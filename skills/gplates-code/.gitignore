@@ -1,0 +1,4 @@
+# Generated index data — never committed.
+data/
+__pycache__/
+*.py[cod]
