@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourSpectrum tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourSpectrum` maps a scalar `position` to a `Colour` by linearly interpolating (via `Colour::linearly_interpolate`) between an `upper_colour` and a `lower_colour` across a `[lower_bound, upper_bound]` range — the building block used by continuous colour palettes such as `AgeColourPalettes` and `Palette` to turn a numeric value into a gradient colour rather than a discrete lookup.
+
+It offers two ways to handle a position outside the configured bounds: `get_colour_at` returns `boost::none` so the caller can decide there is simply no colour for that value, while `get_colour_or_bound_colour` instead clamps by returning the colour at whichever bound was exceeded, so a caller that always wants a `Colour` (never `boost::none` for in-bounds inputs) can use it without a null check.
 
 ## Declared types
 
@@ -41,9 +41,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourSpectrum tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_colour_at`'s doc comment claims out-of-range positions are clamped, but the implementation actually returns `boost::none` for any `position` outside `[lower_bound, upper_bound]`; clamping behaviour is only in `get_colour_or_bound_colour`.
+- The two accessors interpolate in opposite directions at the bounds: `get_colour_at` returns `lower_colour` at `lower_bound` and `upper_colour` at `upper_bound`, while `get_colour_or_bound_colour` returns `upper_colour` at `lower_bound` and `lower_colour` at `upper_bound` — they are not drop-in replacements for each other for in-range positions.
+- The constructor only logs a `qWarning` if `upper_bound < lower_bound`; it does not reject or correct the values, so a misconfigured spectrum keeps running with an inverted range.
 
 ## Used by
 

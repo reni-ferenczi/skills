@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ManageFeatureCollectionsActionWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ManageFeatureCollectionsActionWidget` is the per-row action bar (Edit Configuration / Save / Save As / Save a Copy / Reload / Unload buttons) that `ManageFeatureCollectionsDialog` places next to each loaded file in its file list. Each row wraps one `GPlatesAppLogic::FeatureCollectionFileState::file_reference`; the widget itself holds no file-handling logic and instead forwards every button click straight to the owning `d_feature_collections_dialog` (e.g. `handle_save()` calls `save_file(this)`), passing itself as the caller so the dialog knows which row triggered the action.
+
+All buttons start disabled — the constructor's doc comment notes this explicitly — because the widget cannot know which actions are valid until `update()` is called with the file's `FeatureCollectionFileFormat::Registry` lookup, its `FileInfo`, and whether an edit configuration is available. `update()` then re-enables buttons and selectively disables `Reload`/`Save` when the registry reports the format can't be read/written, disables `Edit Configuration` when none is available, and disables both `Save` and `Reload` for a feature collection that exists only in memory and has no file on disk yet (the "new, unsaved collection" edge case, favouring `Save As` instead).
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ManageFeatureCollectionsActionWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A newly constructed widget has every button disabled; callers must invoke `update()` at least once before it is usable, as the constructor's own documentation warns.
 
 ## Used by
 

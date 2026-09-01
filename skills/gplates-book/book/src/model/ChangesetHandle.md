@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/ChangesetHandle tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ChangesetHandle` lets client code group several model transactions into one
+logical, user-undoable changeset. A model transaction — adding a feature,
+changing a property — is often too fine-grained to present as a single undo
+step; without an active `ChangesetHandle`, each `*Handle` mutation generates its
+own implicit changeset instead. Client code uses it in RAII style: constructing
+one on the stack scopes all transactions between construction and destruction
+into that changeset, and the constructor registers the handle with the
+`Model` it belongs to (`Model::register_changeset_handle`) while the destructor
+unregisters it.
+
+`ChangesetHandle`s nest: only the outermost one in a call chain is operative, so
+a helper function that opens its own changeset still gets folded into a
+caller's broader one if the caller already opened one. The class carries a
+human-readable `description` for the UI and a set of modified handles, but per
+its own Doxygen comment it "currently does nothing useful" beyond the
+registration bookkeeping — the tracking members exist for future undo/redo
+support that has not been built on top of it yet.
 
 ## Declared types
 
@@ -42,9 +56,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/ChangesetHandle tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `model_ptr` may be `NULL`; when it is, the handle registers with nothing and
+  is a no-op for its whole lifetime.
+- `ChangesetHandle` derives from `boost::noncopyable`: it is meant to be
+  constructed once on the stack at the scope that should own the changeset, not
+  copied or passed around by value.
+- The class does not itself implement undo/redo — it only records which handles
+  were touched — so do not expect constructing one to make changes revertible.
 
 ## Used by
 

@@ -8,9 +8,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/SubjectObserverToken tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ObserverToken` and `SubjectToken` implement a polling variant of the
+subject-observer pattern, used as a cache-invalidation primitive instead of Qt
+signals or callback lists. A `SubjectToken` holds a 64-bit `Counter64` that its
+owner increments (via `invalidate()`) whenever its state changes; each
+`ObserverToken` records the counter value it last saw. A cache checks
+`is_observer_up_to_date()` before trusting its own state and calls
+`update_observer()` after refreshing it, avoiding the ordering and circular-
+dependency problems that signal/slot wiring can introduce between layers.
+
+The pattern is used pervasively across `app-logic` and `opengl` to let one
+object (for example a `LayerProxy` or a `GLMultiResolutionRaster`) know
+without a subscription that an upstream input has moved on, so it can lazily
+recompute derived state on next access rather than being pushed updates
+eagerly.
 
 ## Declared types
 
@@ -47,9 +58,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/SubjectObserverToken tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Relies on `Counter64` being genuinely 64-bit: at the fastest conceivable
+increment rate (one per CPU cycle on a 3 GHz machine) the counter would take
+195 years to wrap around, whereas a 32-bit counter could wrap in seconds. A
+default-constructed `SubjectToken` invalidates itself immediately unless
+`invalidate_` is passed as `false`, so that any observer created afterwards is
+forced to update itself once before being considered up to date.
 
 ## Used by
 

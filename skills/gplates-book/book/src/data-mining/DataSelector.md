@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/DataSelector tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DataSelector` is the entry point that drives a whole co-registration run: given the reconstructed seed features, the target `LayerProxy`s and a reconstruction time, `select()` produces a `DataTable` with one row per seed and one column per row of the `CoRegConfigurationTable` it was built from. Callers get an instance only through the static `create()` factory, which returns a `boost::shared_ptr` — the constructor itself is protected and also `optimize()`s the configuration table on first use.
+
+`select()` splits target layers into two paths. Raster targets are handled by `co_register_target_reconstructed_rasters()`, which groups configuration rows by `(layer, band name)` so multiple attributes of the same raster are co-registered together via `GPlatesOpenGL::GLRasterCoRegistration` — this path only runs when a `RasterCoRegistration` (an OpenGL renderer plus co-registration context) is supplied; without it, raster columns are simply skipped. Reconstructed-geometry targets go through `co_register_target_reconstructed_geometries()`, which, for each seed and each configuration row, builds the row's `CoRegFilter`/`CoRegMapper`/`CoRegReducer` triple with `create_filter_map_reduce()`, runs filter then map then reduce, and writes the single resulting `OpaqueData` into the corresponding cell — using a `CoRegFilterCache` so identical filter configurations are not recomputed for every row.
 
 ## Declared types
 
@@ -54,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/DataSelector tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_data_table` is `static`, a state the header itself flags as a `TODO` to remove — it is a shared, process-wide result buffer rather than per-instance state, so concurrent or nested `DataSelector` usage would clobber it. `select()` first calls `is_config_table_valid()` and, if any configuration row references a target layer that is disabled or no longer connected, logs a warning and skips co-registration entirely rather than producing a partial table; the header notes this situation can arise because Qt's slot delivery order does not guarantee the configuration dialog removes stale rows before a reconstruction-wide co-registration runs. A seed feature with no reconstructions at the given time (inactive at that time) is left with `EmptyData` in every column rather than being dropped from the table.
 
 ## Used by
 

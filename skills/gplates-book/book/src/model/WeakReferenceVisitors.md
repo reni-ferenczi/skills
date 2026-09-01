@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/WeakReferenceVisitors tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header supplies the five concrete `WeakObserverVisitor<H>` implementations that turn a `WeakObserverPublisher<H>` lifecycle event into a `WeakReference<H>` callback notification. Each visitor is applied by the publisher (via `apply_weak_observer_visitor()`) to every subscribed observer; when the observer being visited happens to be a `WeakReference`, `visit_weak_reference()` calls straight back into the matching `WeakReference` method — `publisher_modified()`, `publisher_added()`, `publisher_deactivated()`, `publisher_reactivated()`, or `publisher_about_to_be_destroyed()` — which in turn forwards to any `WeakReferenceCallback` the caller attached.
+
+`WeakReferencePublisherModifiedVisitor` and `WeakReferencePublisherAddedVisitor` carry extra state (the modification `Type`, or the container of newly added children) that gets threaded through to the callback along with the notification; the other three visitors are stateless triggers for their respective events. Application-logic code does not normally construct these directly — they are the plumbing a publisher (such as `FeatureHandle`) uses internally to fan a single state change out to every attached `WeakReference`.
 
 ## Declared types
 
@@ -66,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/WeakReferenceVisitors tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLImageUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLImageUtils` is a small free-function namespace bridging OpenGL frame buffers and Qt's `QImage`. `copy_rgba8_frame_buffer_into_argb32_qimage` reads back a rectangle of the currently bound RGBA8 frame buffer into a `QImage`, and `draw_text_into_qimage` renders text with `QPainter` into a fresh `QImage` for use as an OpenGL texture (e.g. labels or overlays drawn onto rasters).
 
 ## Declared types
 
@@ -31,9 +29,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLImageUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`copy_rgba8_frame_buffer_into_argb32_qimage` requires the bound frame buffer to be fixed-point RGBA8 and the destination `QImage` to be `Format_ARGB32` or `Format_ARGB32_Premultiplied`; because OpenGL's and Qt's y-axes run in opposite directions, both the source and destination viewports it takes are given in OpenGL's coordinate frame and the function itself accounts for the flip.
 
 ## Used by
 

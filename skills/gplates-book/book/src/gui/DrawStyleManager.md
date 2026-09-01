@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/DrawStyleManager tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DrawStyleManager` is a singleton (`instance()`) registry of every `StyleAdapter` and `StyleCategory` in the application, and the central place layers look up how a feature should be drawn. On construction it registers the four built-in categories ("PlateId", "SingleColour", "FeatureAge", "FeatureType"); each `StyleAdapter`/`StyleCategory` is given a monotonically increasing `d_id`, offset by `BUILT_IN_OFFSET` (`0x80000000`) when `built_in` is true, which is how `is_built_in_style()` and `remove_style()` distinguish protected built-in styles from user-created ones without a separate flag. `d_reference_map` counts how many layers currently reference each style (`increase_ref()`/`decrease_ref()`), which `can_be_removed()` and `remove_style()` consult so an in-use or built-in style cannot be deleted out from under a layer.
+
+Styles are persisted per-category under the `draw_styles/user-defined` preferences prefix via `save_user_defined_styles()`/`get_saved_styles()`, serialising each style's `Configuration` through a `GPlatesUtils::ConfigBundle`; a category's "template" style — the clean, unconfigured adapter registered with `register_template_style()` — is what `get_saved_styles()` and `get_built_in_styles()` deep-clone to reconstruct each saved or preset variant, since a `StyleAdapter` wrapping a Python object cannot be default-constructed generically. `get_built_in_styles()` hard-codes the built-in preset variants for the C++-defined categories (a fixed palette of colour names for `SingleColour`, named `ColourPalette` presets for `PlateId`/`FeatureAge`/`FeatureType`); Python-defined styles instead supply their own presets through `PythonStyleAdapter::register_alternative_draw_styles()`, as the comment at the end of `get_built_in_styles()` explains.
 
 ## Declared types
 
@@ -89,9 +89,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/DrawStyleManager tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`instance()` leaks its singleton by design (`new DrawStyleManager()`, never deleted through that path); `is_alive()` exists solely so other code destructing during application teardown can check `DrawStyleManager` hasn't already been destroyed before touching it — a plain null check would not work since the pointer itself is never cleared. The destructor takes the Python GIL (`GPlatesApi::PythonInterpreterLocker`) before deleting any styles, because destroying a `PythonStyleAdapter` destroys a wrapped Python object; `remove_style()` does the same for single-style removal. `DrawStyleManager` owns `d_user_prefs` (a `GPlatesAppLogic::UserPreferences`) only when constructed with `local_user_pref = true`, the default and the path every production caller uses through `instance()`; the alternate constructor argument exists for tests that want to inject a shared `ApplicationState`'s preferences instead, and only that path frees `d_user_prefs` in the destructor. The class is `boost::noncopyable` and both constructors are private, so the only way to obtain one is `instance()`.
 
 ## Used by
 

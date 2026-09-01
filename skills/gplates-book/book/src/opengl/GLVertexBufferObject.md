@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexBufferObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexBufferObject` is the `GLVertexBuffer` concrete implementation backed
+by a real `GL_ARRAY_BUFFER_ARB` object, requiring the
+`GL_ARB_vertex_buffer_object` extension. It wraps a `GLBufferObject` (held in
+`d_buffer`), exposed both as the `GLBuffer::shared_ptr_to_const_type` seen
+through the base `GLVertexBuffer::get_buffer` interface and as the concrete
+`GLBufferObject` through `get_buffer_object` for callers that need the actual
+resource. `get_target_type` reports the fixed `GL_ARRAY_BUFFER_ARB` binding
+target that distinguishes it from a `GLVertexElementBuffer`'s
+`GL_ELEMENT_ARRAY_BUFFER_ARB`.
+
+Its `gl_*_pointer` methods implement the same interface as
+`GLVertexBuffer`'s, forwarding to `renderer` to bind this buffer object and
+issue the corresponding vertex/attribute pointer call, so higher-level code
+that only knows about `GLVertexBuffer` works unchanged whether the underlying
+storage is this hardware-backed buffer or a client-side fallback.
 
 ## Declared types
 
@@ -52,9 +64,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexBufferObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Requires `GL_ARB_vertex_buffer_object`; use `GLVertexBufferImpl` when the
+extension is unavailable.
 
 ## Used by
 

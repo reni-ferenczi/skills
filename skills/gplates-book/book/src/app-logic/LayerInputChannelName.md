@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerInputChannelName tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the vocabulary of the reconstruct graph's edges. Every `LayerTask`
+declares its accepted inputs as `LayerInputChannelType` values keyed by one of
+these enumerators, `Layer::connect_input_to_file` and
+`connect_input_to_layer_output` take one to say where the input goes, and
+`ReconstructGraphImpl::LayerInputConnections` uses it as the multimap key that
+groups a layer's connections. The set is closed and global: adding a new kind of
+layer input means adding an enumerator here, not inventing a name locally.
+
+The design decision worth knowing is stated in the header comment: these are
+enumerations rather than strings *specifically* so that channel names can appear
+in saved sessions and projects without the persisted form being tied to anything
+the user sees. Display text lives one layer up, in
+`GPlatesPresentation::VisualLayerInputChannelName`, which switches on this enum
+and returns a translated string; renaming a channel in the GUI therefore cannot
+break an old session file. The `transcribe` function is the other half of that
+contract, mapping each enumerator to a stable string id for `GPlatesScribe`.
 
 ## Declared types
 
@@ -55,9 +68,22 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerInputChannelName tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **The transcribe string ids are a file format.** `LayerInputChannelName.cc`
+  carries an explicit warning not to change them even when the enumerator is
+  renamed, and there is already one divergence to prove the point:
+  `TOPOLOGY_SURFACES` is persisted as `"DEFORMATION_SURFACES"`, its former name.
+  If you add an enumerator, add a matching `GPlatesScribe::EnumValue` in the same
+  commit — the header says so, and omitting it silently breaks session
+  round-tripping for any layer that uses the new channel.
+- **`UNUSED` is a real answer, not a sentinel for "invalid".** It is what
+  `LayerTask::get_main_input_feature_collection_channel()` returns for layers
+  that take no feature collection of their own and consume only other layers'
+  output — `CoRegistrationLayerTask`, `VelocityFieldCalculatorLayerTask` and
+  `ReconstructScalarCoverageLayerTask` all do this. Code that treats the main
+  channel as always connectable must handle it. It is also transcribed like any
+  other value, so it cannot be repurposed as a count or an end marker.
+- Enumerator *order* in the header is not the transcribed order and carries no
+  meaning; nothing depends on the numeric values crossing a process boundary.
 
 ## Used by
 

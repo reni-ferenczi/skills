@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/SymbolFileReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Parses a simple text file that maps GPlates feature types to symbol representations. Each non-comment line specifies a feature type name, symbol type, size, and optional fill state (FILLED or UNFILLED). Empty lines and lines starting with `#` are ignored. The reader populates a `symbol_map` that `ViewportWindow` uses to render features on the map view with their configured symbol appearance.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/SymbolFileReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `read_file()` method clears the `symbol_map` at the start, so it replaces any previous contents. Lines must have at least three space-separated fields (feature type, symbol type, size); a fourth field (FILLED/UNFILLED) is optional and defaults to FILLED. Invalid symbol types or non-numeric sizes are silently skipped; size parsing defaults to 1 on error. The helper function `read_line()` is in the unnamed namespace and returns `boost::none` for empty lines, comments, or invalid entries.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolygonOrientation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PolygonOrientation` determines whether a `PolygonOnSphere` ring winds `CLOCKWISE` or `COUNTERCLOCKWISE` as seen from above the globe at that point. Because "above" only makes sense locally on a sphere, orientation is computed from the sign of a projected 2D signed area: the ring is projected onto a tangent plane with `GnomonicProjection` and `calculate_polygon_ring_projected_signed_area` sums the signed area of the projected vertices, which is much cheaper than a true spherical-area calculation. If the projection fails — the ring spans more than `MAXIMUM_PROJECTION_ANGLE_DEGREES` from its centroid, too big to fit on one tangent plane — the function falls back to a genuine spherical area calculation instead.
+
+`calculate_polygon_orientation` reports the orientation of the whole polygon (dominated by the exterior ring, though a sufficiently large combined interior-ring area can flip it, even with interior rings of arbitrary orientation), while `calculate_polygon_exterior_ring_orientation` and `calculate_polygon_interior_ring_orientation` test one ring in isolation. This unit is a building block for `PolygonPartitioner` and the various GMT/OGR topology exporters, which need consistent, predictable ring winding regardless of how a feature's geometry happened to be digitised.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolygonOrientation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The gnomonic-projection fast path only applies when every ring vertex is within 45 degrees (`MAXIMUM_PROJECTION_ANGLE_DEGREES`) of the ring's centroid; beyond that it transparently falls back to summing signed spherical triangle areas, so callers never need to check which path was taken.
 
 ## Used by
 

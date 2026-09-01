@@ -128,6 +128,16 @@ def cmd_plan(args, units) -> int:
         if wanted and len(batches) >= wanted:
             break
 
+    # Record the dispatch so `settle` can tell "never attempted" from "retried
+    # and still not done" - only the latter deserves a flag.
+    progress = load_json(PROGRESS_PATH, {"units": {}, "failed": []})
+    progress.setdefault("units", {})
+    for batch in batches:
+        for unit in batch["units"]:
+            rec = progress["units"].setdefault(unit["id"], {})
+            rec["dispatched"] = rec.get("dispatched", 0) + 1
+    save_json(PROGRESS_PATH, progress)
+
     if args.per_batch:
         # One small spec per batch: the dispatching agent then only has to name
         # a file, not repeat a page list it would otherwise have to print.
@@ -162,12 +172,13 @@ def cmd_settle(args, units) -> int:
     still_pending = []
     for t in targets:
         state = t["state"]
-        prev = progress["units"].get(t["id"], {})
-        progress["units"][t["id"]] = {"state": state, "run": run,
-                                      "attempts": prev.get("attempts", 0) + (state != "done")}
+        rec = progress["units"].setdefault(t["id"], {})
+        rec.update(state=state, run=run)
         if state != "done":
             still_pending.append(t["id"])
-            if progress["units"][t["id"]]["attempts"] >= 2 and t["id"] not in progress["failed"]:
+            # Flagged only after a second dispatch left it unfinished; a unit
+            # whose turn simply has not come yet is not a failure.
+            if rec.get("dispatched", 0) >= 2 and t["id"] not in progress["failed"]:
                 progress["failed"].append(t["id"])
         elif t["id"] in progress["failed"]:
             progress["failed"].remove(t["id"])
@@ -176,6 +187,8 @@ def cmd_settle(args, units) -> int:
     if merged:  # a freshly merged one-liner can flip a page from undescribed to done
         for t in all_targets(units):
             progress["units"][t["id"]]["state"] = t["state"]
+            if t["state"] == "done" and t["id"] in progress["failed"]:
+                progress["failed"].remove(t["id"])
         still_pending = [t["id"] for t in all_targets(units) if t["state"] != "done"]
     save_json(PROGRESS_PATH, progress)
     print(f"run {run}: {len(targets) - len(still_pending)}/{len(targets)} pages written, "

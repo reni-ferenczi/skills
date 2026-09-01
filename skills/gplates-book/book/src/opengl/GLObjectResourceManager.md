@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLObjectResourceManager tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLObjectResourceManager` is the allocation/deallocation half of the `GLObjectResource` pair: it holds a `ResourceAllocatorType` policy object that knows how to allocate and deallocate one kind of raw OpenGL handle (texture, buffer, shader, program, etc.), and each `GLObjectResourceManager<ResourceHandleType, ResourceAllocatorType>` instantiation manages exactly that one resource kind for one `GLContext`.
+
+Deallocation is deliberately two-phase: `queue_resource_for_deallocation` only records a handle, and the actual `ResourceAllocatorType::deallocate` calls happen later, in a batch, from `deallocate_queued_resources`. This lets `GLObjectResource` destructors run at arbitrary times — including when no OpenGL context is current — without making OpenGL calls; the caller is expected to invoke `deallocate_queued_resources` periodically while the context *is* current, such as right after rendering a frame.
 
 ## Declared types
 
@@ -43,9 +43,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLObjectResourceManager tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- If `deallocate_queued_resources` is not called regularly while the context is current, released OpenGL resources accumulate in `d_resource_deallocation_queue` and are never actually freed on the GPU.
+- `allocate_resource` and `deallocate_queued_resources` both make real OpenGL calls (through the allocator policy) and therefore require a current OpenGL context; only `queue_resource_for_deallocation` is safe to call without one.
 
 ## Used by
 

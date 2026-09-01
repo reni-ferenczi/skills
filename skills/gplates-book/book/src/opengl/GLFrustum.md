@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLFrustum tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLFrustum` extracts the six clip planes (left, right, bottom, top, near, far) of a view frustum directly from a model-view and projection matrix pair, using the standard technique of combining rows of the combined model-view-projection matrix (`get_left_plane` etc. in the `.cc` add/subtract the translation row and the corresponding axis row). The resulting `GLIntersect::Plane` values are in model space — before the model-view or projection transforms are applied — and are consumed for frustum culling: skipping geometry that lies entirely outside the view volume before it is submitted to the GPU.
+
+The `PlaneType` enum's ordering is load-bearing (the constructor's `IDENTITY_FRUSTUM_PLANES` table and every caller that indexes `get_plane`/`get_planes` rely on it) and must not be changed. Plane normals point toward the inside of the frustum, so the frustum is the intersection of the positive half-spaces of all six planes, and the normals are not unit length.
 
 ## Declared types
 
@@ -50,9 +50,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLFrustum tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Plane normals are not normalised to unit length, so distances computed against them are not true Euclidean distances — callers that need magnitude must normalise first.
+- The `PlaneType` enum order (`LEFT_PLANE` … `FAR_PLANE`) is assumed throughout the class and by `ALL_PLANES_ACTIVE_MASK`; reordering it breaks plane indexing.
 
 ## Used by
 

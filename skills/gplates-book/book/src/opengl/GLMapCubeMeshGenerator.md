@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMapCubeMeshGenerator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMapCubeMeshGenerator` adapts the sphere-space cube subdivision mesh (built by `GLCubeMeshGenerator`) to a 2D map view by projecting each cube-face grid point through a `GPlatesGui::MapProjection`, producing a `Point` that carries both the original `UnitVector3D` position on the sphere and its map-projected `Point2D` coordinate. It exists because `GLMultiResolutionMapCubeMesh` and related map-view rendering need the same cube-subdivision tiling the globe view uses, but expressed in projected map coordinates instead of 3D positions.
+
+Rather than generate a whole cube face at once, `create_cube_face_quadrant_mesh_vertices` works one quadrant at a time: a cube face is split into four quadrants specifically so the antimeridian (dateline) only ever falls on a quadrant edge rather than cutting across a quadrant's interior, since a map projection is generally discontinuous there. `create_pole_mesh_vertex` handles the north/south pole cases separately, because a pole's pre-projection longitude is degenerate and must be resolved from context (which quadrant, and which side of the dateline) rather than read off the sphere position directly.
 
 ## Declared types
 
@@ -43,9 +43,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMapCubeMeshGenerator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The `map_projection` reference passed to the constructor must outlive the `GLMapCubeMeshGenerator` — it is stored by reference, not copied.
+- `cube_face_dimension` must be a power of two.
+- `quadrant_x_offset`/`quadrant_y_offset` must each be 0 or 1; the vertex-indexing formula documented on `create_cube_face_quadrant_mesh_vertices` depends on that and on the quadrant sizes from `get_cube_face_quadrant_dimension_in_vertex_spacing`/`_samples`.
 
 ## Used by
 

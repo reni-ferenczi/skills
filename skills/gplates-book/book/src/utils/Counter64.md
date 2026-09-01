@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Counter64 tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::Counter64` is a monotonically-incrementing 64-bit counter used
+as a cheap "has anything changed" or "generation number" token — for example
+tracking observer/revision counts on `ReconstructionGeometry` and its
+subclasses, or resource generation counters in the `opengl` raster/buffer
+classes. It only supports increment, equality and less-than, via Boost's
+`operators.hpp` mixins (`boost::incrementable`, `boost::equality_comparable`,
+`boost::less_than_comparable`), which derive the remaining operators
+(`operator++(int)`, `operator!=`, `operator<=`, etc.) from the three it
+implements directly.
+
+Two implementations are compiled depending on `BOOST_NO_INT64_T`: the normal
+path stores a single `boost::uint64_t`, while a fallback for compilers
+without a native 64-bit integer type composes the counter from two
+`boost::uint32_t` halves and detects overflow of the low half manually to
+carry into the high half. Both behave identically to callers.
 
 ## Declared types
 
@@ -37,9 +49,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Counter64 tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The counter is increment-only by design; there is no `operator--` or
+  decrement support in either implementation.
+- Overflow is a known non-issue in practice: even incrementing every CPU
+  cycle on a 3 GHz machine would take about 195 years to wrap a 64-bit
+  counter, so wraparound is not guarded against.
+- Not thread-safe: `operator++` reads and writes `d_counter` (or the
+  two-word fallback) with no synchronisation.
 
 ## Used by
 

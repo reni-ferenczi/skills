@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ReconstructionViewWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionViewWidget` is the central widget of `ViewportWindow`: it assembles the globe/map canvas, the zoom slider, the coordinate-display labels, and the toolbars (`AnimateControlWidget`, `ZoomControlWidget`, `TimeControlWidget`, `ProjectionControlWidget`) around the `TaskPanel` that `ViewportWindow` inserts afterwards via `insert_task_panel()`. Its layout is built mostly in C++ rather than the Designer form — the `.ui` file supplies only a placeholder (`canvas_taskpanel_place_holder`) and a couple of top-level slots, and the constructor then hand-builds a `QSplitter` holding a `GlobeAndMapWidget` plus `ZoomSliderWidget` on one side and stretches the `TaskPanel` on the other, with the "awesome bars" and "view bar" toolbars constructed by the private `construct_awesomebar_one()`, `construct_awesomebar_two()`, `construct_viewbar()` and `construct_viewbar_with_projections()` helpers.
+
+Beyond layout, the widget forwards state from the active `SceneView` (globe or map) up to `ViewportWindow`: it recalculates and displays the camera's lat/lon position whenever the globe orientation or map transform changes, tracks the mouse pointer position over whichever view is active, and re-labels the mouse-coordinate display when the projection type flips between orthographic and the flat map projections. `update_tools_and_status_message()` is relayed rather than handled directly, letting `ViewportWindow` own the actual status-bar and tool-enablement logic.
 
 ## Declared types
 
@@ -79,9 +79,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ReconstructionViewWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor relies on a placeholder widget (`canvas_taskpanel_place_holder`) defined in the `.ui` form rather than laying the splitter directly into `this`; a comment on the affected code notes this is a deliberate workaround for a globe-rendering bug and is left in place because the current approach works and is not an urgent fix.
+- `construct_awesomebar_one()`/`construct_awesomebar_two()`/`construct_viewbar()`/`construct_viewbar_with_projections()` return `std::unique_ptr<QWidget>` only because the widgets are not yet parented; each caller immediately calls `.release()` after adding the widget to a layout, at which point Qt's parent/child ownership takes over.
+- `handle_projection_type_changed()` only swaps the placeholder text shown when the mouse is off the globe/map; it does not affect the coordinate values themselves.
 
 ## Used by
 

@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VisualLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayerParams` is the base class for parameters and options that are specific to visualising a particular type of layer, kept separate from `GPlatesAppLogic::LayerParams` so that presentation-only settings (colouring, symbology, display toggles) never leak into the app-logic layer that actually computes reconstructions. Each visual layer type that needs its own options derives from this class; the seven subclasses correspond to the layer types registered in `VisualLayerRegistry`.
+
+The class wraps a `GPlatesAppLogic::LayerParams::non_null_ptr_type`, giving derived classes access to the underlying layer's own parameters through the protected `get_layer_params()`, and an optional `GPlatesGui::StyleAdapter` used to override the default drawing style. Double dispatch onto a subclass is done through `accept_visitor`, which takes either a `ConstVisualLayerParamsVisitor` or a `VisualLayerParamsVisitor` (see `VisualLayerParamsVisitor`); the base implementations are no-ops, so a subclass that does not override `accept_visitor` is simply invisible to visitors.
+
+`handle_layer_modified` is the hook by which a `VisualLayerParams` learns that its owning app-logic layer's input connections changed; the base implementation does nothing, and it is guaranteed to also be called once right after construction so a subclass can initialise itself from the current layer state.
 
 ## Declared types
 
@@ -48,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VisualLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Subclasses should call `emit_modified()` (not `Q_EMIT modified()` directly) whenever they change a parameter, so that listeners are notified consistently through the one signal.
 
 ## Used by
 

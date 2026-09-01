@@ -10,9 +10,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AddPropertyDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AddPropertyDialog` is the modal dialog behind "add a property to this
+feature": the user picks a property name and a property value type from two
+comboboxes, the dialog swaps in the matching `EditWidgetGroupBox` edit widget,
+and on accept it builds a `PropertyValue` from that widget and calls
+`GPlatesModel::ModelUtils::add_property()` to attach it to the focused
+feature. Which property names are offered, and whether a chosen name is valid
+for the feature's type, is decided by consulting `GPlatesModel::Gpgim` — the
+dialog does not hard-code GPGIM's feature/property rules itself, it queries
+them live via `Gpgim::instance().get_feature_property()`.
+
+`set_feature()` re-populates the property-name combobox every time it is
+called, even for the same feature and feature type, because GPGIM property
+multiplicity means which names are still legal to add can change as the
+feature's existing properties change; since the dialog is modal, nothing else
+can mutate the feature while it is open, so this is simpler than listening
+for model change callbacks. `add_property()` deliberately adds the property
+without GPGIM's usual name/multiplicity/value-type checks, since the name and
+type were already chosen from GPGIM-derived comboboxes.
 
 ## Declared types
 
@@ -62,9 +77,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AddPropertyDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_feature_ref` is a `weak_ref`; `add_property()` checks `is_valid()` and
+shows a warning dialog instead of adding the property if the feature has gone
+away while the dialog was open. The `EditWidgetGroupBox` is combined into the
+Designer-generated `Ui_AddPropertyDialog` layout by hand in
+`set_up_edit_widgets()`, since Qt Designer forms cannot embed a hand-coded
+composite widget directly.
 
 ## Used by
 

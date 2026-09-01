@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/AbstractPythonRunner tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApi::AbstractPythonRunner` is the interface between callers that want
+Python code run and whatever actually runs it — the interactive console, a
+script file, or an arbitrary `boost::function`. It covers the different shapes
+that "run some Python" takes: a line typed interactively (`exec_interactive_command`,
+paired with `reset_interactive_buffer` for Ctrl+C handling), a string of code,
+a script file (`exec_file`, which takes a separate `filename_encoding` so the
+filename itself renders correctly in tracebacks), or a native C++ callable that
+executes or evaluates to a `boost::python::object`. Every operation reports its
+outcome back through a `PythonExecutionMonitor` rather than a return value,
+which is what lets execution happen elsewhere — including on another thread —
+while the caller is told the result asynchronously.
+
+The class deliberately leaves threading unspecified: whether Python code runs
+on the calling thread or a separate one, and whether the runner's own methods
+are safe to call concurrently, is up to the concrete implementation.
 
 ## Declared types
 
@@ -41,9 +53,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/AbstractPythonRunner tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`monitor` must not be null for any of these calls. `exec_file` reads the target
+file in text mode but does not decode it; non-ASCII source must declare its own
+encoding via a PEP 263 comment, and `filename_encoding` only affects how the
+filename (not the file contents) appears in tracebacks and syntax errors.
 
 ## Used by
 

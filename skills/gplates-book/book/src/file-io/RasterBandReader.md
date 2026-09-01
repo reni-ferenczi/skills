@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RasterBandReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterBandReader` narrows a `RasterReader` to one fixed band. `RasterReader`'s
+methods all take a band number as a parameter because a raster file can carry
+several bands; callers that only ever want one band (a single-band raster
+layer, for instance) would otherwise have to thread that band number through
+every call. `RasterBandReader` wraps a `RasterReader::non_null_ptr_type` plus
+the chosen `band_number` and exposes the same `can_read`, `get_type`,
+`get_proxied_raw_raster` and `get_raw_raster` operations without the band
+argument, forwarding each call straight to the underlying `RasterReader` with
+`d_band_number` filled in.
+
+It is a thin, copyable adapter rather than an owner: several `RasterBandReader`
+instances can share the same underlying `RasterReader` (each holding its own
+band number), which is how `RasterBandReaderHandle` hands out per-band readers
+backed by one shared reader.
 
 ## Declared types
 
@@ -45,9 +56,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RasterBandReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`band_number` must be between 1 and the source raster's band count inclusive;
+`can_read` checks this range together with the underlying reader's own
+`can_read`, so an out-of-range band fails that check rather than throwing.
 
 ## Used by
 

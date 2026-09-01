@@ -8,9 +8,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/IdTypeGenerator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`IdTypeGenerator` is the template that produces GPlates' ID types (feature IDs,
+revision IDs and the like): a Unicode string interned into a `SingletonType`
+(a `GPlatesUtils::IdStringSet`, one instance per ID kind, see `StringSetSingletons`),
+so that two IDs with equal text share the same underlying string and can be
+compared for equality by comparing iterators instead of characters, and checking
+whether an ID string is already in use is an O(log n) set lookup rather than a scan
+over every feature. Use `QualifiedXmlName` instead for XML qualified names like
+`gml:Point`, and `StringContentTypeGenerator` for other interned strings that
+are not IDs.
+
+An ID can optionally be *defined* by one object — the "back-reference target" —
+via `set_back_ref_target()`, which registers a nested `BackRef` (an RAII node
+linked into the ID's back-reference list; it deregisters itself automatically on
+destruction). A `FeatureId`, for example, back-references the `FeatureHandle` that
+defines it, but not the `GpmlPropertyDelegate` instances that merely reference the
+same ID; `find_back_ref_targets()` walks that list to recover the defining objects
+for a given ID string. Copying or copy-assigning an `IdTypeGenerator` never copies
+the back-reference, since the source object's back-reference names *its* container,
+which is not necessarily the copy's container.
 
 ## Declared types
 
@@ -48,9 +64,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/IdTypeGenerator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A `BackRef` is non-copyable and expected to be heap-allocated; `d_back_ref_ptr` is a
+`boost::scoped_ptr` specifically so a back-reference can never end up shared between
+two `IdTypeGenerator` instances produced by copying. The base classes are chained
+(`less_than_comparable<..., equality_comparable<...>>`) rather than inherited in
+parallel, to avoid growing `sizeof(IdTypeGenerator)` with multiple empty bases.
 
 ## Used by
 

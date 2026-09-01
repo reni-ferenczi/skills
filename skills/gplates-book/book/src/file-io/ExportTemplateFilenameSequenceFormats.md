@@ -9,9 +9,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ExportTemplateFilenameSequenceFormats tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header defines the individual format-specifier classes that
+`ExportTemplateFilenameSequenceImpl` (the private implementation behind
+`file-io/ExportTemplateFilenameSequence`) matches against a filename template
+and expands per frame. Each placeholder from the template syntax — `%%`,
+`%P`, `%A`, `%R`, `%n`/`%u`, `%f`/`%d`, `%T`/`%D` — gets its own `Format`
+subclass (`PercentCharacterFormat`, `PlaceholderFormat`,
+`ReconstructionAnchorPlateIdFormat`, `DefaultReconstructionTreeLayerNameFormat`,
+`FrameNumberFormat`, `ReconstructionTimePrintfFormat`, `DateTimeFormat`), so
+adding a new placeholder means adding one new `Format` implementation rather
+than extending a monolithic parser.
+
+Each subclass exposes a static `match_format()` that tests whether a format
+specifier starts at the current position in the remaining template text and,
+if so, returns how many characters it consumed, plus a virtual
+`expand_format_string()` that renders the specifier's text for a given frame
+index, reconstruction time and date/time. `Format::get_variation_type()`
+classifies a specifier as varying with reconstruction time/frame, varying
+only across iterators (the `%T`/`%D` timestamp captured once per iterator),
+or constant, which lets the caller decide how much of an expansion can be
+cached. The `format_types` `boost::mpl::vector` lists every concrete `Format`
+in the order matching is attempted; `ReconstructionTimePrintfFormat` is
+deliberately last so a printf-style catch-all cannot shadow a more specific
+specifier added later.
 
 ## Declared types
 
@@ -133,9 +153,20 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ExportTemplateFilenameSequenceFormats tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The order of `format_types` is load-bearing, not cosmetic: matching walks
+  the list in order and stops at the first `match_format()` success, and the
+  comment on `format_types` explains why `ReconstructionTimePrintfFormat`
+  must stay last — a new specifier inserted after it risks being swallowed by
+  the printf-style matcher instead of being recognised.
+- `DefaultReconstructionTreeLayerNameFormat` silently rewrites spaces in the
+  layer name to underscores in its constructor because some operating
+  systems mishandle spaces in filenames; other whitespace is left untouched
+  (marked `TODO` in the source).
+- `PlaceholderFormat` (`%P`) is the one specifier that is matched but not
+  substituted here — `expand_format_string()` for it is defined out-of-line
+  in the `.cc` and returns the placeholder itself, leaving expansion to the
+  caller as documented on `ExportTemplateFilename::PLACEHOLDER_FORMAT_STRING`
+  in `file-io/ExportTemplateFilenameSequence`.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/XsDouble tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`XsDouble` is the `GPlatesModel::PropertyValue` wrapping a bare `double`, corresponding to the XML Schema `xsi:double` type (its `get_structural_type()` returns `StructuralType::create_xsi("double")`). It is the standard property-value representation for a scalar numeric quantity read from or written to GPML, and is registered with the visitor dispatch machinery via `DECLARE_PROPERTY_VALUE_FINDER(GPlatesPropertyValues::XsDouble, visit_xs_double)`, so `GPlatesFeatureVisitors::get_property_value()` and both `FeatureVisitor`/`ConstFeatureVisitor` hierarchies can find and visit it like any other property value.
+
+Construction goes only through the `create()` factory, which returns a `non_null_ptr_type`; the constructors are protected so instances always live behind an intrusive-pointer and can never be created on the stack.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/XsDouble tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_value()` calls the inherited `update_instance_id()`, so mutating an `XsDouble` in place changes its identity for the purposes of clone-tracking (a clone otherwise shares its instance id with the object it was cloned from). `clone()` and `deep_clone()` are equivalent here since a `double` has no nested property values to recursively clone.
 
 ## Used by
 

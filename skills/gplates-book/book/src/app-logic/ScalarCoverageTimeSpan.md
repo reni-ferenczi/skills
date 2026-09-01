@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ScalarCoverageTimeSpan tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The public front end for a scalar coverage's time history, sitting above `ScalarCoverageEvolution`. It separates scalar types into two families: types affected by deformation are delegated entirely to a `ScalarCoverageEvolution` (built lazily when a `TopologyReconstruct::GeometryTimeSpan` is supplied), while non-evolving types are stored once, as-is, in `d_non_evolved_scalar_coverage`, and only ever change insofar as their associated geometry points get deactivated (subducted or consumed by a mid-ocean ridge) over time. Callers query both kinds uniformly through `get_scalar_values` / `get_all_scalar_values`, which do not need to know which family a given `scalar_type_type` belongs to.
+
+The two `create` overloads mirror this split: `create(initial_scalar_coverage)` builds a coverage with no time dimension at all (the same values are returned regardless of reconstruction time, and the map may not be empty), while `create(initial_scalar_coverage, geometry_time_span)` builds a coverage that tracks a topologically-reconstructed geometry, evolving deformation-affected types forward and backward from the geometry's import time and deactivating points as the geometry time span dictates. In this second form the incoming scalar map may be empty, because evolved types fall back to default initial values inside `ScalarCoverageEvolution`.
+
+`is_valid` reflects only the time range in which the underlying geometry points remain active (all points subducted/consumed narrows it from `[-inf, inf]`) — it is unrelated to a feature's own time of appearance/disappearance, which callers must handle separately. Because a topologically reconstructed geometry can be tessellated, introducing extra interpolated points, `get_num_all_scalar_values` can exceed the size of the scalar arrays originally passed into `create`.
 
 ## Declared types
 
@@ -59,9 +61,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ScalarCoverageTimeSpan tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_scalar_values` returns only active-point values (fewer entries than `get_num_all_scalar_values` is normal), while `get_all_scalar_values` returns one entry per point including inactive ones, flagged via a parallel `scalar_values_are_active` array — mixing up which method's output you are indexing against will silently misalign scalar values with points. Both `get_scalar_values` and `get_all_scalar_values` return `false` (leaving output parameters untouched) if `is_valid` is false or the scalar type is not present, so the return value must be checked before using the output. `ScalarCoverage` instances are non-owning views tied to the `ScalarCoverageTimeSpan` that produced them and can only be constructed by it (private constructor, friend declaration).
 
 ## Used by
 

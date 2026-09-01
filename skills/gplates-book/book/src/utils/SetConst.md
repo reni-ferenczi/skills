@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/SetConst tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SetConst<T, Const>::type` normalizes the top-level const-ness of `T` to match the boolean `Const`: `true` yields `boost::add_const<T>::type`, `false` (the primary template) yields `boost::remove_const<T>::type`. It is a small building block for templates that are parameterized on a `Const` flag and need to declare a pointer, reference or parameter type whose constness tracks that flag — for example generating both a mutable and a const-visitor from the same template body, which is how the `LayerParamsVisitor`, `VisualLayerParamsVisitor` and `ColourPaletteVisitor` families use it to avoid duplicating a visitor class for its const and non-const variants.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/SetConst tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

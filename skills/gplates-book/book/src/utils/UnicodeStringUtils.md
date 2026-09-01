@@ -8,9 +8,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/UnicodeStringUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Free functions that convert between ICU's `GPlatesUtils::UnicodeString` (an
+alias defined in `global/unicode.h`) and Qt's `QString`/`std::string`, since
+the model stores textual content — `FeatureType`, `FeatureId`, `PropertyName`,
+`TextContent` and similar Unicode string containers — as ICU strings while the
+GUI and most of the rest of the codebase work in `QString`. `make_qstring()`
+is the generic entry point: it is a template that calls `T::get()` on any
+Model string-container type and converts the result, so callers do not need
+to know each container's exact accessor pattern.
+
+Every function is a thin `inline` wrapper around ICU's own `qstring()`
+conversion or a direct constructor call, with no buffering, encoding
+negotiation or error handling of its own.
 
 ## Declared types
 
@@ -32,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/UnicodeStringUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

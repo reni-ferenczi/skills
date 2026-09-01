@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/ProximityHitDetailVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A textbook Gamma95 Visitor base for the `ProximityHitDetail` hierarchy: one `visit_*` overload per concrete hit-detail type (`MultiPointProximityHitDetail`, `PointProximityHitDetail`, `PolygonProximityHitDetail`, `PolylineProximityHitDetail`, `SmallCircleProximityHitDetail`), each with an empty default body so a concrete visitor only overrides the cases it cares about. Each `visit_*` function spells out its target type in its name rather than being overloaded on parameter type, specifically to dodge C++ name hiding: a derived class that declares any function called `visit` would otherwise hide every base overload of that name, forcing it to override all of them at once.
+
+The destructor is declared pure virtual purely to force the class to be abstract; since every `visit_*` function already carries a body, that would otherwise be the only thing stopping direct instantiation.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/ProximityHitDetailVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Copy-assignment is declared but intentionally left undefined, so any attempt to copy-assign a `ProximityHitDetailVisitor` fails to link.
 
 ## Used by
 

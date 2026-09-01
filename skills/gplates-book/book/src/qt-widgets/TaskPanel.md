@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TaskPanel tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TaskPanel` is the pane docked next to the globe/map in `ReconstructionViewWidget` that hosts one `TaskPanelWidget` per canvas-tool workflow — feature summary, digitisation, geometry modification, pole manipulation, topology tools, measure distance, small circle, lighting. Rather than a real `QTabWidget`, it uses a `QStackedWidget` (`d_stacked_widget_ptr`) with `choose_tab()`/the `choose_*_tab()` convenience slots switching pages, so `GPlatesGui::CanvasToolWorkflows` can show whichever panel matches the active canvas tool. Each `set_up_*_tab()` method builds its page's layout and QToolButtons entirely in C++ rather than from a Designer form, wiring the buttons to `QAction`s (via `ActionButtonBox`) so the same actions can double as menu entries owned by `ViewportWindow`.
+
+`choose_tab()` deactivates the previously active widget's `clear_action_enabled_changed` connection, activates the new one via `handle_activation()`, and reconfigures the shared `d_clear_action` (text, tooltip, visibility, enabled state) from whatever the newly active `TaskPanelWidget` reports through `get_clear_action_text()`/`clear_action_enabled()` — so every tab shares one "Clear" action rather than each defining its own. The per-tab child widgets (`DigitisationWidget`, `ModifyGeometryWidget`, `TopologyToolsWidget`, and so on) are exposed through accessors so the corresponding canvas tools can push data into them directly.
 
 ## Declared types
 
@@ -69,9 +69,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TaskPanel tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_task_panel_widgets` and the per-tab named pointers (`d_feature_summary_widget_ptr`, `d_digitisation_widget_ptr`, ...) are members of the same anonymous `union`, so `d_task_panel_widgets[page_idx]` and the corresponding named pointer alias the same storage; the `Page` enum's order must match the order the fields are declared in the struct, and the constructor's `set_up_*_tab()` call order, or the array-to-name mapping silently breaks.
+- `set_tab_enabled()` is compiled out (`#if 0`) despite being listed as a public slot in the declared-types table's Doxygen; it is not currently callable.
+- All the per-tab widgets are Qt-parented and destroyed by Qt's ownership tree, not explicitly by `TaskPanel`.
 
 ## Used by
 

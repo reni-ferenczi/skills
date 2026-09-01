@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourSchemeContainer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourSchemeContainer` is the registry of every `ColourScheme` the application knows about, keyed by an `id_type` and grouped into one of the `ColourSchemeCategory::Type` buckets (`PLATE_ID`, `SINGLE_COLOUR`, `FEATURE_AGE`, `FEATURE_TYPE`). Its constructor populates the container with GPlates' built-in schemes via `create_built_in_colour_schemes`, and callers such as the colouring dialog add, remove or edit further entries (`add`, `remove`, `add_single_colour_scheme`, `edit_single_colour_scheme`) as the user creates custom schemes at runtime. `ColourSchemeCategory::Iterator` and its free `begin()`/`end()` let code range over the category enum itself, separately from `ColourSchemeContainer::iterator`, which ranges over the `ColourSchemeInfo` entries within one category.
+
+As the header states directly, this container only tracks what colour schemes exist; it has no notion of which one is currently selected in the GUI. That responsibility, and the `colour_scheme_edited` signal's consumption, belongs to `ColourSchemeDelegator`, which this class is deliberately decoupled from.
 
 ## Declared types
 
@@ -80,9 +80,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourSchemeContainer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get` has undefined behaviour if passed an `id` that was never returned by `add`/`add_single_colour_scheme` for that `category`, or that has since been `remove`d — there is no bounds or existence check.
+- Ids are assigned from a single monotonically increasing `d_next_id` shared across all categories, so ids are unique container-wide, not just within a category.
 
 ## Used by
 

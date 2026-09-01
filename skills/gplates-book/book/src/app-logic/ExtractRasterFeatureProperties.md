@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ExtractRasterFeatureProperties tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExtractRasterFeatureProperties` is a `GPlatesModel::ConstFeatureVisitor` that pulls the pieces a raster layer needs out of a raster feature: the `Georeferencing`, the `SpatialReferenceSystem`, the proxied `RawRaster` bands, and the `GpmlRasterBandNames`. Because raster properties can be time-dependent (wrapped in a `GpmlPiecewiseAggregation` of `GpmlTimeWindow`s), the visitor is constructed with a reconstruction time and resolves each property against that instant rather than returning every time slice.
+
+The anonymous `CanResolveRasterFeature` visitor is a separate, lighter-weight check used only to answer "is this a raster feature at all", backing the free functions `is_raster_feature()` and `contains_raster_feature()`. Callers such as `FeatureCollectionFileFormatClassify` use it to classify feature collections without needing a reconstruction time.
 
 ## Declared types
 
@@ -77,9 +77,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ExtractRasterFeatureProperties tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `ExtractRasterFeatureProperties::visit_gpml_piecewise_aggregation()` only descends into the `GpmlTimeWindow` whose `valid_time` contains `d_reconstruction_time`, so one instance extracts a single time slice; a different reconstruction time needs a new instance. `CanResolveRasterFeature`, by contrast, visits every time window regardless of `valid_time` — it treats "is a raster feature" as a property of the whole feature, not of one instant.
+- Only the first `GmlFile` encountered contributes to `get_proxied_rasters()`; later matches at the same instant are ignored, since the auto-generated raster colour palette is built from the first frame of a time-dependent sequence.
 
 ## Used by
 

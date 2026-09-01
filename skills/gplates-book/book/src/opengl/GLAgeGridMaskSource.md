@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLAgeGridMaskSource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLAgeGridMaskSource` is a `GLMultiResolutionRasterSource` that turns an age grid raster into a per-tile mask showing which sea-floor pixels are older than the current reconstruction time. Rather than storing one mask raster per reconstruction time, it re-derives the mask on the GPU whenever `update_reconstruction_time` reports a change, so a single age grid raster can drive the mask at any time in the animation.
+
+Because fixed-function OpenGL has no 16-bit integer comparison, the age values and the reconstruction time are each split into a high and low byte and encoded into two 8-bit textures (`d_age_high_byte_tile_working_space` / `d_age_low_byte_tile_working_space`, converted via `convert_age_to_16_bit_integer`). `load_tile` then drives three render passes (`d_first_render_pass_state`, `d_second_render_pass_state`, `d_third_render_pass_state`, compiled once and replayed per tile) that compare the byte pairs and combine the results with the `GL_ARB_texture_env_dot3` extension to produce a single RGBA8 mask texture: the mask value replicated into RGB, and the age grid's coverage (valid-data) flag in alpha.
+
+Age data itself comes from a `ProxiedRasterResolver` over the supplied age grid raster, so tiles are decoded on demand rather than the whole raster being loaded up front.
 
 ## Declared types
 
@@ -78,9 +80,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLAgeGridMaskSource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create` returns `boost::none` (rather than throwing) if the supplied raster is not a proxied, numeric raster, or is uninitialised — callers must check the `boost::optional` before use.
+- `tile_texel_dimension` must be a power of two and is silently clamped to the run-time system's maximum texture size.
+- A tile-load failure is logged only once per source (`d_logged_tile_load_failure_warning`), so repeated failures for the same source do not flood the log.
 
 ## Used by
 

@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GzipFile tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GzipFile` adapts zlib's gzip mode to Qt's `QIODevice` interface so gzip-
+compressed feature collections and rasters can be read and written through
+the same streaming API as any other `QIODevice`. It wraps another
+`QIODevice` (the underlying file or buffer) rather than talking to the
+filesystem itself, decompressing through `readData` when opened
+`ReadOnly` or compressing through `writeData` when opened `WriteOnly`; the
+implementation follows the `zpipe.c` example from zlib's own documentation.
+The private `ZStream` class exists only to keep `<zlib.h>` out of the header,
+so `boost::scoped_ptr<ZStream>` is a pointer to an incomplete type from the
+header's point of view.
+
+`GZIP_WINDOW_BITS` is the `windowBits` value passed to `inflateInit2()` and
+`deflateInit2()` that selects gzip framing instead of raw zlib framing, and
+`STREAM_BUFFER_SIZE` (128 KB) sizes the input/output buffers zlib operates
+on, per zlib's own recommendation. Because `isSequential()` always returns
+true, callers cannot seek within a `GzipFile` — it must be read or written
+strictly forward, as any streaming compressor requires.
 
 ## Declared types
 
@@ -61,9 +75,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GzipFile tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`GzipFile` does not own the wrapped `d_device`: it opens it (if not already
+open) and closes it in `close()`, but never deletes it — the caller is
+responsible for the underlying device's lifetime. The destructor calls
+`close()` itself and swallows any exception, since `~QIODevice()` does not
+call `close()` and a destructor must not let an exception escape.
+`compression_level` is validated to be at most 9 in the constructor via
+`GPlatesGlobal::Assert`, and only matters when the device is opened for
+writing — it is ignored when opened for reading, since the compression level
+is a property of how the stream was encoded, not how it is decoded. `open()`
+also rejects a mode/device combination where an already-open wrapped device's
+mode does not match the requested read or write direction.
 
 ## Used by
 

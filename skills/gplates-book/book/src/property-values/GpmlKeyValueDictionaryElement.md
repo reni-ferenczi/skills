@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlKeyValueDictionaryElement tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlKeyValueDictionaryElement` is the single key/value pair type held in a `GpmlKeyValueDictionary`'s element vector: an `XsString` key, a `PropertyValue` (the value, of arbitrary property-value type), and the `StructuralType` that value is expected to have. Unlike the property values around it, it is a plain value type, not itself a `GPlatesModel::PropertyValue` — it is only ever stored inside a dictionary, never attached directly to a feature.
+
+It derives from `GPlatesUtils::QtStreamable` purely to pick up `operator<<` support for `qDebug()`/`QTextStream` from the single `std::ostream` `operator<<` overload declared alongside the class.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlKeyValueDictionaryElement tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

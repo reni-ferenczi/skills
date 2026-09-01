@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/python tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`python.h` is the mandatory replacement for including `<Python.h>` (and, transitively, `<boost/python.hpp>`) directly anywhere in GPlates. It exists to paper over a string of platform- and version-specific incompatibilities between CPython's headers, Boost.Python and MSVC/Qt: it undefines stray `HAVE_DIRECT_H`/`HAVE_UNISTD_H`/`ssize_t` macros left over on Windows, defines `HAVE_SNPRINTF` for MSVC 2015+ so `pyconfig.h` doesn't redefine `snprintf`, and temporarily undefines `_DEBUG` around the `<Python.h>` include so MSVC debug builds don't try to link the (usually absent) `python27_d.lib`. It then pulls in `<boost/python.hpp>` with `BOOST_BIND_GLOBAL_PLACEHOLDERS` defined to silence a Boost 1.74 deprecation warning that Boost itself has not yet fixed, and optionally `<boost/python/numpy.hpp>` and the raw NumPy C API when `GPLATES_HAVE_BOOST_PYTHON_NUMPY` / `GPLATES_HAVE_NUMPY_C_API` are configured in.
+
+The whole body is wrapped in `#ifndef Q_MOC_RUN` because Qt's moc cannot parse the `BOOST_JOIN` macro used inside Boost, so any header that both needs Python and is processed by moc must guard the Python include this way. `PUSH_MSVC_WARNINGS`/`DISABLE_MSVC_WARNING(4996)`/`POP_MSVC_WARNINGS` (from `CompilerWarnings.h`) bracket the includes to silence an MSVC deprecation warning raised by Boost.Python's use of `PyEval_CallFunction`.
 
 ## Declared types
 
@@ -36,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/python tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Some source files must include this header before `<ctype.h>` gets pulled in transitively by anything else, to work around a `<pyport.h>` compile error on Python versions older than 2.7.13/3.5.3 — get the include order wrong and only some translation units will fail to build, depending on what else they include first.
 
 ## Used by
 

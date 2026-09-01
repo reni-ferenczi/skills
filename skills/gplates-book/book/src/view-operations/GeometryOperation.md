@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/GeometryOperation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryOperation` is the abstract base every canvas-tool geometry-editing operation implements (five subclasses, including `InsertVertexGeometryOperation` and `MoveVertexGeometryOperation`), fixing the `activate()`/`deactivate()` lifecycle a canvas tool drives as it is selected and deselected. Beyond that lifecycle it standardises how an operation reports which point of a `GeometryBuilder` geometry the mouse is currently over: subclasses call the protected `emit_highlight_point_signal`/`emit_unhighlight_signal` helpers rather than emitting `highlight_point_in_geometry`/`unhighlight_point_in_geometry` directly, so every subclass gets the same de-duplication for free — a repeated highlight of the same point is a no-op, and highlighting a new point automatically unhighlights the previous one first.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/GeometryOperation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Subclasses declaring the `highlight_point_in_geometry`/`unhighlight_point_in_geometry` slots must use fully namespace-qualified argument types, per the header's own note — Qt's signal/slot matching is a literal string comparison, so an unqualified type in a slot signature silently fails to connect at runtime.
 
 ## Used by
 

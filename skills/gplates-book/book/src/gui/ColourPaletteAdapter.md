@@ -8,9 +8,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourPaletteAdapter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourPaletteAdapter<FromType, ToType, ConverterType>` wraps a
+`ColourPalette<FromType>` so it can be used wherever a
+`ColourPalette<ToType>` is expected: `get_colour(ToType value)` converts
+`value` back to `FromType` (via `ConverterType`, defaulting to
+`StaticCastConverter`) and forwards to the wrapped palette. `RealToBuiltInConverter`
+is a ready-made converter for the common case of unwrapping a
+`GPlatesMaths::Real` into a plain built-in numeric type. The adapter takes
+ownership of the wrapped palette via its `non_null_ptr_type`.
+
+The free function `convert_colour_palette<FromType, ToType>` is the normal
+entry point rather than constructing `ColourPaletteAdapter` directly: it
+dispatches through the `ColourPaletteAdapterInternals::ConvertColourPalette`
+helper struct (needed because function templates cannot be partially
+specialised), whose `FromType == ToType` specialisation returns the input
+palette unchanged instead of wrapping it in a no-op adapter. This lets
+callers such as `ColourPaletteUtils` and `BuiltinColourPalettes` convert a
+palette's value type generically without special-casing the identity
+conversion themselves.
 
 ## Declared types
 
@@ -77,9 +92,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourPaletteAdapter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

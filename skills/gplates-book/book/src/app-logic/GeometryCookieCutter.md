@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/GeometryCookieCutter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryCookieCutter` answers "which plate does this point or line fall inside?" by turning a set of reconstructed polygon geometries into a `GPlatesMaths::PolygonPartitioner` per polygon and testing arbitrary geometry against them. It accepts static reconstructed polygons (`ReconstructedFeatureGeometry`), `ResolvedTopologicalBoundary` and `ResolvedTopologicalNetwork` geometries either pre-separated, combined in one `ReconstructionGeometry` list, or resolved on the fly from feature collections via a `ReconstructMethodRegistry` and `ReconstructionTreeCreator`.
+
+Priority order matters because polygons can overlap: topological networks (and their interior static polygons) partition first, then topological boundaries, then plain static polygons, since the closed plate polygons currently leave holes where deforming networks exist. Within each group the polygons are optionally sorted by plate ID or by area (highest first) so that, when boundaries overlap, the more specific (further from the anchor, or smaller) plate wins the assignment. When grouping is turned off, the internal `FeatureOrderVisitor` instead walks the source feature collections to recover the original feature order and preserves it via a `std::multimap` keyed by that order, rather than by plate ID or area.
+
+Callers such as `PartitionFeatureUtils` and `AssignPlateIds` use `partition_geometry`/`partition_geometries` to split arbitrary geometry into inside/outside pieces per polygon, or `partition_point` for a single point-in-polygon query.
 
 ## Declared types
 
@@ -73,9 +75,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/GeometryCookieCutter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- If overlapping partitioning polygons are passed in, results depend on the final ordering established by the constructor (grouping, then plate-ID/area sort, then feature order): a point inside two polygons is assigned to whichever comes first in that order, not to some notion of best fit.
+- Ideally partitioning polygons should not overlap, but the class tolerates it rather than asserting; the sort options exist specifically to make the overlap behaviour predictable.
+- The object is `boost::noncopyable` and immutable after construction — it captures a single reconstruction time and one fixed set of partitioning polygons, so a new instance is needed per reconstruction time.
 
 ## Used by
 

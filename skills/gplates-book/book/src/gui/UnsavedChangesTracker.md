@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/UnsavedChangesTracker tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`UnsavedChangesTracker` draws together, in one place, everything the GUI shows
+the user about which loaded files have unsaved changes, so that closing the
+window, clearing the session, or loading a previous session/project can warn
+before data is lost. The actual saved/unsaved state lives in the app-logic
+tier (`FeatureCollectionFileState`, `FeatureCollectionFileIO`); this class
+only observes it and drives the presentation — status icons on
+`ViewportWindow`, highlighted rows in `ManageFeatureCollectionsDialog`, and the
+confirmation prompt in `UnsavedChangesWarningDialog`.
+
+It tracks "unsaved" at the level of individual `FeatureCollectionHandle`s by
+keeping a `LoadedFile` entry — a `file_reference` plus a
+`FeatureCollectionHandle::weak_ref` — for every currently loaded file, and
+attaching an `UnsavedChangesCallback` (a `WeakReferenceCallback<FeatureCollectionHandle>`)
+to each one so `publisher_modified()` fires back into the tracker whenever
+that collection's revision changes. `connect_to_file_state_signals()` keeps
+`d_loaded_files` in sync as files are added and removed by
+`FeatureCollectionFileState`. `close_event_hook()`,
+`clear_session_event_hook()`, `load_previous_session_event_hook()` and
+`load_project_event_hook()` are the four places `ViewportWindow` calls into it
+before letting one of those actions proceed, each returning an
+`UnsavedChangesResult` that tells the caller whether to go ahead, discard, or
+abort.
 
 ## Declared types
 
@@ -71,9 +90,24 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/UnsavedChangesTracker tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `init()` must be called after `ViewportWindow::setupUi()`, not from the
+  constructor — it wires up buttons and menus that do not exist yet at
+  construction time.
+- `d_loaded_files` deliberately keeps its own `LoadedFile` entries (a
+  `file_reference` plus a `FeatureCollectionHandle::weak_ref`) instead of
+  iterating `FeatureCollectionFileState`'s own list directly, because
+  `handle_file_state_file_about_to_be_removed()` fires *before* the file is
+  removed, and iterating the file state's live list at that point would still
+  include the file that is about to disappear.
+- `d_loaded_files` cannot be a `std::set` of weak-refs: the `UnsavedChangesCallback`
+  is attached to each weak-ref only after it is copied into the container, and
+  callbacks are not copied — so the weak-ref must be modifiable in place after
+  insertion, which a set does not allow.
+- `d_warning_dialog_ptr` is parented to `ViewportWindow`, so its lifetime is
+  managed by Qt's parent/child ownership rather than by this class.
+- `file_io_feedback()` and `manage_feature_collections_dialog()` locate their
+  target objects via `ViewportWindow`'s Qt object tree rather than being
+  passed in, to avoid widening the constructor's parameter list further.
 
 ## Used by
 

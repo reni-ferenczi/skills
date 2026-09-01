@@ -9,9 +9,32 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/FeatureCollectionFileFormatRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Registry` is the single map from a `FeatureCollectionFileFormat::Format` to
+everything needed to detect, read, write and describe that format: its short
+description, its filename extensions, its `classifications_type` (which
+kinds of features it can hold), a detector function, optional reader and
+writer-visitor factory functions, and an optional default
+`file-io/FeatureCollectionFileFormatConfiguration`. It exists so that code
+outside `file-io` — the CLI, `gui/FileIOFeedback`, export dialogs — can go
+from a `QFileInfo` or a `Format` value to "read/write this file" or "does
+this format support X" without knowing about any concrete reader/writer
+class (`GpmlReader`, `OgrWriter`, `PlatesRotationFileProxy`, etc.); those
+concrete classes are wired in once, in `register_default_file_formats()`,
+via `boost::function` objects stored per format.
+
+Format detection (`get_file_format()`) walks the registered formats in
+insertion order and asks each one's detector function to test the file's
+extension (and, for GPML/GPMLZ, a magic-number sniff of the file's first
+bytes via `identify_gpml_or_gpmlz_by_magic_number()`, since both formats
+share confusable extensions and a `.gpml` file can in practice be gzip
+data or vice versa). `read_feature_collection()`/`write_feature_collection()`
+resolve the format for a `File::Reference` this way and then simply invoke
+the matching registered function, raising `FileFormatNotSupportedException`
+if the format is unregistered or does not support the requested direction.
+`FileFormatInfo` (private) is the per-format record actually stored in
+`d_file_format_info_map`; the free functions and `FILE_FORMAT_EXT_*`
+constants at file scope in the `.cc` are the concrete detector/reader/writer
+implementations registered for each built-in format.
 
 ## Declared types
 
@@ -96,9 +119,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/FeatureCollectionFileFormatRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_file_format()` for writing relies purely on filename extension since
+  the file being written may not exist yet or may not yet contain the final
+  bytes; `does_file_format_support_writing()`'s doc comment calls this out
+  explicitly as the reason it differs from the read-side check, which can
+  also sniff file contents.
+- Almost every accessor (`get_short_description()`, extension lookups,
+  `get_default_configuration()`, `read_feature_collection()`,
+  `write_feature_collection()`, ...) throws `FileFormatNotSupportedException`
+  for a `Format` that was never registered or has been
+  `unregister_file_format()`-ed; there is no "return empty/default" path.
+- `Registry` is `boost::noncopyable`: it is meant to be built once (typically
+  via the default constructor, which calls `register_default_file_formats()`)
+  and passed around by reference, not duplicated.
+- `get_default_configuration()` returning a base `Configuration` (rather than
+  `boost::none`) means the format is registered and has *some* default, even
+  though that default carries no options — callers must not treat "got a
+  `Configuration`" as "format has configurable options".
 
 ## Used by
 

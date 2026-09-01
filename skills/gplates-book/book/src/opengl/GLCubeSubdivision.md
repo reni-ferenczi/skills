@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLCubeSubdivision tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLCubeSubdivision` computes the view/projection transforms, frustums, spherical bounding polygons and oriented bounding boxes for a quad-tree subdivision of a cube face, at any `level_of_detail`/`tile_u_offset`/`tile_v_offset` address. Because the cube is a gnomonic projection of the sphere (great circles project to straight lines), each tile's frustum, when projected onto the sphere, is bounded by exactly four great-circle arcs — which is what `get_bounding_polygon` and `get_oriented_bounding_box` exploit to build cheap spatial bounds for culling and raster look-up.
+
+Every query has a "loose" counterpart (`get_loose_projection_transform`, `get_loose_frustum`, `get_loose_bounding_polygon`, `get_loose_oriented_bounding_box`) that doubles the tile's extent about its own centre rather than the true tile size; see `CubeQuadTreePartition` for why loose bounds are needed. `get_expand_frustum_ratio` and the `expand_frustum_ratio` passed to `create` let a frustum be widened slightly so that a tile's border texel centres land exactly on the frustum planes, which is required to avoid seams when bilinearly-filtered tile textures are stitched together; this expansion is unnecessary for nearest-texel filtering.
+
+The `zNear`/`zFar` passed to `create` are chosen close to the sphere's surface (`zNear` near zero) specifically to keep large, untessellated geometry arcs from being clipped by the near plane, at the cost of depth-buffer precision — acceptable because most cube-based rendering has no real depth complexity.
 
 ## Declared types
 
@@ -56,9 +58,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLCubeSubdivision tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `zNear` cannot be zero (a zero-distance frustum has no valid projection matrix) and is deliberately kept small but not vanishingly so, to balance near-plane clipping avoidance against numerical precision in the projection matrix.
+- `tile_u_offset` and `tile_v_offset` must lie in `[0, 2^level_of_detail)`; this is documented but not asserted in the header.
+- Loose-tile methods double `expand_frustum_ratio` (`2 * d_expand_frustum_ratio`) rather than recomputing it, relying on the fact that the same ratio works for both loose and non-loose tiles when loose texels are twice the size of non-loose ones.
 
 ## Used by
 

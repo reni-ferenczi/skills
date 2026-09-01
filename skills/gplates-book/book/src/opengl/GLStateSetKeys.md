@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLStateSetKeys tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLStateSetKeys` maps every distinct piece of OpenGL state that GPlates tracks
+(a `glEnable` capability, a bound buffer target, a texture-unit parameter, a
+generic vertex attribute, and so on) onto a small dense integer, `key_type`.
+That key is what `GLState` uses to index its array of current `GLStateSet`
+values, so setting or querying a piece of state is an array lookup rather than
+a map lookup or a chain of comparisons.
+
+State that exists regardless of the GPU (like `glEnable(GL_BLEND)` or
+`glDepthFunc`) gets a fixed key from the anonymous enum. State whose extent
+depends on the driver's reported limits — the number of texture image units,
+texture coordinate sets, or generic vertex attributes — cannot be enumerated
+at compile time, so `GLStateSetKeys` allocates a base key for each such
+category after the fixed keys and computes per-unit keys by adding a
+fixed per-unit offset (`TextureImageUnitKeyOffsetType`,
+`TextureCoordKeyOffsetType`, `GenericVertexAttributeKeyOffsetType`) multiplied
+by the unit or attribute index onto that base. `create` builds one instance
+from the queried `GLCapabilities`, after which `get_num_state_set_keys`
+reports the total the caller must size its state array to.
 
 ## Declared types
 
@@ -66,9 +81,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLStateSetKeys tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The instance is immutable once created (`create` returns a
+  `non_null_ptr_to_const_type`), and its key layout is fixed for the lifetime
+  of the `GLCapabilities` it was built from — the number and offsets of keys
+  depend on driver-reported limits, so a `GLStateSetKeys` built for one
+  context is not valid for another with different capabilities.
+- `get_polygon_mode_key` requires the caller to split `GL_FRONT_AND_BACK`
+  into separate `GL_FRONT` and `GL_BACK` requests; passing it directly is not
+  handled.
+- Unsupported enum values passed to the `get_*_key` methods trigger
+  `GPlatesGlobal::Abort` rather than returning an error code.
 
 ## Used by
 

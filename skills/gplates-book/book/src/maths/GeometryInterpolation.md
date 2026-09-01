@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeometryInterpolation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Interpolates between two `PolylineOnSphere` geometries along small circle arcs emanating from a rotation axis, with fine control over latitude and longitude alignment. The main `interpolate` functions generate intermediate polylines at specified intervals (either by distance or by explicit interpolation factors from 0 to 1). The implementation handles alignment of corresponding points at equal latitudes in the reference frame of the rotation axis, manages overlapping and non-overlapping latitude ranges, and can resolve longitude overlaps by copying points from one polyline to the other.
 
 ## Declared types
 
@@ -66,9 +64,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeometryInterpolation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

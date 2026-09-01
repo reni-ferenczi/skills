@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Symbol tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::Symbol` is a small value struct describing how to draw a feature as a symbol instead of its native geometry — a `SymbolType` (triangle, square, circle, cross or strain marker), a size, whether it is filled, and optional per-axis scale and rotation angle. `symbol_map_type` associates a `GPlatesModel::FeatureType` with the `Symbol` used to render features of that type, which is how `presentation/ReconstructionGeometryRenderer` and `view-operations/RenderedGeometryFactory` decide to draw symbols instead of the feature's actual geometry; `get_symbol_type_from_string()` and `symbol_text_map_type` support parsing the symbol type from text, used when reading symbol configuration such as `file-io/SymbolFileReader`'s files.
+
+`Symbol` participates in the Scribe serialisation used for sessions and projects: both the struct itself and its `SymbolType` enum have `transcribe()` overloads. The enum is transcribed by string id (via `GPlatesScribe::transcribe_enum_protocol`) rather than by numeric value, so its serialised form is stable even if the enum's declaration order changes.
 
 ## Declared types
 
@@ -60,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Symbol tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`Symbol::transcribe()` treats every field as optional on read: if a field fails to transcribe, it falls back to that field's default-constructed value rather than failing the whole transcription, so older or newer saved sessions stay forward/backward compatible as fields are added. The enum's string ids used in serialisation (`"TRIANGLE"`, `"SQUARE"`, etc.) must never change once shipped, even if the C++ enumerator names do, or saved sessions/projects referencing them will fail to load. Adding a new `SymbolType` value also requires adding it to `transcribe()`'s `enum_values` table.
 
 ## Used by
 

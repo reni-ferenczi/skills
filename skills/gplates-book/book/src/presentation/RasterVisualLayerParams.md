@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/RasterVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterVisualLayerParams` holds the presentation-only settings for a raster
+layer — colour palette, opacity, intensity and the normal-map surface relief
+scale — as distinct from `GPlatesAppLogic::RasterLayerParams`, which holds the
+app-logic side (which raster feature, its statistics, its type). It follows
+the standard `VisualLayerParams` pattern of double-dispatching through
+`accept_visitor()` to `ConstVisualLayerParamsVisitor`/`VisualLayerParamsVisitor`,
+and calling `emit_modified()` after every setter so the GUI (in particular
+`RasterLayerOptionsWidget`) is notified.
+
+`handle_layer_modified()` is where the two sides meet: it `dynamic_cast`s the
+underlying `LayerParams` to `RasterLayerParams` and, the first time a raster
+feature is available, auto-initialises the colour palette's mapped range from
+the raster's `RasterStatistics` mean and standard deviation (scaled by the
+palette's configured deviation-from-mean) via
+`RemappedColourPaletteParameters::map_palette_range()`. This one-shot
+initialisation is guarded by `d_colour_palette_parameters_initialised_from_raster`,
+which is also set once a caller explicitly calls `set_colour_palette_parameters()`,
+so a user-chosen palette is never overwritten by the statistics-based default.
 
 ## Declared types
 
@@ -57,9 +72,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/RasterVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_modulate_colour()` packs `d_intensity` into the RGB channels and
+`d_opacity` into alpha as `(I, I, I, O)` — it is not an independent colour
+setting. `d_opacity` and `d_intensity` are documented as ranging over `[0,1]`
+but setters do not clamp, so callers are responsible for staying in range.
+`d_raster_type` reflects the raster as of the last `handle_layer_modified()`
+call, not necessarily the current state, if the layer has since changed
+without triggering that callback.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FileIOFeedback tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FileIOFeedback` wraps GPlates' app-logic file loading and saving (`GPlatesAppLogic::FeatureCollectionFileIO`, `SessionManagement`) with the GUI feedback users expect: it prompts for filenames via `SaveFileDialog`/`OpenFileDialog`, and turns app-logic exceptions into error dialogs rather than letting them propagate. It was factored out of `ManageFeatureCollectionsDialog` so the load/save logic can be reused from menu actions, drag-and-drop, session restore and project files alike. Every load or session-restore path funnels through `try_catch_file_or_session_load_with_feedback`, which takes a `boost::function<bool ()>` — one of the free `*_try_catch_function` adapters that bind a specific app-logic call (`open_files_try_catch_function`, `reload_file_try_catch_function`, `open_previous_session_try_catch_function`, `open_project_try_catch_function`) — so the same exception handling and error reporting is written once and shared by every entry point.
+
+Saving is layered similarly: `save_file_as_appropriate` picks between `save_file_in_place`, `save_file_as` and `save_file_copy` depending on whether the file already has a name and format, `get_save_file_filters_for_file` builds the matching Save-dialog filters from the `FeatureCollectionFileFormat::Registry` and `ReconstructMethodRegistry`, and `file_is_unnamed` supplies the shared definition of "not yet saved anywhere" that `save_files`/`save_all` use to decide which loaded files to touch. `CollectLoadedFilesScope` is a small RAII helper, independent of the rest of the class, that listens to `FeatureCollectionFileState::file_state_files_added` for the lifetime of the scope and reports which files were newly loaded — used where a caller needs to know exactly which files a load operation added, such as project or session restore.
 
 ## Declared types
 
@@ -104,9 +104,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FileIOFeedback tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `manage_feature_collections_dialog` and `unsaved_changes_tracker` are not owned here: both are looked up through `d_viewport_window_ptr` (the latter via the Qt object tree), so this class depends on `ViewportWindow` having already constructed those objects.
+- `open_project_internal` and the raw `save_file(File::Reference &, ...)` overload skip the unsaved-changes prompt that the public `open_project`/`save_*` entry points perform — call them directly only when that check has already been handled (e.g. from inside `try_catch_file_or_session_load_with_feedback`).
+- Every public load/save entry point is expected to route through `try_catch_file_or_session_load_with_feedback` so that app-logic exceptions are caught and reported once, in one place, instead of duplicating error-dialog logic at each call site.
 
 ## Used by
 

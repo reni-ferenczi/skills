@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportTotalRotationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportTotalRotationAnimationStrategy` writes finite *total* rotations — from the current reconstruction time back to present day — at each animation frame, as opposed to `ExportStageRotationAnimationStrategy`'s stage-to-stage rotations. Like the stage variant, `Configuration::RotationType` folds together whether the rotation is `RELATIVE` (moving-to-fixed plate pair) or `EQUIVALENT` (to the anchor plate) with the output field separator, and it reuses `ExportOptionsUtils::ExportRotationOptions` for identity/Euler-pole formatting.
+
+`do_export_iteration` walks every edge of the default reconstruction layer's `GPlatesAppLogic::ReconstructionTree`, taking each edge's `get_relative_rotation()` (relative) or `get_composed_absolute_rotation()` (equivalent), and writes one line per plate id via `GPlatesGui::CsvExport`. It always exports the tree from the *default* reconstruction layer, not a layer the user selects.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportTotalRotationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+When a reconstruction has more than one reconstruction-tree-producing layer, this strategy always exports the default layer's tree; there is no way to export a different one (noted as a FIXME in the implementation).
 
 ## Used by
 

@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlOutputVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlOutputVisitor` is the writer half of the GPML format: a `ConstFeatureVisitor`
+that serialises each feature and property value it visits as GPML/GML XML through
+an `XmlWriter`. It is the mirror image of `GpmlPropertyReader` and
+`GpmlStructuralTypeReaderUtils` — one `visit_*` override per concrete property-value
+type, each writing that type's own element structure — so extending GPML to a new
+property type means adding a visitor override here as well as a reader.
+
+The class supports two ways of directing output: opening and owning a `QFile` for a
+given `FileInfo` (optionally routed through a `GzipFile` when `use_gzip` is set, for
+`.gpmlz`/`.gpml.gz`), or writing to a caller-supplied `QIODevice` it does not own.
+`start_writing_document` writes the XML prologue and the `gpml:FeatureCollection`
+root element, stamping it with the current `Gpgim` version and recording that
+version as a tag on the feature collection so later code can tell which GPGIM
+schema a collection was last saved against.
 
 ## Declared types
 
@@ -104,9 +115,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlOutputVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+File ownership depends on which constructor is used: the `FileInfo` constructor
+creates and owns `d_qfile_ptr`, opening it for writing (throwing
+`ErrorOpeningFileForWritingException` on failure) and closing it when the visitor
+is destroyed; the `QIODevice*` constructor leaves `d_qfile_ptr` empty and leaves
+device lifetime to the caller. The destructor wraps its cleanup in `try`/`catch(...)`
+so no exception escapes from it. When `use_gzip` is true, `d_gzip_file` sits between
+the XML writer and `d_qfile_ptr`, compressing at the zlib default level; the header's
+comment on `d_qfile_ptr` documents the intended call sequence
+(`FileInfo::get_writer()` creates the visitor, the caller visits the feature
+collection, then the visitor going out of scope closes the file).
 
 ## Used by
 

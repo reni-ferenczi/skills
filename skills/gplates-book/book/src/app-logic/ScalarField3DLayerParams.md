@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ScalarField3DLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The `LayerParams` for a 3D scalar field layer: it holds the feature reference for the scalar field and caches metadata read out of the field's on-disk file — depth-layer radius range and per-field statistics (min/max/mean/standard deviation of both the scalar values and their gradient magnitudes). These are the numbers the scalar-field rendering options widget uses to set up sensible default colour-mapping ranges without having to reopen the file itself.
+
+`set_scalar_field_feature` does the actual work: it runs `ExtractScalarField3DFeatureProperties` on the feature to find the field's filename, opens it with `GPlatesFileIO::ScalarField3DFileFormat::Reader`, and copies the precomputed statistics out of the file header into this object's fields, emitting the `modified` signal (inherited from `LayerParams`) whichever way the call ends. Everything is cleared to `boost::none` up front, so a failed lookup — no feature, no filename, a missing file, or an unsupported/corrupt file format (caught and logged with `qWarning`) — leaves all the optionals unset rather than stale from a previous field.
 
 ## Declared types
 
@@ -62,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ScalarField3DLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All the statistic getters are documented as reflecting the field at present day; the header notes they will need to become time-dependent if/when time-varying scalar fields are supported, so treat the current values as a present-day snapshot, not a per-reconstruction-time quantity. `set_scalar_field_feature` swallows `UnsupportedVersion` and `FileFormatNotSupportedException` (logging via `qWarning` and leaving the optionals empty) rather than propagating them, so callers cannot distinguish "no field" from "field present but unreadable" except by checking the application's log.
 
 ## Used by
 

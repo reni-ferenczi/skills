@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FeatureTableModel tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureTableModel` is the `QAbstractTableModel` behind the search-results and clicked-feature tables: each row is a `ReconstructionGeometryRow` wrapping a `GPlatesAppLogic::ReconstructionGeometry`, held in `d_sequence`, with columns such as feature type, plate ID, name and time range computed on demand by per-column accessor functions (`get_feature_type`, `get_plate_id`, `get_name`, `get_time_begin`, ...) driven by the static `column_heading_info_table` dispatch table. It always reports itself as flat/tabular (`parent()`/`index()`/`hasChildren()` are overridden to deny any tree structure) even though `QAbstractTableModel` never asks for a hierarchy, purely to make Views that probe for tree-ness behave.
+
+The model tracks two independent kinds of change: `handle_feature_modified`, wired to `FeatureFocus::focused_feature_modified`, refreshes rows whose feature was just edited; `handle_rendered_geometry_collection_update`, wired to the `RenderedGeometryCollection`'s `collection_was_updated` signal, re-resolves each row's `ReconstructionGeometry` against the newly computed reconstruction (since a `ReconstructionGeometry` is only valid for the reconstruction it came from) by matching against the `RECONSTRUCTION_LAYER`'s current geometries via `find_reconstruction_geometries_observing_feature`, using `d_rendered_geometry_collection` as the short-list to avoid picking up stale or invisible geometries. Callers that mutate `geometry_sequence()` directly must bracket the change with the `sequence_about_to_be_changed`/`sequence_changed` or `begin_insert_features`/`end_insert_features` (and remove equivalents) pairs so Qt's views stay consistent.
 
 ## Declared types
 
@@ -115,9 +115,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FeatureTableModel tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The model is currently non-editable; `get_index_for_feature` is compiled out (`#if 0`) as "not as easy to implement right now", so lookups by feature are done via `get_index_for_geometry` instead.
+- If a row's `ReconstructionGeometry` can no longer be matched to the current reconstruction (e.g. the reconstruction time moved outside the feature's valid time range), `handle_rendered_geometry_collection_update` deliberately leaves the stale row in place rather than removing it, so the row can re-highlight if the time changes back.
+- When the same feature is reconstructed by two different layers, `handle_rendered_geometry_collection_update` picks whichever matching `ReconstructionGeometry` is found first and cannot guarantee it belongs to the same layer as the original — a known limitation noted in the source.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SelectionWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SelectionWidget` hides the choice between `QListWidget` and `QComboBox` behind one interface, so code that presents a single-choice-from-many control does not need to be written twice or special-cased per display style. Exactly one of `d_listwidget` (wrapped as the private `InternalListWidget`, which exposes a couple of `QListWidget`'s protected index-lookup methods) or `d_combobox` is constructed, chosen by the `DisplayWidget` enum passed to the constructor; every public method dispatches on which one is non-null.
+
+Items are added and retrieved through `add_item<T>()` and `get_data<T>()`, which store the caller's `user_data` in a `QVariant` via `Qt::UserRole` (list widget) or item data (combo box) — `T` must be storable in a `QVariant`, and a custom type needs `Q_DECLARE_METATYPE`. The two backing widgets' distinct signals (`itemActivated`/`currentRowChanged` vs `currentIndexChanged`) are funnelled through private slots into the widget's own `item_activated` and `current_index_changed` signals, giving callers one signal pair regardless of the underlying widget.
 
 ## Declared types
 
@@ -53,9 +53,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SelectionWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `item_activated` is only ever emitted when the display widget is a `QListWidget`; a combo box never produces the equivalent double-click/activation gesture, so code that needs that signal must construct the widget with `Q_LIST_WIDGET`.
+- `get_data<T>()` returns `boost::none` both when the index is invalid and when the stored `QVariant` cannot convert to `T` — the two failure cases are indistinguishable to the caller.
 
 ## Used by
 

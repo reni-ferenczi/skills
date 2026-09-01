@@ -8,9 +8,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/CopyConst tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::CopyConst<SrcType, DstType>` is a small compile-time trait
+that transfers the const-qualification of `SrcType` onto `DstType`: its
+`::type` member is `DstType` with any `const` stripped, unless `SrcType` is
+itself `const`, in which case the partial specialisation adds `const` to
+`DstType` instead. It is the standard trick for writing a single template
+that generates both a const and non-const variant of a visitor or accessor —
+most visibly the const/non-const pairs of `FeatureVisitor`,
+`ReconstructionGeometryVisitor` and `LayerProxyVisitor`, where a shared
+template parameter for "the type being visited" needs to propagate its
+const-ness into the visitor's return or parameter types without duplicating
+the whole class.
 
 ## Declared types
 
@@ -41,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/CopyConst tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

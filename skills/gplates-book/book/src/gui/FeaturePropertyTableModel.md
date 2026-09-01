@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FeaturePropertyTableModel tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeaturePropertyTableModel` is a `QAbstractTableModel` that exposes the top-level properties of a `GPlatesModel::FeatureHandle::weak_ref` as a two-column (name, value) table, for use with Qt's model/view framework via `QTableView::setModel()` — distinct from GPlates' own application-level model/view split. Each row is backed by a `FeaturePropertyTableInfo` entry cached in `d_property_info_cache`, recording the property's `PropertyName`, its `FeatureHandle::iterator`, and whether it is inline-editable; `set_feature_reference` and `refresh_data` are the slots `EditFeaturePropertiesWidget` uses to point the model at a feature and rebuild that cache.
+
+Cell values are produced by the free functions `top_level_property_to_simple_qvariant` and `top_level_property_to_verbose_qstring`, which render a `TopLevelProperty`'s first value plainly or verbosely depending on the requested Qt role.
 
 ## Declared types
 
@@ -69,9 +69,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FeaturePropertyTableModel tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Inline editing is currently disabled everywhere: the header notes a `FeatureHandle::iterator` is not always sufficient to address a value once time-dependent property values are involved, and points to Bug #77 for the details — `is_property_editable_inline` and `editable_inline` exist for a future rewrite, not present behaviour.
+- `get_property_iterator_for_row` throws an STL out-of-bounds exception for an invalid row rather than returning an error value, while `get_row_for_property_iterator` returns `-1` for no match — callers must handle the two failure modes differently.
+- `calculate_number_of_properties` exists specifically to work around a Qt 4.3.0 `QTableView` regression (Trolltech Bug #169255); it is not otherwise part of the model's logic.
 
 ## Used by
 

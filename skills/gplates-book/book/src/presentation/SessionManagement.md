@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/SessionManagement tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesPresentation::SessionManagement` is the `QObject` that owns the "which files were loaded and what did the Layers system look like" behaviour of GPlates: recent-session persistence via `UserPreferences`, and the newer project-file (`.gproj`) mechanism, both built on top of `Session`/`InternalSession`/`ProjectSession`. It exposes three lightweight, read-only wrapper classes — `SessionInfo`, `InternalSessionInfo` and `ProjectInfo` — so callers such as the Recent Sessions menu can inspect a past session's description, timestamp and files without holding a reference to the underlying `InternalSession`/`ProjectSession` object itself.
+
+The public surface splits into the recent-sessions path (`get_recent_session_list()`, `load_previous_session()`, `save_session()`) and the project path (`is_current_session_a_project()`, `load_project()`, `save_project()`), which converge on shared private helpers — `clear_session_state()`, `load_session_state()`, `save_session_state()` — that actually unload/reload files, layers and application state. `clear_session()` and `close_event_hook()` are the entry points used respectively when the user asks to start fresh and when GPlates is shutting down and needs to remember the current file set for next time.
 
 ## Declared types
 
@@ -65,9 +65,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/SessionManagement tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- "Saving" a session records only the list of loaded files and application/layer state, never feature data itself — the files must still exist on disk (or be remapped, see `InternalSessionInfo::set_remapped_file_paths()`) for a saved session to be restorable.
+- Loading a session (`load_session_state()`) blocks `ApplicationState::reconstruct` signals and groups layer removals for the duration of the switch, to avoid triggering a cascade of intermediate reconstructions while the old layers are torn down and the new ones built; if loading the requested session fails, it falls back to restoring the session that was current beforehand (saved just before the switch began) rather than leaving GPlates in a partially-loaded state.
+- `unload_all_files()`/`clear_session_state()` remove auto-created layers as a side effect of unloading their input files, but user-created layers are not removed automatically and must be deleted explicitly, or they would otherwise accumulate across repeated session switches.
+- `d_app_state_ptr` and `d_view_state_ptr` are `QPointer`s rather than owned references, reflecting that `SessionManagement` does not own `ApplicationState`/`ViewState` and must tolerate them (in principle) being destroyed first.
 
 ## Used by
 

@@ -14,7 +14,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [gpgim](../src/qt-resources/gpgim/gpgim.md) | 2 | 4442 | 0 | (pending) |
+| [gpgim](../src/qt-resources/gpgim/gpgim.md) | 2 | 4442 | 0 | The GPGIM schema data files (feature types, properties, structural types) that GPlatesModel::Gpgim parses at startup |
 
 ## Other files
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/KeyValueDictionaryFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`KeyValueDictionaryFinder` collects every `GpmlKeyValueDictionary` property value found on a feature, optionally restricted to specific property names via the same constructor/`add_property_name_to_allow()` allow-list pattern used by `GeometryFinder`. `GpmlKeyValueDictionary` is the property-value type GPlates uses to hold imported shapefile attributes, so this finder is the generic entry point onto that data; `ShapefileAttributeFinder` builds on the same dictionary type to pull out one named attribute.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/KeyValueDictionaryFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The collected dictionaries are stored as non-owning `non_null_ptr_to_const_type`s built with `NullIntrusivePointerHandler`, so they stay valid only as long as the underlying feature property they point into is still alive.
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLContextImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLContextImpl` supplies the two concrete `GLContext::Impl` backends that adapt Qt's OpenGL context types to the `GLContext` abstraction: `QGLWidgetImpl` wraps a `QGLWidget` (the on-screen canvas used by `GlobeCanvas` and `MapCanvas`/`MapView`), and `QGLPixelBufferImpl` wraps a `QGLPixelBuffer` (used for off-screen rendering, notably by `GLOffScreenContext`). Both simply forward `make_current`, `get_qgl_format`, `get_width` and `get_height` to the wrapped Qt object, converting widget/pixel-buffer dimensions to device pixels by multiplying by `devicePixelRatio` since OpenGL dimensions are expected in device pixels rather than logical ones.
 
 ## Declared types
 
@@ -52,9 +50,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLContextImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `QGLWidgetImpl` binds to its `QGLWidget` for life via a reference, but `QGLPixelBufferImpl` holds its `QGLPixelBuffer` by pointer and exposes `set_pixel_buffer` to repoint it — the two wrappers are not interchangeable in this respect, since only the pixel-buffer variant supports being retargeted after construction.
+- Neither wrapper takes ownership of the Qt object it wraps; the caller must keep the `QGLWidget` or `QGLPixelBuffer` alive for as long as the `GLContextImpl` is in use.
 
 ## Used by
 

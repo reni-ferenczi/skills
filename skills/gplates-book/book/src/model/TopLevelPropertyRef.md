@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/TopLevelPropertyRef tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopLevelPropertyRef` is a proxy object, not a value type client code is expected to name: it is what a `FeatureHandle::children_iterator` returns on dereference, standing in for direct access to the referenced `TopLevelProperty`. Reading through it (`operator->`, `operator*`, or the implicit conversion to `non_null_ptr_to_const_type`) resolves the current property by looking up `d_index` on the feature via `d_feature_ref`, a `WeakReference<FeatureHandle>`, each time it is dereferenced, so it always reflects the feature's latest revision rather than a snapshot taken when the iterator was obtained.
+
+Writing through it — `*iter = new_property` — is what lets the model know a `TopLevelProperty` changed: `operator=` forwards to `FeatureHandle::set()`, which is where a new revision is created and, per the header's own example, an undo/redo `Transaction` gets generated. This indirection is the mechanism that captures in-place edits to a feature's properties for the undo-redo system without exposing the revisioning machinery to callers, who just assign through the dereferenced iterator as if it were a plain pointer.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/TopLevelPropertyRef tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Dereferencing (`operator->`, `operator*`, `get()`) is undefined behaviour if the index is no longer valid (the property was removed, or the feature deactivated); `operator=`, by contrast, is defensive and silently does nothing if `d_index` is invalid or `d_feature_ref` no longer resolves. Obtained through a `const_children_iterator` (a const `FeatureHandle`), assignment through it fails because `FeatureHandle::set()` needs a non-const feature reference that a const-context iterator cannot supply.
 
 ## Used by
 

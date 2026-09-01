@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/InvalidGreatCircleArcException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown when an attempt is made to create an invalid `GreatCircleArc` that violates the class invariant. The exception carries a message describing the specific conditions that caused the invariant violation and inherits from `MathematicalException`.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/InvalidGreatCircleArcException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

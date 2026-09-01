@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTopologicalLineSection tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlTopologicalLineSection` implements `gpml:TopologicalLineSection`, one concrete kind of `GpmlTopologicalSection` used as an element of `GpmlTopologicalLine` (and of the boundary/interior sequences of topological polygons and networks). Rather than storing geometry directly, a section holds a `GpmlPropertyDelegate` pointing at the line geometry property of another feature, plus a `get_reverse_order()` flag saying whether that geometry should be traversed backwards when the sections are concatenated into a continuous line — since two adjacent sections must join head-to-tail regardless of how each source feature's coordinates happen to be ordered.
+
+`app-logic/TopologyGeometryResolver` and `app-logic/TopologyNetworkResolver` are the primary consumers: they resolve each section's delegate to the referenced feature's actual geometry at a given reconstruction time and stitch the (possibly reversed) pieces together.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTopologicalLineSection tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`directly_modifiable_fields_equal()` compares only the source-geometry delegate (by value, via `GpmlPropertyDelegate::operator==`); `d_reverse_order` is not part of that equality check, so two sections that reference the same source geometry but disagree on traversal direction currently compare equal for property-value-equality purposes.
 
 ## Used by
 

@@ -8,9 +8,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/CubeQuadTreePartitionUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Header-only algorithms that operate on `CubeQuadTreePartition`, the spatial
+partition built on the six-face cube quad tree: copying one partition into
+another (`mirror`, `merge`), and finding intersections both between two
+partitions and within a single partition (`CubeQuadTreePartitionIntersectingNodes`,
+`CubeQuadTreeIntersectingNodes`, `visit_potentially_intersecting_elements`).
+`mirror` walks the source tree creating matching nodes in the destination and
+hands each root or node element to a caller-supplied function, so callers
+choose what "mirroring" an element means (e.g. reconstructing it to a new
+time) rather than this code assuming a copy; `merge` is the special case that
+just adds source elements into an existing destination partition.
+
+The two `*IntersectingNodes` classes are built to be instantiated recursively
+alongside the caller's own quad-tree traversal — one instance per node,
+constructed either at a cube-face root or from a parent instance plus a child
+offset — accumulating, at each depth, the small fixed-size set of nodes from
+a second partition that could intersect the current node (at most nine for
+partition-vs-partition, four for a regular quad tree against a partition,
+since a regular quad tree's nodes cannot be "loose"/padded). This turns an
+O(depth) intersection search into a constant amount of work per node,
+consumed by uses such as reconstructing polygons against overlapping raster
+tiles or finding features that overlap between two groups.
+
+`visit_potentially_intersecting_elements` handles the pairwise case within a
+single partition, e.g. testing every polygon in a partition against every
+other polygon that could overlap it: it walks the tree once, at each node
+visiting the node's own elements against each other and against all elements
+gathered so far in ancestor and same-depth sibling ranges, using an
+intrusive, tail-sharing linked list (`Implementation::ElementRangeListNode`) so
+that an ancestor's element range can be shared cheaply across many
+descendant traversals without copying.
 
 ## Declared types
 
@@ -102,9 +129,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/CubeQuadTreePartitionUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `ElementRangeListNode` lists used during `visit_potentially_intersecting_elements`
+traversal are built on the call stack and rely on tail-sharing: unwinding the
+stack at one level leaves lists still referenced further up the call chain
+intact, so the traversal must remain a plain recursive walk for this to be
+safe — it is not something that can be flattened into an explicit stack of
+heap-allocated nodes without also copying the lists. When visiting sibling
+neighbours, each pair of elements is deliberately visited only once by
+comparing element memory addresses to break the symmetry; ancestor neighbour
+pairs are visited without that check because the ancestor traversal never
+revisits the descendant's elements from the other direction.
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/CompilerWarnings tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CompilerWarnings.h` gives call sites a compiler-neutral way to push, pop, enable and disable specific warnings around a block of code, without sprinkling `#ifdef __GNUC__` / `#ifdef _MSC_VER` guards through the rest of the codebase. Each macro expands to the gcc `_Pragma()` form or the MSVC `__pragma()` form depending on which compiler is active, and to nothing on any other compiler.
+
+The header exists because `#pragma` cannot appear inside another macro's expansion (the preprocessor treats the leading `#` as the stringizing operator), so gcc's warning pragmas have to be built through `_Pragma()` and the `STRINGIFY_WARNING` helper instead. This is why the header is used so widely across the tree: any file that needs to silence a specific warning around third-party or generated code (Qt moc output, Boost, GDAL/OGR headers, etc.) includes it.
 
 ## Declared types
 
@@ -37,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/CompilerWarnings tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every `PUSH`/`POP`/`ENABLE`/`DISABLE` macro here is compiler-specific: the gcc variants expand to nothing under MSVC and vice versa, so a `PUSH_GCC_WARNINGS` must always be paired with a matching `POP_GCC_WARNINGS` (likewise for MSVC) rather than mixed, or the push/pop stack for the untargeted compiler is simply never touched.
 
 ## Used by
 

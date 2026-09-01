@@ -8,9 +8,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourPaletteVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The visitor interface for double-dispatching over the small closed set of
+concrete `ColourPalette` implementations (`AgeColourPalette`,
+`CategoricalCptColourPalette<int32_t>`/`<uint32_t>`, `FeatureTypeColourPalette`,
+`PlateIdColourPalette`, `RegularCptColourPalette`). `ColourPaletteVisitorBase<Const>`
+is templated on constness so a single definition serves both const and
+non-const traversal: `GPlatesUtils::SetConst` adjusts each `visit_*`
+parameter's type accordingly, and `ConstColourPaletteVisitor` /
+`ColourPaletteVisitor` are the two instantiations client code actually names.
+Every `visit_*` method has a default no-op body, so a concrete visitor
+(`ColourPaletteUtils::Implementation::RangeVisitor`, `ColourPaletteRangeRemapper`,
+`ColourScaleGenerator`, and others) only needs to override the palette kinds
+it cares about.
 
 ## Declared types
 
@@ -57,9 +66,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourPaletteVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Adding a new concrete `ColourPalette` kind requires a matching `visit_*`
+method here (with a default no-op body, to avoid breaking existing
+visitors) and an `accept_visitor` override on the new palette class that
+calls it — this header only defines the dispatch surface, not which
+palettes exist.
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The value type passed around the rendering path: a thin, copyable pimpl wrapper around a reference-counted `RenderedGeometryImpl` (via `boost::intrusive_ptr`). `RenderedGeometryFactory` builds them, `RenderedGeometryLayer` and `RenderedGeometryCollection` store and hand them out, and painters and canvas tools consume them — hence the very wide fan-in across `view-operations`, `presentation`, `gui` and `canvas-tools`.
+
+A default-constructed `RenderedGeometry` has no implementation at all: `accept_visitor()` and both proximity tests silently do nothing (or return a null hit) rather than dereferencing a null pointer, so callers do not need to special-case "empty" instances before using them.
+
+The implementation is reachable only through `accept_visitor()`, and every `ConstRenderedGeometryVisitor` method takes its argument by const reference. That makes a constructed `RenderedGeometry` effectively immutable from the outside — the class exists specifically to hide which concrete `RenderedGeometryImpl` subclass (point, polyline, coloured mesh, symbol, …) it holds behind one non-polymorphic type.
 
 ## Declared types
 
@@ -41,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Ownership of the underlying `RenderedGeometryImpl` is shared via intrusive reference counting, so copying a `RenderedGeometry` is cheap and safe; the implementation is freed once the last copy goes away. The "effective immutability" only holds from outside the class — a caller that stashes its own pointer to the implementation (obtained, say, inside a visitor override) can still mutate it, which the header calls out as a subversion of the intended design rather than a supported use.
 
 ## Used by
 

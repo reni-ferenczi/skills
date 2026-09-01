@@ -9,9 +9,13 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourNameSet tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A small base class for a static, named colour table — the pattern used by
+`GMTColourNames` and `HTMLColourNames` to expose their large hard-coded lists
+of colour-name-to-RGB mappings (GMT's and HTML/CSS's, respectively) behind a
+common lookup interface. Subclasses populate the table once, in their
+constructor, via repeated `insert_colour(name, r, g, b)` calls; callers then
+look a name up with `get_colour()`, which returns `boost::none` for an
+unrecognised name rather than throwing.
 
 ## Declared types
 
@@ -39,9 +43,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourNameSet tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`insert_colour` writes into two parallel maps: `colours` (as a `Colour`, with
+components normalised from 0-255 ints to floats) and `d_color_name_table`
+(the raw `{r, g, b}` ints, exposed read-only via `get_name_map()`). Both are
+kept in sync only because every entry goes through `insert_colour` — a
+subclass that touches either map directly would desynchronise them.
 
 ## Used by
 

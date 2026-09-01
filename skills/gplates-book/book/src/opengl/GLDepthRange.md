@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLDepthRange tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLDepthRange` is a small value type holding the `glDepthRange` near/far parameters (`z_near`, `z_far`), used by `GLState`/`GLStateSets` and `GLRenderer` to track and compare depth-range state as part of the render framework's compiled state objects. Storing the values as `GPlatesMaths::real_t` rather than raw `GLclampd` gives `operator==` (and the derived `operator!=`, from `boost::equality_comparable`) an epsilon comparison instead of exact floating-point equality, so state comparisons used to decide whether a state change needs to be applied are robust to tiny floating-point differences.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLDepthRange tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

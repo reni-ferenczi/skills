@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/CsvExport tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CsvExport` is a small static-method utility that writes tabular data to a CSV file, called from the various export dialogs and animation-export strategies rather than having each one hand-roll delimiter and quoting logic. It offers three entry points depending on what the caller already has: `export_table_widget()` and `export_table_view()` read directly from a live `QTableWidget` or `QTableView` (the latter also emitting a header row via `export_table_view_header()`), while `export_data()`/`export_line()` write a caller-assembled `std::vector<LineDataType>` where `LineDataType` is just `std::vector<QString>`. All variants route individual field values through the anonymous-namespace helper `csv_quote_if_necessary()`, which applies the Wikipedia CSV specification's escaping rule: a field is quoted only when it contains the quote character, the configured delimiter, a newline, or leading/trailing spaces, and any embedded quote character is doubled rather than backslash-escaped.
+
+`ExportOptions` currently carries only the delimiter character; the header's own TODO comment notes that locale handling, header-writing and quote-character configuration were considered but not implemented.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/CsvExport tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every export method opens its own `std::ofstream` with `badbit | failbit` exceptions enabled and catches both `std::exception` and `...` around the write loop, popping a `QMessageBox::critical` on failure rather than propagating the error to the caller — callers cannot detect export failure programmatically, only the user sees it. `export_table_widget()` and `export_table_view()` treat a `NULL` `QTableWidgetItem`/empty model cell as an empty field rather than an error.
 
 ## Used by
 

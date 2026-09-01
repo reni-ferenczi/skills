@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AnimateControlWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Playback controls for geological time animation. The widget provides play/pause, seek-to-beginning, step-forward/backward buttons and a time slider for navigation within a defined animation time range. It stores a pointer to `AnimationController`, which holds the shared animation state, and responds to controller signals for time changes and animation state transitions. The slider maps between slider units and geological time (Ma). Can be created as a standalone QDockWidget and supports toggling between combined and separate play/pause buttons.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AnimateControlWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `AnimationController` pointer is not owned; the caller manages its lifetime. The widget is typically added to a QDockWidget that is initially hidden and shown by the application when animation starts.
 
 ## Used by
 

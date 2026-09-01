@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeConstructObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConstructObject<ObjectType>` lets `transcribe_construct_data()` hand a client's `transcribe_construct_data` overload a slot for an object that does not yet exist, so types without a default constructor can still be transcribed from an archive. When loading, the `ConstructObject` initially wraps uninitialised memory; the client calls one of the `construct_object()` overloads (generated for 1 up to `GPLATES_SCRIBE_CONSTRUCT_MAX_CONSTRUCTOR_ARGS` arguments via the Boost.Preprocessor `GPLATES_SCRIBE_CONSTRUCT_OBJECT` macro) to placement-construct `ObjectType` in place with whatever arguments its constructor needs, after which `get_object()`/`operator*`/`operator->` become valid. When saving, the wrapped object is already constructed and `ConstructObject` is just a reference to it.
+
+Because `Access::construct_object()` does the actual placement-new, a type with a private constructor only needs `friend class GPlatesScribe::Access;` to be constructible this way — the scribe framework never needs public access to the constructor itself.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeConstructObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `construct_object()` a second time, or accessing the object before construction, both throw `Exceptions::ScribeLibraryError` via the class's own assertions. Constructor arguments are taken as `const` references, so a constructor parameter that must bind to a non-const reference (or an in-place-constructed temporary) needs to be passed through `boost::ref()`, exactly as with `boost::in_place()`. `get_object_address()` returns the raw pointer regardless of construction state and must not be dereferenced directly — use `get_object()` or the dereference operators, which check initialisation first.
 
 ## Used by
 

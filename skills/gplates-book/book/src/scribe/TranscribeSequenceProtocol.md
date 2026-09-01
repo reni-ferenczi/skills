@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeSequenceProtocol tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header gives every sequence-like container (`std::vector`, `std::list`, `std::set`, `QList`, `QSet`, and so on) a single, shared wire format, so that a data member's concrete container type can be changed later without breaking backward or forward compatibility with archives written by older versions of GPlates. `transcribe_sequence_protocol()` implements that wire format directly: it writes a `sequence_size` object tag followed by that many indexed items, and on load it clears the target sequence first, transcribes each item, then relocates them into their final container in a second pass (needed because `push_back`-style growth can reallocate and invalidate the tracked-item addresses `Scribe` handed out during loading). Per-container behaviour — how to get the length, iterate items, clear the container and add a loaded item — is factored out into the `TranscribeSequence` template, which the primary definition implements generically for any STL-vector-like sequence; container types with different semantics (e.g. set-like containers that reject duplicates) are expected to specialise it, as `add_item()`'s boolean return (added vs. rejected as a duplicate) already anticipates. `relocated_sequence_protocol()` is the matching half used when a transcribed sequence is later relocated (e.g. because it lives inside a relocated parent object), walking both the old and new sequences in lockstep and calling `scribe.relocated()` on each corresponding pair of items.
+
+Because `TRANSCRIBE_UNKNOWN_TYPE` can occur per element (for example a polymorphic pointer to a derived class this build doesn't know about), the protocol is deliberately transparent: `ObjectTag::sequence_size()` and `ObjectTag::sequence_item(index)` are documented as public API so a caller who needs to skip unknown elements individually, instead of failing the whole sequence, can drive the same tags directly rather than going through `transcribe_sequence_protocol()`.
 
 ## Declared types
 
@@ -45,9 +45,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeSequenceProtocol tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- On load, `transcribe_sequence_protocol()` clears the destination sequence up front; if any item fails to transcribe it clears the sequence again before returning, so a caller must not assume a partially-filled sequence survives a non-`TRANSCRIBE_SUCCESS` result.
+- A mismatch between the recorded sequence length and the number of items actually saved or loaded is asserted as `Exceptions::ScribeLibraryError`, not a user error — it indicates a bug in a `TranscribeSequence` specialisation rather than a bad archive.
+- Adding a new container type means specialising `TranscribeSequence` for it; the primary template only works for vector-like sequences that support `push_back` and never reject an added item.
 
 ## Used by
 

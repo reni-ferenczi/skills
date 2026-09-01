@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlStructuralTypeReaderUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the counterpart to `GpmlPropertyStructuralTypeReaderUtils`: the header says
+explicitly that it covers structural types that cannot appear directly as a feature
+property, only nested inside another structural type — `gml:pos`,
+`gpml:TimeSample`, `gpml:TimeWindow`, `gpml:PropertyDelegate`,
+`gpml:FiniteRotationSlerp`, coordinate lists, feature and revision IDs, and the
+low-level scalar parsers (`create_boolean`, `create_double`, `create_int`,
+`create_string`, ...) that both structural-type-utils files build on. Composite
+readers such as `create_gpml_time_sample` and `create_gpml_key_value_dictionary_element`
+take a `GpmlPropertyStructuralTypeReader` so they can recurse into whatever
+top-level property value the nested element wraps.
+
+A large share of the file is generic find/create combinators —
+`find_one`/`find_zero_or_more`/`find_one_or_more` locate child elements by name and
+report `ReadErrorAccumulation` errors when the required cardinality is not met, and
+the `find_and_create_*` overloads pair that lookup with a `creation_fn` pointer to
+parse the located element in one call. `create_point` is the shared implementation
+behind `create_point_on_sphere`, `create_lon_lat_point_on_sphere` and
+`create_point_2d`, which differ only in how they interpret the `gml:pos`/
+`gml:coordinates` element. `ValueObjectTemplateVisitor` extracts a `gml:CompositeValue`
+value-component's element name and attributes without caring about its content, used
+by `create_gml_value_component` to read the "app:Temperature"-style template element
+described in the GML spec.
 
 ## Declared types
 
@@ -121,9 +140,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlStructuralTypeReaderUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every function takes `gpml_version` for the same reason as in
+`GpmlPropertyStructuralTypeReaderUtils`: some structural element layouts changed
+between GPGIM revisions, and the caller must be able to parse an older file's
+version of the layout into the current representation. Adding a new type here that
+can appear as a nested (non-property) structural element must not be confused with
+adding one to `GpmlPropertyStructuralTypeReaderUtils` — the two files are
+partitioned by whether the type can stand alone as a feature property.
 
 ## Used by
 

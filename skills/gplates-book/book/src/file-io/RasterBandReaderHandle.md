@@ -9,9 +9,15 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RasterBandReaderHandle tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterBandReaderHandle` wraps a `RasterBandReader` by value and forwards every
+call to it unchanged. It exists so a "proxied" `RawRaster` — one whose pixel
+data has not been loaded yet — can carry a copyable, storable handle back to
+the reader that will supply that data on demand: `RawRaster`'s
+`WithProxiedData` data policy (see `property-values/RawRaster.h`) stores a
+`RasterBandReaderHandle` and hands it to `ProxiedRasterResolver` when the
+actual raster contents are finally needed. The extra layer over
+`RasterBandReader` itself keeps that storage relationship separate from the
+read-adapter relationship `RasterBandReader` has with `RasterReader`.
 
 ## Declared types
 
@@ -41,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RasterBandReaderHandle tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

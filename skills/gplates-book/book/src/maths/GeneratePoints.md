@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeneratePoints tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeneratePoints` provides the three public entry points GPlates uses to scatter
+points evenly across the globe, a lat/lon box, or a `PolygonOnSphere`. All
+three delegate to the anonymous-namespace `UniformPointsBuilder`, which drives
+a `SphericalSubdivision::RhombicTriacontahedronTraversal` down to
+`point_density_level` levels of recursion and emits the quad vertices it
+reaches. Starting from a Rhombic Triacontahedron (30 quad faces) rather than
+the Hierarchical Triangular Mesh (8 triangular faces) gives a more uniform
+point spacing; each recursion level halves the roughly-40-degree spacing of
+level zero.
+
+When a bounding polygon or lat/lon extent is supplied, `UniformPointsBuilder`
+prunes whole subtrees early: it tests each quad against bounds contracted or
+expanded by an angular distance threshold sized to the maximum possible random
+offset at the current recursion depth, so a quad found entirely inside (or
+outside) the tolerance skips per-child testing lower in the recursion, and
+individual vertices are still bounds-checked at the leaf level to catch the
+boundary case exactly. `d_visited_vertices` deduplicates vertices shared by
+adjacent quads. If `point_random_offset` is non-zero, `RandomOffsetPointGenerator`
+nudges each surviving vertex within a circle scaled by that fraction of the
+local quad edge length, using two independent `RandomOffsetGenerator`
+(Mersenne Twister) instances for radius and angle.
 
 ## Declared types
 
@@ -56,9 +74,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeneratePoints tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`point_random_offset` must lie in `[0, 1]`; for `create_uniform_points_in_lat_lon_extent`,
+`top`/`bottom` must lie in `[-90, 90]` and `left`/`right` in `[-360, 360]`.
+Violating any of these raises `GPlatesGlobal::PreconditionViolationError`
+via `GPlatesGlobal::Assert`, not a maths-specific exception. `top`/`bottom`
+and `left`/`right` are silently swapped if passed in the wrong order.
 
 ## Used by
 

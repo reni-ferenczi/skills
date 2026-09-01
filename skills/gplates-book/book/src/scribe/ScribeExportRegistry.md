@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeExportRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportRegistry` is the runtime type registry the scribe framework needs whenever an object is transcribed through something other than its own concrete type — a base-class pointer, or a value stored inside a `boost::variant`. Without a registry, decoding a transcription that stored a polymorphic pointer would have no way to know which concrete `Type` to reconstruct; registration (normally done declaratively via an entry in `ScribeExportRegistration.h`, not by calling `register_class_type()` directly) records a string `class_id_name`, the `std::type_info`, and a `TranscribeOwningPointer` that knows how to construct and own that concrete type, then makes the mapping searchable both by name (for reading an archive) and by `std::type_info` (for writing one).
+
+`ExportClassType` instances live in a `boost::object_pool`, owned for the process lifetime by the `ExportRegistry` singleton, so the `const ExportClassType &` returned by lookups stays valid indefinitely. `register_class_type()` statically asserts the type is not abstract (an abstract type can never be the concrete object behind a pointer) and tolerates being called twice for the same class as long as both calls agree on the type, since registration entries can appear more than once in translation units that both include the same header.
 
 ## Declared types
 
@@ -54,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeExportRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Registering the same `class_id_name` string for two different types, or the same `Type` under two different `class_id_name` strings, both throw (`ExportRegisteredMultipleClassTypesWithSameClassName` / `ExportRegisteredMultipleClassNamesWithSameClassType`) rather than silently overwriting an entry — a duplicate name is only safe when it is genuinely a re-registration of the same type. `unregister_class_type()` exists solely for unit tests to undo a registration; production code has no supported way to remove an entry once registered.
 
 ## Used by
 

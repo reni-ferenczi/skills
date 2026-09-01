@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionTree tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `ReconstructionTree` is one *snapshot* of the plate circuit: a `ReconstructionGraph` — the whole set of total reconstruction sequences loaded from rotation files — collapsed into a rooted, acyclic tree for a single reconstruction time and a single anchor plate. Everything downstream that needs "where was plate N at time t, relative to the anchor" ultimately asks a tree built here. The graph is not a tree: each graph edge is a *sequence* spanning a time range, and crossovers (a moving plate switching fixed plates at some time) put cycles in it. `create()` is where that cycle-bearing graph becomes a usable hierarchy.
+
+The traversal in `create_sub_trees_from_graph_plate()` / `create_sub_tree_from_graph_edge()` starts at the graph's `Plate` for the anchor ID and walks outward. A graph edge is followed only if the tree's reconstruction time lies inside its `[get_begin_time(), get_end_time()]` range, and only if its resulting moving plate is not the anchor and has not already been claimed by another tree edge — the insertion into `d_all_edges` is both the duplicate test and the registration, which is what makes the result acyclic. Outgoing graph edges may all be followed; incoming ones (traversed *upwards*, producing a tree edge whose fixed and moving plates are swapped relative to the rotation file — `Edge::is_reversed()`) are restricted to at most one per plate, and only when the parent tree edge is itself reversed. The long comment in the `.cc` explains why: taking both branches up through a crossover would let some plates be reached by a much longer circuit than the rotation-file author intended. This matters only for a non-zero anchor plate; with anchor 0 the traversal is purely downward.
+
+Rotations are not computed during construction. Each `Edge` holds a reference to its `ReconstructionGraph::Edge` and computes its relative rotation lazily, interpolating that graph edge's `PoleSample` list at the tree's time via `GPlatesMaths::interpolate` (reversing it with `GPlatesMaths::get_reverse` if the tree edge is reversed), then composing up the parent chain for the absolute rotation. Both results are memoised. This is the reason the tree keeps a shared reference to the graph rather than copying poles out of it, and it means building a tree over a large rotation model is cheap while the per-plate cost is paid only for the plates actually queried. `ReconstructionTreeCreator` sits directly on top of this, caching trees per reconstruction time so callers do not re-run the traversal for every feature.
 
 ## Declared types
 
@@ -57,9 +59,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionTree tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Lifetime.** The tree owns every `Edge` in a `boost::object_pool` and hands out bare pointers and references to them (`get_edge()`, `get_all_edges()`, `Edge::get_parent_edge()`, `Edge::get_child_edges()`). Those are valid only while the tree itself is alive; nothing else keeps them up. The intrusive edge lists deliberately use `normal_link` rather than the default `safe_link`, so edges are never unlinked from their parent's child list — the whole tree is destroyed in one go and unlinking would be wasted work. Do not try to remove or re-parent an edge. Each `Edge` also holds a raw `const ReconstructionGraph::Edge &`; that is safe only because the tree holds a counted reference to the graph for its whole life.
+
+**Anchor plate not in the graph is not an error.** `create()` silently returns an empty tree, and an empty tree answers every query with the identity rotation. Likewise `get_composed_absolute_rotation()` returns identity for any plate the tree does not describe — use `get_composed_absolute_rotation_or_none()` if you need to tell "no rotation" apart from "no such plate". The anchor plate itself is never the moving plate of an edge, so it is special-cased to identity.
+
+**Compare trees with `created_from_same_graph_with_same_parameters()`, never by pointer.** Tree creators cache trees and can evict them, so a logically identical tree may be a fresh instance at any time.
+
+**Thread safety.** The lazy rotation caches are `mutable` members written from `const` methods with no synchronisation, so concurrent `get_relative_rotation()` / `get_composed_absolute_rotation()` calls on the same tree race. Treat a tree as single-threaded even through a `non_null_ptr_to_const_type`.
+
+**Pole edge cases.** The oldest pole sample may be at the distant past and the youngest at the distant future; `calculate_graph_edge_relative_rotation()` clamps to the adjacent finite sample instead of interpolating against an infinity. The code relies on `ReconstructionGraph` guaranteeing at least two pole samples per edge and on the reconstruction time already lying within the edge's bounds — it falls through to `pole.back()` otherwise.
+
+**Non-determinism at crossover times.** When two graph edges are equally eligible (a crossover time, or a sequence split across two rotation files), which one becomes a tree edge depends on the order of edges in the graph, hence on the order in the rotation file. The resulting rotations agree only if the crossover is properly synchronised; an unsynchronised crossover will produce a silently different answer.
 
 ## Used by
 

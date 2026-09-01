@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/RasterStatistics tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterStatistics` is a plain aggregate of the four summary values (`minimum`, `maximum`, `mean`, `standard_deviation`) that describe a raster band's data distribution. Each field is independently optional because a given raster source or cache format may supply only some of them, or none at all; consumers such as colour-mapping and mipmap generation code must check each field before using it rather than assuming the whole struct is populated.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/RasterStatistics tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

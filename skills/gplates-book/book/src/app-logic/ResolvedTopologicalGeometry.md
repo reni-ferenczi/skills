@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalGeometry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTopologicalGeometry` factors out the state and behaviour shared by
+`ResolvedTopologicalBoundary` and `ResolvedTopologicalLine`: both are a
+`ReconstructionGeometry` derived by resolving a topological feature's sections
+at a particular reconstruction time, and both need to observe the source
+`FeatureHandle` via `WeakObserver` so the resolved geometry can be invalidated
+if the feature changes. The only thing left abstract is
+`resolved_topology_geometry()`, which each subclass implements to return
+either a polygon or a polyline.
+
+Besides the geometry accessor, the class carries the bookkeeping every
+resolved topology needs regardless of shape: the `ReconstructionTree` and
+`ReconstructionTreeCreator` used to produce it, the feature property iterator
+it was derived from, and the cached plate ID and time of formation pulled from
+the feature's properties at resolve time (both optional, since a topological
+feature need not carry either).
 
 ## Declared types
 
@@ -59,9 +71,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalGeometry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The constructor is protected: instances are only ever built by the concrete
+subclasses, which are in turn created by the topology-resolving code in
+`ReconstructUtils`/`TopologyUtils`, not directly by client code. The cached
+`plate_id()` and `time_of_formation()` can each be absent (`boost::none`) when
+the source feature lacks the corresponding property; callers must check before
+using them, e.g. when colouring by plate ID or by age.
 
 ## Used by
 

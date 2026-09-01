@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructScalarCoverageLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructScalarCoverageLayerParams` is the `LayerParams` for a reconstruct-scalar-coverage layer: it holds the `ReconstructScalarCoverageParams` evolution settings and the currently selected `ValueObjectType` scalar (out of possibly several scalar types the connected scalar coverage features carry), and delegates actual computation to its `ReconstructScalarCoverageLayerProxy`. `get_scalar_statistics` computes and caches per-scalar-type `ScalarCoverageStatistics` (mean, standard deviation, min/max, including the time history of evolved values) in `d_cached_scalar_statistics`, since visual layers repeatedly query these to map colour palettes.
+
+Because this layer is connected to an upstream Reconstruct layer but is not notified directly of changes there, `d_layer_proxy_observer_token` tracks the layer proxy's subject token so `update()` can detect staleness — for example when scalar coverage features are reloaded from file and the selected scalar type is no longer among the available ones, `update()` (and `set_scalar_type`) fall back to the first available scalar type and clear the statistics cache. `get_scalar_type` and `get_scalar_statistics` both call `update()` internally so callers always see a state consistent with the current layer proxy.
 
 ## Declared types
 
@@ -54,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructScalarCoverageLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_scalar_type` and `get_scalar_statistics` are logically `const` but internally `const_cast` themselves to call the mutating `update()` — a deliberate lazy-refresh pattern, not a bug, but it means these "read" accessors can emit the `modified` signal as a side effect. `set_reconstruct_scalar_coverage_params` updates the coverage-evolution parameters but explicitly does *not* push that change into the layer proxy itself.
 
 ## Used by
 

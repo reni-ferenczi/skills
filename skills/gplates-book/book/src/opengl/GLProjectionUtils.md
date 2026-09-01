@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLProjectionUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A free-function namespace of GLU-style helpers for converting between window
+coordinates, model space and the projection frustum, built on top of `GLViewport`
+and `GLMatrix`. `glu_project` and `glu_un_project` are thin wrappers around
+`gluProject`/`gluUnProject` that take GPlates' own transform and viewport types
+instead of raw OpenGL state.
+
+`project_window_coords_onto_unit_sphere` composes `glu_un_project` with a ray-sphere
+intersection: it unprojects a window coordinate onto the near clipping plane, then
+intersects the ray from the eye through that point with the unit sphere centred at
+the origin, returning `boost::none` when the ray misses the globe. `get_min_max_pixel_size_on_unit_sphere`
+samples nine points across the view frustum's near face (the four corners, the four
+edge midpoints and the centre), projects each pair of adjacent samples onto the unit
+sphere and returns the smallest and largest resulting great-circle distances. This
+gives callers a cheap way to estimate how finely a raster or mesh needs to be
+tessellated to match screen resolution, without projecting every pixel.
 
 ## Declared types
 
@@ -35,9 +47,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLProjectionUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_min_max_pixel_size_on_unit_sphere` is documented as reasonably expensive, but
+acceptable because callers invoke it once per raster per render scene rather than
+per pixel. Its returned range is `(0, Pi]`, the distance between the north and south
+poles on the unit sphere; a caller that needs only one bound should use
+`get_min_pixel_size_on_unit_sphere` or `get_max_pixel_size_on_unit_sphere` rather
+than discarding half of the pair result itself, since both are computed from a
+single call anyway.
 
 ## Used by
 

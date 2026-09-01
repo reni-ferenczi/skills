@@ -8,9 +8,14 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlReaderException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlReaderException` is the exception the GPML structural-type readers throw when
+an XML element cannot be parsed as its expected type at all — as opposed to a
+recoverable problem, which goes through `ReadErrorAccumulation` instead. It carries
+the offending `XmlElementNode`, a `ReadErrors::Description` code identifying what
+went wrong, and an optional `source_location` string for the throwing call site, so
+a catch site (typically higher up in `GpmlPropertyReader` or
+`GpmlFeatureReaderImpl`) can report exactly which element and which reason caused
+the read to fail.
 
 ## Declared types
 
@@ -42,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlReaderException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

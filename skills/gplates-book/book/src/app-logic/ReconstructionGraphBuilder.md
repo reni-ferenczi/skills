@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionGraphBuilder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionGraphBuilder` is the incremental constructor for a `ReconstructionGraph`: callers feed it one fixed/moving plate pair and its time-dependent pole at a time via `insert_total_reconstruction_sequence`, and `build_graph()` hands back the finished, immutable graph. A sequence with fewer than two enabled pole time samples is silently dropped, since a single sample cannot define a pole valid away from present day. More than one edge can exist between the same fixed and moving plate — this is how a rotation sequence split across files (for example 0-250Ma in one file, 250-410Ma in another) is represented — and the builder does not attempt to order or merge them.
+
+The optional `extend_total_reconstruction_poles_to_distant_past` constructor argument addresses a specific artefact: without it, a moving plate's rotation is undefined before the oldest time sample of its oldest incoming edge, which causes reconstructed geometries to snap back to their present-day position once the reconstruction time exceeds that edge's range. When enabled, `build_graph()` calls `extend_total_reconstruction_poles_to_distant_past()`, which finds each plate's oldest incoming edge and, unless it already reaches the distant past, adds a further edge from that edge's oldest pole sample out to `GeoTimeInstant::create_distant_past()` holding the same finite rotation — effectively freezing the plate's motion beyond the data's actual time range instead of letting it collapse.
+
+Calling `build_graph()` also resets the builder's internal graph to a fresh, empty one, so a single `ReconstructionGraphBuilder` can be reused to build a second, independent graph from a new set of inserted sequences without the two graphs interfering.
 
 ## Declared types
 
@@ -42,9 +44,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionGraphBuilder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Edge, plate and pole-sample objects are allocated from `ReconstructionGraph`'s own object pools; a pool allocation failure is reported by throwing `std::bad_alloc` rather than by any richer error path.
+- The order in which edges are attached to a plate's incoming/outgoing lists is not currently significant to how a `ReconstructionTree` is later generated, including at crossovers — see the comment in `insert_total_reconstruction_sequence` for what would have to change (both forward and reverse graph propagation) if that ever became necessary.
 
 ## Used by
 

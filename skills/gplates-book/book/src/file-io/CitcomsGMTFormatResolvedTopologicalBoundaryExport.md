@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/CitcomsGMTFormatResolvedTopologicalBoundaryExport tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit is the GMT-format backend for exporting CitcomS resolved topologies: two free functions, `export_resolved_topological_boundaries` and `export_sub_segments`, take the sequences already assembled by `CitcomsResolvedTopologicalBoundaryExportImpl` and write them out as `>`-delimited GMT multi-segment files. All of the format-specific work happens in an anonymous namespace behind those two entry points.
+
+`GMTExportHeader` is a small internal strategy interface with two implementations: `ResolvedTopologyHeader` formats the header line for a whole resolved boundary or network (using a `PlatesLineFormatHeaderVisitor`-derived `OldPlatesHeader` to fill in the feature name and, for slab polygons, the `slabFlatLying`/`slabFlatLyingDepth` attributes), and `SubSegmentHeader` formats the per-subsegment header line, including a two-letter PLATES type code and subduction-zone-specific attributes such as age, convergence, dip and depth. `GMTFeatureExporter` pairs one of these headers with a `GMTHeaderPrinter` and a `TextStream` (a thin `QFile`/`QTextStream` wrapper) to write a feature's header followed by its geometry. The free `get_feature_*` helper functions pull individual GPML properties (name, identity, subduction-zone attributes) off a `FeatureHandle::const_weak_ref`, falling back to a `GpmlOldPlatesHeader` where the property is absent.
 
 ## Declared types
 
@@ -107,9 +107,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/CitcomsGMTFormatResolvedTopologicalBoundaryExport tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The `SubSegmentHeader` format still emits a `polygon:` field tying each subsegment to one owning polygon; a source comment flags this as an open question (`TODO`) because it prevents de-duplicating subsegments shared by multiple polygons.
+- Fields with no corresponding GPML property (name, subduction-zone age/dip/depth/convergence, slab flags) are written as the literal string `"Unknown"` rather than omitted, so downstream GMT consumers always see a fixed column layout.
 
 ## Used by
 

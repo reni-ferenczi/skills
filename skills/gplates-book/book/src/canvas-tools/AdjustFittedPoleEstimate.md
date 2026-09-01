@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/AdjustFittedPoleEstimate tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AdjustFittedPoleEstimate` is the canvas tool behind the Hellinger plate-fitting workflow: it lets the user drag, on the globe or map, the two initial pole estimates (and their associated angles) that seed a Hellinger fit between plates 1-2 and 1-3. Each pole is rendered as a draggable vertex plus a reference arc and a relative arc, and dragging the pole, either arc's end point recomputes the angle and redraws all three via `update_current_pole_arrow_layer()` and `update_current_pole_and_angle_layer()`.
+
+The tool keeps its own copy of the pole/angle state (`d_current_pole_12`, `d_current_angle_12`, and the "13" equivalents) and stays synchronised with `GPlatesQtWidgets::HellingerDialog` in both directions: `update_local_values_from_hellinger_dialog()` pulls the dialog's values in on activation, and `update_hellinger_dialog_from_local_values()` pushes edits back out after every drag or Qt-signal-driven change from the dialog's own lat/lon/angle spin boxes. `GeometryFinder` is a small local visitor, duplicated from `SelectHellingerGeometry` per its own TODO, used to recover the geometry-on-sphere under a proximity hit so the tool knows which vertex or arc end point the mouse is over.
 
 ## Declared types
 
@@ -98,9 +98,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/AdjustFittedPoleEstimate tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only one of the two poles (1-2 or 1-3) is ever the "active" one at a time, tracked by `d_active_pole_type`; drag handlers dispatch on this flag to decide which pole/angle/end-point fields to mutate, so the two poles cannot be dragged simultaneously. `handle_deactivation()` always flushes local state back to `HellingerDialog` before disabling the rendered layers, so deactivating the tool mid-edit does not lose changes made only via mouse dragging.
 
 ## Used by
 

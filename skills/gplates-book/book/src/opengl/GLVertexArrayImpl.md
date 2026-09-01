@@ -9,9 +9,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexArrayImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexArrayImpl` is the fallback `GLVertexArray` implementation used when the
+`GL_ARB_vertex_array_object` extension is unavailable. Instead of relying on a
+real OpenGL vertex array object name, it reproduces the same effect by
+recording every `set_*` call (vertex, colour, normal, texture-coordinate and
+generic attribute pointers, plus enable/disable of client and attribute
+arrays) into a `GLCompiledDrawState` via `GLRenderer::CompileDrawStateScope`.
+`gl_bind` then simply replays that compiled state through the `renderer`, so
+binding this "vertex array" re-issues the equivalent fixed-function and
+attribute-pointer calls each time rather than switching a single GL object.
+
+Instances are only constructed through `create`/`create_as_unique_ptr`, which
+keep the constructor private and force acquisition through `GLRenderer`, in
+line with the rest of the `opengl` module's object-creation convention.
 
 ## Declared types
 
@@ -56,9 +66,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexArrayImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A vertex element buffer must be set via `set_vertex_element_buffer` before any
+drawing call; using `gl_draw_range_elements` without one is a precondition
+violation. `gl_draw_range_elements` falls back to an ordinary
+`gl_draw_elements`-equivalent call when `GL_EXT_draw_range_elements` is not
+present, silently ignoring the `start`/`end` bounds in that case.
 
 ## Used by
 

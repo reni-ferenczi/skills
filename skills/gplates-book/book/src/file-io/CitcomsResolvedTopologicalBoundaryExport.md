@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/CitcomsResolvedTopologicalBoundaryExport tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the top-level orchestrator for exporting CitcomS resolved topologies: its single public entry point, `export_resolved_topological_boundaries`, takes a list of resolved `ReconstructionGeometry` pointers plus an `OutputOptions` struct and produces whatever combination of plate-polygon, network-polygon and slab-polygon/edge files (and their ridge-transform/subduction subsets) the options ask for. Internally it sorts the resolved geometries into an `Output` struct of parallel `resolved_topologies_seq_type`/`sub_segment_group_seq_type` sequences (`add_topological_closed_plate_boundary`, `add_topological_network_boundary`, `add_topological_slab_boundary` and their `_sub_segments` counterparts), then dispatches each requested output to a format-specific exporter chosen by `get_export_file_format` (GMT via `CitcomsGMTFormatResolvedTopologicalBoundaryExport`, or shapefile/OGRGMT/GeoJSON via the OGR-backed writers) inside `export_resolved_topological_boundaries_file`/`export_sub_segments_file`.
+
+`OutputOptions` is the whole public dial: each `export_*` boolean turns one specific output on or off, and each `placeholder_*` string is the token that `substitute_placeholder` replaces in `file_basename` to derive that output's actual filename, so a single basename can expand into many files distinguished by their placeholder substrings. `gui/ExportAnimationRegistry` builds the actual default `OutputOptions` used by the GUI (noted in the header) and drives this function from the export-animation pipeline; `ExportCitcomsResolvedTopologyOptionsWidget` is the corresponding UI.
 
 ## Declared types
 
@@ -137,9 +137,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/CitcomsResolvedTopologicalBoundaryExport tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `export_resolved_topological_boundaries` throws `ErrorOpeningFileForWritingException` if an output file cannot be opened, and a file-format-not-supported exception if `export_format` is not handled by the chosen writer — callers must be prepared to catch both.
+- `OutputOptions`'s boolean defaults in this header are not the GUI's defaults; the GUI builds its own `OutputOptions` in `gui/ExportAnimationRegistry.cc` (`default_citcoms_resolved_topology_export_options`), so reading the constructor defaults here does not tell you what a user actually gets from the export dialog.
 
 ## Used by
 

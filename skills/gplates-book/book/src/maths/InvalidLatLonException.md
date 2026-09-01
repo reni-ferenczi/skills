@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/InvalidLatLonException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InvalidLatLonException` is thrown when a `LatLonPoint` is constructed from a latitude or longitude value outside the valid range. It carries the single offending value and a `LatOrLon` tag saying which coordinate was bad, and `write_message` formats them into the exception's diagnostic text; if both coordinates are invalid, only one is reported.
+
+It is a thin `GPlatesGlobal::PreconditionViolationError` specialisation, following the same shape as the other precondition exceptions in the codebase: a private data member per invalid input, plus `exception_name` and `write_message` overrides that plug into the base class's reporting machinery.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/InvalidLatLonException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

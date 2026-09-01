@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/FileDialogFilter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FileDialogFilter` is a small value type used by `OpenFileDialog` and `SaveFileDialog` to build the filter dropdown of a native file dialog: a description paired with zero or more file extensions, the first of which callers treat as the default extension when saving. `create_filter_string()` formats a single entry as `"Description (*.ext1 *.ext2)"`, and the static overload joins several filters together with `";;"`, the separator Qt's file dialogs expect. A filter constructed with no extensions formats as `"Description (*)"` and matches all files.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/FileDialogFilter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`create_filter_string()` caches its result in `d_cached_filter_string`; `add_extension()` invalidates that cache, but extensions must be passed as bare names such as `"gpml"`, not `".gpml"` or `"*.gpml"` — the class prepends the `*.` itself.
 
 ## Used by
 

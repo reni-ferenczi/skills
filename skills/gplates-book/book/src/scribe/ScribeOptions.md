@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeOptions tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Defines the bit-flag constants passed as the `options` argument of `Scribe::transcribe()` and related calls: `TRACK`, `EXCLUSIVE_OWNER` and `SHARED_OWNER`. They are combined with bitwise OR, as in `GPlatesScribe::EXCLUSIVE_OWNER | GPlatesScribe::TRACK`, to tell the Scribe how to treat a particular object during transcription. `TRACK` requests that an object be tracked (untracked is the default) so it can later be relocated or shared via reference; `EXCLUSIVE_OWNER` and `SHARED_OWNER` apply only to pointers and declare whether the pointer owns the pointed-to object outright or shares that ownership with other pointers.
 
 ## Declared types
 
@@ -31,9 +29,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeOptions tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

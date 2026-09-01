@@ -8,9 +8,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/LatLonAreaSampling tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LatLonAreaSampling<ElementType>` decimates a dense set of points on the
+sphere down to roughly one representative element per unit area, which is
+what `view-operations/RenderedGeometryLayer` uses it for: thinning out point
+markers that would otherwise overplot at low zoom. Elements are added via
+`add_element` at a `GPlatesMaths::PointOnSphere` location; internally each is
+converted to a `GPlatesMaths::LatLonPoint` and dropped into a `SampleBin`
+looked up first by latitude row (`LatitudeLookup`) and then by longitude
+within that row (`LongitudeLookup`). Only the element closest to each bin's
+centre survives as that bin's "sample element" — `get_sampled_element`
+iterates just those, not every element added. Longitude bin counts are
+computed per latitude row (`reset_spacing`) so that a bin's east-west extent
+along its small circle of latitude approximates the same surface distance as
+its north-south extent, keeping the bins close to equal area near the poles
+as well as the equator despite meridians converging.
+
+Both bin lookups use an `ObjectPool` for storage, so bin addresses stay
+stable once created, and an `IntrusiveSinglyLinkedList` to track which bins
+and element entries exist without extra per-node allocation.
+`LongitudeLookup` picks between two internal representations depending on
+how many longitude bins that latitude row could need: below
+`MAX_SAMPLE_BINS_FOR_HIGH_SPEED_LOOKUP` (500) it uses a flat array indexed
+directly by longitude bin, and above that threshold it switches to a lower
+memory layout that packs up to 8 bins' worth of pointers per `OuterBin` using
+a bitmask and an intrusive list, trading lookup speed for roughly a quarter
+of the memory. In both cases a `SampleBin` is only actually constructed the
+first time an element lands in it, since most bins in a large lat/lon grid
+typically end up unused.
 
 ## Declared types
 
@@ -51,9 +75,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/LatLonAreaSampling tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`reset_sample_spacing` rebuilds the entire lat/lon grid and re-adds every
+previously added element (via the intrusive `d_element_list`), so it is an
+O(N) operation over all elements added so far, not a cheap parameter tweak.
+`get_sampled_element` does no bounds checking in release builds — the
+assertion on `sample_element_index` is compiled out behind `#if 0`, so an
+out-of-range index is undefined behaviour. The order of sampled elements
+returned by `get_sampled_element` is unspecified and can change across a
+`reset_sample_spacing` call.
 
 ## Used by
 

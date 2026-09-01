@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/GpgimFeatureClass tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpgimFeatureClass` represents one feature type's entry in the GPGIM — a
+`FeatureType` name, a description, its own `GpgimProperty` definitions, an
+optional default geometry property, and an optional parent class. Feature
+classes form a single-inheritance tree (`Gpgim` builds and owns it), with
+concrete, instantiable feature types at the leaves and abstract classes above
+them; `does_inherit_from()` walks up via `get_parent_feature_class()` to test
+membership anywhere in that chain.
+
+Most query methods come in an "including ancestors" and an "excluding
+ancestors" form: `get_feature_properties()` and `get_geometry_feature_properties()`
+recurse up through `d_parent_feature_class` first and append this class's own
+`d_feature_properties` after, so a derived feature class's own properties are
+never confused with the accessor that returns only what it declares itself
+(`get_feature_properties_excluding_ancestor_classes()`). The same override rule
+applies to the default geometry property: `get_default_geometry_feature_property()`
+returns this class's own default if it has one, and only falls back to the
+parent's when it does not — a derived class's default geometry property takes
+precedence.
 
 ## Declared types
 
@@ -52,9 +67,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/GpgimFeatureClass tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create()` asserts (`GPlatesGlobal::PreconditionViolationError`) that
+  `default_geometry_property`, when given, is actually one of the properties in
+  `[gpgim_properties_begin, gpgim_properties_end)` — passing a property that
+  belongs to a different feature class throws at construction.
+- Overriding a default geometry property in a derived class silently shadows an
+  ancestor's default rather than erroring; per the header comment this is not
+  expected to occur if the GPGIM itself is designed correctly.
 
 ## Used by
 

@@ -8,9 +8,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/TypeTraits tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TypeTraits<T>` is a small, deliberately non-comprehensive compile-time type
+traits facility, built before the project could rely on `<type_traits>` or a
+full Boost.TypeTraits dependency. It classifies `T` as built-in, integral or
+floating-point by checking membership in `boost::mpl::set` lists of the
+concrete built-in types (`TypeTraitsInternals::built_in_types`,
+`integral_types`, `floating_point_types`), with a partial specialisation of
+`IsBuiltIn` for pointer types so any `T *` is treated as built-in.
+
+The practically useful output is `TypeTraits<T>::argument_type`, computed via
+`Select` as `T` when `T` is built-in and `const T &` otherwise — a standard
+"pick a cheap parameter type" trick used by generic code that does not want to
+pay for pass-by-reference on primitives or pay for pass-by-value on larger
+objects.
 
 ## Declared types
 
@@ -81,9 +91,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/TypeTraits tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The header's own comment warns that this is not a comprehensive traits
+implementation: it only covers the fixed list of built-in scalar types plus
+raw pointers, and gives incorrect results for implementation-specific or
+compiler-extension types outside that list.
 
 ## Used by
 

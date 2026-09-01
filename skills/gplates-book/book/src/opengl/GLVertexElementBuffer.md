@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexElementBuffer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexElementBuffer` is a pure abstract interface for a `GLBuffer`
+interpreted as index (vertex element) data, the counterpart to
+`GLVertexBuffer` for attribute data. As with `GLVertexBuffer`, the same
+underlying `GLBuffer` can be attached to both a `GLVertexBuffer` and a
+`GLVertexElementBuffer` so vertices and indices share one allocation.
+Concrete work — binding and `glDrawRangeElements` — is left to subclasses
+(`GLVertexElementBufferImpl` and `GLVertexElementBufferObject`); this class
+only fixes the shared interface and the `create` factory.
+
+The `GLVertexElementTraits<VertexElementType>` specialisations (for
+`GLubyte`, `GLushort`, `GLuint`) map an index storage type to its OpenGL enum
+(`GL_UNSIGNED_BYTE`/`_SHORT`/`_INT`) and to `MAX_INDEXABLE_VERTEX`, the
+largest vertex count that type can index — callers use this to choose the
+smallest index type that still fits a given mesh.
 
 ## Declared types
 
@@ -72,9 +83,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexElementBuffer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

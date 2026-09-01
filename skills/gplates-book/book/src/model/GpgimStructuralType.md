@@ -8,9 +8,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/GpgimStructuralType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpgimStructuralType` describes one property structural type — the GPML/GML
+value shape a property can hold, such as `gml:Point` or `gpml:Array` — as
+recorded in the GPGIM. It pairs a `GPlatesPropertyValues::StructuralType` name
+with a human-readable description and a flag for whether the type represents
+geometry (used to recognise `gml:Point`, `gpml:TopologicalNetwork` and similar
+types uniformly). `GpgimProperty` and `Gpgim` hold these to describe what
+values a GPGIM property definition accepts.
+
+Some structural types are templates — `gpml:Array` needs a value type before it
+names a concrete instantiation, as in `gpml:Array<gml:TimePeriod>` — so
+`get_instantiation_type()` returns an `InstantiationType` pairing the structural
+type with an optional value type, and is virtual so the derived
+`GpgimTemplateStructuralType` can override it to supply that value type.
+`GpgimEnumerationType` is the other subclass, adding the allowed enumeration
+values for `gpml:` enumeration types. Both derive from `ReferenceCount` and are
+constructed only through the protected constructor plus each class's own
+`create()`, kept off the stack like other reference-counted model objects.
 
 ## Declared types
 
@@ -45,9 +59,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/GpgimStructuralType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The destructor is virtual specifically because `GpgimEnumerationType` (and
+  `GpgimTemplateStructuralType`) subclass it and code uses
+  `GPlatesUtils::dynamic_pointer_cast` on `non_null_ptr_type` values — omitting
+  virtuality here would make that cast undefined behaviour on destruction.
+- `get_instantiation_type()`'s base implementation assumes no value type; only
+  override it when the structural type is genuinely a template, as
+  `GpgimTemplateStructuralType` does.
 
 ## Used by
 

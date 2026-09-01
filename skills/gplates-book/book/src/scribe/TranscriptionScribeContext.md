@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscriptionScribeContext tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TranscriptionScribeContext` is the layer between `Scribe`, which drives the object graph traversal that application code sees, and `Transcription`, the in-memory tree of tagged composite and primitive objects that is actually the archive. `Scribe` never touches a `Transcription::CompositeObject` directly; it calls `push_transcribed_object()`/`pop_transcribed_object()` to move into and back out of the object currently being transcribed, and `transcribe_object_id()`/`transcribe()` to read or write the child identified by an `ObjectTag` relative to whatever object is on top of that stack. `push_transcribed_object()` is called with a freshly allocated id (via `allocate_save_object_id()`) when saving, or with an id already present in the loaded `Transcription` when loading, and the constructor seeds the stack with an emulated `ROOT_OBJECT_ID` composite purely so that top-level `transcribe()` calls have somewhere to record their tag.
+
+Internally, an `ObjectTag` is a sequence of sections — plain tag/version pairs, array indices, or an array's size — and `is_in_transcription()` / `transcribe_object_id()` walk those sections one at a time, descending into a fresh `CompositeObject` after each non-final section and resolving the actual child object id only at the final section. Each section's tag name and version are converted to a `Transcription::object_key_type` via `Transcription::get_object_key()` (loading) or `get_or_create_object_key()` (saving); a lookup failure at any section — an unknown key, or a key with zero or more than one matching child — simply returns `false`/`boost::none` rather than throwing, which is how `Scribe` detects `TRANSCRIBE_INCOMPATIBLE` conditions such as tags that don't exist in an older or newer archive. The primitive `transcribe()` overloads are the leaf case: they write a value directly into whatever composite/tag/array slot the id stack currently identifies, with 64-bit integers narrowed to `long`/`unsigned long` (and vice versa) via `boost::numeric_cast`, throwing `Exceptions::ScribeUserError` if a value doesn't fit — the only reason this indirection exists is that a `long` is 32-bit on Windows but 64-bit on Mac/Linux.
 
 ## Declared types
 
@@ -72,9 +72,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscriptionScribeContext tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `push_transcribed_object()`/`pop_transcribed_object()` must be balanced by the caller (`Scribe`); `pop_transcribed_object()` asserts (`Exceptions::ScribeLibraryError`) that the emulated root object is never popped off the stack.
+- On save, popping an object that never had anything transcribed into it (e.g. an empty base class) still creates an empty composite object in the `Transcription`, so that the parent's reference to it resolves rather than dangling.
+- `object_id_type` value `0` is reserved for null pointers and `1` for the emulated root object; real transcribed objects are allocated starting at `2` on the save path.
+- A missing or ambiguous object key (absent tag, or more than one child sharing a key — which should already have been prevented when the transcription was written) is treated as ordinary transcription failure, not a thrown exception; only structurally-impossible states (e.g. failed invariants about the transcribed-object stack or tag-section shape) raise `Exceptions::ScribeLibraryError`.
+- 64-bit integer transcription throws `Exceptions::ScribeUserError` if a value on the save path does not fit in a `long`/`unsigned long`, which effectively caps transcribable integers at 32 bits on platforms (Windows) where `long` is 32-bit.
 
 ## Used by
 

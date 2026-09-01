@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/SphericalGrid tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::SphericalGrid` draws the latitude/longitude graticule and the globe's circumference outline for the 3D globe view, using settings supplied by a `GraticuleSettings` reference it does not own. Lines of latitude are tessellated as `GPlatesMaths::SmallCircle`s and lines of longitude as great-circle arcs (`stream_line_of_lat`/`stream_line_of_lon`), streamed into vertex buffers via `GPlatesOpenGL::GLDynamicStreamPrimitives` and uploaded once into a compiled OpenGL draw state (`GLCompiledDrawState`) rather than re-issued every frame.
+
+Both `paint()` and `paint_circumference()` cache their compiled draw state and only rebuild it when the graticule settings actually change (`d_last_seen_graticule_settings` tracks what was last compiled), since compiling is comparatively expensive and the grid's shape rarely changes between frames. Rendering can go either straight to the OpenGL framebuffer or through `FeedbackOpenGLToQPainter` to composite onto a `QPainter` paint device (e.g. when exporting to a vector image), which the two paint methods select automatically based on `renderer.rendering_to_context_framebuffer()`.
 
 ## Declared types
 
@@ -68,9 +68,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/SphericalGrid tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_graticule_settings` is held by reference, so the referenced `GraticuleSettings` object must outlive the `SphericalGrid`. The grid draw state is invalidated on any settings change, but the circumference draw state only checks the colour (its line width and geometry don't depend on the lat/lon spacing settings) — a change to spacing alone will not recompile the circumference, only the grid.
 
 ## Used by
 

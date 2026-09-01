@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportVelocityAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportVelocityAnimationStrategy` is the concrete `ExportAnimationStrategy` for writing velocity mesh output during an animation export, playing the concrete Strategy role from Gamma et al. against `ExportAnimationContext`. Each animation frame, `do_export_iteration` gathers the visible `VELOCITY_FIELD_CALCULATOR` layers from `GPlatesPresentation::VisualLayers`, pulls their `VelocityFieldCalculatorLayerProxy` output as `MultiPointVectorField` objects (overriding delta-time and boundary-smoothing parameters from the export options), and dispatches to one of four `GPlatesFileIO::MultiPointVectorFieldExport` functions chosen by `Configuration::file_format`.
+
+The nested `Configuration` hierarchy (`GpmlConfiguration`, `GMTConfiguration`, `TerraTextConfiguration`, `CitcomsGlobalConfiguration`) captures the per-format export options as immutable, cloneable value objects handed in at construction; `TerraTextConfiguration` and `CitcomsGlobalConfiguration` additionally expose static placeholder tokens (`%MT`, `%NT`, `%ND`, `%NP`, `%D`, `%C`) used to pattern-match parameters embedded in Terra and CitcomS velocity-domain grid filenames.
 
 ## Declared types
 
@@ -66,9 +66,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportVelocityAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Construction is protected; instances are created only through the per-`Configuration`-subclass `create()` factory, which returns a `non_null_ptr_type`, matching the pattern used by sibling `ExportAnimationStrategy` subclasses.
+- All visual layers of type `VELOCITY_FIELD_CALCULATOR` are exported regardless of visibility — a deliberate compatibility choice with GPlates 1.5, noted in the code as something a future per-export layer-selection UI should revisit.
+- `d_loaded_files` and the general export-file bookkeeping are copied from `ExportReconstructedGeometryAnimationStrategy.h`, so the two strategies should be kept in sync if that logic changes.
 
 ## Used by
 

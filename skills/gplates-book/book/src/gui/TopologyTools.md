@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TopologyTools tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyTools` is the interactive controller behind the "build/edit topology"
+canvas tools (`BuildTopology`, `EditTopology`) and the `TopologyToolsWidget`
+task panel. It owns the whole workflow of assembling a topological line,
+boundary or network out of a sequence of section features clicked on the
+globe: tracking the ordered list of boundary and interior sections in two
+`TopologySectionsContainer`s, reconstructing each section's geometry at the
+current time, intersecting neighbouring sections to find shared vertices,
+choosing reversal flags that minimise "rubber-banding" distance between
+non-intersecting sections, and finally assembling the clipped subsegments into
+the `GpmlTopologicalSection` list that `create_topological_geometry_property()`
+turns into the feature's `gpml:boundary`/`gpml:interior` properties.
+
+The class inherits `GPlatesMaths::ConstGeometryOnSphereVisitor` to pull the
+concrete point/polyline/polygon/multipoint geometry out of whatever
+`ReconstructionGeometry` a section resolves to, and `QObject` so it can react
+to `ApplicationState::reconstructed`, `FeatureFocus` changes, and the
+insert/remove/modify signals from the two `TopologySectionsContainer`s that
+back the boundary and interior section lists. It renders its working state
+(segments, intersection points, insertion neighbours, focused geometry) into
+dedicated `RenderedGeometryCollection` child layers so the canvas shows the
+topology being built before it is committed to the model.
+
+`activate_build_mode()` and `activate_edit_mode()` are the two entry points a
+canvas tool uses to start a session; build mode starts from an empty section
+list, edit mode seeds it from the currently-focused topological feature via
+`initialise_topological_sections_from_edit_topology_focused_feature()`. Most
+of the private surface — the reversal-flag search
+(`find_reverse_section_subsets`, `find_flip_reverse_order_flags`,
+`find_reverse_order_subset_to_minimize_rubber_banding`,
+`choose_child_reverse_order_subset`) and the segment assignment/drawing
+methods — is the geometric machinery this workflow needs and is not meant to
+be called from outside the class.
 
 ## Declared types
 
@@ -160,9 +189,26 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TopologyTools tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `AutoReconnectToTopologySectionsContainers` is an RAII guard, not a
+  general-purpose type: while it is alive it disconnects both
+  `TopologySectionsContainer` signal connections, and its destructor
+  reconnects them. It is used around code that flips a section's reverse flag
+  so that the resulting `entry_modified` signal does not re-enter
+  `react_entry_modified_boundary()`/`react_entry_modified_interior()`.
+- `d_boundary_section_info_seq`/`d_interior_section_info_seq` are kept in sync
+  with the two `TopologySectionsContainer`s purely by listening to their
+  cleared/inserted/removed/modified signals (`connect_to_*_sections_container_signals`);
+  nothing re-validates them against the container on demand, so a container
+  mutation made without going through those signals would desynchronise the
+  tool.
+- `handle_unloaded_sections()` clears the whole topology if any referenced
+  section feature has been unloaded from the model, rather than trying to
+  repair a partial section list.
+- The tool is a single stateful session: `d_is_active` and `d_seq_num` (which
+  of the boundary/interior sequence is being edited) must be set by
+  `activate_build_mode()`/`activate_edit_mode()` before any of the private
+  reconstruction/rendering methods are meaningful, and `deactivate()` must be
+  called to detach it from focus and container signals.
 
 ## Used by
 

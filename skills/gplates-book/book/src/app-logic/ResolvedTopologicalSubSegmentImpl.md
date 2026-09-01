@@ -9,9 +9,30 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalSubSegmentImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTopologicalSubSegmentImpl` is the implementation namespace behind
+`ResolvedTopologicalGeometrySubSegment` and `ResolvedTopologicalSharedSubSegment`:
+both classes forward their point-source-info and sub-sub-segment queries here
+rather than implementing the logic themselves, because the logic is identical
+whichever "owning" class asked for it and is intricate enough to deserve its
+own file. The header declares only the two entry points,
+`get_sub_segment_vertex_source_infos()` and `get_sub_sub_segments()`; almost
+all of the 1060-line `.cc` is private helper functions in the same namespace.
+
+`get_sub_segment_vertex_source_infos()` fills in, per vertex of a (possibly
+rubber-banded) sub-segment, which source reconstructed feature geometry that
+vertex's velocity should be computed from — a single shared source if the
+topological section is a `ReconstructedFeatureGeometry`, or one source per
+vertex inherited from the section's own sub-segments if it is a
+`ResolvedTopologicalLine`. Rubber-band vertices (inserted where a section
+doesn't quite meet its neighbour) get an interpolated source blended between
+the two adjacent sections, fixed to be evaluated *at* the section endpoint so
+that velocities interpolate correctly rather than being sampled at the
+rubber-band midpoint. `get_sub_sub_segments()` handles the companion problem
+for a section that is a `ResolvedTopologicalLine`: it maps the (possibly
+clipped, by intersection or rubber-banding) range of the outer sub-segment
+back onto the line's own unclipped sub-segments, splitting or replacing the
+first/last one where the outer sub-segment's boundary falls in the middle of
+one of them.
 
 ## Declared types
 
@@ -39,9 +60,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalSubSegmentImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_sub_segment_vertex_source_infos()` asserts (via `PreconditionViolationError`)
+that the section reconstruction geometry passed in is either a
+`ReconstructedFeatureGeometry` or a `ResolvedTopologicalLine` — no other
+`ReconstructionGeometry` kind is valid as a topological section. The
+sub-sub-segment splitting logic in the `.cc` file has several subtle
+special cases (documented inline) around intersections and rubber bands
+landing exactly on the first or last vertex of a resolved line; the
+author's own comment on `replace_intersected_sub_sub_segment` calls it
+"probably the most subtle point of this function" — read that function's
+comments closely before changing the clipping behaviour.
 
 ## Used by
 

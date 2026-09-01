@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/GpgimVersion tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpgimVersion` is a small value type for the `<MAJOR>.<MINOR>.<REVISION>` version
+number stamped on the GPGIM itself, stored as the `gpml:version` attribute of a
+GPML feature collection element and as the `FEATURE_COLLECTION_TAG` tag on a
+`FeatureCollectionHandle`. It lets readers and writers compare "the version this
+file was written against" to "the version this build of GPlates implements" and
+decide whether an upgrade path is needed.
+
+`create()` parses a version string leniently: the revision field can be omitted
+only for `"1.6"`, in which case it defaults to `DEFAULT_ONE_POINT_SIX_REVISION`
+(317), because GPlates wrote plain `"1.6"` into GPML files for years before the
+three-part scheme was introduced in 2012, and existing files need to keep parsing
+to the same effective version. `get_version_string()` renders the revision back out
+zero-padded to four digits (`"1.6.0317"`), which is the convention used on the
+GPGIM feed, even though `create()` also accepts the unpadded form. Ordering
+(`operator<`, and the rest via `boost::less_than_comparable`) compares major, then
+minor, then revision numerically, so version strings must not be compared as text.
 
 ## Declared types
 
@@ -50,9 +63,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/GpgimVersion tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The direct constructor throws `GPlatesGlobal::LogException` if given numbers that
+don't form a valid version (major/minor not a non-zero single digit, major.minor
+below 1.6, or revision zero or over 9999); `create()` instead returns `boost::none`
+for the same conditions when parsing a string, so callers get a validating
+constructor and a non-throwing parser side by side.
 
 ## Used by
 

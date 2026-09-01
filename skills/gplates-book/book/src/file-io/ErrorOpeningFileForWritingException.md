@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ErrorOpeningFileForWritingException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ErrorOpeningFileForWritingException` is the write-side counterpart to `ErrorOpeningFileForReadingException`: a `GPlatesGlobal::Exception` thrown whenever a file cannot be opened for writing, carrying only the target filename via `filename()`. Its wide fan-in — every format writer in `file-io` (`GpmlOutputVisitor`, `OgrWriter`, `GMTFormatWriter`, `PlatesRotationFormatWriter`, and the various export modules), plus `GLScalarField3DGenerator` and `LogToFileHandler` — makes it the standard exception any export or logging path can throw when the underlying `QFile`/OS call to open the output fails, letting callers such as `gui/FileIOFeedback` report a uniform "could not write to this file" error regardless of which writer raised it.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ErrorOpeningFileForWritingException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CalculateReconstructionPoleDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Dialog for computing a plate rotation from a Virtual Geomagnetic Pole (VGP). Given a VGP latitude/longitude and a geographic target pole (North or South), calculates the rotation that carries the VGP to that pole, extracting the rotation axis and angle to populate a `ReconstructionPole`. The dialog pre-fills VGP fields from the currently focused feature via `PalaeomagUtils::VirtualGeomagneticPolePropertyFinder`. An "Insert Pole in Rotation Model" button opens `InsertVGPReconstructionPoleDialog` to add the calculated pole to the active rotation model.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CalculateReconstructionPoleDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

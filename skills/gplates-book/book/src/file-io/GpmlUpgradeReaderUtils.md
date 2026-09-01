@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlUpgradeReaderUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This namespace lets GPlates read a GPML file written against an older GPGIM
+version without having to keep a separate reader implementation for every schema
+revision. It does so by decorating a `GpmlFeatureReaderImpl` with wrapper readers:
+`RenamePropertyFeatureReaderImpl` renames properties after delegating to the
+wrapped reader, `RemovePropertyFeatureReaderImpl` drops matching properties, and
+`ChangeFeatureTypeFeatureReaderImpl` rewrites the feature type — each pairing with
+a matching `*_gpgim_feature_class_properties` helper that produces the modified
+`GpgimFeatureClass` the wrapped reader is built against, so the reader accepts the
+old property names/types while presenting the current ones outward.
+`TopologicalNetworkFeatureReaderUpgrade_1_6_319` and
+`CrustalThinningFactorUpgrade_1_6_338` are one-off readers for specific GPGIM
+version transitions that need more than a rename/remove/retype, named after the
+GPGIM version that introduced the change they compensate for.
+
+`OldVersionPropertyValueFinder` is a small `ConstFeatureVisitor` used by the
+topological-network upgrade to recover an `OldVersionPropertyValue` that may be
+wrapped inside a `GpmlConstantValue` or `GpmlPiecewiseAggregation`, since older
+files stored unrecognised structural content that way. `create_topological_section_list`
+similarly re-derives a list of topological sections from an old-style
+`gpml:TopologicalPolygon`/`gpml:TopologicalInterior` element for the same upgrade
+path.
 
 ## Declared types
 
@@ -129,9 +147,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlUpgradeReaderUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Each wrapper reader (`RenamePropertyFeatureReaderImpl`,
+`RemovePropertyFeatureReaderImpl`, `ChangeFeatureTypeFeatureReaderImpl`, and the
+version-specific readers) holds `d_feature_reader` and delegates all actual
+property reading to it, only touching the result afterwards — they never
+reimplement the underlying GPML parsing themselves. This is a decorator chain assembled by `GpmlFeatureReaderFactory`, which is itself
+constructed once per file read (`GpmlReader` builds one against the GPGIM version
+recorded in that file), so the wrapper chain is built once per file rather than
+once per feature.
 
 ## Used by
 

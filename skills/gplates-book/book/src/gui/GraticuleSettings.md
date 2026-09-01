@@ -9,9 +9,16 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GraticuleSettings tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GraticuleSettings` is a small value type holding the user's preferences for
+the lat/lon grid drawn on the globe and map: spacing in radians for latitude
+and longitude, a colour, and a line-width hint. A spacing of zero suppresses
+that axis's lines entirely. `SphericalGrid` and `MapGrid` consume an instance
+to know what to draw, and `ViewState` owns the live setting that
+`ConfigureGraticulesDialog` edits. It participates in project/session
+serialisation via `transcribe()`, falling back field-by-field to the defaults
+in `DEFAULT_GRATICULE_DELTA_LAT`/`_LON`/`_COLOUR` (30 degrees and translucent
+silver) when a field is missing from older saved data, so new settings fields
+can be added without breaking backward compatibility.
 
 ## Declared types
 
@@ -54,9 +61,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GraticuleSettings tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Equality (`boost::equality_comparable`) compares floating-point fields with
+`GPlatesMaths::are_almost_exactly_equal()` rather than `==`.
 
 ## Used by
 

@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlPropertyReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlPropertyReader` reads one named feature property, validating it against a
+single `GpgimProperty` rather than a hard-coded schema: `create` binds a reader to
+one GPGIM property definition, and `read_properties` scans a feature's XML element
+for all children with that property name, checking the property's multiplicity
+(`ZERO_OR_ONE`, `ONE`, `ONE_OR_MORE`, ...) and reporting `NecessaryPropertyNotFound`
+or `DuplicateProperty` read errors when the count is wrong. Because GPML wraps a
+property's structural type in time-dependent structures such as
+`gpml:ConstantValue`, `gpml:IrregularSampling` or `gpml:PiecewiseAggregation`, most
+of the private machinery — `read_property_structural_type`,
+`convert_unwrapped_to_time_dependent_wrapped_structural_type` and its inverse,
+`get_time_dependent_wrapped_structural_type` — exists to reconcile whatever wrapping
+(or lack of it) is actually present in the file against what the GPGIM property
+declares.
+
+A property whose name is recognised but whose structural type the GPGIM rejects
+is not dropped: it is wrapped in an `UninterpretedPropertyValue` so it round-trips
+unchanged when the feature collection is written back out. Only a property name
+the GPGIM does not accept at all yields no property value. This class is created
+per property by `GpmlFeatureReaderFactory`/`GpmlFeatureReaderImpl` machinery built
+from the GPGIM, and it delegates the actual structural parsing to a
+`GpmlPropertyStructuralTypeReader`.
 
 ## Declared types
 
@@ -57,9 +75,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlPropertyReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Processed XML property nodes are always erased from
+`unprocessed_feature_property_xml_nodes`, even when the result is an
+`UninterpretedPropertyValue` rather than an interpreted one — callers must not
+assume a node surviving in that list means the property name was unrecognised in
+some other sense. `d_structural_reader_types` is guaranteed non-empty by the GPGIM
+property that constructed this reader. `d_gpml_version` records the GPGIM version the file was written against and is
+threaded through to every structural-type creation call
+(`GpmlPropertyStructuralTypeReaderUtils::create_*`), since parsing some structural
+elements depends on which GPGIM version produced them.
 
 ## Used by
 

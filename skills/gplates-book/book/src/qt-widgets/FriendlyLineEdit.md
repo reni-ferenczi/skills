@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/FriendlyLineEdit tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FriendlyLineEdit` is a `QWidget` wrapper around a hidden `QLineEdit` (`FriendlyLineEditInternals::InternalLineEdit`) that shows a grey, italic placeholder message whenever the logical contents are the empty string, reverting to normal text and font once the field gains focus or real text is typed. `FriendlyLineEdit` re-exposes the usual `QLineEdit` surface (`text()`, `setText()`, `setValidator()`, `setAlignment()`, `setReadOnly()`, `editingFinished()`, `textEdited()`) by forwarding every call to `d_line_edit`, so it is a drop-in replacement wherever a `QLineEdit` was used directly but a friendlier empty-state hint is wanted — the destination widgets listed as users of this class are labelled combo/spinbox layer-options panels where a numeric field's default meaning needs explaining when left blank.
+
+The forwarding is not simply structural: `InternalLineEdit` tracks whether it is currently displaying the placeholder in `d_is_empty_string`, and its overridden `text()` returns an empty `QString` rather than the placeholder text whenever the widget lacks focus and is showing the message, so callers of `FriendlyLineEdit::text()` never see the placeholder string itself. Because `focusInEvent()`/`focusOutEvent()` are not virtual on `QWidget` in a way `FriendlyLineEdit` can intercept directly through the internal edit, the internal edit is instead constructed with `boost::function` callbacks bound to `FriendlyLineEdit::focusInEvent()`/`focusOutEvent()`, letting subclasses of `FriendlyLineEdit` still hook into focus changes on the outer widget.
 
 ## Declared types
 
@@ -73,9 +73,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/FriendlyLineEdit tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`InternalLineEdit::setText()` simulates a focus-in/focus-out cycle around the underlying `QLineEdit::setText()` call so the placeholder logic (which lives in `handle_focus_in()`/`handle_focus_out()`) runs even for programmatic updates, not just user interaction. `d_line_edit` is a raw pointer but is parented to `this` via `QtWidgetUtils::add_widget_to_placeholder()`, so its memory is managed by Qt.
 
 ## Used by
 

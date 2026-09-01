@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/WeakObserverPublisher tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`WeakObserverPublisher<H>` is the publisher half of the observer pattern that backs `WeakReference`/`WeakObserver`: a class that wants weak references made to it (such as `FeatureHandle`) derives from `WeakObserverPublisher<H>` and thereby gains the head/tail pointers of two intrusive doubly-linked lists, one for `WeakObserver<H>` (non-const) observers and one for `WeakObserver<const H>` observers. `apply_weak_observer_visitor()` and `apply_const_weak_observer_visitor()` walk each list in turn, handing every subscribed observer to a `WeakObserverVisitor<H>` — this is how a publisher broadcasts lifecycle events (modified, deactivated, about to be destroyed) to everything weakly referencing it, via the visitors in `WeakReferenceVisitors.h`.
+
+The four free `weak_observer_get_first`/`weak_observer_get_last` function templates exist only so `WeakObserver<H>` can pick the correct list (const or non-const) purely by overload resolution on pointer constness, without the publisher needing to expose two differently-named accessor pairs; the unused second parameter is a tag argument chosen only for its type, following the same trick as Boost's `intrusive_ptr_add_ref`/`release`.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/WeakObserverPublisher tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The destructor unsubscribes every observer still on either list, so a publisher going out of scope does not leave any `WeakObserver` with a dangling publisher pointer — but this class does not itself notify observers of destruction; that notification is a separate, explicit step callers must trigger (see `WeakReferencePublisherDestroyedVisitor`) before the publisher is actually destroyed. `first_const_weak_observer()`/`last_const_weak_observer()` are declared `const` and mutate `mutable` members, since subscribing a new const observer must be possible even through a const publisher.
 
 ## Used by
 

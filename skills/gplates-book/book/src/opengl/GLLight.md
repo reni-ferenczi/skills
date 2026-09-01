@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLLight tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLLight` represents a single directional light shared by the 3D globe view and the 2D map views, and exists to solve a projection problem: on the globe the light direction is constant in world space, but on a map the light is meant to be constant in map space, which means it varies across the globe once the map is projected back onto it. Rather than recompute that varying direction per pixel in shader logic, `GLLight` precomputes it once into a hardware cube map (`d_map_view_light_direction_cube_texture`, rendered by `update_map_view` using the `light` shader program) indexed by position-on-sphere, so a raster painter can just sample the cube map by surface position to get the correct world-space light direction for map-view lighting.
+
+Callers create one `GLLight` (with or without a `GPlatesGui::MapProjection`, selecting globe-view or map-view mode) and update it through `set_scene_lighting` whenever the `GPlatesGui::SceneLightingParameters`, view orientation, or map projection change; a `GPlatesUtils::SubjectToken` lets dependents detect that update without polling. For the common globe case where no normal mapping is used, `get_map_view_constant_lighting` gives a single ambient+diffuse scalar instead of requiring a texture lookup.
 
 ## Declared types
 
@@ -59,9 +59,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLLight tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `is_supported` must be checked before use: lighting requires vertex/fragment shader support, and there is no fallback path inside `GLLight` itself.
+- `get_map_view_light_direction_cube_map_texture` returns an 8-bit RGBA texture with light-direction components encoded into `[0,1]`; callers must remap to `[-1,1]` before use, and must bind it as `GL_TEXTURE_CUBE_MAP_ARB`, not `GL_TEXTURE_2D`.
+- Use `get_map_view_constant_lighting` only when the surface normal is constant and perpendicular to the map (no normal mapping); otherwise the light direction varies across the map and the cube map texture must be sampled instead.
 
 ## Used by
 

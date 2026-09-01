@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/patterns/PublisherTemplate tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A template-based implementation of the Observer/Publisher-Subscriber pattern that makes event notification type-safe through inheritance-based mixin style base classes. Classes become publishers by inheriting from `PublisherTemplate<T>`, while subscriber types inherit from `PublisherTemplate<T>::Subscriber` and define `receive_notification()`. The pattern handles automatic cleanup: publishers automatically unsubscribe all subscribers upon destruction, and subscribers automatically unsubscribe themselves before being destroyed.
+
+The implementation provides subscription and unsubscription operations callable from either the publisher or subscriber side, with idempotent semantics (attempting to subscribe an already-subscribed subscriber or unsubscribe a non-subscribed one are safe no-ops). All operations are strongly exception-safe and exception-neutral. A single class can be both a publisher and subscriber to different publishers simultaneously, though the type system prevents a class from inheriting from multiple publisher or multiple subscriber base classes.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/patterns/PublisherTemplate tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Copy-construction and copy-assignment are disabled for `PublisherTemplate` itself because they violate the invariant that a subscriber can only be subscribed to one publisher: copying a publisher would require copying its subscriber list, but those subscribers would still be subscribed to the original publisher. Subscribers' copy-constructor and assignment operator are protected and update subscription state to match the source; derived classes must explicitly invoke them in their own copy operations. All methods safely handle NULL state: `Subscriber::unsubscribe()` is a no-op if not subscribed, `append_subscriber()` is a no-op if already subscribed, and `remove_subscriber()` is a no-op if not subscribed to this publisher. Subscriber destruction automatically unsubscribes to prevent dangling pointers, and publisher destruction automatically calls `unsubscribe()` on all subscribers.
 
 ## Used by
 

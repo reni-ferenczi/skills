@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerTask tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerTask` is the abstract interface every concrete layer implementation (reconstruct, raster, topology resolver, velocity calculator, co-registration, and so on) implements to plug into `ReconstructGraph`. It declares its own `LayerInputChannelType` set and main input channel, receives file and layer-proxy connect/disconnect notifications on those channels, and exposes a `LayerProxy` at its output plus a `LayerParams` for its configuration — the graph and `Layer` wrapper drive a task purely through this interface, never through a concrete subclass.
+
+`update()` is the task's one hook to react to anything it did not directly observe through the connection methods: a reconstruction time or anchored plate change, a model edit, or a change propagating from a dependent layer — the task is expected to flush any cached internal state affected by such changes. The `LayerTaskType` returned by `get_layer_type()` exists mainly so the GUI can pick the right visual representation and options widget for a given task without a subclass check.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerTask tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `reconstruction` passed to `update()` already contains all active layer proxies, including the task's own — a task should use it to look up other layers' current output, not to find itself. Each layer proxy tracks its own connection changes independently, so `update()` exists only to react to changes elsewhere (other layers, the model, reconstruction time/anchor); it is not the place to re-derive state already handled by the `add_input_*`/`remove_input_*` callbacks.
 
 ## Used by
 

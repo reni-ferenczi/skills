@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PlatesRotationFormatWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PlatesRotationFormatWriter` is a `ConstFeatureVisitor` that serializes total
+reconstruction sequence features back out to the PLATES4 `.rot` line format (or
+its GROT variant) — the counterpart to `PlatesRotationFormatReader`. As the
+feature visitor walks a sequence feature's properties, it accumulates one
+`PlatesRotationFormatAccumulator::ReconstructionPoleData` per `GpmlTimeSample`
+found inside the `GpmlIrregularSampling` (`visit_gpml_irregular_sampling` /
+`write_gpml_time_sample`), picking up the finite rotation, time, comment, disabled
+flag and metadata for each sample, plus the moving and fixed plate IDs
+(`visit_gpml_plate_id`). `finalise_post_feature_properties` then prints the
+accumulated poles as PLATES4 lines only once
+`PlatesRotationFormatAccumulator::have_sufficient_info_for_output` confirms every
+sample has both a rotation and a time.
+
+The `grot_format` constructor flag distinguishes GROT output, which is allowed to
+carry metadata lines without an accompanying rotation pole, from plain PLATES4
+`.rot` output, where every line must contain a pole; in PLATES4 mode a metadata-only
+line is prefixed with a dummy `"999 0.0 0.0 0.0 0.0 999 !"` pole so the line
+still parses as a (disabled) rotation entry.
 
 ## Declared types
 
@@ -50,9 +65,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PlatesRotationFormatWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor throws `ErrorOpeningFileForWritingException` if the output file
+  cannot be opened, so construction alone can fail before any feature is visited.
+- A `ReconstructionPoleData` entry is skipped when writing out if it lacks both a
+  finite rotation and a time (`have_sufficient_info_for_output`); an irregular
+  sampling with an incomplete time sample therefore silently loses that sample on
+  round-trip rather than erroring.
+- `d_output_file`/`d_output_stream` are `boost::scoped_ptr`, so the writer owns the
+  file for its own lifetime and closes it on destruction; the writer is not
+  copyable as a result.
 
 ## Used by
 

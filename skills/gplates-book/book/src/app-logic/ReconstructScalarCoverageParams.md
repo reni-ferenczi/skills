@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructScalarCoverageParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructScalarCoverageParams` is the parameters object `ReconstructScalarCoverageLayerProxy` and `ReconstructScalarCoverageLayerParams` hold for configuring how 2D scalar coverages are deformed/evolved. It follows the same pattern as `ReconstructParams`: a comparable, `Scribe`-transcribable value type that a layer's params can compare against to detect configuration changes and that can round-trip through sessions and projects.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructScalarCoverageParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The class currently declares no data members: `operator==` unconditionally returns `true`, `operator<` unconditionally returns `false`, and `transcribe` transcribes nothing. It exists as a placeholder for scalar-coverage-evolution options that have not yet been added; do not assume it carries any configurable state today.
 
 ## Used by
 

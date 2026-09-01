@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/InvalidLatLonCoordinateException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InvalidLatLonCoordinateException` reports a single bad coordinate found while
+converting a flat sequence of doubles into (lat, lon) pairs — the situation
+that arises when geometry is built from externally supplied coordinate data
+(digitised points, imported files, reconstructed geometry) rather than
+constructed programmatically with already-valid values. Unlike the plain
+`FunctionDomainException`, it derives from
+`GPlatesGlobal::ExternalResourceFailureException`, classing an invalid
+coordinate as a data-input problem rather than an internal maths-invariant
+violation, which matters for how callers decide whether to catch and report
+it versus let it propagate as a bug.
+
+It carries enough detail for a caller or error dialog to pinpoint the problem
+precisely: the offending value (`invalid_coord()`), whether it was the
+latitude or longitude half of the pair (`coordinate_type()`, a
+`LatitudeCoord`/`LongitudeCoord` enum), and the index of the pair within the
+input sequence (`coord_index()`). `write_message()` composes these into a
+single diagnostic line such as "invalid latitude coordinate 132.5 at index 3
+in sequence".
 
 ## Declared types
 
@@ -45,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/InvalidLatLonCoordinateException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyInternalUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyInternalUtils` is the free-function toolbox shared by the topology-resolving and topology-editing code: it works with the raw GPML property values (`GpmlTopologicalLine`, `GpmlTopologicalPolygon`, `GpmlTopologicalNetwork`, `GpmlTopologicalSection`) rather than with resolved geometry, so both `TopologyGeometryResolverLayerProxy`/`TopologyNetworkResolverLayerProxy` (reading topologies) and the `gui::TopologyTools`/`canvas-tools` editing workflow (writing topologies) depend on it. Most of the work is done by private `FeatureVisitor` classes anonymous to the `.cc` file — `TopologicalGeometryPropertyValue` and `TopologicalGeometryPropertyValueType` unwrap a possibly time-dependent property to get at the underlying topological value or its type, `CreateTopologicalSectionPropertyValue` and `CreateTopologicalNetworkInterior` build the property-delegate wrappers that let a topology reference another feature's geometry property by name, and `FindTopologicalSectionsReferenced` walks a topological feature (or collection) to collect the feature IDs of every section it references.
+
+`find_topological_reconstruction_geometry()` is the other half of that reference-by-feature-ID scheme: given a property delegate (or a raw property iterator) it looks up the already-computed `ReconstructionGeometry` for the referenced geometry, which only works if the referenced geometry has already been reconstructed or resolved — callers must therefore order their work so that dependency's resolving happens first. The `can_use_as_resolved_*_topological_section()` family encodes which kinds of `ReconstructionGeometry` are legal sections for each resolved geometry kind, matching the one-way line/boundary/network referencing restriction described on `TopologyGeometryResolverLayerProxy`.
 
 ## Declared types
 
@@ -139,9 +139,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyInternalUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Property delegates identify a geometry property only by its property *name*, not a unique ID, so `create_gpml_topological_section()` and `find_topological_reconstruction_geometry()` can misbehave when a feature has multiple geometry properties sharing a name, or when the same feature is reconstructed more than once in different layers — `find_topological_reconstruction_geometry()` fails (returns `boost::none`) if the candidate reconstruction geometries it finds resolve to more than one feature. `find_topological_reconstruction_geometry()` also only sees `ReconstructionGeometry` objects that have already been generated for the requested reconstruction time; calling it before the referenced feature has been reconstructed or its topological line resolved silently yields nothing.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatHeader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit builds the `>`-prefixed comment header GMT writes above each feature's coordinate block, using the `GMTFormatHeader` interface and three interchangeable strategies. `GMTFormatPlates4StyleHeader` reformats a feature's `OldPlatesHeader` (obtained via `PlatesLineFormatHeaderVisitor`) into the fixed-width two-line PLATES4 header layout. `GMTFormatVerboseHeader` instead walks every property of the feature as a `ConstFeatureVisitor`, serialising each property value it understands (geometry, plate IDs, time periods, key-value dictionaries, and so on) into a flat, human-readable header line per property — `PropertyAccumulator` tracks whether the property being visited is a geometry or carries a reconstruction plate ID so it can be reported specially. `GMTFormatPreferPlates4StyleHeader` picks between the two: it visits the feature looking for a `GpmlOldPlatesHeader` property and, if found, delegates to the PLATES4-style formatter; otherwise it falls back to the verbose one.
+
+`GMTHeaderPrinter` is the separate object that actually writes formatted header lines to a `QTextStream`, and is the piece that owns the tricky bookkeeping: GMT's `>` character serves double duty as both a "end of point list" terminator (written by `GMTFormatGeometryExporter`) and the prefix for each header comment line, so `GMTHeaderPrinter` tracks whether it is printing the very first feature in the file (via `d_is_first_feature_header_in_file`) to decide whether it needs to emit a `>` itself or can reuse the one already left behind by the previous feature's geometry output.
 
 ## Declared types
 
@@ -122,9 +122,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatHeader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Use one `GMTHeaderPrinter` instance per file written, as its doc comment states: it tracks first-feature state (`d_is_first_feature_header_in_file`) that is only valid for a single output stream, and `print_global_header_lines()` asserts that no feature has been written yet.
+- The coupling between `GMTHeaderPrinter` and `GMTFormatGeometryExporter`'s trailing `>` terminator is load-bearing: reordering how geometry and headers are interleaved when writing a file can produce a doubled or missing `>` marker.
+- `GMTFormatVerboseHeader` and `GMTFormatPreferPlates4StyleHeader` are stateful `ConstFeatureVisitor`s (`d_header_lines`, `d_current_line`, `d_nested_depth`, `d_property_accumulator`); an instance is not reentrant and must not be shared across concurrent `get_feature_header_lines()` calls.
 
 ## Used by
 

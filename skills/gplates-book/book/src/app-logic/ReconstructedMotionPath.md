@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructedMotionPath tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructedMotionPath` is the `ReconstructedFeatureGeometry` specialisation for motion tracks: a single `motion_path_points` polyline traced by a seed point as it moves under a fixed `reconstruction_plate_id`, together with the seed point's present-day and reconstructed positions. Structurally it mirrors `ReconstructedFlowline` but tracks one plate's motion rather than two plates diverging from a spreading point, and as with flowlines the base class's reconstructed geometry deliberately holds *all* seed points so geometry-editing tools like move-vertex keep working.
+
+Instances are created only through the private constructor via `create()`, so a `ReconstructedMotionPath` always lives behind `non_null_ptr_type` rather than on the stack.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructedMotionPath tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

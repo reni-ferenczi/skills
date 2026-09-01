@@ -8,9 +8,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLStateSetStore tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLStateSetStore` is a plain aggregate of `GPlatesUtils::ObjectPool` instances,
+one per concrete `GLStateSet` subclass declared in `GLStateSets.h` (bind
+targets, `glEnable` flags, matrix loads, vertex pointers, and so on). Each
+`GLState` change constructs one of these small immutable state-set objects,
+and rather than `new`/`delete` per change, it draws and returns instances from
+the matching pool here — a fixed, type-safe alternative to a single
+heterogeneous allocator for the very high churn of per-frame state objects.
+
+`GLContext::SharedState::get_state_store` creates one lazily, together with a
+`GLStateSetKeys`, and hands both to `GLStateStore`; callers reach it through
+that shared state rather than constructing it directly, since the constructor
+is private and only invoked via `create`.
 
 ## Declared types
 
@@ -81,9 +90,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLStateSetStore tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Adding a new `GLStateSet` subclass requires adding a matching `ObjectPool`
+field here as well — nothing enforces the pairing at compile time.
 
 ## Used by
 

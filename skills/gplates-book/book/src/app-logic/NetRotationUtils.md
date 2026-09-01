@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/NetRotationUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`NetRotationUtils` is the point-by-point math behind a net-rotation calculation. `calc_net_rotation_contribution` takes one sample point together with the `GPlatesMaths::FiniteRotation` stage pole that applies to its plate, and turns the stage pole's rotation angle and axis into a per-point rotation vector plus a cos-latitude weighting factor, packaged as a `NetRotationResult`. `sum_net_rotations` folds a stream of these per-point results into a running total keyed by plate id (`net_rotation_map_type`), and `convert_net_rotation_xyz_to_pole`/`convert_net_rotation_pole_to_xyz` convert between the Cartesian `GPlatesMaths::Vector3D` form used during accumulation and the pole-and-angle (`GPlatesMaths::LatLonPoint` plus degrees/Ma) form used to report a result.
+
+The module is a set of stateless free functions with no owned data; it does not itself iterate over a plate's points or a reconstruction's plates. That driving loop, and ownership of the accumulated `net_rotation_map_type`, belongs to the caller — currently `ExportNetRotationAnimationStrategy` in `gui`, which is the only unit that uses this one.
 
 ## Declared types
 
@@ -51,9 +51,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/NetRotationUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `calc_net_rotation_contribution` returns a zero-valued `NetRotationResult` early when the stage pole is an identity rotation or when `time_interval` is (almost) zero, to avoid dividing by zero when converting the rotation angle to degrees/Ma.
+- The per-point weighting factor is `(x² + y²) · cos(latitude)` of the sample point, not a plate area; `sum_net_rotations` simply adds these weights, so the caller is responsible for normalising by the total weight (as `display_net_rotation_output` does) to get a meaningful average.
+- `display_net_rotation_output` is debug-only (`qDebug` output) and silently swallows any `std::exception` it catches.
 
 ## Used by
 

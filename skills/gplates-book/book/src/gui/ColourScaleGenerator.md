@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourScaleGenerator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The single public entry point, `GPlatesGui::ColourScale::generate`, renders a `RasterColourPalette` into a pair of `QPixmap`s (a normal one and a checkerboard-backed "disabled" one) suitable for a colour-scale legend widget. It works by wrapping the request in an internal `ColourScaleGenerator`, a `boost::static_visitor<bool>` that is applied to the palette's variant so the code never needs to know the palette's concrete key type up front.
+
+Inside that visitor, `RangeVisitor` extracts the palette's numeric range and produces an equivalent `ColourPalette<double>` (via `convert_colour_palette`, using `ColourPaletteConverter` to pick a `StaticCastConverter` or, for `GPlatesMaths::Real` keys, a `RealToBuiltInConverter`), so the rest of the generator only ever deals with `double`. `fill_colour_scale` then walks the pixmap rows and paints each one with the colour the interpolator says corresponds to that row: `LinearInterpolator` maps pixel rows to values proportionally, while `LogInterpolator` spaces them logarithmically and, when the range straddles zero, apportions extra rows near the crossing (biased by the caller-supplied deviation) since log space cannot represent zero itself. `calculate_linear_annotation_multiplier` picks a "nice" round-number spacing (a multiple of 1, 2 or 5 times a power of ten) for the linear case's tick labels, matched to how many rows the annotation font height allows.
+
+This is pure computation over Qt pixmaps with no persistent state; every call to `generate` builds a throwaway `ColourScaleGenerator` and discards it once the pixmaps are filled in.
 
 ## Declared types
 
@@ -95,9 +97,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourScaleGenerator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `generate` returns `false` (leaving the pixmaps untouched) if the palette is `RasterColourPalette::empty` or if `RangeVisitor` cannot determine a range, e.g. a categorical palette with no configured range.
+- `use_log_scale`'s `double` payload is only meaningful when the value range straddles zero (`max_value >= 0 && min_value <= 0`); `LogInterpolator` asserts it is positive and non-zero in that case via `GPlatesGlobal::Assert`, since log space can approach but never reach zero.
+- `annotations`, when supplied, is populated in place: the caller's `annotations_seq_type` is cleared and refilled by the generator, and pixel row positions in the returned pairs are only valid for the same `pixmap_width`/`pixmap_height` used to generate them.
 
 ## Used by
 

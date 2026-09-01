@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=shaders/multi_resolution_raster_map_view tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionRasterMapView` uses this pair to draw a raster's cube-map tiles onto the flat 2D map projections, as the map-view counterpart to `multi_resolution_raster`'s globe-side tile compositing. It is deliberately narrower in scope: it supports the same `ENABLE_CLIPPING` and `SOURCE_RASTER_IS_FLOATING_POINT` compile-time variants (clip-texture masking, and bilinear filtering of packed data/coverage floating-point rasters) but has no lighting or normal-map handling, because the map view's lighting is either constant across the scene or computed elsewhere.
+
+The vertex shader calls `ftransform()` instead of multiplying by `gl_ModelViewProjectionMatrix` directly, matching the fixed-function pipeline's vertex transform bit-for-bit so this shader can be swapped in without shifting geometry relative to anything still rendered through the fixed-function path.
 
 ## Declared types
 
@@ -27,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=shaders/multi_resolution_raster_map_view tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

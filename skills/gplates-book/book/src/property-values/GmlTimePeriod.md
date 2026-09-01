@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlTimePeriod tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlTimePeriod` is the `GPlatesModel::PropertyValue` for `gml:TimePeriod`: a
+pair of `GmlTimeInstant` bounds, `d_begin` (the older, less recent time) and
+`d_end` (the more recent time), used throughout the model to express a
+feature's `gml:validTime` or a reconstructable geometry's temporal validity.
+`contains()` tests whether a `GeoTimeInstant` (or a raw `double`, via the
+overload that wraps it in one) falls within `[begin, end]` inclusive of both
+endpoints.
+
+The class documents an invariant — begin must not be later than end — but
+does not enforce it unconditionally: `create()`, `set_begin()` and
+`set_end()` all take a `check_begin_end_times` flag that defaults to `false`,
+because, as the header explains, real files in the wild violate this
+ordering. Only when a caller opts in does a violation raise
+`BeginTimeLaterThanEndTimeException` (a `GPlatesGlobal::PreconditionViolationError`).
 
 ## Declared types
 
@@ -58,9 +69,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlTimePeriod tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Because `check_begin_end_times` defaults to `false` everywhere, a
+  `GmlTimePeriod` can legitimately exist with begin later than end; code that
+  relies on the ordering (such as `contains()`) will simply behave oddly
+  rather than fail loudly unless the caller passed `true`.
+- `begin()` and `end()` each have a non-`const` overload returning
+  `GmlTimeInstant::non_null_ptr_type`, so a caller can mutate the pointed-to
+  `GmlTimeInstant` directly (e.g. via its own `set_time_position()`) without
+  going through `GmlTimePeriod::set_begin()`/`set_end()` — that path bypasses
+  the begin/end ordering check entirely, even when the caller would otherwise
+  want it.
+- `deep_clone()` recursively deep-clones both `d_begin` and `d_end`, unlike
+  the plain `clone()` used internally, which only copies the intrusive
+  pointers.
 
 ## Used by
 

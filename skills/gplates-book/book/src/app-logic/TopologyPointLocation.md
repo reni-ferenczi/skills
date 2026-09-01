@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyPointLocation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyPointLocation` records where a single point sits relative to resolved topologies at one instant: outside everything, inside a `ResolvedTopologicalBoundary`, or inside a `ResolvedTopologicalNetwork` at a particular delaunay face or rigid block (`network_location_type`). It exists purely to keep this per-point, per-time-slot record small — a `boost::variant` over the four private location structs, reached only through `boost::apply_visitor`, packs into 24 bytes on 64-bit builds versus 40 for the equivalent `boost::optional<boost::variant<...>>` — because `TopologyReconstruct` stores one of these for every point of every geometry at every time slot in a topological reconstruction's history, so the per-point overhead multiplies across the whole reconstructed time span.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyPointLocation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The compact representation is the whole point of this class: changing it to store anything larger than the current 24 bytes defeats the memory optimisation `TopologyReconstruct` relies on when it keeps one location per point per time slot.
 
 ## Used by
 

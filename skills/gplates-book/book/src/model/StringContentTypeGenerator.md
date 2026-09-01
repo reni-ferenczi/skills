@@ -8,9 +8,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/StringContentTypeGenerator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`StringContentTypeGenerator` is the template behind property-value text types such
+as `TextContent`, `EnumerationContent`, `TimescaleBand` and `TimescaleName`: like
+`IdTypeGenerator`, it interns a Unicode string into a `SingletonType`
+(a `GPlatesUtils::StringSet`) so that identical strings appearing in many features
+share one storage instance, equality reduces to comparing the shared-iterator
+member `d_ss_iter`, and checking whether a string is already loaded is an O(log n)
+set lookup rather than a walk over every feature's properties. Unlike
+`IdTypeGenerator`, it carries no back-reference machinery — it exists purely to
+deduplicate and cheaply compare repeated text content, not to track which object
+defines a given string.
+
+The two private `transcribe*` members hook the type into the `GPlatesScribe`
+serialisation framework used for sessions and projects; their implementations
+live in `TranscribeStringContentTypeGenerator.h` rather than here specifically so
+that this lightweight, widely-included header does not have to pull in the
+heavyweight `Scribe.h`.
 
 ## Declared types
 
@@ -41,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/StringContentTypeGenerator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

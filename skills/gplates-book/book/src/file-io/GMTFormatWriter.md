@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GMTFormatWriter` is the `ConstFeatureVisitor` that drives writing a whole feature collection to a GMT xy file: it opens the target `QFile`/`QTextStream` in its constructor (which requires `is_writable(file_info)` to already hold), accumulates every geometry found while visiting a feature's properties in `FeatureAccumulator`, and on `finalise_post_feature_properties()` writes one header-plus-geometry block per accumulated geometry, delegating the geometry itself to a fresh `GMTFormatGeometryExporter` per geometry and the header lines to a `GMTFormatHeader` strategy chosen from the file's `GMTConfiguration` (`PLATES4_STYLE_HEADER`, `VERBOSE_HEADER`, or `PREFER_PLATES4_STYLE_HEADER`). A single `GMTHeaderPrinter` instance is kept for the writer's whole lifetime so header/`>` bookkeeping stays consistent across all features written to the file.
+
+A feature with geometry but no usable header information is still written, with whatever (possibly empty) header lines its `GMTFormatHeader` strategy produced, on the reasoning that the user likely still wants the geometry exported even if header metadata is missing.
 
 ## Declared types
 
@@ -51,9 +51,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor requires `is_writable(file_info)` to already be true; it opens the file itself and throws `ErrorOpeningFileForWritingException` if the open fails.
+- If `file_ref` carries no `GMTConfiguration` (or a configuration of the wrong type), the writer falls back to `default_gmt_file_configuration` and writes that configuration back onto `file_ref`, mutating the caller's `File::Reference`.
+- The destructor is defined out-of-line specifically so `boost::scoped_ptr<GMTFormatHeader>` is destroyed where `GMTFormatHeader` is a complete type; do not make it `= default` in the header.
+- `GmlOrientableCurve` and `GpmlConstantValue` properties are unwrapped by re-dispatching `accept_visitor()` on their inner value rather than being geometries themselves.
 
 ## Used by
 

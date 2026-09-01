@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionFeatureProperties tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionFeatureProperties` is a `GPlatesModel::ConstFeatureVisitor` that pulls out, in a single pass over `visit_feature()`, the handful of top-level properties almost every reconstruction method needs: `gpml:reconstructionPlateId`, `gpml:leftPlate`/`gpml:rightPlate`, `gpml:spreadingAsymmetry`, `gpml:reconstructionMethod`, `gpml:geometryImportTime` and the `gml:validTime` period. Rather than one visitor method per concept, it dispatches on `current_top_level_propname()` inside the generic `visit_gpml_plate_id`, `visit_xs_double`, `visit_enumeration`, `visit_gml_time_instant` and `visit_gml_time_period` overrides, since several unrelated properties share the same GPML value type (three different property names all resolve to a `GpmlPlateId`, for instance).
+
+`is_feature_defined_at_recon_time()` answers whether a feature's `gml:validTime` covers a given time, defaulting to true (valid for all time) when no valid-time property was found on the feature.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionFeatureProperties tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`initialise_pre_feature_properties()` resets every cached field to `boost::none` at the start of each `visit_feature()` call, so a single instance can safely be reused across multiple features — stale values from a previous feature never leak through.
 
 ## Used by
 

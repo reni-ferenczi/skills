@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AbstractCustomPropertiesWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Abstract base class for feature-specific property widget behaviour. Subclasses override `do_geometry_tasks()` to apply geometry-based transformations to features at a given reconstruction time, with the base implementation returning the input geometry unchanged. Allows feature property editing to handle domain-specific geometry customization without embedding logic in the main dialog code.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AbstractCustomPropertiesWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

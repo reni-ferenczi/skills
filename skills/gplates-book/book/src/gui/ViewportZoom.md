@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ViewportZoom tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ViewportZoom` is the single source of truth for how far the globe/map view
+is zoomed, shared by both the OpenGL viewport (`GlobeCanvas`, `MapCanvas`) and
+the zoom-related UI (`ZoomSliderWidget`, `ZoomControlWidget`) and canvas tools
+(`ZoomGlobe`, `ZoomMap`). It exposes the zoom two ways: `zoom_percent()`/
+`zoom_factor()` is the intuitive linear percentage (100% to 100,000%,
+`s_min_zoom_percent`/`s_max_zoom_percent`) that the viewport actually scales
+by, while `zoom_level()` is a logarithmic scale (0 to 60,
+`s_min_zoom_level`/`s_max_zoom_level`) designed so that UI controls like a
+slider or repeated key presses change the zoom at a constant perceived rate
+rather than a constant percentage. `set_zoom_level()` converts back to a
+percent via `pow(10, ...)` and `zoom_level()` via `log10`, so the two
+representations always agree.
+
+All setters funnel through `set_zoom_percent()`, which clamps to the valid
+range and emits `zoom_changed()` (plus `send_zoom_to_stdout()`) only when the
+value actually changes, so any number of independent widgets can drive or
+observe the zoom through the same `QObject` without redundant updates or
+feedback loops.
 
 ## Declared types
 
@@ -56,9 +71,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ViewportZoom tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `s_max_zoom_level` is tied to `s_max_zoom_percent` by the
+  `zoom_level()`/`set_zoom_level()` formula; the header comment on
+  `s_max_zoom_percent` warns that raising the maximum zoom percent requires
+  recomputing and updating the matching maximum zoom level, or existing
+  zoom-level-based controls (sliders, keyboard shortcuts) will change the
+  zoom rate they used to.
+- `set_zoom_percent()` compares the new value against the current one via
+  `GPlatesMaths::Real` (an epsilon-aware comparison) before emitting
+  `zoom_changed()`, so setting a value indistinguishable from the current
+  zoom is a no-op that does not trigger listeners.
 
 ## Used by
 

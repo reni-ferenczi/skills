@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeXmlArchiveWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`XmlArchiveWriter` is the `ArchiveWriter` implementation that serialises a `Transcription` to XML, the write-side counterpart of `XmlArchiveReader`. Like the reader, it wraps a caller-owned `QXmlStreamWriter` instead of a file, so it can be nested inside another XML document.
+
+`write_transcription()` opens the root archive element with the archive signature, XML format version and current `Scribe` version as attributes, then recursively serialises the transcription's `Transcription::CompositeObject` tree with the protected `write()` overloads for each primitive type. As in the reader, all numeric conversions go through a fixed `C_LOCALE` ("C" locale) so the archive is portable across systems with different locale settings. `close()` writes the closing root element; the destructor calls `close()` itself if the caller has not, swallowing any exception since destructors must not propagate them, but a caller that wants write errors to surface should call `close()` explicitly.
 
 ## Declared types
 
@@ -50,9 +50,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeXmlArchiveWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The destructor calls `close()` if it has not already been called, but discards any exception `close()` throws — relying on the destructor to close the archive hides errors that an explicit `close()` call would surface.
+- `write_transcription()` can be called multiple times to write several transcriptions into the same archive before `close()`.
 
 ## Used by
 

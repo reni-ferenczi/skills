@@ -10,9 +10,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ConfigureExportParametersDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConfigureExportParametersDialog` is the "add an export to the animation
+export list" dialog launched from `ExportAnimationDialog`/`EditExportParametersDialog`.
+Its three cascading lists — export type, then export format, then a
+per-exporter `ExportOptionsWidget` and filename template — are driven by
+`GPlatesGui::ExportAnimationRegistry`, which is queried both to discover
+supported type/format/export-ID combinations and to construct the export-
+specific options widget for whatever was selected. `d_export_animation_context_ptr`
+is the `GPlatesGui::ExportAnimationContext`, described in the header comment
+as the Context role of the Gang-of-Four Strategy pattern, and holds the
+actual accumulated export configuration this dialog is populating.
+
+Since `QListWidgetItem` carries no generic payload slot, the dialog attaches
+its own state to list items via three small template mixins —
+`ExportTypeWidgetItem`, `ExportFormatWidgetItem` and
+`ExportConfigurationWidgetItem` — each wrapping a `WidgetItemType` (typically
+`QListWidgetItem`) with one extra field, retrieved back through
+`dynamic_cast` by the matching `get_export_type()`/`get_export_format()`/
+`get_export_configuration()` static template functions. The private
+`ExportFormatListWidget` overrides `sizeHint()`/`minimumSizeHint()` to report
+its actual contents size, because — per its header comment — no layout
+configuration achieved the same effect, letting the format list stay compact
+so the export-options area below gets the remaining space.
 
 ## Declared types
 
@@ -60,9 +79,18 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ConfigureExportParametersDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Selecting an export type clears and repopulates the format list, which in
+turn re-fires `react_export_format_selection_changed()`; that handler can
+therefore be invoked with an export ID left over from the previous type and
+silently returns if that ID is not in the registry's currently supported
+exporters, rather than warning, because — per a comment in the source — this
+happens routinely during the cascade rather than indicating an error. The
+`Ok` button in `main_buttonbox` is kept disabled until both a type and a
+format resolve to a supported, fully-configured export. `get_export_type()`/
+`get_export_format()`/`get_export_configuration()` fall back to an
+`INVALID_TYPE`/`INVALID_FORMAT`/default value (logging a `qWarning()`)
+instead of asserting if handed a widget item that was not actually one of
+this dialog's own wrapper types.
 
 ## Used by
 

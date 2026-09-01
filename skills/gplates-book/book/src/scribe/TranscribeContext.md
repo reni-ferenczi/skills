@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeContext tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TranscribeContext<ObjectType>` is an empty template that callers specialise per `ObjectType` when transcribing that type needs information the archive itself does not carry. The default, unspecialised template holds nothing; a specialisation adds whatever extra state a `transcribe()` implementation needs but cannot reconstruct from the archived data alone — for example `TranscribeUtils::FilePath`'s specialisation carries the path of the project file currently being loaded, so relative file paths can be re-resolved against it rather than against where the project was originally saved.
+
+The context object itself is never archived — it is constructed separately during loading (or saving) and made available to `Scribe` alongside the object being transcribed, for the cases where a constructor needs collaborators that the transcription format has no way to represent.
 
 ## Declared types
 
@@ -32,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeContext tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

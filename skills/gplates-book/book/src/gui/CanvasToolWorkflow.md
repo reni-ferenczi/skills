@@ -9,9 +9,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/CanvasToolWorkflow tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Abstract base for one "tab" of related canvas tools — a *workflow* such as
+digitisation, feature inspection, or topology editing, each grouping the
+`CanvasToolWorkflows::ToolType` values that make sense together. A concrete
+subclass supplies which globe/map tool pair backs each `ToolType` it
+supports (`get_selected_globe_and_map_canvas_tools`), and hooks for setup and
+teardown when the whole workflow is switched in or out
+(`activate_workflow`/`deactivate_workflow`). The base class owns the
+`GlobeCanvasToolAdapter` and `MapCanvasToolAdapter` that route mouse events
+from `GlobeCanvas`/`MapView` to whichever concrete `GlobeCanvasTool`/
+`MapCanvasTool` is currently selected, so subclasses never touch the adapters
+directly.
+
+`activate()`/`deactivate()` implement the state machine: activating a
+workflow calls the derived class's `activate_workflow()` once, then activates
+the selected tool; switching tools within an already-active workflow
+deactivates the old tool and activates the new one without re-running
+`activate_workflow()`. Individual tools can also be independently enabled or
+disabled (`emit_canvas_tool_enabled`) — for example because another tool left
+the application in a state where the current selection no longer makes
+sense — and the currently selected tool is auto-activated or -deactivated
+to track its own enabled flag while the workflow is active. `CanvasToolWorkflows`
+is the concrete owner that switches between the seven `CanvasToolWorkflow`
+subclasses as the user changes tabs.
 
 ## Declared types
 
@@ -61,9 +81,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/CanvasToolWorkflow tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`activate_selected_tool()` silently does nothing if the selected tool is
+currently disabled (this is the normal path when switching tabs leaves a
+disabled tool selected), but if the workflow is active and the tool is
+enabled, it asserts (`GPlatesGlobal::Assert`) that
+`get_selected_globe_and_map_canvas_tools` actually returns a tool and that no
+tool is already active — a derived class that reports `contains_tool() ==
+true` for a tool it cannot actually supply, or that double-activates, is a
+programming error, not a runtime condition to recover from.
+`is_tool_enabled`/`emit_canvas_tool_enabled` likewise assert the `ToolType`
+is within `d_enabled_tools`, which is sized to `CanvasToolWorkflows::NUM_TOOLS`
+and defaults every tool to disabled.
 
 ## Used by
 

@@ -23,7 +23,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [RefToValue](../src/system-fixes/loki/RefToValue.md) | 3 | 68 | 8 | Template class transporting references as values for smart pointers and scope guards |
-| [ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | 2 | 382 | 12 | (pending) |
+| [ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | 2 | 382 | 12 | Loki scope-guard idiom: RAII cleanup action run on scope exit unless dismissed |
 
 
 ## Other files

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/Types tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Types.h` defines the two enumerations that describe a co-registration query in the data-mining layer. `AttributeType` selects where a per-feature attribute value comes from — a GPML property, a shapefile attribute, a raster sample, or one of the built-in distance/presence pseudo-attributes. `ReducerType` selects how the values sampled from features within a region of interest are collapsed into a single result — minimum, maximum, mean, median, percentile, a weighted mean, a nearest-distance or vote-style lookup, or a simple presence/count test.
+
+Both enums are declared inline in the header along with a `to_string()` helper used for display and logging, and a `transcribe()` overload that lets `GPlatesScribe::Scribe` read and write the enum value in the session/project file format. These two types are the shared vocabulary that `DataSelector`, `CoRegFilterMapReduceFactory`, `CoRegConfigurationTable` and the `CoRegistrationLayerConfigurationDialog` UI pass around when building and running a co-registration filter/map/reduce pipeline.
 
 ## Declared types
 
@@ -63,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/Types tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Each `transcribe()` overload encodes enumerators by an explicit string id rather than by ordinal, so reordering or renaming an enumerator does not break saved sessions/projects. Adding a new enumerator (before the `NUM_OF_Attribute_Type` / `NUM_OF_Reducer_Type` sentinel) must be mirrored by hand in the corresponding `transcribe()` table, as the header comments warn — the compiler will not catch a missed entry, and the new value silently fails to round-trip. `to_string()` returns an empty `QString` for any value at or past the `NUM_OF_*` sentinel rather than asserting.
 
 ## Used by
 

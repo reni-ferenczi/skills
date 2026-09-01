@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourPaletteUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Free-function helpers layered on top of `ColourPalette` and the CPT readers
+in `file-io`. `read_cpt_raster_colour_palette` loads a `.cpt` file and
+returns it as a `RasterColourPalette`, choosing between the regular
+(real-valued) and categorical (integer-valued) CPT formats — it first
+attempts `RegularCptReader`, and only falls back to
+`CategoricalCptReader<boost::int32_t>` (when `allow_integer_colour_palette`
+is set) if the regular parse yields no `ColourSlice` entries; a real-valued
+palette is preferred when the file is ambiguous, since it can also colour
+integer-valued raster data whereas a categorical one cannot colour
+real-valued data.
+
+`get_range` (overloaded for `ColourPalette<PaletteKeyType>` and for
+`RasterColourPalette`) extracts the numeric extent a palette covers, for
+callers such as `ColourScaleGenerator` that need to draw a scale bar or
+remap values. It is implemented via the private
+`Implementation::RangeVisitor`, a `ConstColourPaletteVisitor` that knows how
+to pull a range out of each concrete palette kind that has one
+(`AgeColourPalette`, `RegularCptColourPalette`, the categorical CPT
+palettes); palette kinds with no numeric range (or with no entries) leave
+`d_range` unset and `get_range` returns `boost::none`.
 
 ## Declared types
 
@@ -43,9 +60,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourPaletteUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A CPT file containing only "BFN" (background/foreground/NaN) lines and no
+actual colour entries parses successfully under *both* the regular and
+categorical readers, since that part of the syntax is shared; when
+`read_cpt_raster_colour_palette` cannot otherwise tell which format was
+intended, it resolves the ambiguity in favour of the regular (real-valued)
+palette, and only returns a categorical palette when it parsed non-empty
+categorical entries. Callers passing `allow_integer_colour_palette = false`
+should not assume a returned palette is a real error indicator — check
+`RasterColourPaletteType::get_type()` as the header notes, since an empty
+`RasterColourPalette::create()` is also returned on read failure.
 
 ## Used by
 

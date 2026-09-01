@@ -9,9 +9,13 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlPolygon tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlPolygon` is the `GPlatesModel::PropertyValue` for `gml:Polygon`. It is a
+thin, immutable-geometry wrapper around a `GPlatesMaths::PolygonOnSphere`,
+held by `internal_polygon_type` (a `non_null_intrusive_ptr` to a const
+polygon) — the same shape as `GmlMultiPoint` and `GmlPoint` use for their own
+maths geometry, since none of these classes have anything left to add on top
+of the underlying `PropertyValue` machinery besides the geometry itself and
+`get_structural_type()`/`accept_visitor()` boilerplate.
 
 ## Declared types
 
@@ -52,9 +56,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlPolygon tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `polygon()` deliberately has no non-`const` overload: the header notes the
+  contained `PolygonOnSphere` must not be modified in place, and callers who
+  need a different polygon must build one and call `set_polygon()` instead.
 
 ## Used by
 

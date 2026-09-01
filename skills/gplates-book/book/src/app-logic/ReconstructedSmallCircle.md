@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructedSmallCircle tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructedSmallCircle` is the `ReconstructedFeatureGeometry` specialisation for small-circle features: a centre `PointOnSphere` plus a `radius`. The base RFG's reconstructed geometry is set to the reconstructed *centre point* rather than a traced-out circle polygon, so anything drawing or exporting the actual circle outline (`SmallCircleGeometryPopulator`, the globe/map painters) must combine `centre()` and `radius()` itself rather than reading a ready-made circle geometry from the RFG base.
+
+Like the other simple RFG subclasses in this cluster (`ReconstructedFlowline`, `ReconstructedMotionPath`), instances are only ever created through the private constructor via `create()`.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructedSmallCircle tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

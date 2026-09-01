@@ -8,9 +8,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/ConfigInterface tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::ConfigInterface` is the pure-virtual abstract base shared by
+`GPlatesAppLogic::UserPreferences` and `GPlatesUtils::ConfigBundle`, so code
+such as `ConfigBundleModel` that needs to treat "the application's real
+preferences" and "a standalone bag of key/value settings" the same way can do
+so polymorphically instead of duplicating logic per backend. It defines a
+hierarchical key-value store with unix-style `/`-delimited keys, `QVariant`
+values, and a two-tier user-value/default-value model: `get_value()` returns
+whichever is in effect, `has_been_set()` and `default_exists()` distinguish
+an explicit user override from a fallback default, and `clear_value()` /
+`clear_prefix()` revert to defaults rather than deleting the key outright.
+
+`subkeys()` and `root_entries()` give two different views over the same
+prefix-delimited namespace — a flat recursive listing versus one level of
+"directory" names — and `get_keyvalues_as_map()` / `set_keyvalues_from_map()`
+let a whole subtree of keys be read or written as a single `KeyValueMap`,
+which is how composite objects like a `GPlatesUtils::Session` are persisted
+under one key prefix. The `key_value_updated` Qt signal lets observers (e.g.
+preference-editing UI) react to any change regardless of which concrete
+backend made it.
 
 ## Declared types
 
@@ -49,9 +65,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/ConfigInterface tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_value()` returns a null `QVariant` for a nonexistent key rather than
+  throwing; that null value converts to `0`, `0.0` or `""` as appropriate, so
+  a missing key is easy to miss if the caller doesn't also check `exists()`.
+- Keys should be treated as case-sensitive even though a given backend might
+  not enforce it, and must not begin with `/`.
+- `exists()` returns `false` for a key that is only a "directory" prefix of
+  other keys (no value stored at that exact path), even though `subkeys()`
+  and `root_entries()` will list entries under it.
+- The class derives from `boost::noncopyable`; a subclass must still declare
+  `Q_OBJECT` itself for `moc` to wire up its own signals/slots, but can emit
+  the base class's `key_value_updated` signal without redeclaring it.
 
 ## Used by
 

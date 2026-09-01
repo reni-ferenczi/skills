@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ShapefileAttributeWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ShapefileAttributeWidget` presents one combo box per GPlates model property (plate ID, feature type, begin/end age, name, description, feature ID, conjugate plate, reconstruction method, left/right plate, spreading asymmetry, geometry import time) and lets the user pick which shapefile attribute column, if any, supplies that property. `setup()` populates every combo box with a leading `<none>` entry followed by the shapefile's `d_field_names`, then pre-selects a default for each: it prefers an existing entry in the incoming `model_to_attribute_map` (via `fill_fields_from_qmap()`), falling back to the hard-coded `ShapefileAttributes::default_attribute_field_names` (via `fill_fields_from_default_list()`) when the map is empty or a mapped attribute is missing from the file's field list. The `remapping` constructor flag disables the feature-type and feature-ID combo boxes, since those two properties cannot be changed once a feature collection has already been imported.
+
+`accept_fields()` reads the combo boxes back into `d_model_to_attribute_map` (a reference the widget does not own), skipping any still set to `<none>`; `reset_fields()` restores the selections captured in `d_combo_reset_map` at the end of `setup()`, undoing whatever the user changed without re-deriving the defaults.
 
 ## Declared types
 
@@ -48,9 +48,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ShapefileAttributeWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_field_names` and `d_model_to_attribute_map` are stored as references to caller-owned objects, not copies; the widget must not outlive them, and `accept_fields()` mutates the caller's map in place.
+- The feature-type default lookup has a hard-coded fallback: if the configured default field (normally `GPGIM_TYPE`) is not present in the shapefile, the code also tries a literal `"TYPE"` column before giving up. A comment in `setup()` flags this as a stopgap pending a proper list of fallback default names per property.
 
 ## Used by
 

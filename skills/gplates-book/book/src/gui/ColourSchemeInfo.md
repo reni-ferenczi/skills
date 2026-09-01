@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourSchemeInfo tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourSchemeInfo` is a plain-data record pairing a `ColourScheme::non_null_ptr_type` with the metadata `ColourSchemeContainer` needs to present it in the UI: a short label for the colouring dialog's preview caption, a longer description for its tooltip, and an `is_built_in` flag distinguishing schemes shipped with GPlates (which cannot be removed) from user-created ones. It exists purely to keep this bundle together as a single value inside `ColourSchemeContainer`'s per-category maps.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourSchemeInfo tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

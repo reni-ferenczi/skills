@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerFitWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HellingerFitWidget` is the "fit" tab of `HellingerDialog`: it exposes the fitting parameters — search radius, grid search toggle, confidence limit, per-pair initial pole estimates (`estimate_12()`/`estimate_13()`), and the "amoeba" (downhill-simplex) stopping criteria, either a residual tolerance or an iteration limit — and shows the fitted poles and uncertainty ellipses the underlying computation produces. `update_fit_widgets_from_model()` and `update_model_from_fit_widgets()` are the two directions of syncing with `HellingerModel`; this widget never mutates `HellingerModel` itself outside those calls. It talks to its owning `HellingerDialog` both directly (`d_hellinger_dialog_ptr`, e.g. to trigger `handle_calculate_fit()`) and via `pole_estimate_12_changed`/`pole_estimate_13_changed` signals that let the dialog keep the on-canvas pole-estimate markers in sync as the spin boxes change.
+
+Two/three-way fitting is a mode switch: `enable_three_way_widgets()`/`show_three_way_widgets()` add the third plate's controls (the "13" and "23" pair estimates/results) when `d_three_way_fitting_is_enabled`, keeping the same widget usable for the simpler two-plate case.
 
 ## Declared types
 
@@ -93,9 +93,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerFitWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_hellinger_dialog_ptr` and `d_hellinger_model_ptr` are non-owning; both are constructed and owned by `HellingerDialog`, which outlives this widget. `d_red_palette` is swapped onto a field's palette to flag invalid input (e.g. an unparsable amoeba tolerance) and must be restored from `d_default_palette` once the value becomes valid again — there is no automatic reset.
 
 ## Used by
 

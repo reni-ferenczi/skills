@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/TopologyGeometryVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesPresentation::TopologyGeometryVisualLayerParams` is the `VisualLayerParams` for a resolved-topological-geometry layer (topological lines and polygons, as opposed to the topological-network layer covered by `TopologyNetworkVisualLayerParams`). It holds the small set of display options specific to that layer type — whether resolved polygons are filled, and the opacity/intensity/modulate colour of that fill — leaving everything else (colouring by feature, symbolisation, etc.) to the shared machinery in the `VisualLayerParams` base.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/TopologyGeometryVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

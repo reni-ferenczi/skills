@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeArchiveReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ArchiveReader` is the abstract interface that lets the rest of `GPlatesScribe` load a `Transcription` without caring whether it came from a text, binary or XML archive. `ScribeBinaryArchiveReader`, `ScribeTextArchiveReader` and `ScribeXmlArchiveReader` each implement `read_transcription()` and `close()` against their own on-disk layout (whose shared constants live in `ArchiveCommon`), and callers such as `ProjectSession` and `InternalSession` hold only this base type.
+
+An archive can contain more than one transcription written back to back, so `read_transcription()` is meant to be called repeatedly until the caller has consumed everything it expects.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeArchiveReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Call `close()` only after reading every transcription the archive contains; a partial read followed by `close()` can throw, since some archive types use it to verify the stream reached its end. `close()` is never called from the destructor, so a caller that skips it deliberately (to abandon a partial read) will not get that end-of-archive check.
 
 ## Used by
 

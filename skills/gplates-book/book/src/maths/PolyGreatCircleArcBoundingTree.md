@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolyGreatCircleArcBoundingTree tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PolyGreatCircleArcBoundingTree` is a header-only, iterator-based binary bounding-small-circle tree over a linear sequence of `GreatCircleArc`s, shared by `PolylineOnSphere` and `PolygonOnSphere` to speed up queries such as intersection and distance testing (`GeometryIntersect`, `GeometryDistance`). It is templated on the arc iterator type so it can be built directly over a polyline's or polygon's own const-iterator range without copying arcs; `RequireRandomAccessIterator` defaults to true and is enforced with a `BOOST_STATIC_ASSERT`, since the tree relies on `std::advance` being cheap.
+
+The tree is built by recursively bisecting the arc range in half at `create_node`, bottoming out into leaf nodes once a subrange falls at or below `max_num_node_great_circle_arcs_per_leaf_node`, with each node's `BoundingSmallCircle` computed from its arcs' centroid. Polygons pass `partition_separators` so that the exterior ring and each interior ring — which are spatially disconnected — get their own sub-tree; `initialise_partitions` then merges these sub-trees pairwise, repeatedly combining the two adjacent partitions with the fewest arcs so the smaller partitions end up deeper in the final tree, until one root remains. A caller walks the tree by fetching `get_root_node()` and descending through `get_child_node()`, checking `Node::is_leaf_node()`/`is_internal_node()`, and consulting `Node::get_bounding_small_circle()` to prune whole subtrees of arcs from consideration.
 
 ## Declared types
 
@@ -55,9 +55,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolyGreatCircleArcBoundingTree tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor throws `GPlatesGlobal::PreconditionViolationError` if the arc range is empty, if `max_num_node_great_circle_arcs_per_leaf_node` is zero, or if `partition_separators` is given but is empty, out of order, or produces an empty partition.
+- `d_geometry_shared_pointer` is `boost::none` by default and is only set when the caller explicitly passes `shared_reference_to_geometry`; `PolylineOnSphere`/`PolygonOnSphere` deliberately leave it unset when they build a tree over their own arcs, since they already hold the tree and setting it would create a reference cycle (and a leak). Any other caller that keeps the tree past the lifetime of its source arcs must either pass this reference or otherwise guarantee the arcs stay alive.
+- Merging across partitions is not spatially optimal — disconnected rings can end up adjacent in the tree even if they are far apart on the sphere — but is cheap and works well in practice because arcs within a partition retain spatial locality.
 
 ## Used by
 

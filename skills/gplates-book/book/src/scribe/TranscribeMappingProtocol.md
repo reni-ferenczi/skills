@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeMappingProtocol tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`transcribe_mapping_protocol()` gives every associative-container-like type — `std::map`, `std::multimap`, `QMap`, `QMultiMap` — a single, uniform on-archive layout: a length, then that many key/value pairs each tagged with `ObjectTag::map_item_key()`/`map_item_value()`. Because the layout does not depend on the container's own implementation, an archive written with one mapping type can, in principle, be reloaded into a different one, and the format is stable even if the underlying container's memory layout changes between GPlates versions.
+
+`TranscribeMap<MapType>` is the adaptor: the primary template only declares the operations `transcribe_mapping_protocol()` needs (`get_length()`, `get_items()`, `get_key()`/`get_value()`, `clear()`, `add_item()`), and each concrete mapping type must supply a specialisation implementing them (see `TranscribeStd.h`/`TranscribeQt.h`). `transcribe_mapping_protocol()` then drives loading and saving purely in terms of that adaptor, and `relocated_mapping_protocol()` is its companion for propagating a `Scribe::relocated()` notification (when a transcribed map is copied to its final location) onto each value in the map, since values are tracked as objects for identity but keys are not.
 
 ## Declared types
 
@@ -48,9 +48,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeMappingProtocol tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- If any key or value in the map returns `TRANSCRIBE_UNKNOWN_TYPE` while loading (for example a polymorphic pointer to a derived class the current build doesn't know), the whole map load fails with `TRANSCRIBE_UNKNOWN_TYPE` and the map is cleared — there is no way to skip just the unrecognised item through this protocol; a caller that needs to skip bad items must reimplement the protocol manually using the `ObjectTag` scheme described in the header.
+- Only values are tracked/relocated (via `TRACK` and `scribe.relocated()`); keys are transcribed untracked, so `relocated_mapping_protocol()` only walks and relocates values, not keys.
+- `add_item()` returning `boost::none` (e.g. a duplicate key for a type that forbids them) silently drops that item rather than failing the whole transcription.
 
 ## Used by
 

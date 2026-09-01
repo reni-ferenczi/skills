@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ScalarCoverageEvolution tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Evolves per-point scalar values attached to a deforming topological network over time, driven by strain rate. Given an `InitialEvolvedScalarCoverage` (present-day, or import-time, values for one or more `EvolvedScalarType`s) and a `TopologyReconstruct::GeometryTimeSpan` describing how the underlying geometry deforms, `create()` builds a `ScalarCoverageEvolution` that steps forward through time computing the crustal thickness factor `T(n)/T(0)` at each active time slot from the per-point `DeformationStrainRate`; crustal thickness, stretching (beta) and thinning (gamma) factors are all derived from that one solved quantity. Results at each time slot are cached in a `TimeSpanUtils::TimeWindowSpan`, with rigid-sample creation and interpolation supplied by `create_time_span_rigid_sample` and `interpolate_time_span_samples`.
+
+Tectonic subsidence (`TECTONIC_SUBSIDENCE_KMS`) is a second, more expensive evolved quantity: it solves a 1D advection-diffusion equation for lithospheric temperature at a fixed depth resolution (`NUM_TEMPERATURE_DIFFUSION_DEPTH_INTERVALS` samples over `LITHOSPHERIC_THICKNESS_KMS`), then converts the integrated temperature profile into subsidence via the standard thermal-cooling/crustal-stretching relation. Because this is costly, it is computed lazily on first request (`d_have_initialised_tectonic_subsidence`) rather than as part of the main evolution pass. The block of physical constants (`THERMAL_ALPHA`, `THERMAL_CONDUCTIVITY`, `DENSITY_MANTLE`, etc.) parameterises this thermal model; `NUM_POINTS_IN_TEMPERATURE_DIFFUSION_GROUP` batches points during that solve purely to bound memory use and improve cache locality, with no effect on the result.
+
+This class is the computational engine behind reconstructed scalar coverages (for example crustal-thickness rasters on deforming networks); `ScalarCoverageTimeSpan` and `ReconstructScalarCoverageLayerProxy` are the layer-proxy machinery that drives it and exposes its output to the rest of the application.
 
 ## Declared types
 
@@ -82,9 +84,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ScalarCoverageEvolution tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Not all `EvolvedScalarType`s need initial values: `InitialEvolvedScalarCoverage::add_initial_scalar_values` is optional per type, and unsupplied crustal-thickness-related types fall back to being derived from the crustal-thickness factor (using `DEFAULT_INITIAL_CRUSTAL_THICKNESS_KMS` when even that is absent). `get_scalar_values` returns values for *all* points, including inactive ones (flagged via `scalar_values_are_active`), in the same order as `TopologyReconstruct::GeometryTimeSpan::get_all_geometry_data()`; callers must not assume the arrays are pre-filtered to active points. `LITHOSPHERIC_THICKNESS_KMS` and `NUM_TEMPERATURE_DIFFUSION_DEPTH_INTERVALS` are coupled: changing one changes the maximum strain rate the diffusion solve remains numerically stable for.
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/XmlAttributeValue tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesModel::XmlAttributeValue` is the type used to hold the text of an XML attribute value while parsing or building a GPML/XML document tree. Rather than defining its own class, the header instantiates `StringContentTypeGenerator<XmlAttributeValueFactory>`: each `XmlAttributeValue` stores an iterator into a single shared `GPlatesUtils::StringSet`, so equal attribute values (which recur constantly across a loaded feature collection — enumerations, `"true"`/`"false"`, common IDs) are interned once and compared by iterator rather than by string content.
+
+`XmlAttributeValueFactory` supplies the one piece `StringContentTypeGenerator` needs from its template parameter: a way to reach the process-wide `StringSet` to intern into. It does this by forwarding to `StringSetSingletons::xml_attribute_value_instance()`; the factory itself is never constructed.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/XmlAttributeValue tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The shared `StringSet` singleton reference-counts each interned string: an entry is only removed once the last `XmlAttributeValue` holding it is destroyed, so equality between two `XmlAttributeValue`s reduces to comparing the underlying iterators rather than the string contents.
 
 ## Used by
 

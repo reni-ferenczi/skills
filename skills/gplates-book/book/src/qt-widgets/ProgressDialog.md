@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ProgressDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A reusable modal-style progress bar dialog wired around `Ui_ProgressDialog` (label, progress bar, cancel button). Callers driving a long-running loop (import, export, animation generation — see the long "Used by" list) call `update_value`/`update_progress` on each iteration; both call `progress_bar->repaint()` followed by `QCoreApplication::processEvents()` so the bar and label actually redraw and the cancel button stays clickable even though the caller's own loop is blocking the event loop.
+
+Cancellation is cooperative rather than exception-driven: `handle_cancel` (triggered by the cancel button or by pressing Escape, which Qt turns into `rejected()`) only sets `cancel_flag`; the caller's loop is expected to poll `canceled()` between iterations and unwind itself. The window is built with `Qt::CustomizeWindowHint | Qt::WindowTitleHint`, so it has a title bar but no system close/minimize/maximize buttons — cancel button or Escape are the only ways to dismiss it.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ProgressDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`update_value`/`update_progress` call `QCoreApplication::processEvents()` synchronously from inside whatever loop the caller is running, which re-enters the event loop and can dispatch other pending events (including further user input) before returning — the same reentrancy hazard as any manual `processEvents()` call. `cancel_flag` is only ever set to `true`; nothing resets it, so a dialog instance is single-use for one cancellable operation.
 
 ## Used by
 

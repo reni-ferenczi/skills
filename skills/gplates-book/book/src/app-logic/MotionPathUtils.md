@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/MotionPathUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MotionPathUtils` supplies the two feature visitors and helper functions used to reconstruct `gpml:MotionPath` features. `DetectMotionPathFeatures` is a cheap `GPlatesModel::ConstFeatureVisitor` that only inspects `feature_type()` (it never visits properties) to answer whether a feature collection contains any motion path features at all. `MotionPathPropertyFinder` does the real work: it walks one motion-path feature's properties (`gpml:reconstructionPlateId`, a relative plate ID, `gml:validTime`, the seed-point geometry, and the `GpmlArray<TimePeriod>` of sample times) and exposes them as plain accessors, plus `can_process_motion_path()`/`can_process_seed_point()` to check that enough of those properties were actually present before a caller tries to reconstruct anything.
+
+`calculate_motion_track()` turns a present-day seed point and a sequence of `GPlatesMaths::FiniteRotation`s into the polyline of points making up the motion track, applying the rotations from most recent to oldest. `fill_times_vector()` merges a feature's list of time samples with the current reconstruction time into one ascending vector, inserting the reconstruction time only when it falls strictly between the sampled endpoints.
 
 ## Declared types
 
@@ -73,9 +73,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/MotionPathUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`MotionPathPropertyFinder::get_time_of_disappearance()` returns `d_time_of_appearance`, not `d_time_of_dissappearance` — it is implemented as a copy of `get_time_of_appearance()`, so callers currently cannot read the actual disappearance time through this accessor.
+
+`can_process_motion_path()` no longer requires the reconstruction time to fall within the feature's time-of-appearance/disappearance range, by design, so that a motion path can still be displayed or exported (e.g. at present day) even when its sample times don't cover that instant.
 
 ## Used by
 

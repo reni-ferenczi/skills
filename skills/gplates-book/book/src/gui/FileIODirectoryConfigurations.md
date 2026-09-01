@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FileIODirectoryConfigurations tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DirectoryConfiguration` decides which directory a file dialog should open in, given three `GPlatesAppLogic::UserPreferences` keys (default directory, last-used directory, behaviour) and the `GPlatesQtWidgets::PreferencesPaneFiles::FileBehaviour` the user has chosen for that context: always the configured default, the default the first time and the last-used directory afterwards, or always the last-used directory (falling back to whatever was recorded in preferences on the very first use of the session). `update_last_used_directory` records a newly chosen directory both in memory and back into `UserPreferences`, and clears the "first use" flag that the behaviour switch consults.
+
+`FileIODirectoryConfigurations` is the `ViewState`-owned aggregate of two such configurations — `feature_collection_configuration()` and `project_configuration()` — wired to the `paths/default_feature_collection_dir`/`paths/last_used_feature_collection_dir`/`paths/feature_collection_behaviour` and matching `paths/*_project_*` preference keys respectively, so `OpenFileDialog`/`SaveFileDialog` and the project save/load dialogs each get independent, persisted directory memory.
 
 ## Declared types
 
@@ -60,9 +60,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FileIODirectoryConfigurations tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- A `DirectoryConfiguration` does not read preferences at construction; `initialise_from_preferences()` must be called before `directory()` reflects the stored behaviour, default and last-used values — `FileIODirectoryConfigurations`'s constructor does this for both of its members.
+- The `ALWAYS_LAST_USED_BEHAVIOUR` and `DEFAULT_THEN_LAST_USED_BEHAVIOUR` cases both distinguish "first use this session" (`d_first_use`) from later use, so which value `directory()` returns depends on whether `update_last_used_directory` has been called yet, not only on the stored behaviour.
 
 ## Used by
 

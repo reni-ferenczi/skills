@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeInternalUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Internal plumbing for the Scribe library itself, not part of its public API. It solves two problems that the templated `Scribe` transcribe functions cannot solve on their own: identifying an object's true address when pointers and references to it may alias, and erasing an object's concrete type so it can be saved or loaded through a common interface.
+
+`ObjectAddress` pairs a `void *` with a `std::type_info *` (kept as a pointer because `std::type_info` is not copy-constructible) so that two objects at the same memory address but of different types — for example a base sub-object and the derived object that contains it — are not confused with each other. `get_dynamic_object_address()` resolves this correctly for polymorphic types by `dynamic_cast`-ing to the complete object, since under multiple inheritance a base sub-object's address can differ from the derived object's; `get_static_object_address()` instead keeps the address as given. `shared_ptr_cast()` picks `dynamic_pointer_cast` or `static_pointer_cast` for a `boost::shared_ptr` based on the same polymorphism check.
+
+`TranscribeOwningPointer` and its `TranscribeOwningPointerTemplate<ObjectType>` subclass let `Scribe` save and load a heap-allocated object through a pointer without the calling code needing to know `ObjectType` — the template captures the type once, at the point the pointer is registered, and the type-erased base is what the rest of the Scribe machinery stores and calls through. The template's `save_object()`/`load_object()` bodies live in `ScribeInternalUtilsImpl.h` rather than here, so that including this header does not pull in `Scribe.h`. `Relocated` and `RelocatedTemplate<ObjectType>` follow the same type-erasure pattern for the opposite direction: when the `Scribe` moves a previously loaded object to a new address, `RelocatedTemplate` finds and calls a non-member `relocated()` function for `ObjectType` via argument-dependent lookup, so client code can supply that hook in its own namespace instead of in `GPlatesScribe`.
 
 ## Declared types
 
@@ -115,9 +117,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeInternalUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`TranscribeOwningPointerTemplate` and `RelocatedTemplate` have private constructors and must be created through their `create()` factory methods, which return a `non_null_intrusive_ptr` — this keeps every instance reference-counted via `GPlatesUtils::ReferenceCount`. `relocated_ADL()` deliberately calls `relocated()` unqualified so ADL can find a client-namespace overload instead of recursing into `RelocatedTemplate::relocated()`; a `relocated()` overload placed in `GPlatesScribe` itself would be found preferentially and break that dispatch.
 
 ## Used by
 

@@ -9,9 +9,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/CoRegistrationData tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoRegistrationData` is a thin `ReconstructionGeometry` wrapper around a single
+`GPlatesDataMining::DataTable`: the result of running a co-registration query at one
+reconstruction time. It carries no reconstruction logic of its own — `data_table()`
+gives read/write access to the underlying table, and `accept_visitor()` lets it
+participate in the usual `ReconstructionGeometryVisitor`/`ConstReconstructionGeometryVisitor`
+double dispatch alongside other reconstruction geometry types, e.g. so
+`presentation/ReconstructionGeometryRenderer` and other visitors can recognise it in a
+mixed collection of results. Instances are produced by
+`app-logic/CoRegistrationLayerProxy` and `app-logic/CoRegistrationLayerTask` and
+consumed by the data-mining pipeline (`data-mining/DataSelector` and friends) and the
+`api/CoReg` Python bindings.
 
 ## Declared types
 
@@ -44,9 +52,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/CoRegistrationData tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Like other `ReconstructionGeometry` subclasses, the constructor is private and
+instances are only reachable through `create()` as a `non_null_ptr_type`, so one is
+never accidentally created on the stack.
 
 ## Used by
 

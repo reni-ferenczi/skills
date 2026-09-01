@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionGeometryFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionGeometryFinder` walks the weak-observer list attached to a `GPlatesModel::FeatureHandle` and collects every `ReconstructionGeometry` currently observing it — the reverse lookup from a feature to the `ReconstructedFeatureGeometry`, `ResolvedTopologicalGeometry` and `ResolvedTopologicalNetwork` instances that were derived from it. Because a feature can be reconstructed many times (once per property, once per reconstruction, or across successive `reconstruct()` calls whose stale results have not yet been discarded), the three constructors let a caller narrow the search: to RGs built from one property (`GPlatesModel::PropertyName`), to the RG built from one specific property iterator (at most one match, since a `FeatureHandle::iterator` names a single property), or to RGs carrying a reconstruct handle from a given `ReconstructHandle::type` set — the last of these is how a caller restricts results to the most recent reconstruction pass rather than picking up stale RGs left over from an earlier one.
+
+The visitor dispatches all three RG kinds through a single private template, `visit_reconstruction_geometry_derived_type`, which applies the property-name, properties-iterator and reconstruct-handle filters in sequence before appending the geometry to `d_found_rgs`. The free functions in the anonymous namespace of the `.cc` (`property_name_matches`, `properties_iterator_matches`, `reconstruct_handle_matches`) implement those three filters and are templated or overloaded purely to work uniformly across the three RG-derived types.
 
 ## Declared types
 
@@ -57,9 +57,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionGeometryFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `property_name_to_match` and `properties_iterator_to_match` are mutually exclusive in practice: only one constructor sets either, never both, though the class does not enforce this.
+- `find_rgs_of_feature` is a no-op on an invalid `weak_ref` or a null pointer rather than asserting — callers do not need to check validity first.
+- The finder accumulates into `d_found_rgs` across repeated calls; call `clear_found_rgs()` between searches if reusing the same instance.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExternalSyncController tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExternalSyncController` synchronises GPlates' current time, camera orientation/zoom and loaded files with an external process over a line-based text protocol carried on standard input/output. Depending on `d_gplates_is_master`, GPlates either launches and owns the external program as a `QProcess` (writing to its stdin, reading `readyReadStandardOutput()`) or is itself the child, in which case a dedicated `StdInThread` blocks on `std::cin` and emits `std_in_string_read` for each line so the read never stalls the Qt event loop.
+
+Incoming lines are tokenised and dispatched by `process_external_command` on a fixed vocabulary of commands (`TIME`, `PROJECTIONCENTRE`, `DISTANCE`, `GAINFOCUS`, `ORIENTATION`, `OPENSHAPEFILE`) to the matching `process_*_command` method, which pulls the new state out of `d_viewport_window_ptr`'s `ReconstructionViewWidget`, `AnimationController` and `ViewState`. Outgoing state changes are the mirror image: `connect_message_signals` wires `AnimationController::view_time_changed`, and the camera/orientation/zoom signals from `ReconstructionViewWidget` and `ViewportZoom`, to the `send_external_*_command` slots that format and write the same protocol back out.
 
 ## Declared types
 
@@ -109,9 +109,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExternalSyncController tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_should_send_output` is set false for the duration of `process_external_command` and restored afterwards, specifically to stop an incoming command's resulting state change from being echoed straight back out and causing a feedback loop between the two applications.
+- `d_gplates_is_master` is `const`, fixing at construction time which half of the master/slave protocol this instance plays, since that decides whether communication goes through a `QProcess` this object owns or through the standalone `StdInThread`.
+- The `PROJECTIONCENTRE` command path (`process_viewport_centre_command`) is compiled out (`#if 0`) in `process_external_command`, so that command is currently a no-op even though its handler still exists.
 
 ## Used by
 

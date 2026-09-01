@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/FlowlineUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FlowlineUtils` holds the two feature visitors and the free-function toolkit that `FlowlineGeometryPopulator` and related exporters build on. `DetectFlowlineFeatures` is a minimal `GPlatesModel::ConstFeatureVisitor` that stops as soon as it sees one feature of type `gpml:Flowline` — it deliberately returns `false` from `initialise_pre_feature_properties()` so it never visits a feature's properties, since feature type alone answers the question. `FlowlinePropertyFinder` does the real work of reading a flowline feature's `gpml:leftPlate`/`gpml:rightPlate` plate IDs, its `GpmlArray<GmlTimePeriod>` of flowline times, and its geometry, then exposes three yes/no questions through `can_process_seed_point()`, `can_process_flowline()` and `can_correct_seed_point()`. `can_process_flowline()` additionally requires the current reconstruction time to fall within the oldest and youngest sampled flowline times, so a flowline feature only produces a full flowline while the reconstruction time is inside its defined time range — outside that range only the seed point is processable.
+
+The free functions implement the actual flowline maths: `fill_seed_point_rotations()` and `calculate_flowline()` build up chains of half-stage rotations (via `get_half_angle_rotation()`) between the left and right plates over the feature's sampled times, and `reconstruct_seed_point()`/`reconstruct_seed_points()`/`reconstruct_flowline_seed_points()` apply those rotations (optionally in `reverse`) to move a seed point along the flowline. `correct_end_point_to_centre()` is used separately to snap a flowline's end point back onto the ridge (spreading centre) between two plates at a given time.
 
 ## Declared types
 
@@ -84,9 +84,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/FlowlineUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`can_process_flowline()` assumes `d_times` is already sorted oldest-to-youngest (it reads `d_times.back()` as the oldest time and `d_times.front()` as the youngest without sorting); callers relying on `FlowlinePropertyFinder` after visiting a feature out of the usual order could get an incorrect in-range check.
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportOptionsUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header collects the plain-data option structs shared by the animation-export pipeline and its Qt option widgets. Each struct bundles the settings one export format needs — file-splitting behaviour for Shapefile output (`ExportFileOptions`), pixel dimensions for screenshot/SVG output (`ExportImageResolutionOptions`), rotation formatting choices for total and stage rotation exports (`ExportRotationOptions`, `ExportStageRotationOptions`), and the parameters that drive velocity and net-rotation calculations (`ExportVelocityCalculationOptions`, `ExportNetRotationOptions`).
+
+Keeping the options as free-standing structs rather than members of the exporters themselves lets a `GPlatesQtWidgets` options widget construct and populate one independently of the `GPlatesGui::ExportAnimationStrategy` that eventually consumes it: the widget builds the struct from user input, and the corresponding `Export*AnimationStrategy` reads it back when writing files for each reconstruction frame.
 
 ## Declared types
 
@@ -86,9 +86,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportOptionsUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`ExportFileOptions::separate_output_directory_per_file` only has an effect when `export_to_multiple_files` is true; it is ignored otherwise.
 
 ## Used by
 

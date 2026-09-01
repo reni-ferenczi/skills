@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexBuffer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexBuffer` is a thin, extension-agnostic wrapper around a `GLBuffer`
+that interprets its contents as vertex attribute data — as opposed to
+`GLVertexElementBuffer`, which interprets a `GLBuffer` as index data. It does
+not own storage itself; `create` attaches it to an existing `GLBuffer`, and
+the same underlying buffer can be attached to both a `GLVertexBuffer` and a
+`GLVertexElementBuffer` at once so vertices and indices can share one
+allocation.
+
+Its `gl_*_pointer` methods (`gl_vertex_pointer`, `gl_color_pointer`,
+`gl_normal_pointer`, `gl_tex_coord_pointer`, and the generic
+`gl_vertex_attrib_pointer`/`_i_pointer`/`_l_pointer` family) mirror the
+fixed-function and shader-attribute pointer calls that `GLVertexArrayImpl`
+and `GLVertexArrayObject` record when a `GLVertexArray` client calls their
+equivalent `set_*` methods, letting those two vertex-array implementations
+share one buffer abstraction regardless of whether a real vertex array object
+is backing them.
 
 ## Declared types
 
@@ -49,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexBuffer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

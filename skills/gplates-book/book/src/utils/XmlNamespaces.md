@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/XmlNamespaces tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Central registry of the fixed XML namespace URIs and their standard aliases
+used when reading and writing GPlates' XML formats: `gpml` (GPlates' own
+namespace), `gml` (OGC Geography Markup Language), `xsi`
+(XMLSchema-instance) and `gpgim` (the GPGIM's own XML schema, which reuses
+this machinery purely to share XML parsing code with the feature readers,
+per the header's own note, even though it is not itself a feature namespace).
+Each namespace/alias is exposed both as an ICU `GPlatesUtils::UnicodeString`
+and as a `QString`, since callers on the parsing side work in ICU strings and
+callers on the Qt/GUI side work in `QString`.
+
+`get_standard_alias_for_namespace()` and `get_namespace_for_standard_alias()`
+do the URI-to-alias and alias-to-URI lookups through a `StringSet`, falling
+back to the `gpml` namespace/alias when given anything unrecognised, so callers
+get a definite answer rather than an empty or invalid result for unexpected
+input.
 
 ## Declared types
 
@@ -55,9 +67,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/XmlNamespaces tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The namespace and alias strings are function-local `static const` values
+(Meyers singletons) rather than namespace-scope statics, specifically to
+sidestep C++'s unspecified initialisation order for non-local static objects
+across translation units — a comment in the header calls this out explicitly.
+Unrecognised namespace URIs or aliases silently map to `gpml` rather than
+signalling an error, so a typo in calling code will not surface as a lookup
+failure.
 
 ## Used by
 

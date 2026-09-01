@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/SafeBool tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SafeBool<T>` is a reusable, pre-`explicit operator bool` implementation of the safe-bool idiom: a class wants to be usable in a boolean context (`if (obj)`) without also being implicitly convertible to `int` and silently participating in arithmetic, ordering or cross-type comparisons. A class opts in by publicly inheriting `SafeBool<Derived>` (CRTP) and providing a `bool boolean_test() const` member; the base then supplies `operator bool_type()`, which returns a pointer-to-member-function that is truthy or `NULL` but cannot be compared, added, or implicitly converted to another type. Seven classes across the model, maths and scribe modules use it where a predicate-like object needs to behave like a bool in conditionals only.
+
+The free `operator==`/`operator!=` overloads on `SafeBool<T>` exist purely to fail template instantiation (via `BOOST_STATIC_ASSERT(sizeof(T) == 0)`) if someone tries to compare two `SafeBool`-derived objects directly, which is exactly the accidental usage the idiom is designed to prevent.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/SafeBool tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A derived class must supply a public, non-virtual `bool boolean_test() const` — `operator bool_type()` calls it via `static_cast<const T*>(this)`, so its absence is a compile error at the point of instantiation, not at the `SafeBool` declaration itself.
 
 ## Used by
 

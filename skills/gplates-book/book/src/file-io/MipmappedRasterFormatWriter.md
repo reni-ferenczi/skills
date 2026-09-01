@@ -9,9 +9,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/MipmappedRasterFormatWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MipmappedRasterFormatWriter` generates the on-disk mipmap cache files that
+`file-io/MipmappedRasterFormatReader` reads back. The real writing logic
+lives in `MipmappedRasterFormatWriterInternals::BaseMipmappedRasterFormatWriter<ProxiedRawRasterType, MipmapperType>`,
+whose `write()` streams each mipmap level to its own `QTemporaryFile` first
+(since block compression makes each level's final size unpredictable in
+advance) and only concatenates them into the destination file once every
+level has been generated, patching in the true total file size at the end so
+a reader can detect a partially written file. Levels are produced by
+`hilbert_curve_traversal`, a quad-tree recursion over the source raster's
+blocks ordered along a Hilbert curve — the recursion's leaves are base-level
+blocks, and each step back up the tree mipmaps its four children into one
+parent block for the level above, so every mipmap level gets a Hilbert
+ordering appropriate to its own block grid.
+
+`MipmappedRasterFormatWriter<ProxiedRawRasterType, use_colour_palette, Enable>`
+itself is deliberately left undefined and is specialised via `enable_if_c` on
+the source raster's `element_type` and `has_no_data_value`, plus the
+`use_colour_palette` flag (which only applies to integer rasters): one
+specialisation for RGBA rasters with no no-data value, one for floating-point
+rasters with a no-data value, and two for integer rasters with a no-data
+value — one that mipmaps the integer data as floats (letting `GPlatesGui::Mipmapper`'s
+integer specialisation do the int-to-float conversion), and one that first
+converts the raster to RGBA via a `GPlatesGui::RasterColourPalette` and
+mipmaps the colour data instead. All four specialisations share the same
+constructor signature, including an unused `colour_palette` parameter where
+it does not apply, purely so calling code can be written generically over
+which specialisation gets instantiated.
 
 ## Declared types
 
@@ -114,9 +138,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/MipmappedRasterFormatWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`write()` asserts (via `GPlatesGlobal::Assert`) that the supplied
+`RasterBandReaderHandle` actually produces the expected `proxied_raster_element_type`
+— a mismatch is treated as a programming error, not a recoverable input
+error. `has_coverage()` is `false` only for the RGBA-without-no-data-value
+specialisation, since GPlates keeps no-data information for RGBA in the
+alpha channel rather than a separate coverage raster; every other
+specialisation reports `true`. If the temporary directory rejects the
+per-level `QTemporaryFile`, `write()` retries once using the destination
+filename's own directory as the template before giving up and throwing
+`ErrorOpeningFileForWritingException`.
 
 ## Used by
 

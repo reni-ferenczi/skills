@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/TestSuiteFilter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TestSuiteFilter` is the `GPlatesUtils::Singleton` that `GPlatesTestSuite::add_test_suites()`/`add_test_cases()` consult to decide which suites and cases actually get registered with Boost.Test, letting a single command-line string select a subtree of the otherwise-fixed test hierarchy without recompiling. `set_filter_string()` parses that string on `/` into one path segment per tree depth, then each segment on `,` into a `FilterData` of alternative name patterns for that depth; `pass(test_suite_name, depth)` returns true if the filter has no entry for that depth (`is_empty()`) or if `test_suite_name` matches any pattern at that depth via `is_match()`.
+
+`is_match()` supports exact names, an empty pattern or a bare `*` (match anything), and a single leading or trailing `*` for suffix/prefix matching — it does not implement general glob or regex matching beyond those cases.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/TestSuiteFilter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_filter` is `static`, so the filter string set via `set_filter_string()` is shared by every reference to the singleton — there is exactly one active filter for the whole test binary, not one per suite. `is_empty()` and `is_match()` treat malformed input leniently: an out-of-range depth or an exception during lookup makes `is_empty()` return `true` (i.e. "no restriction, let it pass") rather than propagating the error, and `is_match()` falls through to `false` for any pattern shape it does not recognise instead of raising one.
 
 ## Used by
 

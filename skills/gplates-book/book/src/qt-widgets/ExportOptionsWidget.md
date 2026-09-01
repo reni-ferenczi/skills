@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportOptionsWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportOptionsWidget` is the abstract base for the per-export-type option panels shown inside `ConfigureExportParametersDialog` and `EditExportParametersDialog` — one concrete subclass per `ExportAnimationType` (raster, SVG, velocity, rotation, and so on). Its single pure virtual, `create_export_animation_strategy_configuration()`, is the contract every subclass must fulfil: read back whatever controls it added, and package them together with the caller-supplied filename template into an `ExportAnimationStrategy::const_configuration_base_ptr` that the export machinery in `ExportAnimationContext` can act on uniformly regardless of which export type is selected.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportOptionsWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

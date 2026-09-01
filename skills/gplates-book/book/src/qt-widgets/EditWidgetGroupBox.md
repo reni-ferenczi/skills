@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditWidgetGroupBox tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EditWidgetGroupBox` is a `QGroupBox` that owns one instance of every concrete `AbstractEditWidget` subclass (`EditPlateIdWidget`, `EditTimePeriodWidget`, `EditGeometryWidget`, and so on) and shows exactly one of them at a time, keyed by the structural type of the property being edited. Rather than constructing and destroying edit widgets on demand, it pre-allocates the full set in the constructor via `build_widget_map()` and toggles their visibility, so switching between properties of different types is just a show/hide swap rather than a rebuild.
+
+Callers drive it through `activate_appropriate_edit_widget()`, which delegates the type-to-widget dispatch to a visiting `EditWidgetChooser`, or through `activate_widget_by_property_type()` for callers (like `AddPropertyDialog`) that only know the property type and have no value yet. Because edit widgets can only modify a clone of a `TopLevelProperty` rather than the model's live copy, `EditWidgetGroupBox` tracks that clone in `d_current_property` together with the `FeatureHandle::iterator` it came from in `d_current_property_iterator`, and `commit_property_to_model()` is what writes the clone back once the user is done; `d_current_property_iterator` is `boost::none` when editing a standalone property that is not attached to a feature.
 
 ## Declared types
 
@@ -100,9 +100,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditWidgetGroupBox tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`update_property_value_from_widget()` requires `activate_appropriate_edit_widget()` to have been called first with a valid `FeatureHandle::iterator`; otherwise there is no `PropertyValue` to modify and the call throws `NoActiveEditWidgetException` (or `UninitialisedEditWidgetException`). It returns `true` only when the active widget was actually dirty and the model was changed — callers that forward this into `FeatureFocus::announce_modification_of_focused_feature` must check it, since doing so unconditionally risks a signal/slot feedback loop. `refresh_edit_widget()` deliberately does not change which widget is visible, only its contents, to avoid the UI flickering when an external edit (e.g. via a `QTableView`) touches the same property the group box is currently showing. The header itself flags the block of `activate_edit_*_widget()` overloads as possibly redundant now that `activate_widget_by_property_type()` and `d_widget_map` provide a polymorphic dispatch path.
 
 ## Used by
 

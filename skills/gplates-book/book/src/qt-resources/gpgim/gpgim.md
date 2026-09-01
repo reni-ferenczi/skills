@@ -12,9 +12,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-resources/gpgim tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit is the GPlates Geological Information Model (GPGIM): a declarative, data-driven schema that lists every feature type GPlates understands (`gpml:Isochron`, `gpml:MidOceanRidge`, and so on), every property those features can carry, and every structural type a property value can take. `gpgim.xml` is the master document — three top-level lists (`PropertyTypeList`, `PropertyList`, `FeatureClassList`) that between them define enumerations and native property types, name-to-type-and-multiplicity bindings for each property, and the feature classes themselves with their `Inherits` parent and optional default geometry property. `gpgim.xsd` is a supplementary XML Schema used only to sanity-check `gpgim.xml` with an external tool such as `xmllint`; it is not consulted by GPlates at runtime. `gpgim.xsl` is a stylesheet for viewing `gpgim.xml` as browsable cross-linked HTML in a web browser while editing it, again outside of GPlates itself. `units.xml` and `timescales/ICC2012.xml` are separate, independently-loaded resources: a dictionary of measurement units for UI display, and the International Chronostratigraphic Chart used to populate stratigraphic age names in the UI.
+
+Only `gpgim.xml`, `units.xml` and `timescales/ICC2012.xml` are compiled into the GPlates binary as Qt resources (see `src/qt-resources/gpgim.qrc`), reachable at runtime as `:/gpgim/gpgim.xml` etc. `GPlatesModel::Gpgim` (`src/model/Gpgim.h`/`.cc`) parses `gpgim.xml` with `QXmlStreamReader` at singleton construction, in three passes: structural/enumeration types first, then properties (which reference those types), then feature classes (which reference the properties) — each pass depends on the ones before it. Because this schema is the single source of truth for what a well-formed GPML feature collection may contain, changing feature types, properties or their multiplicities means editing `gpgim.xml`, not GPlates C++ source (adding a genuinely new *kind* of property value still requires a matching `GpgimProperty`/structural-type implementation in C++).
 
 ## Declared types
 
@@ -30,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-resources/gpgim tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Feature class inheritance is not flattened at load time: `GPlatesModel::Gpgim::create_feature_class` resolves each `<Inherits>` element by recursively creating the named parent `GpgimFeatureClass` first (memoised in a feature-type map so each class is built once regardless of processing order), and stores a pointer to that parent rather than copying its properties. `GpgimFeatureClass::get_feature_properties`/`get_feature_property`/`get_default_geometry_feature_property` walk up this parent chain at query time, so a subclass's own `<Property>` list and `defaultGeometryProperty` attribute are consulted first and only fall back to the ancestor's if not set locally — use `get_feature_properties_excluding_ancestor_classes()` when only the class's own, non-inherited properties are wanted. `gpml:UnclassifiedFeature` is a special case synthesised in code (`create_unclassified_feature_class`), not read from `gpgim.xml`: it has no parent and accepts a `0..*` multiplicity clone of every known property. Loading is strict — any malformed XML, an undefined `Inherits` target, or a `defaultGeometryProperty` that is not among the class's own properties throws `GpgimInitialisationException` and aborts startup, since the rest of GPlates assumes a fully-validated GPGIM is always available via the `Gpgim` singleton.
 
 ## Used by
 

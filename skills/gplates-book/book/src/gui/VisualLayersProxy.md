@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/VisualLayersProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayersProxy` adapts `GPlatesPresentation::VisualLayers` for the layers
+UI. `VisualLayers` stores layers in draw order (back to front, since that is
+what the renderer needs), but the "Visual Layers" panel presents them
+top-first (front to back), which is more natural for a user reordering them.
+This class is that reversal: every index-taking method (`visual_layer_at()`,
+`child_layer_index_at()`, `move_layer()`) runs the index through `fix_index()`
+before or after delegating to `VisualLayers`, and every index-carrying signal
+`VisualLayers` emits is caught, re-indexed, and re-emitted in the flipped
+order so that `VisualLayersListModel` and the rest of the UI never has to
+think about the underlying storage order.
+
+It is the sole way the GUI layer talks to `VisualLayers` for listing, showing,
+hiding, reordering and looking up visual layers (`get_visual_layer()`,
+`show_all()`, `hide_all()`); `VisualLayersListModel` and the `VisualLayers*`
+widgets all hold a `VisualLayersProxy &` rather than a `VisualLayers &`.
 
 ## Declared types
 
@@ -68,9 +80,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/VisualLayersProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `fix_index(index)` computes `size() - 1 - index`, so it depends on the
+  *current* container size — that is why `handle_layer_about_to_be_added()`
+  passes the explicit-size overload `fix_index(index, size() + 1)`: at that
+  point in the add sequence the underlying `VisualLayers` container has not
+  been resized yet, so `size()` alone would give the wrong flipped index.
+- `handle_layer_order_changed()` re-emits with `first_index`/`last_index`
+  swapped as well as flipped (`fix_index(last_index), fix_index(first_index)`),
+  since reversing a `[first, last]` range also reverses which end is which.
+- `d_visual_layers` is stored as a reference; the `VisualLayers` instance it
+  wraps must outlive the proxy.
 
 ## Used by
 

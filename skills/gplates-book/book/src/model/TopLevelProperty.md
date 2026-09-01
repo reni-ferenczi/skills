@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/TopLevelProperty tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopLevelProperty` is the abstract base for the properties a `FeatureHandle` carries directly (as opposed to values nested inside them). It stores only what is common to every top-level property regardless of how its value is held: the `PropertyName` and the map of XML attributes on the property element. Currently `TopLevelPropertyInline` is the sole derivation, holding the property value inline; the header notes a possible future `TopLevelPropertyXlink` that would reference a remote property via a GML Xlink instead.
+
+The class distinguishes `clone()` from `deep_clone()`: `clone()` duplicates the `TopLevelProperty` object itself but copies the contained property-value pointer by value, so the clone still shares the same underlying property value as the original, while `deep_clone()` also duplicates that property value. The header is explicit that `deep_clone()` is what feature-cloning code should use until the "Bubble-Up" revisioning system is complete, since sharing via `clone()` means an edit to the original's property value would silently show up in the clone too.
 
 ## Declared types
 
@@ -61,9 +61,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/TopLevelProperty tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Copy-assignment is deliberately left undefined (declared private, never defined): all copying must go through the virtual `clone()` so that ref-counted `non_null_ptr_type` semantics are preserved; "assignment" of a property in client code should really only mean pointing an `intrusive_ptr` at a different instance. The copy-constructor is likewise only meant to be invoked from a derived class's own `clone()` implementation, and it resets the new instance's ref-count to zero even though it otherwise behaves like the default copy-constructor.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/Session tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesPresentation::Session` is the abstract base for a saved GPlates session: a timestamp, the set of loaded file paths, and a textual description for session/recent-file menus. It is deliberately thin — it does not itself know how to restore anything; `restore_session()` is pure virtual, left to the two concrete subclasses, `InternalSession` (session state kept as a text archive in `UserPreferences`) and `ProjectSession` (a binary archive in a standalone project file). `SessionManagement` and the GUI menus that list past sessions work in terms of this base class so they do not need to distinguish an ordinary auto-saved session from a project.
+
+The free functions `common_base_dir()` and `strip_empty_entries()` are description-building helpers: they derive a short, human-readable summary of a file set (e.g. a common directory) for `get_description()`, and guard against blank filenames that could otherwise corrupt a saved session's file list.
 
 ## Declared types
 
@@ -49,9 +49,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/Session tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `has_same_loaded_files_as()` deliberately ignores the timestamp and compares only the loaded-file set, so that the Recent Sessions menu can recognise "the same session reloaded" rather than treating every save as distinct.
+- The constructor is `protected`; instances are only ever created through the concrete `InternalSession`/`ProjectSession` subclasses, reached via `GPlatesUtils::ReferenceCount`-managed `non_null_ptr_type`s.
 
 ## Used by
 

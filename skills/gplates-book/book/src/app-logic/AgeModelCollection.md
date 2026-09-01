@@ -9,9 +9,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/AgeModelCollection tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AgeModelCollection` holds the set of named age models (e.g. `CandeKent95`) imported
+from an age model file: each `AgeModel` pairs an identifier with a `age_model_map_type`
+mapping magnetic chron names such as `"2An.1ny"` to an age in Ma. The collection tracks
+one model as "active" by index, exposes it through `get_active_age_model()`, and emits
+`active_age_model_changed()` when the selection changes, so GUI code such as
+`qt-widgets/AgeModelManagerDialog` can react to a user switching models.
+
+Alongside the per-model chron ages, the collection separately keeps a file-wide,
+chronologically ordered list of chron names (`d_ordered_chrons`) and free-text
+per-chron metadata (`d_chron_comments`/`chron_comment_map_type`), both populated by
+the file reader (`file-io/AgeModelReader`) as it parses each chron line in order,
+since QString's default sort order does not match chronological chron order.
 
 ## Declared types
 
@@ -90,9 +99,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/AgeModelCollection tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `add_chron_to_model(const QString &model_id, ...)` overload is an empty stub — it
+does nothing regardless of arguments. Only the index-based overload,
+`add_chron_to_model(int index, ...)`, actually inserts into a model's `d_model` map;
+callers that look up a model by identifier will silently lose data if they call the
+wrong overload. `get_active_age_model()` and `set_active_age_model()` bounds-check
+`d_active_model_index` against `d_age_models`, but `add_chron_to_model(int, ...)` and
+`get_model_id(int)` only reject an index strictly greater than the size, so an index
+equal to `size()` still reaches `at()` and throws `std::out_of_range`.
 
 ## Used by
 

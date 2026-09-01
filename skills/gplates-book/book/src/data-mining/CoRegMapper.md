@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/CoRegMapper tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoRegMapper` is the abstract "map" stage of the co-registration pipeline: `process()` turns a range of `MapperInDataset` (`GPlatesAppLogic::ReconstructContext::ReconstructedFeature` values, after filtering) into a `MapperOutDataset` of `(OpaqueData, ReconstructedFeature)` tuples, extracting a single attribute value from each feature. `RFGToPropertyValueMapper` and `RFGToRelationalPropertyMapper` are the real implementations, pulling a property value or a relational (e.g. distance) quantity out of each reconstructed feature; the extracted `OpaqueData` then feeds a `CoRegReducer` to collapse the dataset down to one value per seed.
+
+`DummyMapper` is the no-op placeholder implementation, used where a mapper is required structurally but no real attribute extraction is configured.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/CoRegMapper tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

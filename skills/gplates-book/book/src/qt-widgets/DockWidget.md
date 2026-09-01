@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/DockWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DockWidget` is the common base every dockable panel in `ViewportWindow` is built
+from, so that docking, tabifying and the right-click context menu ("Dock at Top",
+"Tabify at Left", etc.) only need to be implemented once. On construction it
+registers itself with `GPlatesGui::DockState`, which is the shared authority on
+which dock currently occupies which area; `DockState::can_dock()` and
+`can_tabify()` decide, per allowed area, whether this dock's context-menu action
+for that area should even be shown, and `hide_menu_items_as_appropriate()`
+re-evaluates that whenever `DockState` reports another dock's configuration
+changed or this dock's own `allowedAreas()` changes. Each `dock_at_*()`/`tabify_at_*()`
+slot un-floats the widget and asks `DockState::move_dock()` to actually relocate it;
+`DockWidget` itself never manipulates `QMainWindow`'s dock layout directly. Its own
+`topLevelChanged` and `dockLocationChanged` signals (from `QDockWidget`) are
+re-emitted as a single `location_changed()` signal so subscribers do not need to
+listen to both.
 
 ## Declared types
 
@@ -57,9 +68,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/DockWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The object name is always `"Dock_" + object_name_suffix` (or `"Dock_" + title` if
+no suffix is given), which other code relies on for locating docks (for example
+when hiding all GUI chrome in full-screen mode). `d_dock_state_ptr` and the eight
+action pointers are `QPointer`s rather than raw pointers, but `DockState` and the
+actions created in `set_up_context_menu()` are expected to outlive the dock in
+normal operation; the `QPointer`s guard against dangling access rather than
+signalling an expected lifetime shorter than the dock's own.
 
 ## Used by
 

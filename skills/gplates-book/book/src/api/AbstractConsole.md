@@ -8,9 +8,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/AbstractConsole tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApi::AbstractConsole` is the interface the embedded Python console talks
+to instead of a concrete widget: it decouples the code that runs Python (which
+needs to print output and prompt for input) from whatever surface is actually
+showing it, whether that is a Qt dialog or a headless stream. `append_text` is
+overloaded so callers can hand it either a `QString` they built themselves or a
+raw `boost::python::object`, which the implementation stringifies; the `error`
+flag lets a caller mark a message as an error without the interface needing a
+separate method for it.
+
+Every method is documented as required to be thread-safe, because Python
+execution and console I/O do not necessarily happen on the same thread as the
+console's own display.
 
 ## Declared types
 
@@ -37,9 +46,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/AbstractConsole tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Implementations must make `append_text` and `read_line` thread-safe; the base
+class itself enforces nothing beyond declaring the pure virtual interface.
 
 ## Used by
 

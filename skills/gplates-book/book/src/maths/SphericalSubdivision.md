@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/SphericalSubdivision tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Two independent schemes for recursively subdividing the whole sphere into a hierarchy of cells, each exposed the same way: a top-level `visit()` hands the caller's visitor every top-level cell, and each cell type (`Triangle` or `Quad`) has its own `visit_children()` that subdivides it into four smaller cells at the edge midpoints (and, for quads, the face centre), each renormalised back onto the unit sphere. Neither class stores the recursion itself — the visitor is expected to call `visit_children()` again from inside its own `visit()` to descend further, and an arbitrary `RecursionContextType` (at minimum a depth counter) is threaded through unchanged so the visitor can track how deep it is.
+
+`HierarchicalTriangularMeshTraversal` implements the eight-triangle Hierarchical Triangular Mesh of Kunszt, Szalay and Thakar, starting from the six axis-aligned unit vectors. `RhombicTriacontahedronTraversal` instead starts from a 30-quad, 32-vertex rhombic triacontahedron built from golden-ratio coordinates (`GOLDEN_RATIO`, `GOLDEN_RATIO_2`, `GOLDEN_RATIO_3`), which the header notes gives a more uniform vertex distribution than the triangular mesh. Both are consumed by callers such as `GeneratePoints` that need an even covering of the sphere at a chosen subdivision depth.
 
 ## Declared types
 
@@ -92,9 +92,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/SphericalSubdivision tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`Triangle` and `Quad` store their vertices as references, not copies, to avoid repeated `UnitVector3D` copying across a deep recursive traversal; instances are therefore only valid for the duration of the enclosing `visit()`/`visit_children()` call and must not be retained past it. The `visit`/`visit_children` methods are templates on `VisitorType`, so the visitor's `visit()` overload is duck-typed rather than enforced through a base class — mismatched signatures surface as ordinary template compile errors at the call site.
 
 ## Used by
 

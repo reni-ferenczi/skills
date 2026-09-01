@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/LinkWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LinkWidget` wraps a `QLabel` to give the layer-options widgets a clickable, hyperlink-styled piece of text without pulling in a full `QPushButton`. It renders `d_link_text` through an HTML `LINK_TEMPLATE` so it looks like an `<a>` tag, forwards the label's `linkActivated` signal as its own parameterless `link_activated()`, and sets a pointing-hand cursor over the label.
+
+When the widget is disabled, `update_internal_label()` swaps the HTML-wrapped text for the plain string, because Qt's default rendering of a disabled rich-text link looks visually off; this is triggered by intercepting `QEvent::EnabledChange` in the overridden `event()`. That same override also swallows `QEvent::MouseButtonPress` events over the label, which is needed because `LinkWidget` is typically embedded inside `VisualLayerWidget`, whose drag handling would otherwise steal the mouse press before the label ever sees the click.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/LinkWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

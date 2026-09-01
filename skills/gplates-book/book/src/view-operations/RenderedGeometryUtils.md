@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A grab-bag of free functions built on top of `RenderedGeometryCollection`, `RenderedGeometryLayer` and `RenderedGeometryProximity`, grouped into three jobs: bulk activate/deactivate and counting of `RenderedGeometryLayer` objects across one or more main layers; extracting the underlying `GPlatesAppLogic::ReconstructionGeometry` objects that back rendered geometry (from a whole collection, from a proximity-test result, or from whatever observes a given feature or geometry property); and, via `VisitFunctionOnRenderedGeometryLayers`/`ConstVisitFunctionOnRenderedGeometryLayers`, wrapping an arbitrary `boost::function` so it can be applied to every layer in a collection without writing a bespoke `RenderedGeometryCollectionVisitor` each time.
+
+The `get_unique_reconstruction_geometries*` overloads all funnel through the same `remove_duplicates()` helper and the anonymous-namespace `CollectReconstructionGeometries` visitor, so the multiple entry points (whole collection, one main layer, a proximity-hit sequence, or "everything observing this feature/geometry property") share one notion of what counts as a duplicate `ReconstructionGeometry`.
 
 ## Declared types
 
@@ -95,9 +95,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`remove_duplicates()` deliberately preserves the input order rather than sorting-then-erasing, using a `std::set` of raw pointers purely to dedupe in better than O(N²) time: when the input came from a proximity test sorted by closeness, that ordering must survive deduplication, so do not "simplify" it into a sort-and-unique.
 
 ## Used by
 

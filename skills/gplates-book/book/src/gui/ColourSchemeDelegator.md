@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourSchemeDelegator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourSchemeDelegator` is itself a `ColourScheme`, but rather than deciding colours directly it forwards each `get_colour` call to whichever scheme is currently active, looked up by `colour_scheme_handle` (a category/id pair) in a `ColourSchemeContainer`. This indirection is the reason `ColourScheme` clients — the globe and map renderers, `ReconstructionGeometryRenderer`, and so on — hold a single stable reference for the lifetime of the session even as the user switches colouring schemes or edits one in the colouring dialog; only `d_global_colour_scheme` (or an entry in `d_special_colour_schemes`) changes underneath them, via `set_colour_scheme`.
+
+Colouring can be overridden per feature collection: `set_colour_scheme` with a `feature_collection` argument records a special scheme for just that collection in `d_special_colour_schemes`, while `get_colour` resolves a `ReconstructionGeometry` back to its owning `FeatureCollectionHandle` (via `get_feature_collection_from_reconstruction_geometry`) and falls back to `d_global_colour_scheme` when no override is set. The anonymous-namespace `WeakReferenceRemover`, a `WeakReferenceCallback` on the feature collection, keeps that map from accumulating stale entries by erasing its own entry automatically once the feature collection it refers to is deactivated. `ColourSchemeDelegator` also listens for the container's `colour_scheme_edited` signal and re-emits its own `changed()` to tell renderers that previously rendered colours are now stale.
 
 ## Declared types
 
@@ -63,9 +63,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourSchemeDelegator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_colour_scheme_container` is stored as a reference, not owned; the `ColourSchemeContainer` passed to the constructor must outlive the `ColourSchemeDelegator`.
+- The `FeatureHandle` overload of `get_colour` is an unfinished stub (`//TODO:`) that unconditionally returns `boost::none`; only the `ReconstructionGeometry` overload is implemented.
+- Entries in `d_special_colour_schemes` are removed automatically via `WeakReferenceRemover` when their feature collection is deactivated, so callers must not assume an override set with `set_colour_scheme` persists once that collection is unloaded.
 
 ## Used by
 

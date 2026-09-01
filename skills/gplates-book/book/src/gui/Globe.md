@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Globe tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::Globe` draws the 3D globe view: the star field, the opaque earth
+sphere, the lat/lon `SphericalGrid`, and every visible `RenderedGeometry` on
+top, delegating the last of these to a `GlobeRenderedGeometryCollectionPainter`
+it owns. `paint()` takes four projection matrices differing only in far-clip
+distance — one each for the front hemisphere, the rear hemisphere, the full
+globe, and a long one for the stars — because the front and rear halves of the
+globe are rendered as separate passes to get correct depth ordering against
+sub-surface geometry.
+
+The globe's current attitude is held in a `SimpleGlobeOrientation`, mutated
+through `set_new_handle_pos()`/`update_handle_pos()` as the user drags, and
+`orient()` maps a screen-space point back through that orientation onto the
+sphere. `d_stars`, `d_sphere` and `d_grid` are `boost::optional` because they
+own OpenGL resources that cannot be constructed before `initialiseGL()` runs
+against a bound context; the second constructor clones an existing `Globe`
+into a new OpenGL context (sharing orientation and geometry state) rather than
+rebuilding it from scratch, which is how the globe and map canvases stay in
+sync when a view is duplicated.
 
 ## Declared types
 
@@ -62,9 +77,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Globe tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`paint()` can temporarily overwrite the view's background colour: if any
+sub-surface geometry needs rendering and the background is currently opaque,
+it forces the background alpha to 0.3 (via `ViewState::set_background_colour()`)
+so the rear of the globe reads as translucent, leaving that changed colour in
+place afterwards rather than restoring the original. `d_globe_orientation_changing_during_mouse_drag`
+is read elsewhere to temporarily reduce the sampling rate of 3D scalar-field
+iso-surfaces while the user is actively dragging the globe.
 
 ## Used by
 

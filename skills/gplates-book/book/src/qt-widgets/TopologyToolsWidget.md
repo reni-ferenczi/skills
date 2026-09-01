@@ -10,9 +10,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TopologyToolsWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyToolsWidget` is the task-panel form shown while a topology-building or
+topology-editing canvas tool is active. It presents the section list, the
+"Add"/"Add To Boundary"/"Add To Interior"/"Remove" buttons and the
+"Create"/"Apply" buttons that a user works through while assembling a
+`TopologyBoundary`, `TopologyLine` or `TopologyNetwork` feature, and it adapts
+its labels and which widgets are visible to the `GPlatesAppLogic::TopologyGeometry::Type`
+being built (networks show an interior-sections row that boundaries and lines
+hide).
+
+The widget itself holds almost no topology logic: `activate()` switches
+between `BUILD` mode (constructing a brand-new topological feature, so the
+"Create" button is shown) and `EDIT` mode (reusing the feature currently held
+by `GPlatesGui::FeatureFocus`, so "Apply" is shown instead and the feature's
+`gml:validTime` is read to reactivate the tool over the correct time period),
+then delegates the actual section bookkeeping and geometry construction to
+`GPlatesGui::TopologyTools` via `d_topology_tools_ptr`. Every button handler in
+this class is a thin forward to the matching method on that object;
+`CreateFeatureDialog` and `FeatureSummaryWidget` are launched from here to let
+the user name the new feature and review the resulting topology, respectively.
 
 ## Declared types
 
@@ -76,9 +92,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TopologyToolsWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_edit_topology_feature_ref` is `boost::none` in `BUILD` mode and set to the
+focused feature in `EDIT` mode; code that reads it must check the mode first.
+Entering `EDIT` mode with no valid focused feature disables the whole widget
+and returns before the topology tool is activated, so callers cannot assume
+`activate()` always leaves the widget usable. `d_create_feature_dialog` is
+parented to a Qt widget and is memory-managed by Qt, not explicitly deleted.
 
 ## Used by
 

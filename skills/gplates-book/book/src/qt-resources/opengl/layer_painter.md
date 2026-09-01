@@ -11,9 +11,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=shaders/layer_painter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+These two shader pairs give `LayerPainter` a directional-lighting option for the geometry it batches onto the globe and map. The point/line/polygon pair lights ordinary rendered geometry: the vertex shader passes through the interpolated position (used directly as the sphere normal, since geometry sits on the unit globe) and the fragment shader runs a Lambert diffuse term against it, blended with an ambient contribution. Under `MAP_VIEW` this collapses to a single precomputed `ambient_and_diffuse_lighting` uniform, because the map's surface normal is constant across the scene and does not need a per-fragment dot product.
+
+The axially-symmetric-mesh pair lights meshes such as velocity arrows and small-circle discs, which are built by rotating a 2D profile around an axis rather than sitting flush on the sphere. Because the true surface normal is not the sphere normal, the fragment shader reconstructs it by blending a radial (x, y) normal with the mesh's own axial (z) direction, using per-vertex weights, then transforms that model-space normal into world-space with a per-vertex local frame (`world_space_x_axis`/`y_axis`/`z_axis`) carried from the vertex shader. The resulting lambert term is further clamped based on the *unperturbed* sphere normal so that a mesh on the far side of the globe does not appear lit through it.
 
 ## Declared types
 
@@ -29,9 +29,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=shaders/layer_painter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both fragment shaders use `clamp`/`max` with float literals rather than integer overloads, because some driver GLSL compilers fail to resolve the integer overload of these built-ins and crash. Both vertex shaders write `gl_FrontColor` and `gl_BackColor` identically since the geometry is drawn without back-face culling.
 
 ## Used by
 

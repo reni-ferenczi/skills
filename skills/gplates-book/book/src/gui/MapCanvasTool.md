@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapCanvasTool tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MapCanvasTool` is the abstract State-pattern base (Gamma et al.) for every
+interactive tool available on the map view — the map-side counterpart of
+`GlobeCanvasTool`. Each mouse event on the map (`GPlatesQtWidgets::MapCanvas`,
+`GPlatesQtWidgets::MapView`) is dispatched to `handle_*` virtuals for plain,
+Shift, Ctrl and Shift+Ctrl left-button press/click/drag/release, plus movement
+without a drag; the currently active tool is referenced by a
+`MapCanvasToolChoice`, and `handle_activation()`/`handle_deactivation()` mark
+tool switches. Every handler defaults to a no-op except two: Ctrl+left-drag
+pans the map by calling `MapTransform::translate()`, and Shift+Ctrl+left-drag
+rotates it about the view centre via the protected `rotate_map_by_drag()`
+helper, which derives the rotation angle from the change in the mouse vector
+relative to the viewport centre. Concrete tools subclass this to override only
+the gestures they care about.
+
+The protected `qpointf_to_point_on_sphere()` converts a scene-space click point
+to a `GPlatesMaths::PointOnSphere` by inverse-transforming it through the
+active `MapProjection`, returning `boost::none` where the point has no valid
+inverse (off the map).
 
 ## Declared types
 
@@ -57,9 +72,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapCanvasTool tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The destructor is pure virtual (`virtual ~MapCanvasTool() = 0;`) with a
+  defined body, forcing the class to be abstract even though every other
+  member has a default implementation.
+- `rotate_map_by_drag()` has a known limitation, noted in the source as a
+  `FIXME`: rotating about the view centre requires
+  `QGraphicsView::AnchorViewCentre`, but that anchor also re-centres the map on
+  every rotation; without it, rotation is about the map's centre rather than
+  the view's.
+- `d_map_view_ptr`, `d_map_canvas_ptr` and `d_map_transform_ptr` are raw,
+  non-owning pointers to objects the tool does not control the lifetime of.
 
 ## Used by
 

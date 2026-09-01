@@ -9,9 +9,16 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/NullIntrusivePointerHandler tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`NullIntrusivePointerHandler` is a stateless functor that reports an attempt
+to construct or assign a null value into a non-nullable intrusive-pointer
+type such as `non_null_intrusive_ptr`. Calling `operator()()` is the "you
+tried to make me null" hook that such a smart pointer's implementation
+invokes instead of silently accepting a null raw pointer; the handler's job
+is only to fail loudly, not to do anything with a pointer value itself, which
+is why it takes no arguments and holds no state. This is the failure policy
+half of the intrusive-pointer machinery that most of the codebase's
+`non_null_ptr_to_const_type`/`non_null_ptr_type` typedefs are built on, which
+explains why it is referenced from so many otherwise unrelated units.
 
 ## Declared types
 
@@ -38,9 +45,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/NullIntrusivePointerHandler tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`operator()()`'s behaviour depends on the build: in a `GPLATES_DEBUG` build it
+calls `GPlatesGlobal::Abort` so the failure shows up as a live stack trace in
+a debugger, while in a release build it instead throws
+`NullNonNullIntrusivePointerException`. Code that calls this handler must
+therefore be prepared for either an abort or a C++ exception depending on the
+build configuration, not just one of the two.
 
 ## Used by
 

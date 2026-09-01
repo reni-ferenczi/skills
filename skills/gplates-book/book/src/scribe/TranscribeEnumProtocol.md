@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeEnumProtocol tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`transcribe_enum_protocol()` is the standard way to write a `transcribe()` overload for a C++ `enum`: instead of archiving the enumerator's integer value, it archives the enumerator's name, using a caller-supplied array of `EnumValue` name/value pairs to translate between the two. Archiving by name means the enum's integer values can be reordered, and new enumerators inserted or removed, without breaking backward or forward compatibility with archives written by other versions of GPlates — a concern that matters because enums such as `LayerTaskType` and `VelocityDeltaTime` are transcribed inside saved projects and sessions that must keep loading across releases.
+
+On the load path, an enum name found in the archive that is not in the caller's `EnumValue` table (because a newer GPlates version added it) makes the function return `TRANSCRIBE_UNKNOWN_TYPE` rather than fail outright, so callers can degrade gracefully instead of aborting the whole transcription. `EnumImplementation` exists purely so this header does not have to include the heavier `Scribe.h`, since enum `transcribe()` overloads for a class's *private* enum must be defined as friend functions in the class body itself, which forces this header into other headers rather than just `.cc` files.
 
 ## Declared types
 
@@ -43,9 +43,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeEnumProtocol tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The `name` string in each `EnumValue` is the on-disk identifier: changing it breaks compatibility with every existing archive that used the old name, even if the C++ enumerator itself is only renamed, not removed.
+- On the save path, a live enum value that is missing from the caller's `EnumValue` table triggers `GPlatesGlobal::Assert<Exceptions::UnregisteredEnumValue>`, which signals a programmer error (an enumerator added to the `enum` but not to the transcribe table) rather than a data problem.
+- Every new enumerator must be added to both the `enum` definition and its `transcribe()` function's `EnumValue` table; the header's own example comments flag this as easy to forget.
 
 ## Used by
 

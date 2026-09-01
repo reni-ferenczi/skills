@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/CoordinateTransformation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoordinateTransformation` wraps GDAL/OGR's `OGRCoordinateTransformation` to convert
+coordinates between two `SpatialReferenceSystem`s, most commonly between a raster's or
+shapefile's native projection and WGS84. The two `create()` overloads distinguish the
+common cases from the fallible one: the no-argument form always succeeds and produces
+an identity transform (source and target both WGS84), while the two-SRS form returns
+`boost::none` when GDAL cannot build a transformation between the given systems,
+rather than throwing.
+
+Internally, `create()` checks whether the source and target systems are the same
+(via `OGRSpatialReference::IsSame`) and substitutes the identity transform in that
+case, so `is_identity_transform()` covers both the explicit no-argument construction
+and an SRS pair that happens to match. The `Coord` struct bundles an (x, y) pair with
+an optional z (height above geoid), and every `transform`/`transform_in_place`
+overload — single coordinate, `std::vector<Coord>`, or raw coordinate arrays — funnels
+through the same in-place path so identity transforms are a no-op rather than a
+special-cased copy.
 
 ## Declared types
 
@@ -55,9 +68,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/CoordinateTransformation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create(source, target)` copies both spatial reference systems internally, so the
+  caller is free to modify or destroy the SRS objects it passed in afterwards.
+- A failed transform (`OGRCoordinateTransformation::Transform` returning false) leaves
+  the output coordinate(s) unmodified for the single-`Coord` overloads, but for the
+  batch `transform(vector, vector)` overload the output vector is left unmodified only
+  as a whole — a partial failure does not commit a partial result.
+- `d_ogr_coordinate_transformation` being null is the identity-transform marker, not
+  an error state; `boost::scoped_ptr` requires `OGRCoordinateTransformation` to be a
+  complete type at the point of the class's constructors/destructor, which is why
+  those are defined out-of-line in the `.cc` even though they do nothing else.
 
 ## Used by
 

@@ -10,9 +10,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AssignReconstructionPlateIdsDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AssignReconstructionPlateIdsDialog` is the wizard-style dialog behind
+"cookie-cutting" plate IDs onto features: the user picks one or more active
+partitioning-polygon layers and one or more loaded feature collections, and
+the dialog geometrically tests each feature against the partitioning polygons
+to copy reconstruction/conjugate plate IDs and appearance/disappearance times
+onto it. Its three pages (partitioning layers, files to partition, general
+options) are tracked with a `QStackedWidget` (`stack_widget`) and
+`handle_prev()`/`handle_next()`; `FileState`/`LayerState` (each defaulting to
+disabled) back the two checkbox tables the user enables rows in.
+
+`create_plate_id_assigner()` resolves the chosen layers to their
+`GPlatesAppLogic::LayerProxy` output and builds a `GPlatesAppLogic::AssignPlateIds`
+from them, which does the actual point-in-polygon partitioning work;
+`partition_features()` then runs it over the selected feature collections
+behind a modal `ProgressDialog`, merging the resulting model edits into a
+single change so the GUI is not flooded with per-feature callbacks. The
+dialog can also be driven headlessly via `exec_partition_features_dialog()`
+from other units such as `api/CoReg` and `data-mining` code that need to
+assign plate IDs as part of a larger pipeline.
 
 ## Declared types
 
@@ -123,9 +139,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AssignReconstructionPlateIdsDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`FileColumnName` and `LayerColumnName` must stay in sync with the column
+order laid out in `AssignReconstructionPlateIdsDialogUi.ui` — nothing enforces
+this at compile time. `FileStateCollection::table_widget` and
+`LayerStateCollection::table_widget` start `NULL` and are only valid once the
+corresponding `set_up_*_page()` has run after `setupUi()`. Only layers with an
+already-active `LayerProxy` are offered as partitioning-layer choices, but
+`create_plate_id_assigner()` still tolerates one going inactive between
+population and use rather than asserting.
 
 ## Used by
 

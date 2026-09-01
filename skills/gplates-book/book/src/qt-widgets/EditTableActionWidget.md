@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditTableActionWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EditTableActionWidget` is a small per-row toolbar (insert above, insert below, delete) meant to be embedded as a cell widget inside a `QTableWidget` owned by an `EditTableWidget`. Each button's `clicked()` signal is wired in the constructor to one of the three slots, which simply forward the request to the owning `EditTableWidget` via `handle_insert_row_above()`, `handle_insert_row_below()` and `handle_delete_row()`, passing `this` so the table widget knows which row the action came from.
+
+The widget holds no editing state itself; it is purely a dispatcher that lets each table row carry its own row-management controls without the table widget having to track button identity by position.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditTableActionWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Ownership is implicit rather than enforced: the destructor comment records that because instances are constructed with a `QWidget` parent and then installed as a cell widget in the list-of-points table, Qt's parent-child ownership deletes them automatically, so callers must not delete an `EditTableActionWidget` themselves.
 
 ## Used by
 

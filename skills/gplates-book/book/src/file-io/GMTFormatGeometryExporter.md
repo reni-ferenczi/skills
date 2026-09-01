@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatGeometryExporter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GMTFormatGeometryExporter` renders a `GeometryOnSphere` as GMT "xy" point records by implementing `ConstGeometryOnSphereVisitor`: each `visit_*` method converts its geometry's vertices to `LatLonPoint`s and writes them as fixed-width coordinate lines via `print_gmt_coordinate_line()`, then closes the feature with a `>` termination line. Callers are expected to go through `export_geometry()` rather than calling `accept_visitor()` directly, since the exporter itself is responsible for writing that trailing terminator.
+
+Polygon rings get special handling in `write_polygon_ring()`: because the GMT xy format has no notion of a closed ring, the exporter repeats the ring's first vertex at the end (controlled by `d_polygon_terminating_point`, on by default) so downstream GMT tools render a closed loop; each interior ring is written and terminated the same way as the exterior ring. `d_reverse_coordinate_order` lets a caller opt out of GMT's normal (lon, lat) ordering and write (lat, lon) instead, matching the PLATES4 line format convention used elsewhere in the file-io component.
 
 ## Declared types
 
@@ -48,9 +48,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatGeometryExporter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The exporter does not own `d_stream_ptr`; the caller must keep the `QTextStream` (and its underlying device) alive for the exporter's lifetime.
+- `export_geometry()` must be used instead of calling `accept_visitor()` on the geometry directly, or the required `>` termination line will be missing from the output.
+- The trailing `>` written by `print_gmt_feature_termination_line()` carries no newline, since a GMT header line may follow on the same line; a caller writing raw text after export must account for this.
 
 ## Used by
 

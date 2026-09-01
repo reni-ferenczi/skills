@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ExportTemplateFilenameSequence tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportTemplateFilenameSequence` turns one filename template (a printf-style
+string with placeholders such as `%n`, `%u`, `%f`, `%d`, `%R`, `%T`, `%D`,
+`%A`) plus a reconstruction time range and increment into a forward-iterable
+sequence of concrete filenames, one per exported frame. It exists so the
+various export animation strategies in `gui` and the export-configuration
+widgets in `qt-widgets` can share one implementation of "expand this template
+for frame N at time T" instead of each re-deriving frame counts and format
+substitution themselves.
+
+The class itself is a thin, exception-safe front end: the constructor
+validates the time increment (non-zero, matching the sign of end minus begin
+time) and hands the real work — computing the frame count via
+`GPlatesUtils::AnimationSequence::calculate_sequence` and expanding each
+template — to `ExportTemplateFilenameSequenceImpl`, held by `boost::shared_ptr`
+so cheap copies of the sequence share one implementation.
+`ExportTemplateFilenameSequenceIterator` is a minimal forward iterator over
+that implementation; `%T` and `%D` are resolved from the wall-clock time at
+first dereference and then held fixed for the lifetime of that iterator, so
+every filename produced by one iterator carries the same export timestamp.
+`ExportTemplateFilename::validate_filename_template` lets callers such as
+GUI validators check a template's syntax up front without constructing a
+sequence.
 
 ## Declared types
 
@@ -97,9 +116,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ExportTemplateFilenameSequence tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor throws `TimeIncrementZero` or `IncorrectTimeIncrementSign`
+  before it ever touches the filename template, and can also throw
+  `UnrecognisedFormatString` or `NoFilenameVariation` while building the
+  `ExportTemplateFilenameSequenceImpl`; callers must be prepared to catch all
+  four.
+- `operator*()` on a default-constructed iterator throws
+  `GPlatesGlobal::UninitialisedIteratorException` rather than dereferencing a
+  null impl pointer.
+- The wall-clock time used for `%T`/`%D` is captured lazily on an iterator's
+  first dereference and then cached (`d_first_dereference`, `d_date_time`),
+  so two iterators created moments apart from the same sequence can embed
+  different timestamps, but repeated dereferences of the *same* iterator are
+  stable.
+- `ExportTemplateFilename::PLACEHOLDER_FORMAT_STRING` (`"%P"`) is deliberately
+  left unexpanded by this class; it is a hook for callers (e.g. resolved
+  topology export) to substitute their own per-boundary-type text after
+  dereferencing.
 
 ## Used by
 

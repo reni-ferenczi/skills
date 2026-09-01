@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlFeatureReference tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlFeatureReference` is the property-value representation of a GPML `FeatureReference`: it stores a `GPlatesModel::FeatureId` identifying another feature, together with the `GPlatesModel::FeatureType` that reference is expected to resolve to. It lets a feature property point at another feature by id (rather than embedding the feature itself), with the expected type recorded alongside the id for validation or display purposes without requiring the reference to be resolved.
+
+As with the other GPML property values, instances are always heap-allocated behind `non_null_ptr_type` and built only through `create`; the constructors are `protected`. `deep_clone` is a plain `clone()` because the class holds only value types (`FeatureId`, `FeatureType`) and no nested `PropertyValue` to recurse into. `accept_visitor` dispatches to `visit_gpml_feature_reference`.
 
 ## Declared types
 
@@ -52,9 +52,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlFeatureReference tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `value_type()` has no setter: the expected feature type is fixed at construction and must never change.
+- The three-argument protected constructor accepts a `description_` parameter but silently discards it — no `d_description` member exists on this class, unlike `GpmlConstantValue`. That parameter is dead.
+- Copy-assignment is declared `private` and never defined; use `clone()` instead.
 
 ## Used by
 

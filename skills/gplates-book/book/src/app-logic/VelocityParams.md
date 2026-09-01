@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/VelocityParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VelocityParams` is the plain-data configuration bundle for a velocity layer: which of the two `SolveVelocitiesMethodType` strategies to use, the `VelocityDeltaTime::Type` and delta time to difference over, and whether/how to smooth velocities across plate and network boundaries. `VelocityFieldCalculatorLayerParams` stores one and `VelocityFieldCalculatorLayerProxy` reads it (and uses it as a cache key) to decide how to compute each `MultiPointVectorField`.
+
+The two `SolveVelocitiesMethodType` values distinguish computing the velocity of the domain geometry's own reconstructed motion (`SOLVE_VELOCITIES_OF_DOMAIN_POINTS`) from intersecting the domain geometry with a separate rigid or deforming surface and reporting that surface's velocity at the intersection point (`SOLVE_VELOCITIES_OF_SURFACES_AT_DOMAIN_POINTS`, the original and still-default behaviour). Boundary smoothing, when enabled, blends a domain point's calculated velocity with the average velocity either side of a nearby plate/network boundary, over an angular half-extent in degrees, optionally excluding deforming regions from that averaging.
+
+The class provides value semantics (`operator==`, `operator<` via `boost::equality_comparable`/`boost::less_than_comparable`) so it can be used directly as a map/cache key, and a private `transcribe()` so its settings persist in saved sessions and projects.
 
 ## Declared types
 
@@ -60,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/VelocityParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The default constructor picks `SOLVE_VELOCITIES_OF_SURFACES_AT_DOMAIN_POINTS` (kept for backward compatibility with how GPlates originally calculated velocities) rather than the simpler `SOLVE_VELOCITIES_OF_DOMAIN_POINTS`, a 1.0 delta time with `T_PLUS_DELTA_T_TO_T`, boundary smoothing disabled, a 1-degree half-extent, and `exclude_deforming_regions_from_smoothing` set true. As with `VelocityDeltaTime::Type`, the `SolveVelocitiesMethodType` enumerator names are persisted by string in `transcribe()` and must not be renamed once shipped; any new value must be added both before `NUM_SOLVE_VELOCITY_METHODS` and to that transcribe table.
 
 ## Used by
 

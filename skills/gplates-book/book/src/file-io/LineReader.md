@@ -9,9 +9,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/LineReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LineReader` is a small buffered line-reading wrapper around `QTextStream`,
+built for the hand-written line-oriented parsers such as
+`PlatesLineFormatReader` and `PlatesRotationFormatReader` that need one line
+of lookahead — `peekline` returns the next line without consuming it, and a
+following `getline` returns that same line. It deliberately reads through a
+`QFile`/`QString` rather than `std::istream`/`std::string` so filenames and
+file content with Unicode characters are handled correctly, and it forces
+`UTF-8` decoding on the underlying stream in the constructor. Inheriting from
+`GPlatesUtils::SafeBool<LineReader>` lets client code write `while (reader)`
+to mean "a line is still available", without exposing an unsafe implicit
+conversion to `bool`.
 
 ## Declared types
 
@@ -44,9 +52,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/LineReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`line_number()` counts lines actually consumed via `getline`; a pending
+`peekline` result does not advance it until `getline` is called to retrieve
+it. The class does not own the `QFile` passed to its constructor — the caller
+must keep it alive and open for the `LineReader`'s lifetime. As the header's
+`TODO` notes, `QTextStream::readLine()` recognises `"\n"` and `"\r\n"` but not
+the old classic-Mac `"\r"`-only convention, and a single file mixing newline
+styles is not specially handled.
 
 ## Used by
 

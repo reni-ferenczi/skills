@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourScheme tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourScheme` is the abstract policy interface behind GPlates' colouring system: anything that decides "what colour is this feature drawn in" implements it. It offers two overloads because the same colouring decision can be asked of either a reconstructed `ReconstructionGeometry` (the usual case when rendering the globe or map) or the underlying `FeatureHandle` directly, and either can return `boost::none` to mean "do not draw this at all" rather than any particular colour.
+
+The interface is deliberately thin and reference-counted (via `GPlatesUtils::ReferenceCount`) so that concrete strategies — colouring by plate ID, by age, by a single fixed colour, by a `.cpt` palette, or delegating to another scheme entirely — can be swapped behind a `non_null_ptr_type` at runtime, most visibly through `ColourSchemeDelegator`, without callers caring which strategy is active.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourScheme tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `boost::none` from either `get_colour` overload means "don't draw", not "use a default colour" — callers must treat it as a skip signal, not fall back to black or white.
 
 ## Used by
 

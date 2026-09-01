@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportImageAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportImageAnimationStrategy` is the `ExportAnimationStrategy` (Gamma et al. Strategy role, driven by `ExportAnimationContext`) that saves a screenshot of the active globe or map view to an image file at each animation frame, in one of the Qt image formats listed in `Configuration::ImageType` (BMP, JPG, PNG, TIFF, and others). It also inherits `QObject`, needed only so it can use `QObject::tr()` for status messages, not for signals or slots.
+
+Each `do_export_iteration()` call renders the active `SceneView` to a `QImage` — at the configured resolution if `image_resolution_options.image_size` is set, otherwise at the current viewport size — after temporarily disabling every `RenderedGeometryCollection` main layer except `RECONSTRUCTION_LAYER` so the exported frame shows only the reconstructed geometry, and clearing to transparent black so PNG exports get a transparent background. Layer visibility is restored via `restore_main_layer_active_state()` before returning, even though the restore is skipped if `image_writer.write()` throws.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportImageAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A rendered image can come back at a larger pixel size than requested when the display has a device pixel ratio above 1.0; it still occupies the requested widget dimensions. An empty (`isNull()`) result is treated as a memory allocation failure and reported as an export failure rather than raising an exception.
 
 ## Used by
 

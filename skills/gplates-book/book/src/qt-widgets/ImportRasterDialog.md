@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ImportRasterDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ImportRasterDialog` is the `QWizard` that turns one or more raster files on disk into a GPML raster feature collection. Its pages (`TimeDependentRasterPage`, a band page, `RasterGeoreferencingPage`, a feature-collection page, tracked by the `PageId` enum) collect the raster file(s), which bands to keep, and georeferencing, then `create_range_set()`, `create_band_names()` and `create_domain_set()` assemble the corresponding `GmlFile`/`GmlRectifiedGrid`-based property values. `nextId()` is overridden purely to skip the georeferencing page when the source raster already carries its own (`get_raster_georeferencing()`), rather than making the user re-enter it. `display()` must be used instead of `show()`/`exec()` because it also chooses whether the time-dependent-raster page is needed and threads through the `ReadErrorAccumulation` for reporting problems reading the source files.
+
+`TimeDependentRasterSequence` is the small ordered collection of per-time-slice raster files (each a `FileInfo` — path, band types, dimensions) being imported together as one time-dependent raster; `sort_by_time()`/`sort_by_file_name()` and `create_range_set()`'s in-place sort establish the display order the resulting feature's time samples end up in.
 
 ## Declared types
 
@@ -78,9 +78,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ImportRasterDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`create_range_set()` sorts `d_raster_sequence` in place as a side effect — calling it more than once, or after code that assumes the sequence's original insertion order, will observe the reordering. `d_unsaved_changes_tracker` and `d_file_io_feedback` are non-owning pointers supplied by the caller (typically `ViewportWindow`) and must outlive the dialog.
 
 ## Used by
 

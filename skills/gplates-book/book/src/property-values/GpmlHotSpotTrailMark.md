@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlHotSpotTrailMark tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlHotSpotTrailMark` is the property value for a `gpml:HotSpotTrailMark`: a labelled point along a hot-spot trail, combining a required `GmlPoint` position with optional `GpmlMeasure` trail width, `GmlTimeInstant` measured age, and `GmlTimePeriod` measured-age-range values. It exists to bundle these related, mostly-optional geochronological attributes of one trail sample into a single feature property rather than exposing them as separate properties.
+
+`deep_clone` recurses into every present sub-value (the position always, the three optional measures only when set), so cloning duplicates the whole tree instead of sharing pointers. `directly_modifiable_fields_equal`, used for property-value equality, compares the position and the three optionals via the file-local `opt_eq` helper, which treats two unset optionals as equal and two set optionals as equal only when their pointed-to values compare equal.
 
 ## Declared types
 
@@ -62,9 +62,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlHotSpotTrailMark tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The private, undefined `operator=` is declared as `GpmlPlateId & operator=(const GpmlPlateId &)` — a copy-paste artifact from `GpmlPlateId` rather than `GpmlHotSpotTrailMark`. It is harmless in practice (copy-assignment is already blocked because the inherited `PropertyValue::operator=` is private), but it does not document intent the way the correctly-typed declarations do on sibling property-value classes.
+- `trail_width`, `measured_age` and `measured_age_range` are all `boost::optional`; check for presence before dereferencing, as `print_to` and `directly_modifiable_fields_equal` do.
 
 ## Used by
 

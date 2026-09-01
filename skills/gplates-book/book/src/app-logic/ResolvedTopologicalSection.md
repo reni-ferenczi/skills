@@ -8,9 +8,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalSection tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTopologicalSection` groups, per topological-section feature, every
+`ResolvedTopologicalSharedSubSegment` derived from it across all the
+topologies (`ResolvedTopologicalBoundary` and `ResolvedTopologicalNetwork`)
+that reuse that section as part of their boundary. It exists because
+multiple resolved topologies can share the same section feature — a plate
+boundary segment shared by two adjacent plates, for example — and callers
+such as export code want to enumerate contributions per section feature
+rather than per resolved topology.
+
+The class is a thin, immutable aggregate: the source feature's reconstruction
+geometry (a reconstructed feature geometry or a `ResolvedTopologicalLine`),
+a weak reference to the section feature itself, and the sequence of shared
+sub-segments contributed by it, all fixed at construction via the templated
+`create()` factory.
 
 ## Declared types
 
@@ -40,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalSection tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

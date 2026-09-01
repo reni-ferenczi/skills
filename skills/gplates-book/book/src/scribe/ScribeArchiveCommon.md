@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeArchiveCommon tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the shared constant pool for the three archive formats that `GPlatesScribe` can read and write: text, binary and XML. Each format's reader/writer pair pulls its signature string, format-version number and element/attribute names from here instead of hard-coding them locally, so the on-disk layout of a format is defined in exactly one place.
+
+The format-version constants (`TEXT_ARCHIVE_FORMAT_VERSION`, `BINARY_ARCHIVE_FORMAT_VERSION`, `XML_ARCHIVE_FORMAT_VERSION`) are separate from the archive signature strings: the signature identifies the file as a GPlates Scribe archive at all, while the version lets a reader detect a forward-incompatible change to that format's layout. `get_xml_element_name()` supports the XML archive specifically — it turns an arbitrary tag name into one that is a legal XML element name, prefixing it with `_` when the first character would otherwise be illegal, and optionally validating every character against the W3C `NameChar` grammar.
 
 ## Declared types
 
@@ -73,9 +73,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeArchiveCommon tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The three `*_ARCHIVE_SIGNATURE` constants and the three `*_ARCHIVE_FORMAT_VERSION` constants must never be changed once shipped, or existing archives of that format become unreadable; a format change instead bumps the relevant version constant. Binary archives are pinned to the Qt 4.4 `QDataStream` version and little-endian byte order regardless of the host's native endianness, so a binary archive is portable across machines but not across incompatible Qt stream versions.
 
 ## Used by
 

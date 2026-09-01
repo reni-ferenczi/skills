@@ -9,9 +9,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RasterReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterReader` is the format-independent entry point for reading raster files:
+callers ask `RasterReader::create()` for a filename and get back one object
+that answers `get_number_of_bands`, `get_size`, `get_georeferencing`,
+`get_type`, `get_proxied_raw_raster` and `get_raw_raster` regardless of which
+underlying library actually opened the file. The constructor picks the
+concrete backend from the file extension by consulting
+`get_supported_formats()`: extensions such as `.grd` go to `RgbaRasterReader`
+(the RGBA/Qt-image family, `FormatHandler::RGBA`), everything else supported
+goes to `GdalRasterReader` (`FormatHandler::GDAL`). `RasterReader` itself owns
+that backend through the `RasterReaderImpl` pure-virtual interface in
+`d_impl`, a classic bridge/pimpl split that lets `RasterReader.h` stay free of
+GDAL and image-library includes; `RasterReaderImpl::create_raster_band_reader_handle`
+delegates back to the owning `RasterReader` so backends can build
+`RasterBandReaderHandle`s without duplicating that logic.
+
+`create()` does more than construct the reader: it also walks every band,
+fetches a proxied `RawRaster` for it, and asks the matching
+`ProxiedRasterResolver` to build its mipmaps immediately
+(`ensure_mipmaps_available()`). This front-loads the potentially slow mipmap
+file-cache generation into the file-loading phase so the GUI does not stall
+later when rendering first requests those mipmaps.
+
+The anonymous-namespace helpers in the `.cc` (`add_supported_formats`,
+`create_file_dialog_filter_string`, `create_file_dialog_filters_string`,
+`FormatAccumulator`) build the format tables behind `get_supported_formats()`
+and the filter strings behind `get_file_dialog_filters()`, which
+`ImportRasterDialog` and similar dialogs use to populate their `QFileDialog`
+filters.
 
 ## Declared types
 
@@ -88,9 +113,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RasterReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+If the filename's extension is not among `get_supported_formats()`, the
+constructor records a `ReadErrors::UnrecognisedRasterFileType` failure and
+leaves `d_impl` null; every subsequent query method checks `d_impl` first and
+returns its "error" value (`false`, `0`, `boost::none`, empty pair) instead of
+dereferencing a null pointer, so a `RasterReader` for an unreadable file is
+always safe to call into. Because `create()` eagerly resolves and mipmaps
+every band, opening a raster file can be noticeably slower than a bare
+constructor call would suggest — that cost is intentionally paid once, up
+front, rather than during rendering.
 
 ## Used by
 

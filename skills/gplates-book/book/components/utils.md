@@ -16,61 +16,61 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AnimationSequenceUtils](../src/utils/AnimationSequenceUtils.md) | 2 | 316 | 69 | (pending) |
-| [Base2Utils](../src/utils/Base2Utils.md) | 2 | 234 | 114 | (pending) |
+| [AnimationSequenceUtils](../src/utils/AnimationSequenceUtils.md) | 2 | 316 | 69 | Turns a start/end time and increment into a shared animation frame schedule |
+| [Base2Utils](../src/utils/Base2Utils.md) | 2 | 234 | 114 | Bit-hack helpers for power-of-two rounding and log2 on 32-bit integers |
 | [CallStackTracker](../src/utils/CallStackTracker.md) | 1 | 288 | 1195 | (pending) |
-| [CommandLineParser](../src/utils/CommandLineParser.md) | 2 | 555 | 68 | (pending) |
-| [ComponentManager](../src/utils/ComponentManager.md) | 2 | 137 | 294 | (pending) |
+| [CommandLineParser](../src/utils/CommandLineParser.md) | 2 | 555 | 68 | Shared boost::program\_options wrapper for command-line, response-file and config-file parsing |
+| [ComponentManager](../src/utils/ComponentManager.md) | 2 | 137 | 294 | Process-wide singleton bitset gating optional feature areas (Python, data mining, etc.) |
 | [ConfigBundle](../src/utils/ConfigBundle.md) | 3 | 541 | 0 | Lightweight portable key-value configuration store with user and default values |
 | [ConfigBundleUtils](../src/utils/ConfigBundleUtils.md) | 3 | 180 | 13 | Utility functions for manipulating hierarchical key names in configuration bundles |
-| [ConfigInterface](../src/utils/ConfigInterface.md) | 2 | 303 | 27 | (pending) |
-| [CopyConst](../src/utils/CopyConst.md) | 2 | 52 | 387 | (pending) |
+| [ConfigInterface](../src/utils/ConfigInterface.md) | 2 | 303 | 27 | Abstract key/value config base shared by UserPreferences and ConfigBundle |
+| [CopyConst](../src/utils/CopyConst.md) | 2 | 52 | 387 | Compile-time trait that transfers const-ness from one type onto another |
 | [CopyOnWrite](../src/utils/CopyOnWrite.md) | 3 | 506 | 0 | Template wrapper providing copy-on-write semantics for smart pointers |
-| [Counter64](../src/utils/Counter64.md) | 2 | 147 | 61 | (pending) |
-| [DeferredCallEvent](../src/utils/DeferredCallEvent.md) | 2 | 405 | 63 | (pending) |
-| [Earth](../src/utils/Earth.md) | 2 | 85 | 30 | (pending) |
+| [Counter64](../src/utils/Counter64.md) | 2 | 147 | 61 | Increment-only 64-bit counter used as a generation/change token |
+| [DeferredCallEvent](../src/utils/DeferredCallEvent.md) | 2 | 405 | 63 | Posts callables from a worker thread to run on the Qt GUI thread |
+| [Earth](../src/utils/Earth.md) | 2 | 85 | 30 | WGS-84 equatorial, polar and mean Earth radii in kilometres |
 | [Endian](../src/utils/Endian.md) | 3 | 382 | 7 | Fast endianness conversion functions for basic types and sequences |
 | [Environment](../src/utils/Environment.md) | 3 | 127 | 3 | Wrapper around std::getenv() returning QStrings with boolean interpretation |
-| [FeatureUtils](../src/utils/FeatureUtils.md) | 2 | 410 | 48 | (pending) |
-| [FunctionTypes](../src/utils/FunctionTypes.md) | 2 | 511 | 34 | (pending) |
-| [GeometryCreationUtils](../src/utils/GeometryCreationUtils.md) | 2 | 519 | 89 | (pending) |
+| [FeatureUtils](../src/utils/FeatureUtils.md) | 2 | 410 | 48 | Free functions pulling plate ID, age and time-period values out of a feature |
+| [FunctionTypes](../src/utils/FunctionTypes.md) | 2 | 511 | 34 | Hand-rolled Boost.FunctionTypes substitute extracting a callable's result and parameter types |
+| [GeometryCreationUtils](../src/utils/GeometryCreationUtils.md) | 2 | 519 | 89 | Validated construction of GeometryOnSphere derivations from raw point sequences |
 | [GetPropertyAsPythonObjVisitor](../src/utils/GetPropertyAsPythonObjVisitor.md) | 3 | 628 | 2 | Visitor that converts GPlates property values to Boost.Python objects |
 | [HasFunction](../src/utils/HasFunction.md) | 3 | 114 | 1 | Compile-time meta-functions for detecting functions with specific signatures |
 | [IdStringSet](../src/utils/IdStringSet.md) | 1 | 810 | 356 | (pending) |
-| [IntrusiveSinglyLinkedList](../src/utils/IntrusiveSinglyLinkedList.md) | 2 | 348 | 336 | (pending) |
-| [KeyValueCache](../src/utils/KeyValueCache.md) | 2 | 429 | 47 | (pending) |
-| [LatLonAreaSampling](../src/utils/LatLonAreaSampling.md) | 2 | 839 | 6 | (pending) |
+| [IntrusiveSinglyLinkedList](../src/utils/IntrusiveSinglyLinkedList.md) | 2 | 348 | 336 | Zero-allocation singly-linked list where elements embed their own next-pointer |
+| [KeyValueCache](../src/utils/KeyValueCache.md) | 2 | 429 | 47 | LRU cache that creates and owns a value object per key on first request |
+| [LatLonAreaSampling](../src/utils/LatLonAreaSampling.md) | 2 | 839 | 6 | Downsamples points on the sphere to roughly one representative per lat/lon area bin |
 | [Mapper](../src/utils/Mapper.md) | 3 | 122 | 6 | Abstract base class template defining interface for sequence transformation |
-| [NetworkUtils](../src/utils/NetworkUtils.md) | 3 | 158 | 6 | (pending) |
-| [NullIntrusivePointerHandler](../src/utils/NullIntrusivePointerHandler.md) | 2 | 90 | 116 | (pending) |
-| [NullNonNullIntrusivePointerException](../src/utils/NullNonNullIntrusivePointerException.md) | 3 | 70 | 0 | (pending) |
-| [ObjectCache](../src/utils/ObjectCache.md) | 2 | 936 | 152 | (pending) |
+| [NetworkUtils](../src/utils/NetworkUtils.md) | 3 | 158 | 6 | Bidirectional conversion between QNetworkProxy objects and URL strings |
+| [NullIntrusivePointerHandler](../src/utils/NullIntrusivePointerHandler.md) | 2 | 90 | 116 | Failure policy invoked when a non-nullable intrusive pointer would become null |
+| [NullNonNullIntrusivePointerException](../src/utils/NullNonNullIntrusivePointerException.md) | 3 | 70 | 0 | Exception thrown when constructing a non-null intrusive pointer with NULL |
+| [ObjectCache](../src/utils/ObjectCache.md) | 2 | 936 | 152 | Bounded, recyclable object pool supporting volatile (stealable) and non-volatile allocation |
 | [ObjectPool](../src/utils/ObjectPool.md) | 1 | 534 | 428 | (pending) |
-| [OverloadResolution](../src/utils/OverloadResolution.md) | 2 | 382 | 87 | (pending) |
-| [Parse](../src/utils/Parse.md) | 2 | 350 | 36 | (pending) |
+| [OverloadResolution](../src/utils/OverloadResolution.md) | 2 | 382 | 87 | Template helpers to take a function pointer to one specific overload of a function |
+| [Parse](../src/utils/Parse.md) | 2 | 350 | 36 | Extensible QString-to-value parsing via Parse\<T\> functor specializations |
 | [Profile](../src/utils/Profile.md) | 1 | 2019 | 166 | (pending) |
-| [QtFormattingUtils](../src/utils/QtFormattingUtils.md) | 3 | 77 | 1 | (pending) |
-| [QtStreamable](../src/utils/QtStreamable.md) | 2 | 111 | 57 | (pending) |
-| [Reducer](../src/utils/Reducer.md) | 3 | 73 | 4 | (pending) |
+| [QtFormattingUtils](../src/utils/QtFormattingUtils.md) | 3 | 77 | 1 | Formatting utilities for Qt types |
+| [QtStreamable](../src/utils/QtStreamable.md) | 2 | 111 | 57 | CRTP mixin deriving QDebug/QTextStream operator\<\< from an existing ostream operator\<\< |
+| [Reducer](../src/utils/Reducer.md) | 3 | 73 | 4 | Template base class for reduction operations over value ranges |
 | [ReferenceCount](../src/utils/ReferenceCount.md) | 1 | 272 | 231 | (pending) |
-| [SafeBool](../src/utils/SafeBool.md) | 2 | 125 | 10 | (pending) |
-| [Select](../src/utils/Select.md) | 3 | 53 | 9 | (pending) |
-| [SetConst](../src/utils/SetConst.md) | 2 | 53 | 73 | (pending) |
-| [Singleton](../src/utils/Singleton.md) | 2 | 341 | 75 | (pending) |
+| [SafeBool](../src/utils/SafeBool.md) | 2 | 125 | 10 | Reusable safe-bool-idiom base preventing accidental bool-to-int misuse |
+| [Select](../src/utils/Select.md) | 3 | 53 | 9 | Compile-time type selection via template specialization |
+| [SetConst](../src/utils/SetConst.md) | 2 | 53 | 73 | Adds or strips top-level const on a type based on a compile-time bool |
+| [Singleton](../src/utils/Singleton.md) | 2 | 341 | 75 | Policy-based CRTP singleton base with pluggable creation and lifetime policies |
 | [SmartNodeLinkedList](../src/utils/SmartNodeLinkedList.md) | 1 | 405 | 886 | (pending) |
-| [SmartNodeLinkedList_test](../src/utils/SmartNodeLinkedList_test.md) | 3 | 203 | 0 | (pending) |
-| [StringFormattingUtils](../src/utils/StringFormattingUtils.md) | 2 | 255 | 74 | (pending) |
+| [SmartNodeLinkedList_test](../src/utils/SmartNodeLinkedList_test.md) | 3 | 203 | 0 | Tests for SmartNodeLinkedList template class |
+| [StringFormattingUtils](../src/utils/StringFormattingUtils.md) | 2 | 255 | 74 | Fixed-width, fixed-precision number-to-string formatting for column-based export formats |
 | [StringSet](../src/utils/StringSet.md) | 1 | 824 | 351 | (pending) |
-| [StringUtils](../src/utils/StringUtils.md) | 3 | 144 | 7 | (pending) |
-| [SubjectObserverToken](../src/utils/SubjectObserverToken.md) | 2 | 147 | 202 | (pending) |
-| [TypeTraits](../src/utils/TypeTraits.md) | 2 | 170 | 34 | (pending) |
+| [StringUtils](../src/utils/StringUtils.md) | 3 | 144 | 7 | Utilities for converting between QString and std::wstring |
+| [SubjectObserverToken](../src/utils/SubjectObserverToken.md) | 2 | 147 | 202 | Polling subject-observer pattern via a shared invalidation counter |
+| [TypeTraits](../src/utils/TypeTraits.md) | 2 | 170 | 34 | Minimal compile-time traits for built-in, integral and floating-point types |
 | [UnicodeString](../src/utils/UnicodeString.md) | 1 | 374 | 784 | (pending) |
-| [UnicodeStringUtils](../src/utils/UnicodeStringUtils.md) | 2 | 94 | 289 | (pending) |
-| [UniqueId](../src/utils/UniqueId.md) | 3 | 110 | 3 | (pending) |
+| [UnicodeStringUtils](../src/utils/UnicodeStringUtils.md) | 2 | 94 | 289 | Conversions between ICU UnicodeString and Qt/std string types |
+| [UniqueId](../src/utils/UniqueId.md) | 3 | 110 | 3 | Generation of globally unique XML-ID-compliant string identifiers |
 | [VirtualProxy](../src/utils/VirtualProxy.md) | 3 | 81 | 0 | Defers creation of a pointee object until first dereference via pointer-like interface |
 | [XPath](../src/utils/XPath.md) | 3 | 623 | 0 | Tokenizer for breaking XPath expressions into individual tokens |
-| [XQueryUtils](../src/utils/XQueryUtils.md) | 2 | 547 | 102 | (pending) |
-| [XmlNamespaces](../src/utils/XmlNamespaces.md) | 2 | 433 | 57 | (pending) |
+| [XQueryUtils](../src/utils/XQueryUtils.md) | 2 | 547 | 102 | QXmlQuery-based XQuery evaluation helpers for GeoSciML/GML XML data |
+| [XmlNamespaces](../src/utils/XmlNamespaces.md) | 2 | 433 | 57 | Registry of GPlates' XML namespace URIs and their standard aliases |
 | [non_null_intrusive_ptr](../src/utils/non_null_intrusive_ptr.md) | 1 | 305 | 1689 | (pending) |
 
 ### `src/utils/deprecated`

@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/CartesianConvMatrix3D tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Builds the change-of-basis matrix between the global geocentric (x, y, z)
+frame and the local North/East/Down tangent frame at a given `PointOnSphere`,
+and exposes it as a set of free conversion functions rather than matrix
+algebra the caller has to get right. `CartesianConvMatrix3D` itself just
+stores the three basis vectors (`north`, `east`, `down`) computed once at
+construction; `convert_from_geocentric_to_north_east_down` and its inverse
+apply them to a `Vector3D`.
+
+The remaining functions build on that to convert between North/East/Down
+vectors and (magnitude, azimuth, inclination) triples, where azimuth is
+measured clockwise from north and inclination is the downward angle from the
+tangent plane — the convention is documented once above the function group in
+the header rather than repeated per function. `CalculateVelocity` uses this
+unit to turn geocentric plate velocities into the north/east-referenced form
+used for display and export.
 
 ## Declared types
 
@@ -46,9 +58,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/CartesianConvMatrix3D tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The basis vectors are computed once from the point's latitude/longitude at
+construction and cached; the object is otherwise immutable. Because the east
+and down basis vectors depend on longitude, and longitude is arbitrary at the
+poles, a `CartesianConvMatrix3D` built at (or very near) a pole gives a
+north/east/down frame whose east and down axes are not well defined.
 
 ## Used by
 

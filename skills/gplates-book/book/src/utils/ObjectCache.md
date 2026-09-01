@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/ObjectCache tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ObjectCache<ObjectType>` maintains a bounded but expandable pool of objects that can be recycled between requests instead of freed and reallocated. It supports two usage patterns. Non-volatile allocation behaves like an object pool except that returned objects are *not* destructed or have their memory released — the client gets back the same live object and is responsible for resetting its state before reuse, which suits objects that own expensive heap-allocated resources. Volatile allocation goes further: a `VolatileObject` holds what amounts to a weak reference to a cached object, and the cache is free to steal (recycle) that object for a different request before the original client has explicitly released it. The client must call `VolatileObject::get_cached_object()` before each use and fall back to `recycle_an_unused_object()` or `set_cached_object()` if it returns null, because the underlying object may have been reassigned elsewhere.
+
+The cache tracks two `SmartNodeLinkedList<ObjectInfo>` sequences, in-use and not-in-use, both ordered least- to most-recently touched, so recycling always steals the least-recently-used unused object once `d_min_num_objects` has been reached. Custom `boost::shared_ptr` deleters (`ObjectDeleter` for cached objects, `ReturnVolatileObjectToPoolDeleter` for `VolatileObject`s) intercept the last reference going out of scope and route the object back onto the not-in-use list rather than deleting it, unless the cache itself has already been destroyed. This design is intended for situations with many possible objects but only a small "working set" active at once — GPU-resident render caches (`GLMultiResolutionRaster`, `GLScalarField3D`, and related OpenGL classes) are the dominant users, where allocation is expensive enough that avoiding it, even at the cost of recycling churn, is worthwhile.
 
 ## Declared types
 
@@ -69,9 +69,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/ObjectCache tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Not thread-safe: there is no internal locking, so a cache (and its `VolatileObject`s) must not be shared across threads without external synchronization.
+- A `VolatileObject`'s reference can be invalidated at any time by another allocation stealing its object; always re-check `get_cached_object()` before use rather than caching the returned pointer across calls.
+- `ObjectCache` owns itself via `enable_shared_from_this`, and `VolatileObject` deliberately holds a raw (not shared) pointer back to it to avoid an ownership cycle — the cache outlives its cached objects' custom deleters via a weak reference instead.
+- With the default `min_num_objects = 1`, the cache never recycles until at least one object is allocated and returned; recycling only starts once the object count would otherwise exceed `min_num_objects`.
+- Exceptions thrown from an optional `return_object_to_cache_function` callback are caught and logged with `qWarning()` inside `ObjectDeleter`, not propagated, since they fire from a destructor path.
 
 ## Used by
 

@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PythonExecutionThread tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApi::PythonExecutionThread` is the `QThread` subclass that owns the
+Python interpreter's execution context away from the GUI thread. Its `run()`
+creates a `PythonRunner` bound to the shared namespace and enters a local
+`QEventLoop`; every `exec_*`/`eval_*` method (mirroring
+`AbstractPythonRunner`'s interface) packages its arguments plus the internal
+`PythonExecutionMonitor` `d_monitor` into a `boost::function` and hands it to
+`run_in_python_thread`, which invokes the corresponding `PythonRunner` slot
+across threads via `QMetaObject::invokeMethod` and then blocks the calling
+(main GUI) thread on `d_monitor.exec()` until the job posts back that it
+finished.
+
+`get_python_thread_id()` and `raise_keyboard_interrupt_exception()` exist
+because interrupting a Python call in progress needs the interpreter-level
+thread id captured when `run()` starts, not the `QThread` id;
+`raise_keyboard_interrupt_exception()` uses it with `PyThreadState_SetAsyncExc`
+to deliver a `KeyboardInterrupt` into whatever Python code the thread is
+currently running.
 
 ## Declared types
 
@@ -57,9 +71,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PythonExecutionThread tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_namespace` is stored as a reference (`const boost::python::object &`), not
+a copy, so the namespace object passed to the constructor must outlive the
+thread. `d_python_runner` is only non-null while `run()` is executing —
+`check_python_runner()` throws `GPlatesGlobal::LogException` if a caller
+invokes one of the `exec_*`/`eval_*` methods before the thread has started (or
+after it has stopped). `run_in_python_thread` silently does nothing if it is
+called from any thread other than the main thread, rather than dispatching
+the job or raising an error, so calling the `exec_*`/`eval_*` methods off the
+main GUI thread is a no-op, not a crash.
 
 ## Used by
 

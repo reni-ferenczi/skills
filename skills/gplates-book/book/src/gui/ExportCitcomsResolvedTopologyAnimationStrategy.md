@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportCitcomsResolvedTopologyAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportCitcomsResolvedTopologyAnimationStrategy` is the concrete `ExportAnimationStrategy` that writes resolved topological boundaries and networks in the file layout expected by the external CitcomS workflow, as opposed to the general-purpose `ExportResolvedTopologyAnimationStrategy`. It plays the Strategy role from Gamma et al. under `ExportAnimationContext`, which drives it one `do_export_iteration()` call per animation frame.
+
+At construction it snapshots the currently loaded feature collection files and, separately, the input files feeding any active `RECONSTRUCTION`-type layer in the `ReconstructGraph`, since the CitcomS export format records both sets. Each `do_export_iteration()` call collects the `ResolvedTopologicalBoundary` and `ResolvedTopologicalNetwork` objects currently visible in the `RenderedGeometryCollection` and hands them, together with the snapshotted file lists and the current anchored plate ID, to `GPlatesFileIO::CitcomsResolvedTopologicalBoundaryExport::export_resolved_topological_boundaries()`, which does the actual file writing.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportCitcomsResolvedTopologyAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The list of loaded files and reconstruction input files is captured once, in the constructor; it is not refreshed between frames, so files loaded or unloaded mid-animation will not be reflected in the exported metadata. `do_export_iteration()` catches `std::exception` and all other exceptions around the actual export call and reports failure through the return value rather than propagating, so `ExportAnimationContext` can continue or abort the batch cleanly.
 
 ## Used by
 

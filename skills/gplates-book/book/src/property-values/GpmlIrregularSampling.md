@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlIrregularSampling tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlIrregularSampling` is the property value for a GPML `IrregularSampling`: an ordered `std::vector<GpmlTimeSample>` (time-stamped property values, most commonly `GpmlFiniteRotation` poles for a total reconstruction sequence) together with an optional `GpmlInterpolationFunction` that says how to interpolate between consecutive samples, and the `StructuralType` of the sampled property. This is the container that gives a plate's rotation history its "reconstruction poles at these times, interpolated this way" shape.
+
+`is_disabled`/`set_disabled` implement a convention layered on top of `GpmlFiniteRotation::metadata()` rather than a dedicated field: a sequence is considered disabled when any of its finite-rotation samples carries a `Metadata::DISABLED_SEQUENCE_FLAG` entry with content `"true"` (checked case-insensitively), and `set_disabled` enforces that by stripping the flag from every sample and, when disabling, re-adding it only to the first sample's metadata. This is how the total-reconstruction-sequence editing dialogs mark a rotation sequence as inactive without changing the property-value type.
 
 ## Declared types
 
@@ -60,9 +60,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlIrregularSampling tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `set_disabled` silently does nothing (after logging a `qWarning`) when `time_samples()` is empty, and the disabled-flag convention only has an effect on samples whose value is a `GpmlFiniteRotation`; samples holding other property-value types are left untouched by both `set_disabled` and `contain_disabled_sequence_flag`.
+- `print_to` is a stub (`"{ GpmlIrregularSampling }"`); do not rely on it for debugging output — the `FIXME` in the `.cc` says it was never filled in.
+- `value_type()` has no setter: the sampled property's structural type is fixed at construction and must never change.
+- `deep_clone` recurses into every `GpmlTimeSample` and, when present, into the interpolation function via `deep_clone_as_interp_func()`.
 
 ## Used by
 

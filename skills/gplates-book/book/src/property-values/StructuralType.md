@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/StructuralType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`StructuralType` is the qualified XML name (`namespace_alias:name`, e.g. `gpml:TopologicalNetwork`) that identifies a property value's GPML/GML structural type — it is what every `get_structural_type()` override across `property-values/` returns, and what `Gpgim` and the GPML/GPGIM readers and writers key on to know which structural type a piece of XML represents or which C++ class to construct for it. It is a `typedef` for `GPlatesModel::QualifiedXmlName<StructuralTypeFactory>`, instantiating that generic qualified-name template with `StructuralTypeFactory` as the policy class that supplies the interned name pool.
+
+`StructuralTypeFactory` exists purely to give `QualifiedXmlName` a distinct `GPlatesUtils::StringSet` to intern structural-type names into (`StringSetSingletons::structural_type_instance()`), separate from the pools used by other `QualifiedXmlName` instantiations such as property names or feature types; its private constructor means the class is never instantiated, only used as a template parameter.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/StructuralType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

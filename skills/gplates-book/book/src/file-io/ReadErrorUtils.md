@@ -9,9 +9,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReadErrorUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReadErrorUtils` reshapes a flat `ReadErrorAccumulation::read_error_collection_type`
+into forms convenient for reporting: `group_read_errors_by_file` buckets
+errors by the source file's full name (via each error's `d_data_source`), and
+`group_read_errors_by_type` buckets them by `ReadErrors::Description` code.
+`build_summary_string` produces a single human-readable sentence — e.g.
+"There were 2 failures, 1 warning" — counting `d_failures_to_begin` and
+`d_terminating_errors` together as failures, plus recoverable errors and
+warnings separately, with singular/plural wording handled explicitly for each
+category. Both `ReadErrorAccumulationDialog` (GUI) and
+`CliFeatureCollectionFileIO` (headless) use these to present the same error
+accumulation consistently.
 
 ## Declared types
 
@@ -51,9 +59,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReadErrorUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

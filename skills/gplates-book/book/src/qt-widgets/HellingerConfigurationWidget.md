@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerConfigurationWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HellingerConfigurationWidget` holds the display-appearance settings for the Hellinger three-plate fitting tool: colours for the best-fit pole, the initial-estimate pole and the confidence ellipse, the ellipse's line thickness, and the pole arrow's height and radius. Colours are chosen from a fixed `HellingerColour` enum (rather than an arbitrary `GPlatesGui::Colour`) so they can be shown in a combo box and stored as compact ordinals; `get_colour_from_hellinger_colour()` and `build_colour_description_map()` are the two directions of that mapping, to an actual `GPlatesGui::Colour` for rendering and to a display string for the UI respectively.
+
+It is a plain settings widget with getters and setters for each property plus a `configuration_changed(bool valid)` signal, embedded by `HellingerDialog` and `HellingerConfigurationDialog` so a containing dialog can enable or disable its Apply button based on validity.
 
 ## Declared types
 
@@ -54,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerConfigurationWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`HellingerColour::BLACK` is fixed to `0` to match the index of the corresponding combo box entry; reordering the enum without also reordering the combo box items would silently mismatch the two.
 
 ## Used by
 

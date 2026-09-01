@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/UtilsTestSuite tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Hierarchical test suite for GPlates utility classes. Contains test suites for `GPlatesUtils::SmartNodeLinkedList`, a smart-pointer-managed linked list, and `GPlatesUtils::StringSet`, a string interning data structure. This suite groups tests for foundational utility components that are used throughout the codebase.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/UtilsTestSuite tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

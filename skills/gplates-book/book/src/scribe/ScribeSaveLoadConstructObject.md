@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeSaveLoadConstructObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The three concrete `ConstructObject<ObjectType>` implementations that back constructor transcription — the mechanism Scribe uses to support types with no default constructor, where the constructor's arguments must themselves be loaded from the archive before the object can be created. `SaveConstructObject` wraps an already-existing object so the save path can go through the same `ConstructObject` interface the load path uses, keeping the two paths mirror images of each other. `LoadConstructObjectOnStack` and `LoadConstructObjectOnHeap` instead start from raw, uninitialised storage — respectively an inline `boost::aligned_storage` buffer sized and aligned for `ObjectType`, and a heap block obtained with a raw placement-`new`-style `operator new` — and defer actual construction to `ConstructObject`'s own `construct_object()`, which placement-constructs `ObjectType` into that storage once its constructor arguments have all been loaded.
 
 ## Declared types
 
@@ -57,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeSaveLoadConstructObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both loader classes track initialisation state and clean up correctly whichever way construction ends: `LoadConstructObjectOnStack`'s destructor calls `~ObjectType()` only if the object was actually constructed; `LoadConstructObjectOnHeap`'s destructor deletes the constructed object if it was never `release()`d, or just deallocates the raw memory (without calling a destructor) if construction never happened at all — the two failure/success paths use different cleanup (`delete` vs. plain `operator delete`) because only one of them has a live object to destroy. `LoadConstructObjectOnHeap::release()` asserts (`Exceptions::ScribeLibraryError`) that the object is initialised, and afterwards ownership passes entirely to the caller — the caller must `delete` the returned pointer, since the destructor no longer will.
 
 ## Used by
 

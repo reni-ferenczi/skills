@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/Reconstruction tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Reconstruction` is the accumulated output of the layer reconstruct graph at one reconstruction time and anchor plate ID: it just holds the `LayerProxy` output of every currently active layer, plus the `ReconstructionLayerProxy` used as a fallback for layers not explicitly wired to a reconstruction-tree input. Callers pull results back out by asking `get_active_layer_outputs<LayerProxyDerivedType>()` for the layer proxies of a particular derived type and then querying that type's own interface — `Reconstruction` itself has no knowledge of what any given layer's output means.
+
+`get_all_resolved_topological_sections()` and `get_all_resolved_topological_shared_sub_segments()` walk every active layer's output to assemble a global view of resolved topological sections, which is why the class caches the result: the first call computes and stores it, and `add_active_layer_output()` and `set_default_reconstruction_layer_output()` both invalidate that cache since either can change which layers contribute to it.
+
+The two `create()` overloads differ only in the fallback reconstruction layer proxy: the one-argument-fewer overload supplies a bare `ReconstructionLayerProxy::create()` that reconstructs with identity rotations, letting callers get a valid, blank `Reconstruction` before any real rotation layer exists.
 
 ## Declared types
 
@@ -54,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/Reconstruction tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The resolved-topological-sections cache is lazily populated and only invalidated by `add_active_layer_output` and `set_default_reconstruction_layer_output`; code that mutates `d_active_layer_outputs` through any other means would leave the cache stale.
 
 ## Used by
 

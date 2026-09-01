@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/ShapefileAttributeFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ShapefileAttributeFinder` locates one named attribute inside a feature's imported shapefile attributes and returns its value(s) as `QVariant`s, for readers that display or export shapefile-derived data (`OgrReader`, `PyFeature`, `DataMiningUtils`). Unlike `GeometryFinder` and `KeyValueDictionaryFinder`, it does not take a configurable property-name allow-list: `initialise_pre_property_values()` hardcodes the property name `"shapefileAttributes"`, so it only ever looks inside that one `GpmlKeyValueDictionary` property, then scans its elements for the requested key via `find_shapefile_attribute_in_element()`.
 
 ## Declared types
 
@@ -57,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/ShapefileAttributeFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only `XsBoolean`, `XsDouble`, `XsInteger` and `XsString` dictionary values are actually converted; the overrides for `GmlTimeInstant`/`GmlTimePeriod`, `GpmlConstantValue`, `GpmlPlateId`, `GpmlPolarityChronId` and `GpmlMeasure` are wrapped in `#if 0` in the header itself, so despite appearing in the member list they are not compiled in — a matching attribute of one of those types is silently skipped rather than converted.
 
 ## Used by
 

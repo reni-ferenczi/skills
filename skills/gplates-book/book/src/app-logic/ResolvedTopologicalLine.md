@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalLine tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTopologicalLine` is the `ResolvedTopologicalGeometry` subclass for
+topological features whose resolved shape is an open polyline rather than a
+closed boundary — it implements `resolved_topology_geometry()` by returning
+its `resolved_topology_line_ptr_type` (a `PolylineOnSphere`). Like
+`ResolvedTopologicalBoundary`, it is assembled from a sequence of
+`ResolvedTopologicalGeometrySubSegment` objects, one per contributing
+topological section, stored in `d_sub_segment_seq` and exposed via
+`get_sub_segment_sequence()`.
+
+Because a resolved topological line can itself act as a topological section
+for another topology (see `ResolvedTopologicalGeometrySubSegment`), it also
+exposes per-vertex provenance through `get_vertex_source_infos()`. This is
+computed lazily by `calc_vertex_source_infos()`, which walks the sub-segment
+sequence and asks each one for its reversed point-source infos, and the
+result is cached in `d_vertex_source_infos`. `INCLUDE_SUB_SEGMENT_RUBBER_BAND_POINTS_IN_RESOLVED_LINE`
+is `false` because rubber-band points (inserted where sections don't meet
+exactly) don't change the line's shape at the join, only the shape of the
+individual sub-segments they delineate.
 
 ## Declared types
 
@@ -55,9 +70,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalLine tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The constructor is a private template (taking a forward-iterator range of
+sub-segments) and `create()` is the only way to build an instance, so a
+`ResolvedTopologicalLine` is never constructed on the stack. `d_vertex_source_infos`
+is `mutable` and populated on first call to `get_vertex_source_infos()`, not
+at construction time.
 
 ## Used by
 

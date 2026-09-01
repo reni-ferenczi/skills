@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TaskPanelWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TaskPanelWidget` is the common interface `TaskPanel` uses to treat its nine tab widgets (`FeatureSummaryWidget`, `DigitisationWidget`, `ModifyGeometryWidget`, `TopologyToolsWidget`, and the rest) uniformly, without knowing which specific tab is active. `handle_activation()` is pure virtual: every subclass must define what "becoming the visible tab" means for it (`SmallCircleWidget`, for instance, uses it to enable itself). The remaining virtuals are optional hooks around `TaskPanel`'s single shared "Clear" action — `get_clear_action_text()` returns an empty string by default, which tells `TaskPanel` to hide the action entirely for widgets that have nothing to clear, and `clear_action_enabled()`/`handle_clear_action_triggered()` default to inert no-ops for the same reason.
+
+`clear_action_enabled_changed` lets a subclass tell `TaskPanel` its clear-action state changed asynchronously (e.g. once some editable state becomes non-empty); subclasses raise it through the protected `emit_clear_action_enabled_changed()` rather than emitting the signal directly.
 
 ## Declared types
 
@@ -40,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TaskPanelWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/FromQvariantConverter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FromQvariantConverter` runs the `ToQvariantConverter` conversion in reverse: given a `QVariant` edited in a Qt view, it re-derives the `GPlatesModel::PropertyValue` that should replace an existing one. The caller hands it the target `QVariant` in the constructor, then calls `accept_visitor(this)` on the *existing* property value; whichever `visit_*` override fires tells the converter what concrete type to build, and `get_property_value()` returns the freshly constructed replacement. This double-dispatch is why the class cannot manufacture a property value out of nothing — it always needs an existing value of the right type to visit first. It backs edits made through `FeaturePropertyTableModel`.
+
+Only a handful of property-value types are actually converted (`GmlTimeInstant`, `GpmlPlateId`, `XsBoolean`, `XsDouble`, `XsInteger`, `XsString`); `GpmlConstantValue` is transparently unwrapped by re-visiting its wrapped value.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/FromQvariantConverter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_return_value()` only stores the first value it is offered; a second call is silently ignored. Combined with only the first `PropertyValue` of a multi-valued `TopLevelPropertyInline` being visited, this means the converter always yields at most one replacement. `visit_enumeration` and `visit_gpml_old_plates_header` are no-ops, so converting either of those types leaves `get_property_value()` at `boost::none` — always check the `boost::optional` before dereferencing it.
 
 ## Used by
 

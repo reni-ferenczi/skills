@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Parse tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Parse<T>` is a functor-based, extensible alternative to hand-writing `QString`-to-value conversions: the primary template is intentionally left undefined, and callers get a parser for a given `T` by using one of the specializations declared here (`int`, `unsigned int`, `float`, `double`, `bool`, `QString`, `const QString &`, and the `Int<Base, IntType>` wrapper) or by writing their own specialization alongside a new type, following the same convention. Every specialization exposes a `const` `operator()(const QString &)` that returns the parsed value or throws `ParseError` on failure, so generic code can treat `Parse<T>()(s)` uniformly regardless of `T`.
+
+The numeric specializations route through two small helpers in `ParseInternals`: `parse_using_qlocale()` tries the `QLocale` conversion function first, then retries with the C locale before giving up (letting a file expressed in "C"-style numeric formatting parse correctly even under a different user locale), while `parse_using_qstring()` uses `QString`'s own base-aware conversion (used for non-base-10 integers, since `QLocale` has no concept of numeric base). `Int<Base, IntType>` exists so a base-N integer can be threaded through code that expects a plain integral type via its implicit conversion, while still using the base at parse time — the alternative being to pass the base explicitly to `Parse<int>`'s constructor.
 
 ## Declared types
 
@@ -115,9 +115,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Parse tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `Parse<T>` is deliberately undefined for unspecialized `T`; using it without a matching specialization is a compile error, not a runtime one.
+- `Parse<bool>` only recognizes the literal strings `"true"`/`"false"` (case-insensitive); anything else throws `ParseError`, so it does not accept `"1"`/`"0"` or other truthy forms.
+- `Parse<int>`/`Parse<unsigned int>` only use `QLocale` for base 10; any other base always goes through `QString`'s conversion, since a non-decimal base combined with locale-specific digit grouping has no defined meaning in Qt5.
 
 ## Used by
 

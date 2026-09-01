@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/SourceRasterFileCacheFormatReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SourceRasterFileCacheFormatReader` is the abstract, non-templated interface a caller uses to read back the on-disk cache of a decoded source raster (the cache that `RasterReader` implementations write so a raster does not need re-decoding, e.g. from GDAL, on every subsequent load). Its region-based `read_raster`/`read_coverage` methods let rendering code stream only the tile it currently needs rather than loading the whole raster into memory.
+
+`SourceRasterFileCacheFormatReaderImpl<RawRasterType>` is the concrete implementation, templated on the raw raster pixel type so the same logic works for whichever `RawRasterType` the cache holds. Its constructor performs the same header validation pattern used by `ScalarField3DFileFormat::Reader` and `RasterFileCacheFormat` readers generally: check the file is large enough for a header, verify `RasterFileCacheFormat::MAGIC_NUMBER`, compare the recorded total file size against the actual size on disk to detect a cache left partially written by a crashed or killed GPlates instance, then dispatch on the version field. Version 1 is handled by the nested `VersionOneReader`, which reads the raster's stored pixel type, whether coverage data is present, and its dimensions and block count, then hands the remaining decode work to a `RasterFileCacheFormatReader<RawRasterType>`. A comment in the constructor notes the same versioning strategy as the scalar-field reader: `VersionOneReader` is expected to keep serving new format versions until a structural change forces a new reader class.
 
 ## Declared types
 
@@ -75,9 +75,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/SourceRasterFileCacheFormatReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`read_raster`, `read_coverage` and `get_raster_statistics` silently return `boost::none` once `close()` has been called on the reader, rather than throwing — callers must not treat a `none` result after closing as "region out of bounds" without checking. The constructor throws `ErrorOpeningFileForReadingException` for an unopenable file, `FileFormatNotSupportedException` for a bad magic number, wrong recorded file size, or unexpected raster type, and `RasterFileCacheFormat::UnsupportedVersion` for an unrecognised version. The destructor closes the file automatically if `close()` was not already called.
 
 ## Used by
 

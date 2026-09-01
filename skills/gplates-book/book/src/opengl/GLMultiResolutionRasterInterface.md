@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionRasterInterface tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionRasterInterface` is the common interface for anything that behaves as a level-of-detail raster that can be rendered into the current view — implemented by `GLMultiResolutionRaster` for a plain raster and by `GLMultiResolutionStaticPolygonReconstructedRaster` for a reconstructed one. It centres on two things: computing which level of detail a given viewport/transform combination needs (`get_level_of_detail()`, implemented per subclass), and rendering the tiles for that level (`render()`).
+
+The non-virtual convenience overload of `render()` (implemented in the `.cc`) chains the two steps together: it reads the renderer's current model-view, projection and viewport state, asks the subclass for the exact unclamped level of detail via `get_level_of_detail()`, clamps it with `clamp_level_of_detail()`, and renders at that integer level. `clamp_level_of_detail()` differs between raster kinds — a plain raster clamps to `[0, get_num_levels_of_detail() - 1]`, but a reconstructed raster allows levels down to negative infinity, because reconstruction can be driven by an age-grid mask at higher resolution than the source raster itself. `get_viewport_dimension_scale()` inverts the level-of-detail calculation to answer a different question — what viewport size would make a *given* level of detail exactly fill it — which is the model used for processing at a user-chosen, fixed level of detail (as opposed to visual display, which adapts level of detail to a fixed viewport size).
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionRasterInterface tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `render(renderer, level_of_detail, cache_handle)` overload throws if `level_of_detail` is outside the valid range — callers must pass it through `clamp_level_of_detail()` first, which the convenience `render()` overload does automatically. `level_of_detail_bias` is a log2 value, not a linear factor: a bias of 1.0 halves the resolution used (e.g. 256x256 instead of 512x512) and 2.0 quarters it. The `cache_handle_type` returned by `render()` is meant to be kept alive until the *next* call to `render()`, not discarded immediately, since it lets the implementation reuse the previous frame's cached tiles.
 
 ## Used by
 

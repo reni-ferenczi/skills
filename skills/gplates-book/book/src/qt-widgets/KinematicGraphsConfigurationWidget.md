@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/KinematicGraphsConfigurationWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`KinematicGraphsConfigurationWidget` is the settings form for the kinematic (velocity/rotation) graphs feature: it exposes the finite-difference time step `delta_time`, the yellow/red velocity warning thresholds, and which of the three `VelocityMethod` finite-difference schemes (`T_TO_T_MINUS_DT`, `T_PLUS_DT_TO_T`, `T_PLUS_MINUS_HALF_DT`) to use when computing velocities from rotations. It is embedded both in `KinematicGraphsDialog`/`KinematicGraphsConfigurationDialog`, where the user tweaks graph parameters interactively, and in `PreferencesPaneKinematicGraphs`, where the same values are persisted as application preferences via `GPlatesGui::ConfigGuiUtils` — `build_velocity_method_description_map()` supplies the string labels that map `VelocityMethod` enum values to preference keys.
+
+Each control change fires `configuration_changed(bool valid)` so an embedding dialog can enable or disable its Apply/OK button; `valid` becomes `false` only when the delta-time spinbox is exactly zero, in which case `handle_delta_time_changed()` also paints the spinbox with a red palette to flag the invalid state, restoring `d_spin_box_palette` once the value is non-zero again.
 
 ## Declared types
 
@@ -57,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/KinematicGraphsConfigurationWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `VelocityMethod` enum values are also the ids used by `button_group_velocity_method` and are written directly to preferences, so their numeric order must not change independently of the stored configuration format.
 
 ## Used by
 

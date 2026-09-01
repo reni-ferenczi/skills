@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/CoRegFilter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoRegFilter` is the abstract base of the co-registration filter/mapper hierarchy: `process()` takes a range of `GPlatesAppLogic::ReconstructContext::ReconstructedFeature` and appends the ones that pass into `output`, letting `RegionOfInterestFilter` and `SeedSelfFilter` narrow the candidate features attributed to a seed before a reducer runs. Each filter also carries a nested `Config` — a small abstract factory that knows how to `create_filter()` for a given seed feature, compare configs for equality and ordering (so identical filter setups can be cached), and describe itself (`filter_name()`, `to_string()`, `get_parameters_as_strings()`) for the co-registration UI and for `Scribe` serialisation of saved layer setups.
+
+`DummyFilter` is the trivial concrete instance: its `process()` is a no-op, so it passes every candidate through unchanged. It exists as the default/no-filtering choice `CoRegConfigurationTable` and `DataSelector` fall back to when no real filter is configured, and as a template for how a `Config` subclass wires itself up — though its own `operator<` and `operator==` are unimplemented stubs that throw `GPlatesGlobal::LogException`.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/CoRegFilter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`Config::create_filter()` returns a raw, heap-allocated `CoRegFilter*` — ownership passes to the caller. `DummyFilter::Config::operator<` and `operator==` throw `GPlatesGlobal::LogException` rather than implement a real comparison, so code that orders or deduplicates `Config` objects must not exercise those paths on a `DummyFilter`.
 
 ## Used by
 

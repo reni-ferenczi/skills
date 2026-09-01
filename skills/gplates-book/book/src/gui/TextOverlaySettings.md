@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TextOverlaySettings tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::TextOverlaySettings` is a plain settings bag for the on-screen text overlay that `gui/TextOverlay` renders onto the globe/map view — the text template (default `"%f Ma"`, a format string presumably substituted with the reconstruction time by `TextOverlay`), its decimal-place precision, font, colour, screen-corner `Anchor`, pixel offset from that corner, and whether the overlay is enabled and drawn with a shadow. `qt-widgets/ConfigureTextOverlayDialog` is the UI that edits an instance held by `presentation/ViewState`.
+
+The default font is not a fixed constant but computed at construction time (`get_default_font()`) as the application's default `QFont` scaled up by 1.5x, so the overlay's default size tracks whatever font the platform/Qt style is using.
 
 ## Declared types
 
@@ -77,9 +77,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TextOverlaySettings tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`operator==` compares only `d_colour`, not the other eight fields — two settings objects that differ in text, font, anchor, offsets, enabled state or shadow will still compare equal as long as their colour matches. Anything relying on `boost::equality_comparable` for a full-value comparison (e.g. change detection) will not notice those other differences.
 
 ## Used by
 

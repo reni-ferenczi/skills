@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/MathematicalException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MathematicalException` is the common base for every exception the `GPlatesMaths` module throws for a mathematically invalid situation — division by a zero vector, a degenerate great circle arc, an out-of-domain function argument, and similar cases. It adds no behaviour of its own beyond forwarding the `GPlatesUtils::CallStack::Trace` to `GPlatesGlobal::Exception`; its sole purpose is to give calling code a single type to catch when it wants to handle "something in the maths layer went wrong" without naming every concrete subclass.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/MathematicalException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

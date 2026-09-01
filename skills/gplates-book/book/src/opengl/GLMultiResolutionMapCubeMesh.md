@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionMapCubeMesh tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionMapCubeMesh` is the 2D map-view counterpart of `GLMultiResolutionCubeMesh`: it pre-generates the same cube-map quad tree of mesh drawables, but with vertices projected through a `GPlatesGui::MapProjection` rather than left on the sphere. Each vertex is a `GLTexture3DVertex` carrying the map-projected (x, y) position alongside the original point-on-sphere as texture coordinates (s, t, r), so a tile drawn with this mesh both sits correctly on the flat map and can still sample a texture that was generated in cube-sphere space.
+
+Because the map projection can distort cube faces very unevenly (a face near a projection singularity needs far more subdivision than one near the centre), each `MeshQuadTreeNode` also carries a `GLIntersect::OrientedBoundingBox` of its map-projected extent and a `max_map_projection_size` — an intentionally inflated estimate of how large that node's mesh region is in map space, used to decide whether a node's texel density is adequate. `update_map_projection()` regenerates the whole mesh via `create_mesh()` whenever the caller's `GPlatesGui::MapProjectionSettings` change, and traversal beyond the pre-built depth again falls back to the clip-texture/clip-space-transform scheme used by `GLMultiResolutionCubeMesh`, reusing `GLMapCubeMeshGenerator` to produce projected vertices per cube-face quadrant.
 
 ## Declared types
 
@@ -65,9 +65,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionMapCubeMesh tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`MESH_CUBE_QUAD_TREE_MAXIMUM_DEPTH` was raised from 5 to 7 when the maximum zoom level was increased from 10,000% to 100,000%: at depth 5 there was not enough view-frustum culling near maximum zoom for reconstructed rasters, causing many off-screen tiles to be generated and, in some cases, out-of-memory failures. Vertex indices are 32-bit (`vertex_element_type` is `GLuint`), unlike the plain sphere mesh's 16-bit indices, because the deeper quad tree makes 65536 vertices easy to exceed. `CUBE_FACE_DIMENSION` must stay a power of two no smaller than `1 << MESH_CUBE_QUAD_TREE_MAXIMUM_DEPTH`, since the quad tree depth cannot exceed what the vertex grid supports. As with `GLMultiResolutionCubeMesh`, a `QuadTreeNode` holds a raw pointer into the mesh cube quad tree (or into a parent's mesh, past the pre-built depth), so it must not outlive the owning `GLMultiResolutionMapCubeMesh`.
 
 ## Used by
 

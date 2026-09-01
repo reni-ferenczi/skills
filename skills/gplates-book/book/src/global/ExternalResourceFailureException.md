@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/ExternalResourceFailureException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExternalResourceFailureException` is the common base for exceptions raised when something outside GPlates's control fails to behave — a malformed coordinate read from a file, a raster or vector driver error, a geometry construction that violates a spherical precondition. It carries no data or behaviour of its own beyond forwarding the call-stack trace to `Exception`; its only purpose is to give catch sites a single type to intercept when they want to distinguish "an external input or resource was bad" from other exception categories such as `AbortException` or `LogException`.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/ExternalResourceFailureException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

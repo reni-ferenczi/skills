@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/OpenDirectoryDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A thin wrapper around `QFileDialog::getExistingDirectory` that remembers the last directory the user picked. `d_last_open_directory` is bound by reference in the constructor to `GPlatesPresentation::ViewState::get_last_open_directory()`, so every dialog instance reads and writes the same view-state field rather than keeping its own state: opening the dialog seeds it with wherever the user last browsed to (in any directory dialog sharing that `ViewState`), and a successful pick writes the new path straight back through the reference.
+
+It exists so the many "browse for a folder" actions scattered across the export and import dialogs (see Used by) do not each have to thread a "last directory" value through themselves — they just construct this with the shared `ViewState` and call `get_existing_directory()`.
 
 ## Declared types
 
@@ -40,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/OpenDirectoryDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_last_open_directory` is a `QString &`, not a `QString`: it aliases the `ViewState` instance passed to the constructor, so that `ViewState` must outlive the dialog. There is no default constructor and no way to construct one without a live `ViewState`.
 
 ## Used by
 

@@ -10,9 +10,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/VisualLayerWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayerWidget` renders one row of the Layers panel: the expand/collapse
+and visibility icons, the layer's name and type, and, when expanded, its
+input-channel connections, its `LayerOptionsWidget`, and the "Disable/Enable
+layer", "Rename layer" and "Delete layer" links. It is not permanently bound to
+one `GPlatesPresentation::VisualLayer` — `VisualLayersDelegate` reuses a pool
+of these widgets and repoints each one at a different `VisualLayer` (and row
+index) via `set_data()`, so `set_data()` does the work of a full re-render:
+recolouring the widget by layer type, updating every icon's on/off state from
+the layer's expanded/visible/default flags, and rebuilding the input-channel
+display.
+
+`VisualLayerWidgetInternals` holds the row's building blocks, each too small
+to justify its own file: `ToggleIcon` is a two-state clickable icon (used for
+every expand/collapse and visibility toggle); `InputConnectionWidget` shows one
+existing connection from a channel to a feature collection or another layer,
+with a `DisconnectInputConnectionLabel` click target to remove it;
+`AddNewConnectionWidget` is the "+" label that pops up the menu of things a
+channel could connect to; and `InputChannelWidget` composes one channel's row
+of `InputConnectionWidget`s plus its `AddNewConnectionWidget`, populating the
+menu from either the loaded feature collections or the other layers that could
+feed this channel. These types live outside `VisualLayerWidget` (rather than
+nested inside it) because moc cannot process Q_OBJECT inner classes.
 
 ## Declared types
 
@@ -151,9 +170,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/VisualLayerWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_visual_layer` is a `boost::weak_ptr` and is invalid until `set_data()` has
+been called at least once; code running before that must not dereference it.
+Because the widget is reused across rows, `d_row` and `d_visual_layer` can
+change between calls to `set_data()` — nothing about a `VisualLayerWidget`
+instance identifies a fixed layer. The `InputConnectionWidget` and
+`InputChannelWidget` pools (`d_input_connection_widgets`,
+`d_input_channel_widgets`) only grow: widgets are created on demand when a
+layer needs more of them than currently exist, but excess widgets from a
+previous, larger layer are hidden rather than destroyed, and the whole pool is
+freed only when the owning widget is destroyed. Disabling a layer forces its
+advanced-options section open (the only place the "Enable layer" link is
+reachable), overriding whatever expanded/collapsed state was restored from a
+saved session.
 
 ## Used by
 

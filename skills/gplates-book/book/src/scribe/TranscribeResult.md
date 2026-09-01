@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeResult tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TranscribeResult` is the status code returned from every transcribe call in the `GPlatesScribe` serialisation framework. `TRANSCRIBE_SUCCESS` means the object was read or written normally; the other two values distinguish two different ways an archive can fail to match the current code, which matters because they are recovered from differently. `TRANSCRIBE_INCOMPATIBLE` covers a structural mismatch — a tag missing from the transcription, or a primitive of the wrong kind — and can be handled by supplying a default value for the object. `TRANSCRIBE_UNKNOWN_TYPE` covers a polymorphic pointer, enum value or `boost::variant` alternative that this build of GPlates does not know about; callers that transcribe collections via a polymorphic base or a variant can use this distinction to drop just the unrecognised elements rather than treating the whole load as incompatible, which is the mechanism that lets older GPlates versions open project files saved by a newer one.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeResult tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

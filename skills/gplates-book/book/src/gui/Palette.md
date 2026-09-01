@@ -9,9 +9,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Palette tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Palette` is an older, simpler colour-lookup hierarchy distinct from
+`GPlatesGui::ColourPalette` (see `gui/ColourPalette`) — it is keyed by a
+`Palette::Key`, a `boost::variant<long, double, QString>` wrapper with
+visitor-based conversions (`to_long()`, `to_double()`, `to_qstring()`) and a
+comparison operator that falls back to numeric or, failing that, string
+comparison when two keys hold different variant alternatives. Three lookup
+strategies subclass it: `CategoricalPalette` maps discrete keys to colours
+through `d_color_map`, `RegularPalette` interpolates a numeric key through a
+sequence of `ColourSpectrum` ranges tried in order, and `SingleColorPalette`
+always returns one fixed colour. `Palette` itself carries a
+background/foreground/default ("BFN") colour triple returned by
+`get_BFN_colour()`, used when a lookup fails to find a match.
+
+`DefaultPlateIdPalette`, `RegionalPlateIdPalette` and `FeatureTypePalette` are
+`CategoricalPalette` singletons (Meyers' pattern via a function-local `static`
+pointer, never destroyed) with hard-coded colour tables built once in
+`build_map()`; `RegionalPlateIdPalette` additionally overrides `get_colour()`
+to derive a plate's region from the leading digit of its plate ID
+(`get_region_from_plate_id()`) and vary the colour's HSV value by the plate ID
+modulo 13, so plates sharing a region get visually distinct shades.
+`CptPalette` parses a GMT `.cpt` colour-palette file via
+`GPlatesFileIO::CptReader`, routing its categorical entries into an internal
+`CategoricalPalette` and its ranged entries into an internal `RegularPalette`,
+trying the categorical one first in `get_colour()`. `built_in_palette()` is
+the name-keyed registry (`"DefaultPlateId"`, `"Region"`, `"FeatureAgeDefault"`,
+`"FeatureAgeMono"`, `"FeatureType"`, `"DeaultPalette"` — note the typo is in
+the actual key string) that GUI code looks palettes up by name from.
+`GPlatesApi::Palette` is a thin, non-owning wrapper exposing a `Palette*` to
+Python bindings, falling back to the default colour or black when the
+wrapped pointer is null or the key has no match.
 
 ## Declared types
 
@@ -143,9 +170,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Palette tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The built-in registry key for the default palette is spelled `"DeaultPalette"`
+  in `init_built_in_pallette()` — code or config looking it up must reproduce
+  that misspelling.
+- `DefaultPlateIdPalette::instance()`, `RegionalPlateIdPalette::instance()` and
+  `FeatureTypePalette::instance()` leak their singleton by design (`new` with
+  no matching `delete`); they live for the process lifetime.
+- `GPlatesApi::Palette::d_p` is a raw, non-owning pointer to a
+  `GPlatesGui::Palette` the wrapper does not control the lifetime of — typically
+  one of the leaked singletons or `default_age_palette()`/`mono_age_palette()`/
+  `default_palette()`, which are themselves function-local `static` instances.
+- `RegularPalette::get_colour()` returns the first spectrum that produces a
+  colour, so overlapping spectrum ranges are resolved by insertion order via
+  `append()`, not by any tie-breaking rule.
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/WeakReference tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`WeakReference<H>` is the smart pointer the Application-Logic tier uses to point at objects living inside the Model (typically `FeatureHandle` or `FeatureCollectionHandle`) without keeping them alive. It layers `GPlatesUtils::SafeBool` on top of `WeakObserver<H>`, which supplies the actual intrusive-list subscription to the referenced handle's `WeakObserverPublisher<H>`; `WeakReference` itself adds the dereference operators, an `is_valid()` check, and the optional `WeakReferenceCallback<H>` mechanism. The header's own rationale is that Model objects such as features must be deallocated at specific, deliberate times (so their feature IDs stop being registered, and so memory is reclaimed), so references from outside the Model must not extend their lifetime the way a ref-counted pointer would — but they still need a safe way to detect that the referent is gone rather than dangling.
+
+A `WeakReference` is only safe to dereference (`operator*`, `operator->`) when `is_valid()` is true, meaning the underlying handle pointer is non-null and the handle is still "active" (not conceptually deleted); calling code is expected to check this before every dereference rather than relying on the reference itself to fail safely. When a callback is attached via `attach_callback()`, the five `publisher_*` notification methods — invoked by the `WeakObserverVisitor` implementations in `WeakReferenceVisitors.h` as the publisher's state changes — forward each event to that callback, which is how application-logic code observes modification, deactivation, reactivation, or destruction of the feature it references.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/WeakReference tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_callback` is `mutable` so a callback can be attached even to a `WeakReference` held as a `const` key in a `std::map`; this is safe only because the callback plays no part in `operator==`/`operator<` comparison. Copy-assignment and the copy that happens when converting `WeakReference<H>` to `WeakReference<const H>` both carry the subscription across via `WeakObserver`, but the const-conversion does *not* copy an attached callback — a freshly obtained const reference always starts with no callback.
 
 ## Used by
 

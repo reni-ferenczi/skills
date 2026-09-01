@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GenericColourScheme tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenericColourScheme<PropertyExtractorType>` is the generic `ColourScheme` implementation used to build most per-property colouring modes: it delegates extracting a value from a `ReconstructionGeometry` or `FeatureHandle` to a `PropertyExtractorType` functor (which must be callable on either argument and typedef its result as `return_type`), then looks that value up in a `ColourPalette<PropertyExtractorType::return_type>` to produce the final `Colour`. `PROPERTY_NOT_FOUND_COLOUR` (grey) is returned when the extractor comes back empty, so a colour scheme built this way never fails outright — it degrades to a neutral colour instead. The free function `make_colour_scheme` is the usual way to build one, inferring `PropertyExtractorType` from the extractor argument and returning a `ColourScheme::non_null_ptr_type` for storage alongside other schemes.
+
+`PlateIdScheme` and `FeatureAgeScheme` are older, non-template siblings predating the `GenericColourScheme`/`PropertyExtractor` pattern: they colour directly by reconstruction plate ID or by feature age against a `Palette`, with `FeatureAgeScheme` clamping ages outside its `[d_lower, d_upper]` range to the palette's background/foreground/NaN (BFN) colours instead of interpolating.
 
 ## Declared types
 
@@ -68,9 +68,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GenericColourScheme tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `GenericColourScheme` takes ownership of the `ColourPaletteType::non_null_ptr_type` passed to its constructor; the palette is destroyed along with the scheme.
+- `PlateIdScheme` and `FeatureAgeScheme` store a raw, non-owning `const Palette *` — the caller is responsible for the palette's lifetime, unlike `GenericColourScheme`'s ownership of its `ColourPalette`.
 
 ## Used by
 

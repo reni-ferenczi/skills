@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GeometryExporter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryExporter` is a minimal abstract interface with a single method, `export_geometry()`, that lets format-specific exporters (`GMTFormatGeometryExporter`, `OgrGeometryExporter`, `PlatesLineFormatGeometryExporter`) be driven interchangeably by callers such as `ExportCoordinatesDialog` that only need to hand a `GeometryOnSphere` to whichever output format the user picked, without knowing which concrete exporter class is in use.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GeometryExporter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

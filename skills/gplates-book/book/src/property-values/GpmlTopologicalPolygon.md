@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTopologicalPolygon tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlTopologicalPolygon` is the `PropertyValue` that stores the raw GPML for a topological closed-plate-polygon feature (`gpml:TopologicalPolygon`): a single ordered sequence of `GpmlTopologicalSection` references forming the polygon's exterior. As the header's `TODO` notes, it has no support for interior holes — each interior would need to be a reference to another topological polygon's exterior, which was never implemented.
+
+Like the sibling `GpmlTopologicalNetwork`, this class holds the unresolved section references exactly as parsed; resolving them into an actual geometry is done elsewhere, by code such as `TopologyGeometryResolver`.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTopologicalPolygon tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`directly_modifiable_fields_equal()` recurses into each section for the same reason as `GpmlTopologicalNetwork`: `d_exterior_sections` holds non-const `non_null_intrusive_ptr`s that clients can mutate, so pointer equality would not detect a content change.
 
 ## Used by
 

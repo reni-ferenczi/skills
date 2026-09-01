@@ -8,9 +8,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTriangulationUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTriangulationUtils` is a header-only grab-bag of small, generic
+helpers used by the `ResolvedTriangulation` code (the CGAL-based Delaunay
+triangulation and interpolation machinery behind `ResolvedTopologicalNetwork`).
+None of it depends on any particular triangulation type, which is why it is
+factored out rather than living inside `ResolvedTriangulationNetwork` or
+`ResolvedTriangulationDelaunay2`.
+
+`VertexIndices` assigns zero-based indices to unique vertices as they are
+added, deduplicating via a `std::map`; it exists to build vertex-indexed
+triangle meshes for OpenGL rendering. The remaining function templates —
+`linear_interpolation_2()`, `get_barycentric_coords_2()`,
+`convert_point_on_sphere_to_point_3()` and `convert_point_3_to_point_on_sphere()`
+— bridge CGAL's natural-neighbour interpolation and 3D point types with
+GPlates' own `PointOnSphere` and arbitrary interpolated value types (anything
+supporting addition and scalar multiplication, such as a `Vector3D`), so the
+callers in `ResolvedTriangulation` don't have to repeat this conversion and
+interpolation boilerplate for each field being interpolated (e.g. velocity,
+strain rate).
 
 ## Declared types
 
@@ -43,9 +58,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTriangulationUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`linear_interpolation_2()` asserts (via `PreconditionViolationError`) that the
+supplied norm is positive, and asserts (via `AssertionFailureException`) that
+every 2D point in the natural-neighbour coordinates has a function value
+available from the `Functor` — both are precondition checks on the caller's
+inputs, not recoverable error paths. `get_barycentric_coords_2()` divides by
+the signed area of the triangle (`b0`) without checking for degeneracy, so a
+degenerate (zero-area) triangle produces a division by zero.
 
 ## Used by
 

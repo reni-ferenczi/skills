@@ -8,9 +8,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/RenderSettings tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RenderSettings` is a header-only bag of per-geometry-kind visibility flags
+(static points/multipoints/lines/polygons, topological sections/lines/polygons/
+networks, velocity arrows, rasters, 3D scalar fields, scalar coverages,
+strings), one boolean per flag with matching getter/setter pairs. Its purpose,
+per the file comment, is to let the layer painters (`GlobeRenderedGeometryLayerPainter`
+and its map counterpart) know what to draw without holding a reference to the
+`Globe`/canvas widget itself — it decouples "what to render" from "who decides
+what to render", letting `ViewportWindow` toggle visibility from menu actions
+while the painters just query these flags. Every setter, plus `set_show_all()`,
+emits `settings_changed()` so dependent views (`presentation/ViewState` and
+its clients) know to repaint.
 
 ## Declared types
 
@@ -76,9 +84,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/RenderSettings tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- All flags default to `true` in the no-argument constructor, so a freshly
+  constructed `RenderSettings` shows everything.
+- Each individual setter emits `settings_changed()` on every call, even if the
+  new value equals the old one; there is no change-detection before emitting.
 
 ## Used by
 

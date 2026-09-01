@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportSvgAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportSvgAnimationStrategy` writes a vector snapshot of the currently reconstructed geometry to an SVG file at each animation frame, using Qt's `QSvgGenerator`. Its `Configuration` only needs `ExportOptionsUtils::ExportImageResolutionOptions`, since an SVG has no raster pixels to configure beyond size and aspect ratio.
+
+`do_export_iteration` temporarily disables every `GPlatesViewOperations::RenderedGeometryCollection` main layer except `RECONSTRUCTION_LAYER`, so the SVG captures only reconstructed geometry and not other overlays (mesh, digitisation guides, etc.), then calls `GPlatesQtWidgets::SceneView::render_opengl_feedback_to_paint_device` to feed the OpenGL scene through Qt's paint-engine feedback path into the SVG generator, before restoring the previous layer visibility.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportSvgAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+If `image_resolution_options.image_size` is unset, the SVG is sized to the active scene view's current viewport rather than any fixed default. The rendered-layer active state is saved and restored around the export so the change is invisible to the rest of the UI, but an exception thrown mid-export would leave non-reconstruction layers hidden.
 
 ## Used by
 

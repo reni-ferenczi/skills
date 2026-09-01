@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportRasterAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportRasterAnimationStrategy` is the concrete `ExportAnimationStrategy` that writes the currently visible rasters, unprojected to latitude/longitude, to a file at each animation frame. Its `Configuration` records whether it exports `COLOUR` or `NUMERICAL` rasters, the target pixel resolution in degrees, the lat/lon extents to cover, and whether to use grid-line registration and compression — all set up by the paired `qt-widgets/ExportRasterOptionsWidget`.
+
+`do_export_iteration` does the heavy lifting: it collects the visible raster layers via `get_visible_colour_rasters` or `get_visible_numerical_rasters`, builds a `GPlatesGui::MapProjection` and `Georeferencing` from the configured extents and resolution, then renders each raster into tiles with a `GPlatesOpenGL::GLRenderer` before handing the assembled pixel or float data to `export_colour_raster`/`export_numerical_raster`, which delegate to the `file-io` raster writers (`GdalRasterWriter`, `RasterWriter`, `RgbaRasterWriter`). Numerical rasters can additionally be converted to colour on export using each layer's `RasterColourPalette`. Tiling exists because a reconstructed raster may need to be rendered at a resolution larger than a single OpenGL framebuffer can hold; `setup_tile_for_rendering` configures the sub-region of the export raster covered by each tile before it is rendered and read back.
 
 ## Declared types
 
@@ -93,9 +93,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportRasterAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`do_export_iteration` must not call back into Qt (e.g. `update_status_message`) while inside a `GLRenderer::RenderScope`, since that lets Qt paint and modify OpenGL state directly, which corrupts the state `GLRenderer` is shadowing — this previously caused a hard-to-diagnose bug with missing cube-map tiles. `Configuration::compress` being `boost::none` means the raster format does not support compression at all, not merely that compression is off.
 
 ## Used by
 

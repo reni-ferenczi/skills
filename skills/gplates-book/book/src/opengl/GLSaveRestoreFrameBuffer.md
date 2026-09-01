@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLSaveRestoreFrameBuffer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Lets the main OpenGL framebuffer be temporarily used as a render target
+without permanently losing its contents, by copying its colour (and
+optionally depth/stencil) contents out to textures and pixel buffers on
+`save`, then writing them back on `restore`. It exists specifically for
+systems without `GL_EXT_framebuffer_object`: when that extension is available,
+`GLRenderTarget`/`GLFrameBufferObject` render directly to a texture and this
+class is largely redundant — `GLRendererImpl::RenderTargetBlock::MainFrameBuffer`
+uses it as the fallback path for render-to-texture on such hardware.
+
+Because the framebuffer can exceed the maximum texture dimensions supported by
+the GPU, `save`/`restore` tile the copy internally using a `GLTileRender`
+(`d_save_restore_texture_tile_render`), spreading the saved region across
+however many colour textures are needed; depth and stencil, however, are
+captured into a single `GLPixelBuffer` each regardless of framebuffer size.
+The save/restore textures and buffers are not acquired at construction — only
+between `save` and `restore`, via `acquire_save_restore_colour_texture` — and
+are released again once `restore` completes.
 
 ## Declared types
 
@@ -50,9 +64,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLSaveRestoreFrameBuffer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Callers must not draw outside the constructor's `save_restore_width`/`height`
+region between `save` and `restore` — the header recommends enabling the
+scissor test with a matching scissor rectangle to enforce this, since
+anything drawn outside that region will not be restored. `restore` itself
+temporarily resets OpenGL to the default state, so it ignores any scissoring
+in effect and always restores the entire saved region.
 
 ## Used by
 

@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/MultiPointVectorFieldExport tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit is the format-agnostic entry point for exporting velocity fields computed
+on a multi-point domain. Each of its four functions takes a sequence of
+`GPlatesAppLogic::MultiPointVectorField` objects plus the export options for one
+target format, and groups or splits them into output files as requested (a single
+combined file, one file per input feature collection, or both) before handing the
+actual per-vector formatting off to a dedicated writer: `GpmlFormatMultiPointVectorFieldExport`,
+`GMTFormatMultiPointVectorFieldExport`, `TerraFormatVelocityVectorFieldExport`, or
+`CitcomsFormatVelocityVectorFieldExport`.
+
+The GMT, Terra and CitcomS variants exist because those simulation codes each expect
+a different velocity representation and file-naming convention: GMT allows a choice
+of vector encoding (`GMTVelocityVectorFormatType`) plus optional stride and scaling,
+while Terra and CitcomS match output files to input velocity-domain (mesh) files by
+substituting placeholders in filename templates, since a single reconstruction can
+produce one velocity field per mesh processor or diamond cap.
 
 ## Declared types
 
@@ -52,9 +64,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/MultiPointVectorFieldExport tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The GPML export always writes velocities in colat/lon format, regardless of the
+  GMT-only `GMTVelocityVectorFormatType` choice, which only affects the GMT writer.
+- The Terra and CitcomS exporters silently skip any velocity field whose domain file
+  name does not match the supplied template placeholders; there must be exactly one
+  occurrence of each required placeholder in the template or matching fails.
+- All four functions throw `ErrorOpeningFileForWritingException` if an output file
+  cannot be written.
 
 ## Used by
 

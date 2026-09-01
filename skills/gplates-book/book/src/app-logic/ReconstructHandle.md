@@ -8,9 +8,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructHandle tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A header-only ticket dispenser. It exists to solve one problem in the
+reconstruction pipeline: a single `FeatureHandle` can be reconstructed many
+times over, in different layers and different situations, and each run leaves a
+`ReconstructedFeatureGeometry` attached to the feature as a weak observer. When
+a client later walks a feature's observers it needs to tell *its own* results
+apart from everybody else's. A reconstruct handle is the tag that does that.
+`ReconstructionGeometry` stores one as a `boost::optional<ReconstructHandle::type>`
+member, and finders such as `ReconstructedFeatureGeometryFinder` filter on it.
+
+The workflow is: whoever is about to produce a group of reconstruction
+geometries calls `get_next_reconstruct_handle()` once, stamps every geometry in
+the group with the value it got back, and hands the handle to whoever needs to
+find that group again. The heavy fan-in on this header — the layer proxies, the
+topology resolvers, `ReconstructContext`, `ReconstructUtils` — is almost
+entirely of that shape.
+
+The header notes explicitly why there is no `get_current_reconstruct_handle()`:
+with a getter for the last-issued value, a client could stamp its geometries
+with a handle another client is already using and silently pollute that group.
+Issuing is therefore the only operation, and a handle is opaque — the underlying
+`GPlatesUtils::Counter64` supports only increment and comparison, never
+arithmetic or decrement.
 
 ## Declared types
 
@@ -33,9 +52,22 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructHandle tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Not thread-safe.** `get_next_reconstruct_handle()` increments a function-local
+`static` with no synchronisation. The source carries a TODO saying it will need
+protecting, or converting to a singleton, if GPlates ever becomes
+multi-threaded. Any change that introduces concurrent reconstruction has to deal
+with this line first.
+
+**Handles are process-global and never reused.** The counter is monotonic and
+64-bit specifically so it cannot wrap: `GPlatesUtils::Counter64` documents that
+at one increment per cycle on a 3 GHz machine wraparound takes around 195 years,
+whereas a 32-bit counter would wrap in seconds. Correctness of every
+handle-based lookup rests on that, so do not narrow the type. There is no
+release or recycle step — handles are simply spent.
+
+**Call it once per group, not once per geometry.** Each call yields a distinct
+value, so calling it inside the loop that creates geometries gives every
+geometry its own group and breaks any subsequent lookup by handle.
 
 ## Used by
 

@@ -14,32 +14,32 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [Application](../src/presentation/Application.md) | 2 | 318 | 8 | (pending) |
+| [Application](../src/presentation/Application.md) | 2 | 318 | 8 | Singleton owning ApplicationState, ViewState and ViewportWindow, wiring them together at startup |
 | [DeprecatedSessionRestore](../src/presentation/DeprecatedSessionRestore.md) | 3 | 677 | 15 | Backward-compatibility loader for pre-scribe session formats (versions 1–3) |
-| [InternalSession](../src/presentation/InternalSession.md) | 2 | 833 | 68 | (pending) |
-| [LayerOutputRenderer](../src/presentation/LayerOutputRenderer.md) | 2 | 502 | 20 | (pending) |
-| [ProjectSession](../src/presentation/ProjectSession.md) | 2 | 820 | 17 | (pending) |
-| [RasterVisualLayerParams](../src/presentation/RasterVisualLayerParams.md) | 2 | 374 | 62 | (pending) |
-| [ReconstructScalarCoverageVisualLayerParams](../src/presentation/ReconstructScalarCoverageVisualLayerParams.md) | 2 | 399 | 63 | (pending) |
-| [ReconstructVisualLayerParams](../src/presentation/ReconstructVisualLayerParams.md) | 2 | 584 | 143 | (pending) |
-| [ReconstructionGeometryRenderer](../src/presentation/ReconstructionGeometryRenderer.md) | 2 | 3019 | 60 | (pending) |
-| [RemappedColourPaletteParameters](../src/presentation/RemappedColourPaletteParameters.md) | 2 | 578 | 202 | (pending) |
-| [ScalarField3DVisualLayerParams](../src/presentation/ScalarField3DVisualLayerParams.md) | 2 | 627 | 173 | (pending) |
-| [Session](../src/presentation/Session.md) | 2 | 335 | 11 | (pending) |
-| [SessionManagement](../src/presentation/SessionManagement.md) | 2 | 1316 | 20 | (pending) |
-| [TopologyGeometryVisualLayerParams](../src/presentation/TopologyGeometryVisualLayerParams.md) | 2 | 157 | 16 | (pending) |
-| [TopologyNetworkVisualLayerParams](../src/presentation/TopologyNetworkVisualLayerParams.md) | 2 | 796 | 223 | (pending) |
-| [TranscribeSession](../src/presentation/TranscribeSession.md) | 2 | 3805 | 153 | (pending) |
-| [VelocityFieldCalculatorVisualLayerParams](../src/presentation/VelocityFieldCalculatorVisualLayerParams.md) | 2 | 146 | 31 | (pending) |
+| [InternalSession](../src/presentation/InternalSession.md) | 2 | 833 | 68 | Session saved to the user preferences store, spanning three on-disk format generations |
+| [LayerOutputRenderer](../src/presentation/LayerOutputRenderer.md) | 2 | 502 | 20 | Layer-proxy visitor that hands each layer's output to ReconstructionGeometryRenderer for drawing |
+| [ProjectSession](../src/presentation/ProjectSession.md) | 2 | 820 | 17 | Session saved to a project archive file, tracking moved files and unsaved-state changes |
+| [RasterVisualLayerParams](../src/presentation/RasterVisualLayerParams.md) | 2 | 374 | 62 | Presentation-side settings for a raster layer: palette, opacity, intensity, relief scale |
+| [ReconstructScalarCoverageVisualLayerParams](../src/presentation/ReconstructScalarCoverageVisualLayerParams.md) | 2 | 399 | 63 | Per-scalar-type colour palettes for a reconstruct-scalar-coverage layer, created lazily |
+| [ReconstructVisualLayerParams](../src/presentation/ReconstructVisualLayerParams.md) | 2 | 584 | 143 | Visual settings for a reconstruct layer: VGP visibility, fill styling, topology display options |
+| [ReconstructionGeometryRenderer](../src/presentation/ReconstructionGeometryRenderer.md) | 2 | 3019 | 60 | Visitor turning any ReconstructionGeometry into RenderedGeometry, driven by a RenderParams config |
+| [RemappedColourPaletteParameters](../src/presentation/RemappedColourPaletteParameters.md) | 2 | 578 | 202 | A real-valued colour palette plus an optional remapped input range |
+| [ScalarField3DVisualLayerParams](../src/presentation/ScalarField3DVisualLayerParams.md) | 2 | 627 | 173 | Display settings for a scalar-field-3D layer, lazily seeded from field statistics |
+| [Session](../src/presentation/Session.md) | 2 | 335 | 11 | Abstract base for a saved GPlates session's timestamp, files and description |
+| [SessionManagement](../src/presentation/SessionManagement.md) | 2 | 1316 | 20 | Owns recent-session and project persistence: file lists and layer state across restarts |
+| [TopologyGeometryVisualLayerParams](../src/presentation/TopologyGeometryVisualLayerParams.md) | 2 | 157 | 16 | Fill display options for a resolved-topological-geometry layer |
+| [TopologyNetworkVisualLayerParams](../src/presentation/TopologyNetworkVisualLayerParams.md) | 2 | 796 | 223 | Triangulation draw/colour modes and strain-rate colour palettes for a network layer |
+| [TranscribeSession](../src/presentation/TranscribeSession.md) | 2 | 3805 | 153 | Scribe-based save/load of an entire GPlates session: files, layers, params, view state |
+| [VelocityFieldCalculatorVisualLayerParams](../src/presentation/VelocityFieldCalculatorVisualLayerParams.md) | 2 | 146 | 31 | Arrow body scale, arrowhead scale and spacing for a velocity-field-calculator layer |
 | [ViewState](../src/presentation/ViewState.md) | 1 | 1174 | 1718 | (pending) |
 | [VisualLayer](../src/presentation/VisualLayer.md) | 1 | 642 | 490 | (pending) |
 | [VisualLayerGroup](../src/presentation/VisualLayerGroup.md) | 3 | 57 | 30 | Enumeration of visual layer categories controlling on-screen organization |
 | [VisualLayerInputChannelName](../src/presentation/VisualLayerInputChannelName.md) | 3 | 154 | 1 | Mapping from layer input channel enumerations to GUI display strings |
-| [VisualLayerParams](../src/presentation/VisualLayerParams.md) | 2 | 167 | 64 | (pending) |
-| [VisualLayerParamsVisitor](../src/presentation/VisualLayerParamsVisitor.md) | 2 | 126 | 57 | (pending) |
-| [VisualLayerRegistry](../src/presentation/VisualLayerRegistry.md) | 2 | 880 | 59 | (pending) |
-| [VisualLayerType](../src/presentation/VisualLayerType.md) | 2 | 47 | 59 | (pending) |
-| [VisualLayers](../src/presentation/VisualLayers.md) | 2 | 1321 | 58 | (pending) |
+| [VisualLayerParams](../src/presentation/VisualLayerParams.md) | 2 | 167 | 64 | Base class for per-visual-layer-type display parameters, kept separate from app-logic LayerParams |
+| [VisualLayerParamsVisitor](../src/presentation/VisualLayerParamsVisitor.md) | 2 | 126 | 57 | Const/non-const visitor base for dispatching on the concrete VisualLayerParams subclass |
+| [VisualLayerRegistry](../src/presentation/VisualLayerRegistry.md) | 2 | 880 | 59 | Lookup table of display metadata and factory functions for each registered visual layer type |
+| [VisualLayerType](../src/presentation/VisualLayerType.md) | 2 | 47 | 59 | Typedef alias of GPlatesAppLogic::LayerTaskType::Type used by presentation-layer code |
+| [VisualLayers](../src/presentation/VisualLayers.md) | 2 | 1321 | 58 | Mirrors ReconstructGraph's layers as VisualLayer objects and manages their draw order |
 
 ## Other files
 

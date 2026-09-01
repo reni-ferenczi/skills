@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/InternalGeometryBuilder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InternalGeometryBuilder` is a private helper that `GeometryBuilder` uses to hold the raw point sequence for one geometry being digitised and lazily convert it into a concrete `GPlatesMaths::GeometryOnSphere`. `update()` only rebuilds the cached geometry (via `create_geometry_on_sphere`, using `GPlatesUtils::GeometryConstruction` validity checks) when `d_update` is set, which happens whenever `set_desired_geometry_type` is called or the non-const `get_point_seq()` is used — deferring geometry construction until the result is actually needed.
+
+When the desired geometry type cannot be built from the current points, `create_geometry_on_sphere` recurses to a simpler type — polygon falls back to polyline, polyline and undersized multipoint fall back to point — so the builder always exposes the richest geometry the current point count actually supports rather than failing outright.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/InternalGeometryBuilder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_actual_geometry_type()` and `get_geometry_on_sphere()` are `const` but do not call `update()` themselves — per the header's own note, callers must call `update()` first or they read stale cached values. `d_geometry_opt_ptr` and `d_actual_geometry_type` are `mutable` precisely so that `update()` can refresh them from these `const` accessors' call sites. `get_point_seq()` unconditionally marks the builder dirty on the assumption the caller will modify the returned reference, even when it only reads from it.
 
 ## Used by
 

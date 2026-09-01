@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GdalRasterWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GDALRasterWriter` is the `RasterWriterImpl` counterpart to `GDALRasterReader`: it accumulates a raster's regions and metadata in an in-memory GDAL dataset (created with the GDAL `"MEM"` driver) via `write_region_data()`/`set_georeferencing()`/`set_spatial_reference_system()`, and only touches disk once, in `write_file()`, which uses the format's real GDAL driver (`d_file_driver`) to `CreateCopy()` the in-memory dataset out to `d_filename`. This build-in-memory-then-copy-out approach lets callers write raster data in arbitrary region order and only pay the format-specific encoding cost once at the end.
+
+`WriteNumericalRegionDataVisitorImpl` (used through `TemplatedRawRasterVisitor`) dispatches on the concrete `RawRaster` type being written and enforces a data-type compatibility rule: floating-point region data cannot be written into an integer GDAL raster (no sensible no-data value can be inferred), while integer region data written into a floating-point raster is converted to `DoubleRawRaster` first to preserve 32-bit integer precision that a `float` cannot represent exactly. `InternalFormatInfo` carries GDAL creation-option details (driver name, and general vs. compression-specific and even raster-type-specific `CreateCopy()` options) that are not part of the format-agnostic `RasterWriter::FormatInfo`, and `get_supported_band_types()`/`does_driver_support_creation()` probe a driver's actual GDAL metadata to build the writer's advertised format/type support list.
 
 ## Declared types
 
@@ -63,9 +63,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GdalRasterWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_in_memory_dataset` is owned by this writer and released with a `GDALClose` call in the destructor; a `NULL` value means `can_write()` will fail for the object's whole lifetime.
+- `d_file_driver` is GDAL-managed and must not be freed by this class.
+- All region writes accumulate in the in-memory dataset; nothing reaches `d_filename` on disk until `write_file()` is called and succeeds.
+- Writing floating-point region data into an integer-typed raster silently fails the write (logging a warning) rather than throwing, because there is no safe way to pick an integer no-data value on the writer's side.
 
 ## Used by
 

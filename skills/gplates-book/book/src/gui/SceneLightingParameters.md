@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/SceneLightingParameters tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::SceneLightingParameters` is a plain value object holding the scene's lighting configuration: whether lighting is enabled per primitive type (geometry, filled geometry, direction arrows, rasters, scalar fields), the ambient light contribution, and separate light directions for the 3D globe view and the 2D map view. It has no rendering logic of its own — `opengl/GLLight` and the painters in `gui` read it to decide how to shade what they draw, and `qt-widgets/LightingWidget` is the UI that edits it via `presentation/ViewState`.
+
+The light direction can either stay attached to the view frame (rotating with the camera) or stay fixed in the world frame (fixed to the globe); `is_light_direction_attached_to_view_frame()` records which mode is active, and the free `transform_globe_*_light_direction_*` functions convert a direction between view-space and world-space accordingly, using either a `GPlatesMaths::Rotation` or a `GPlatesOpenGL::GLMatrix` to describe the current view transform.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/SceneLightingParameters tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The ambient light contribution must lie in `[0, 1]`; diffuse contribution is `1 - ambient`, and ambient does not use the light direction at all. An ambient value of 1.0 leaves input colours unchanged (lighting is effectively off). The 2D map view's light direction is currently constant regardless of `is_light_direction_attached_to_view_frame()` — only the 3D globe view direction actually rotates.
 
 ## Used by
 

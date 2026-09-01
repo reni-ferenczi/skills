@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedRaster tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedRaster` is the `ReconstructionGeometry` produced for a raster feature at a given reconstruction time. Unlike geometry-bearing RG types, it does not hold reconstructed data itself — it is a lightweight bundle of references to the layer proxies that actually compute the raster: a `RasterLayerProxy` for the source data, an optional list of `ReconstructLayerProxy` instances supplying the reconstructed polygons the raster is draped onto, and optional age-grid and normal-map `RasterLayerProxy` references for the corresponding modulation layers. Callers that need the pixel data or geometry are expected to query those layer proxies directly through their own interfaces rather than through `ResolvedRaster`.
+
+As a `GPlatesModel::WeakObserver<FeatureHandle>` it also participates in the usual weak-observer machinery, so it is found by `ReconstructionGeometryFinder` and visited via `accept_weak_observer_visitor`/`visit_resolved_raster` alongside other reconstruction geometries derived from the same feature. Its protected constructor forces heap-only construction via `create()`, matching the reference-counted `non_null_intrusive_ptr` ownership used throughout the RG hierarchy.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedRaster tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

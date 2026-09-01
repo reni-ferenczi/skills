@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/GeometryBuilderUndoCommands tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Five `QUndoCommand` subclasses wrap the primitive edits `GeometryBuilder` exposes (insert point, remove point, move point, set geometry type, clear all geometries) so canvas-tool code can push edits onto Qt's undo stack instead of mutating `GeometryBuilder` directly. Each command's `redo()` calls the matching `GeometryBuilder` mutator and stores the `GeometryBuilder::UndoOperation` it returns; `undo()` replays that stored operation through `GeometryBuilder::undo()`. All five commands wrap their call in a `RenderedGeometryCollection::UpdateGuard` so the rendered-geometry redraw triggered by `GeometryBuilder`'s change signal is deferred to the end of the command rather than firing mid-edit.
+
+Two of the commands support coalescing: `GeometryBuilderMovePointUndoCommand::mergeWith` folds a later move into an earlier one (keeping the earlier command's undo operation but the later command's destination), which is how dragging a vertex produces one undo step instead of one per mouse-move event; it is invoked explicitly by calling code rather than by the Qt undo stack, since the class does not override `id()`. `GeometryBuilderSetGeometryTypeUndoCommand` merges through `id()` instead, using a caller-supplied `UndoRedo::CommandId` — the default id of `-1` disables merging.
 
 ## Declared types
 
@@ -95,9 +95,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/GeometryBuilderUndoCommands tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`GeometryBuilderMovePointUndoCommand::d_secondary_geometries` is a reference, not a copy, captured from `GeometryBuilder::get_secondary_geometries()` at construction — it stays bound to that `GeometryBuilder`'s internal container, so the command must not outlive the builder it was created for.
 
 ## Used by
 

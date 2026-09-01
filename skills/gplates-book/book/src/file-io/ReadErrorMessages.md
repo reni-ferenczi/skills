@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReadErrorMessages tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReadErrorMessages` turns the `ReadErrors::Description` and `ReadErrors::Result`
+enum codes used throughout the file readers into user-facing, translatable
+text. Almost all of its 721-line `.cc` is two static tables,
+`description_table` and `result_table` (sourced from the project's
+`ReadErrorMessages` wiki page), each pairing an enum value with plain-`char*`
+short and full message text. `get_short_description_as_string`,
+`get_full_description_as_string` and `get_result_as_string` lazily build an
+`std::map` from the matching table on first use — running each string through
+`QObject::tr()` at that point, not at table-definition time, so Qt's
+translation mechanism sees them — and cache the map in a function-local
+`static` for subsequent lookups.
+
+The code was, per its own header comment, refactored out of
+`ReadErrorAccumulationDialog` specifically so the command-line (non-GUI)
+build could format the same read-error messages without depending on that
+Qt dialog; `CliFeatureCollectionFileIO` is the corresponding CLI-side
+consumer.
 
 ## Declared types
 
@@ -71,9 +85,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReadErrorMessages tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A code missing from its table is not an error: each lookup function falls
+back to a fixed "not found" placeholder string rather than asserting or
+throwing. Adding a new `ReadErrors::Description` or `ReadErrors::Result` value
+means adding a row to the corresponding table here — the enum alone produces
+no text.
 
 ## Used by
 

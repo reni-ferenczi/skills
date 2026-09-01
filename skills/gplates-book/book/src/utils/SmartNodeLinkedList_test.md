@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/SmartNodeLinkedList_test tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Tests the `SmartNodeLinkedList<T>` template class, which provides a doubly-linked list where nodes can splice themselves out of the list automatically upon destruction. The tests verify that nodes created at different scopes correctly manage their lifetime and are spliced out of the list when destroyed, and that the bidirectional iterator interface works correctly including increment, decrement, and arrow-dereferencing operations.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/SmartNodeLinkedList_test tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

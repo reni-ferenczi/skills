@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TopologySectionsTableColumns tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This namespace defines how each column of the Topology Sections table (populated from `TopologySectionsContainer`) is displayed and edited by `TopologySectionsTable`. `ColumnHeadingInfo` bundles everything one column needs — its label, tooltip, width, resize mode, alignment, item flags, and four function pointers: an `accessor` to render a `TableRow` into a `QTableWidgetItem`, a `mutator` to write user-entered cell data back into a `TableRow`, a predicate deciding whether the cell needs an editing widget instead of plain text, and a factory that creates that widget. `get_column_heading_infos()` builds and returns the full `std::vector<ColumnHeadingInfo>` (backed by the file-scope `COLUMN_HEADING_INFO_TABLE`) that drives the table's setup; `COLUMN_ACTIONS` is the reserved index-0 column for the row action buttons, distinct from every data-bound column.
+
+The concrete accessor/mutator functions (`get_data_time_of_appearance`, `get_data_reconstruction_plate_id`, `get_data_feature_name`, etc.) each know how to pull one piece of data — feature type, reconstruction plate ID, name, begin/end time — either from the `TableRow`'s own overrides or by falling back to the referenced feature's own property (via `GPlatesFeatureVisitors::get_property_value`). `get_time_of_appearance()`/`get_time_of_disappearance()` implement that fallback chain explicitly: the topological section's own begin/end time first, then the referenced feature's `gml:validTime`, then distant past/future as a last resort; `should_edit_time_period()` decides a row is independently time-editable only when both a begin and an end time are already set on the section itself.
+
+`EditTimeWidget` is the cell-editing widget for those begin/end time columns: a `QDoubleSpinBox` for the numeric time in Ma paired with a "Distant Past"/"Distant Future" `QCheckBox` that disables the spinbox when checked. It must live in this header (rather than the `.cc`) so Qt's moc picks up its `Q_OBJECT` macro.
 
 ## Declared types
 
@@ -86,9 +88,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TopologySectionsTableColumns tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`EditTimeWidget` edits a local copy of the row (`d_table_row`, taken at construction time via `sections_container.at(...)`), not the container directly. Its slots (`set_spinbox_time_in_topology_section()`, `set_distant_time_checkstate()`) only mutate that local copy — the only call to `d_sections_container.update_at()` that would commit it back lives in `focusOutEvent()`, which along with the destructor and `eventFilter()` is compiled out under `#if 0`. As the code currently stands, edits made through this widget's spinbox or checkbox are never written back to the `TopologySectionsContainer`.
+
+`ColumnHeadingInfo`'s four members are raw C function pointers (not `std::function` or virtuals), so every accessor/mutator/predicate/factory must have C-linkage-compatible free-function signatures matching the `table_accessor_type` etc. typedefs exactly.
 
 ## Used by
 

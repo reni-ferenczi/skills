@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryParameters tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QObject` holding the live, user-adjustable drawing parameters for the reconstruction layer and the canvas tools that manipulate geometry directly (choose-feature tool, topology tools) — point sizes, line widths, arrow scaling and the colours used to distinguish focused, clicked and topological-section geometry. `ConfigureCanvasToolGeometryRenderParametersDialog` is the main writer of these settings; every setter calls `Q_EMIT parameters_changed(*this)`, so painters and layer parameter objects that hold a `RenderedGeometryParameters` can react live to a change instead of polling.
+
+The free constants declared alongside the class, in the nested `RenderedLayerParameters` and `GeometryOperationParameters` namespaces, are a different, fixed set: hard-coded sizes and colours (focus, highlight, delete, the split-feature-tool point colours) used directly by geometry-operation code such as `MoveVertexGeometryOperation` and `SplitFeatureGeometryOperation`. They have no getters/setters and are not part of the `RenderedGeometryParameters` object — they exist purely to give otherwise-magic numbers a name.
 
 ## Declared types
 
@@ -97,9 +97,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryParameters tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every setter unconditionally emits `parameters_changed`, even when the new value equals the old one — there is no change detection, so a connected slot should expect to be called on every `set_*` regardless of whether anything actually changed.
 
 ## Used by
 

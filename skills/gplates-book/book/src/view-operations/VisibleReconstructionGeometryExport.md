@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/VisibleReconstructionGeometryExport tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisibleReconstructionGeometryExport` bridges what the user currently sees on screen to the file-based export machinery in `file-io`. Each `export_visible_*` function calls `RenderedGeometryUtils::get_unique_reconstruction_geometries` to pull the distinct reconstruction geometries (RFGs, flowlines, motion paths, or resolved topologies) actually present in a `RenderedGeometryCollection`, then hands them to the matching `file-io` exporter (`ReconstructedFeatureGeometryExport`, `ReconstructedFlowlineExport`, `ReconstructedMotionPathExport`, `ResolvedTopologicalGeometryExport`) — this unit only decides *what* is visible, not *how* it is written.
+
+`export_visible_resolved_topologies` is the most elaborate entry point: beyond the usual single-file/per-input-file/per-directory output choices, it separately controls whether topological lines, polygons and networks are exported, whether shared topological sections are exported (and further split by `ExportTopologicalSectionType` — subduction left/right, ridge-transform — for output-filename placeholder substitution), whether a resolved topological line's sub-segments are exported individually or collapsed to one geometry per boundary segment, and an optional forced polygon winding order. The free functions `append_suffix_to_template_filebasename`, `substitute_placeholder` and `get_full_output_filename` are the shared filename-templating helpers used to build the various per-category output paths from `file_basename` and its placeholder strings.
 
 ## Declared types
 
@@ -72,9 +72,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/VisibleReconstructionGeometryExport tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every `export_visible_*` function can throw `ErrorOpeningFileForWritingException` if the destination is not writable, or `FileFormatNotSupportedException` if the format implied by the filename's extension is not supported for that export — callers must be prepared to catch both.
 
 ## Used by
 

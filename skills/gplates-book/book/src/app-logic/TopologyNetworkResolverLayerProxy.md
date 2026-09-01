@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyNetworkResolverLayerProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyNetworkResolverLayerProxy` is the `LayerProxy` behind topological network layers, the counterpart of `TopologyGeometryResolverLayerProxy` for deformable triangulated networks rather than plain lines and boundaries. It resolves `ResolvedTopologicalNetwork` objects (and their velocities) from a network's referenced sections, sharing the same input-layer wiring — `ReconstructLayerProxy` for plain reconstructed sections and `TopologyGeometryResolverLayerProxy` for resolved-line sections — and the same `DependentTopologicalSectionLayers` bookkeeping used to invalidate the cache only when a section a resolved network actually depends on changes.
+
+Unlike the geometry resolver, every resolving entry point here also takes an explicit `TopologyNetworkParams` (falling back to `d_current_topology_network_params` when omitted), because network resolution is parameterised by strain-rate smoothing/clamping and rift settings that can be requested per call rather than only as the layer's current setting. `get_resolved_network_time_span()` mirrors `get_resolved_boundary_time_span()`: it caches a whole time range of resolved networks so that repeated per-time-step queries, such as those used by `TopologyReconstruct`, share one computation instead of duplicating it per caller.
 
 ## Declared types
 
@@ -82,9 +82,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyNetworkResolverLayerProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The single-time cache is keyed on both reconstruction time and `TopologyNetworkParams`: passing a different time or a different params value than the last call invalidates it, so alternating calls with two different param sets defeats the cache rather than keeping both around. `set_current_topology_network_params()` never resets this cache itself — it only invalidates the subject token — because results are already cached per requested params and a stale entry for the *old* default params can simply be left in place. As with `TopologyGeometryResolverLayerProxy`, input layer proxy changes are not pushed here; `check_input_layer_proxies()` polls them lazily on `get_subject_token()` and before every resolve.
 
 ## Used by
 

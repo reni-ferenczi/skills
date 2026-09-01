@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/GeometryTypeFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Where `GeometryFinder` collects the geometries themselves, `GeometryTypeFinder` only tallies how many of each type were seen, which is cheaper when a caller just needs to classify a feature or property. It combines `GPlatesModel::ConstFeatureVisitor` with `GPlatesMaths::ConstGeometryOnSphereVisitor`, so the same object can be driven either by visiting a feature/property (`visit_gml_*`) or by visiting a `GeometryOnSphere` directly (`visit_*_on_sphere`); `GmlOrientableCurve` and `GpmlConstantValue` are unwrapped by re-visiting what they wrap.
+
+The free functions declared alongside the class are the module's general-purpose geometry-property helpers, built on `GeometryTypeFinder` and `GeometryFinder`: `find_first_geometry_property()` locates the first property on a feature that has geometry, `is_geometry_property()`/`is_not_geometry_property()` classify a single `TopLevelProperty`, and `find_first_geometry()` extracts the geometry from a property already known to hold one.
 
 ## Declared types
 
@@ -67,9 +67,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/GeometryTypeFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`has_found_multiple_geometry_types()` (e.g. a point *and* a polyline) is distinct from `has_found_multiple_geometries_of_the_same_type()` (e.g. two points). `find_first_geometry()` dereferences the first found geometry without checking that one was found — call it only on a property already confirmed via `is_geometry_property()` or `find_first_geometry_property()`, or it is undefined behaviour.
 
 ## Used by
 

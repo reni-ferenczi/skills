@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GlobeCanvas tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GlobeCanvas` is the `QGLWidget` that renders the 3D globe and turns raw mouse and keyboard events into the domain events (`mouse_clicked`, `mouse_dragged`, `mouse_moved_without_drag`, camera-movement slots) that `GPlatesCanvasTools` and the rest of the GUI act on. It implements `SceneView` alongside `MapView`, so `GlobeAndMapWidget` can treat the two projections interchangeably. Internally it owns a `GPlatesGui::Globe` for the actual sphere geometry and orientation, and a family of `GLMatrix` projection transforms kept separately for the front half-globe, rear half-globe, full globe and stars, because opaque, transparent and sub-surface rendering (scalar fields) each need a different clip-plane setup.
+
+A central concern of the class is translating between screen-pixel mouse coordinates and positions on the unit sphere: `get_universe_coord_y`/`get_universe_coord_z` map screen coordinates into "universe" space, and the free functions `calc_globe_pos_discrim`, `calc_pos_on_globe`, `calc_pos_at_intersection_with_globe` and `calc_virtual_globe_position` resolve whether that universe position lands on the globe or must be projected to the nearest point on it. `current_proximity_inclusion_threshold()` builds on the same math to decide, given the mouse's floating-point imprecision on-screen, which geometries count as "hit" by a click — using an epsilon-radius circle around the click point rather than an exact-pixel comparison.
+
+The private `clone()` constructor creates a second `GlobeCanvas` that shares an existing one's OpenGL context, globe orientation and mouse state, for the same reason `GlobeAndMapWidget::clone_with_shared_opengl_context()` exists: a second view that renders the same scene without re-uploading OpenGL resources.
 
 ## Declared types
 
@@ -125,9 +127,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GlobeCanvas tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All signal/slot parameter types must be written with full namespace scope in both the signal and slot declarations; otherwise Qt's string-based moc matching silently fails to connect them at runtime — this is called out explicitly next to `update_canvas()` and `handle_zoom_change()`. `MakeGLContextCurrent` is a constructor-order trick: as a data member it forces the OpenGL context current before the rest of the constructor body runs, since normal `QGLWidget` code cannot touch OpenGL until `initializeGL()` is called by Qt. `d_gl_off_screen_context` stays unset until `initializeGL()` runs, so any rendering path outside the normal paint event (`render_to_qimage`, feedback rendering) must go through `initializeGL_if_necessary()` first. `get_viewport_size()` and `render_to_qimage()` work in device-*independent* pixels; OpenGL itself uses device pixels, which differ by the device pixel ratio on high-DPI displays.
 
 ## Used by
 

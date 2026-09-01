@@ -8,9 +8,12 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/OpenGLException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OpenGLException` is the module's catch-all exception type: a thin
+`GPlatesGlobal::Exception` specialisation that carries a free-text message
+(`_msg`) describing the failing condition, with no structured error code or
+category. It is the exception the rest of `opengl` throws for OpenGL-specific
+failures — missing extensions, unexpected driver state, resource-creation
+failures — that do not warrant a more specific exception type of their own.
 
 ## Declared types
 
@@ -38,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/OpenGLException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

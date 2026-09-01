@@ -16,24 +16,24 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [CheckAttrTypeVisitor](../src/data-mining/CheckAttrTypeVisitor.md) | 2 | 294 | 58 | (pending) |
+| [CheckAttrTypeVisitor](../src/data-mining/CheckAttrTypeVisitor.md) | 2 | 294 | 58 | Feature visitor that classifies a property value's type as numeric or string for co-registration config |
 | [CoRegConfigurationTable](../src/data-mining/CoRegConfigurationTable.md) | 1 | 526 | 420 | (pending) |
-| [CoRegFilter](../src/data-mining/CoRegFilter.md) | 2 | 218 | 65 | (pending) |
+| [CoRegFilter](../src/data-mining/CoRegFilter.md) | 2 | 218 | 65 | Abstract base and Config for filters that narrow reconstructed features before co-registration |
 | [CoRegFilterCache](../src/data-mining/CoRegFilterCache.md) | 3 | 170 | 7 | Cache for reconstructed feature vectors keyed by co-registration filter configuration |
 | [CoRegFilterMapReduceFactory](../src/data-mining/CoRegFilterMapReduceFactory.md) | 3 | 215 | 4 | Static factories for filter, mapper, and reducer components of co-registration data mining |
-| [CoRegMapper](../src/data-mining/CoRegMapper.md) | 2 | 95 | 20 | (pending) |
-| [CoRegReducer](../src/data-mining/CoRegReducer.md) | 2 | 132 | 47 | (pending) |
+| [CoRegMapper](../src/data-mining/CoRegMapper.md) | 2 | 95 | 20 | Abstract map stage that extracts one OpaqueData attribute per reconstructed feature |
+| [CoRegReducer](../src/data-mining/CoRegReducer.md) | 2 | 132 | 47 | Abstract reduce stage that aggregates mapped attribute values into a single co-registration result |
 | [DataMiningCache](../src/data-mining/DataMiningCache.md) | 3 | 89 | 0 | Generic template cache interface supporting perfect hits, partial hits, and misses |
-| [DataMiningUtils](../src/data-mining/DataMiningUtils.md) | 2 | 521 | 92 | (pending) |
-| [DataSelector](../src/data-mining/DataSelector.md) | 2 | 730 | 23 | (pending) |
-| [DataTable](../src/data-mining/DataTable.md) | 2 | 287 | 127 | (pending) |
+| [DataMiningUtils](../src/data-mining/DataMiningUtils.md) | 2 | 521 | 92 | Free-function toolbox for attribute extraction, geometry distance and config-file loading in co-registration |
+| [DataSelector](../src/data-mining/DataSelector.md) | 2 | 730 | 23 | Drives a co-registration run, filling a DataTable from seed features and target layer proxies |
+| [DataTable](../src/data-mining/DataTable.md) | 2 | 287 | 127 | Co-registration result table: one DataRow of OpaqueData per seed, with header and CSV export |
 | [GetValueFromPropertyVisitor](../src/data-mining/GetValueFromPropertyVisitor.md) | 3 | 308 | 5 | Visitor that extracts scalar and geometric data from property values |
 | [LookupReducer](../src/data-mining/LookupReducer.md) | 3 | 249 | 1 | Reducer that selects data by proximity to a seed geometry |
 | [MaxReducer](../src/data-mining/MaxReducer.md) | 3 | 76 | 1 | Reducer that returns the maximum numeric value from a dataset |
 | [MeanReducer](../src/data-mining/MeanReducer.md) | 3 | 59 | 1 | Reducer that returns the arithmetic mean of numeric values |
 | [MedianReducer](../src/data-mining/MedianReducer.md) | 3 | 69 | 1 | Reducer that returns the median of numeric values using partitioning |
 | [MinReducer](../src/data-mining/MinReducer.md) | 3 | 78 | 1 | Computes the minimum value from a sequence of numerical data in co-registration pipelines |
-| [OpaqueData](../src/data-mining/OpaqueData.md) | 2 | 102 | 96 | (pending) |
+| [OpaqueData](../src/data-mining/OpaqueData.md) | 2 | 102 | 96 | Shared variant value type and empty-value sentinel used across the co-registration pipeline |
 | [OpaqueDataToDouble](../src/data-mining/OpaqueDataToDouble.md) | 3 | 89 | 2 | Visitor that extracts numeric values from opaque data variant type |
 | [OpaqueDataToQString](../src/data-mining/OpaqueDataToQString.md) | 3 | 98 | 8 | Visitor that converts opaque data to QString for UI display |
 | [PercentileReducer](../src/data-mining/PercentileReducer.md) | 3 | 53 | 1 | Placeholder reducer for computing percentiles from numerical data sequences |
@@ -43,7 +43,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [RegionOfInterestFilter](../src/data-mining/RegionOfInterestFilter.md) | 3 | 321 | 6 | Filters reconstructed geometries within a distance threshold of a seed feature |
 | [ScribeExportDataMining](../src/data-mining/ScribeExportDataMining.md) | 3 | 56 | 0 | Registers Scribe serialization mappings for data-mining filter configuration classes |
 | [SeedSelfFilter](../src/data-mining/SeedSelfFilter.md) | 3 | 168 | 1 | Filter that outputs a single seed feature regardless of input, used to bootstrap co-registration |
-| [Types](../src/data-mining/Types.md) | 2 | 199 | 91 | (pending) |
+| [Types](../src/data-mining/Types.md) | 2 | 199 | 91 | Attribute-source and reducer enums shared by the co-registration filter/map/reduce pipeline |
 | [VoteReducer](../src/data-mining/VoteReducer.md) | 3 | 85 | 1 | Reducer that finds the most frequently occurring value through voting |
 | [WeightedMeanReducer](../src/data-mining/WeightedMeanReducer.md) | 3 | 52 | 1 | Stub reducer for computing weighted means, currently unimplemented |
 

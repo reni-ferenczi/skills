@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/EllipseGenerator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Generates points on an elliptical small-circle-like curve on the sphere,
+given a centre, semi-major/semi-minor axis lengths (in radians of arc), and a
+`GreatCircle` fixing the orientation of the semi-major axis. It exists so
+callers such as the globe and map painters (`GlobeRenderedGeometryLayerPainter`,
+`MapRenderedGeometryLayerPainter`) can render error ellipses by sampling
+`get_point_on_ellipse` at a sequence of angles rather than working out the
+spherical geometry themselves.
+
+Internally the ellipse is defined and sampled in a tangent plane touching the
+north pole, with its semi-major axis along the plane's x-axis, and a single
+`Rotation` (`d_rotation`) computed once in the constructor carries every
+sampled point from that tangent-plane ellipse to the requested centre and
+orientation on the sphere. Deriving that rotation takes several intermediate
+rotations, worked out step by step and left partly acknowledged in the source
+as more complex than necessary; the free helper `get_rotation_angle` (file
+scope in the `.cc`, not part of the public interface despite appearing in the
+index) computes the signed angle between two points as seen from a pivot,
+used to correct the ellipse's twist about its centre.
 
 ## Declared types
 
@@ -40,9 +55,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/EllipseGenerator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_point_on_ellipse` samples the tangent-plane ellipse and then normalises
+the result onto the sphere, so the returned points are evenly spaced in the
+tangent-plane parametrisation, not in true arc length or angle as measured on
+the sphere — adequate for rendering but not for area or arc-length
+calculations. The class is `boost::noncopyable`; each instance is tied to the
+one ellipse it was constructed for.
 
 ## Used by
 

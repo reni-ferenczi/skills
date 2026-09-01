@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeLoadRefImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The out-of-line implementation of `LoadRef<ObjectType>`, split out of `ScribeLoadRef.h` because it needs the full definition of `Scribe`, which would otherwise create a header cycle (`Scribe` also needs `LoadRef`). It defines the nested `TrackingDeleter`, the `boost::shared_ptr` deleter installed on `LoadRef::d_object`, along with the bodies of `LoadRef`'s constructor, `is_valid()`, `get()` and `untrack()`.
+
+`TrackingDeleter` is where the "must check `is_valid()`" contract is actually enforced: its `operator()` asserts `is_valid_called`, via `GPlatesGlobal::Assert<Exceptions::ScribeTranscribeResultNotChecked>`, before the object is destroyed, and `get()` performs the same check before dereferencing. `is_valid()` marks the deleter as checked as a side effect of returning whether the reference is non-null. When `release` is true — meaning the `LoadRef` owns an object it allocated rather than merely referencing an existing one — the deleter also untracks the object (via `ScribeInternalAccess::untrack()`) before deleting it, covering both an unrelocated tracked object and one that was never trackable to begin with.
 
 ## Declared types
 
@@ -40,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeLoadRefImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`TrackingDeleter::exception_thrown` guards against throwing a second exception while the first is already unwinding the stack through the deleter — the deleter is not supposed to throw, and a second exception during unwind would terminate the program with no diagnostic. It can only guard against exceptions thrown from within `LoadRef` itself (e.g. from `get()`); an exception thrown from unrelated code during unwind is not caught. `TrackingDeleter::operator()` swallows any exception thrown while untracking (`catch (...) {}`) before proceeding to `boost::checked_delete()`, so a failure in untracking never prevents the object from being freed. This header must be included wherever `LoadRef<ObjectType>` is actually constructed or dereferenced (i.e. together with `Scribe.h`), since `ScribeLoadRef.h` alone only declares the template.
 
 ## Used by
 

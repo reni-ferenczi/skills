@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SmallCircleWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SmallCircleWidget` is the `TaskPanelWidget` for the "Create Small Circle" canvas tool (`GPlatesCanvasTools::CreateSmallCircle`): it holds the centre point and radii the user has specified, draws them on the globe/map through a dedicated `GPlatesViewOperations::RenderedGeometryLayer` (the `SMALL_CIRCLE_CANVAS_TOOL_WORKFLOW_LAYER`), and drives feature creation once the user is satisfied. It is disabled by default and only becomes usable when the canvas tool activates it via `handle_activation()`, so a task panel present at startup cannot be interacted with before its matching tool is selected.
+
+The widget owns a non-modal `CreateSmallCircleDialog` (used to type a centre/radius by hand rather than by clicking the globe) and closes it in `hideEvent()` whenever the task panel itself is hidden, since the tool being deactivated should take the helper dialog down with it. Circles the user has built up are kept in `d_small_circles`; `handle_create_feature()` hands that collection to a separate `CreateSmallCircleFeatureDialog` to actually construct model features, and on acceptance emits `feature_created()`, which is wired directly to `ApplicationState::reconstruct()` to refresh the reconstruction.
 
 ## Declared types
 
@@ -57,9 +57,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SmallCircleWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The widget is constructed disabled (`setEnabled(false)`) and relies on the canvas tool calling `handle_activation()` to enable it; code that reuses this widget outside the small-circle tool's workflow must replicate that activation step or it will render inert.
+- `hideEvent()` closes `d_create_small_circle_dialog_ptr` unconditionally whenever the task panel is hidden, including on ordinary panel switches — not just when the tool itself is deactivated.
 
 ## Used by
 

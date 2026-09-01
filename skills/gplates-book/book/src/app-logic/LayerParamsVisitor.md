@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerParamsVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerParamsVisitorBase` is the double-dispatch base for visiting the per-layer-type `LayerParams` subclasses (`RasterLayerParams`, `ReconstructLayerParams`, `TopologyNetworkLayerParams`, and so on) without every caller needing an `if`/`else` chain over layer type. Each `visit_*` method has an empty default body, so a concrete visitor only overrides the layer kinds it cares about.
+
+The `Const` template parameter, resolved through `GPlatesUtils::SetConst`, generates both a mutating and a read-only visitor from one definition: `LayerParamsVisitor` (`Const = false`) is handed to code that modifies a layer's params, `ConstLayerParamsVisitor` (`Const = true`) to code that only reads them. Concrete `LayerParams` subclasses accept one of these two typedefs in their own `accept_visitor` method to route the call to the matching `visit_*` overload.
 
 ## Declared types
 
@@ -61,9 +61,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerParamsVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Adding a new layer-params kind means adding a `visit_*` overload here (with a default no-op body to keep existing visitors compiling) and a forward declaration, plus wiring the corresponding `accept_visitor` in the new `LayerParams` subclass — the base class itself has no list of subclasses to keep in sync beyond these method declarations.
 
 ## Used by
 

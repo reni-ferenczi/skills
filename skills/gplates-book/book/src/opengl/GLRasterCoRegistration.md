@@ -9,9 +9,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLRasterCoRegistration tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Implements data-mining co-registration entirely on the GPU: for each seed
+(geometry) feature it collects the target raster pixels within a region of
+interest and reduces them to a single scalar per feature, per `Operation`
+(`OPERATION_MEAN`, `OPERATION_STANDARD_DEVIATION`, `OPERATION_MINIMUM` or
+`OPERATION_MAXIMUM`). `GPlatesDataMining` drives it as the back end for its
+raster co-registration filters; this class owns the shader programs, textures
+and framebuffer objects the algorithm needs and knows nothing about the
+data-mining configuration model itself.
+
+The pipeline renders each seed geometry's region of interest into a
+floating-point render target using the GLSL programs under
+`src/qt-resources/opengl/raster_co_registration/`, masks the reconstructed
+target raster (`GLMultiResolutionRasterInterface`) against it, then reduces the
+masked pixels with a sequence of `NUM_REDUCE_STAGES` GPU passes — one halving
+of the fixed `TEXTURE_DIMENSION` square render target per stage — down to a
+single value per seed. Point, multipoint, polyline and polygon seeds are
+batched into separate `SeedCoRegistrationGeometryLists` because each geometry
+type is rendered differently (polygons optionally fill their interior instead
+of only testing distance from the outline, via `Operation`'s `fill_polygons`
+flag). `co_register` processes every requested `Operation` for a batch of
+`ReconstructContext::ReconstructedFeature` seeds against one target raster in
+a single pass, which the header notes is far cheaper than running each
+operation separately.
+
+`is_supported` gates the whole feature on `GL_ARB_texture_float` (plus
+whatever `GLDataRasterSource` and texture-dimension limits require), since the
+algorithm depends on floating-point textures to carry raster values through
+the render-and-reduce pipeline without clamping or quantisation.
 
 ## Declared types
 
@@ -159,9 +184,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLRasterCoRegistration tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A `GLRasterCoRegistration` instance is reusable across runs: its data members
+(shader programs, streaming vertex/index buffers, framebuffer object) are
+constant across co-registrations, and anything specific to one raster or one
+set of seed geometries lives instead in the per-run `CoRegistrationParameters`
+or other nested classes — the header calls this out explicitly so a caller
+does not create a new instance per raster.
+
+Results are read back from the GPU asynchronously via `ResultsQueue`, which
+double-buffers pixel buffers (`NUM_PIXEL_BUFFERS = 2`) so the CPU can process
+one buffer's results while the GPU generates the next; `flush_results` should
+be called as late as possible to avoid stalling on the GPU. A seed *feature*
+can accumulate multiple partial results — one per geometry, or one per render
+target its geometry had to be split across — which must be combined (e.g.
+weight-averaged for `OPERATION_MEAN`) into the single result the feature's
+`Operation::get_co_registration_results()` entry reports. `create` returns
+`boost::none` when `is_supported` fails, so callers must check the runtime
+capability rather than assuming construction always succeeds.
 
 ## Used by
 

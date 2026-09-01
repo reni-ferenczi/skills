@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedScalarField3D tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedScalarField3D` is the `ReconstructionGeometry` produced for a 3D scalar field feature at a given reconstruction time, mirroring the same design as `ResolvedRaster`: it carries no field data of its own, only a reference to the `ScalarField3DLayerProxy` that actually computes the field, plus the reconstruction time it was resolved at. Consumers such as `GLVisualLayers` and the rendered-geometry factories query the layer proxy directly to obtain the field data for rendering; `ResolvedScalarField3D` exists mainly so a scalar-field layer's output participates in the same `ReconstructionGeometry` visitor and weak-observer machinery as every other kind of reconstruction geometry.
+
+As with other RG types, its constructor is protected and instances are created only through the static `create()`, matching the reference-counted `non_null_intrusive_ptr` ownership model used throughout the app-logic RG hierarchy.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedScalarField3D tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

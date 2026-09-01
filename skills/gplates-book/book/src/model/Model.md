@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/Model tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Model` is the concrete implementation of the Model tier: it owns the single
+`FeatureStoreRootHandle` that roots every loaded feature collection and feature,
+created fresh (empty) in the constructor and handed out to callers only as a
+`WeakReference<FeatureStoreRootHandle>` via `root()`. It is deliberately hidden
+behind `ModelInterface` using the p-impl idiom — code outside the model tier
+includes `ModelInterface.h`, never this header, so that `Model.h` (and the
+transitive includes it would otherwise force on every `.cc` file) stays a
+compiler firewall between the model tier and the rest of GPlates.
+
+The other two responsibilities are counters, not data structures:
+`d_notification_guard_count` tracks how many `NotificationGuard` instances are
+currently alive, and while it is above zero, handles in the model queue their
+change/deactivation/reactivation notifications instead of firing them
+immediately, flushing the queue only when the count returns to zero;
+`d_current_changeset_handle` tracks at most one active `ChangesetHandle`,
+registered on a first-come basis by `register_changeset_handle()`. Both counters
+are manipulated only through the private methods, which `ChangesetHandle` and
+`NotificationGuard` reach as declared friends.
 
 ## Declared types
 
@@ -46,9 +61,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/Model tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Deactivation notifications about a handle's impending C++ destruction always fire
+immediately, ignoring the notification-guard count. When the guard count drops
+back to zero, `decrement_notification_guard_count()` bumps it back up to one
+before calling `flush_pending_notifications()` and back down afterwards, so that
+a notification observer creating its own `NotificationGuard` during the flush
+does not recursively re-enter the flush. Only the first `ChangesetHandle` to
+register while none is current becomes `d_current_changeset_handle`; later
+registration attempts are silently ignored until it unregisters.
 
 ## Used by
 

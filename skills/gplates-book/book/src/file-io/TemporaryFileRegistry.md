@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/TemporaryFileRegistry tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A singleton registry that tracks temporary files to be deleted at application shutdown, as an alternative to `QTemporaryFile` when you need a file's lifetime to span the entire application run rather than a single object's lifetime. Register filenames with `add_file()`, and the destructor removes them all when the application exits. The unit provides a helper function to generate temp-directory paths and offers a convenience method to make a filename in the system temp directory while preserving the base name.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/TemporaryFileRegistry tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+As a singleton, there is only one instance created at application startup and destroyed at shutdown. Files are deleted in the destructor via `QFile::remove()` in the order they were registered. If a file is deleted externally before shutdown, `QFile::remove()` silently succeeds and continues; missing or already-deleted files do not raise errors. The temp directory path is computed once at first call and cached as a static variable, so changes to the system temp directory during execution are not reflected in subsequent calls.
 
 ## Used by
 

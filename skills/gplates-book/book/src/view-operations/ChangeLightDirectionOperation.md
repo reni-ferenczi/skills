@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/ChangeLightDirectionOperation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ChangeLightDirectionOperation` is the backend behind the "change light direction" canvas tool: the tool forwards mouse events (`mouse_move`, `start_drag`, `update_drag`, `end_drag`) to it, and it decides proximity, updates state and re-renders. It talks to `GPlatesGui::SceneLightingParameters` to read and write the current light direction, converting between view-space and world-space via `GPlatesGui::SimpleGlobeOrientation` whenever the light is attached to the view frame rather than the world. `GPlatesGui::ViewportZoom` is used to scale both the proximity threshold and the rendered arrow so hit-testing and the drawn arrow track the current zoom level.
+
+The light direction is drawn as a `RenderedRadialArrow` into its own child layer of `RenderedGeometryCollection`, redrawn on every move/drag call with a highlighted or unhighlighted colour scheme depending on cursor proximity. The map-view symbol size is hard-coded to zero because dragging the light direction is only supported in the globe view.
 
 ## Declared types
 
@@ -70,9 +70,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/ChangeLightDirectionOperation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Unlike geometry-editing operations, light-direction changes are applied directly to `SceneLightingParameters` and are not pushed onto the undo stack — dragging the light has no undo/redo history. `adjust_closeness_inclusion_threshold` relies on a small-angle approximation (`arcsin(size) ~ size`) to expand the hit-test radius by the arrow head's size, so it is only accurate for small projected arrow sizes.
 
 ## Used by
 

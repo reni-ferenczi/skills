@@ -9,9 +9,32 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GlobeRenderedGeometryLayerPainter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GlobeRenderedGeometryLayerPainter` implements `ConstRenderedGeometryVisitor`
+to turn every kind of `RenderedGeometry` a `RenderedGeometryLayer` can hold
+(points, polylines, polygons, arrows, symbols, rasters, 3D scalar fields,
+text) into batched vertex-stream primitives on a shared `LayerPainter`. Its
+`paint()` first culls the layer's spatial partition against the view frustum
+via `get_visible_rendered_geometries()`, then visits the surviving geometries
+in their original insertion order — `RenderedGeometryOrder` records that
+order separately because frustum-culling the `CubeQuadTreePartition` does not
+preserve it — before handing the accumulated stream primitives to
+`LayerPainter::end_painting()` to actually draw. `PaintRegionType` splits the
+same visitor into two uses: `PAINT_SURFACE` for the front of the globe (each
+`visit_rendered_*` method bails out immediately when the region does not
+match) and `PAINT_SUB_SURFACE` for geometries below the surface, which is
+currently only 3D scalar fields and needs the `surface_occlusion_texture`
+already rendered for the front surface to occlude correctly. The bulk of the
+`.cc` file is the individual `visit_rendered_*` methods and their
+`paint_arrow`/`paint_ellipse`/`paint_great_circle_arcs`-style geometry
+tessellation helpers, each translating one `RenderedGeometry` variant into
+triangles or lines sized in world space via `d_device_independent_pixel_to_world_space_ratio`
+and the `POINT_SIZE_ADJUSTMENT`/`LINE_WIDTH_ADJUSTMENT` constants so that
+point and line sizes stay constant in screen space regardless of zoom.
+
+`get_vector_geometry_colour()` is the single place that resolves a
+`ColourProxy` to a final `Colour`, applying `d_vector_geometries_override_colour`
+when set (used to render geometry on the globe's far side in gray) instead of
+each visit method querying the colour scheme directly.
 
 ## Declared types
 
@@ -112,9 +135,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GlobeRenderedGeometryLayerPainter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_layer_painter`, `d_frustum_planes` and `d_current_spatial_partition_location`
+are only valid for the duration of a `paint()` call (or, for the last one,
+only while a rendered geometry is being visited); code paths outside `paint()`
+must not dereference them. As the comment on `get_vector_geometry_colour()`
+notes, `ColourScheme`/`ColourProxy` colour resolution is largely vestigial —
+Python-driven colouring now stores colours directly on the `ColourProxy` —
+but the method is kept as the one place that can still override a geometry's
+colour (e.g. gray on the globe's rear).
 
 ## Used by
 

@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlAge tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlAge` is the `GPlatesModel::PropertyValue` for `gpml:Age`, and unlike the
+simple `gml:validTime` numeric ages elsewhere in this component, it is meant
+to carry real, possibly messy geological age data. The header is explicit
+about why: it must support an age expressed as an absolute number in Ma
+(`d_age_absolute`), a named stratigraphic or geomagnetic band from a
+`TimescaleBand`/`TimescaleName` pair (`d_age_named`, `d_timescale`), or both
+at once, because legacy data and pragmatic UI editing both demand it — the
+class makes no attempt to force a single canonical representation. The same
+pattern repeats for uncertainty: it can be a simple `d_uncertainty_plusminus`
+in My, or an asymmetric youngest/oldest range where each end is independently
+either an absolute value or a named band. `age_type()` and
+`uncertainty_type()` are convenience methods that classify which combination
+of optionals is currently populated (`AgeDefinition::AGE_ABSOLUTE`/`AGE_NAMED`/
+`AGE_BOTH`/`AGE_NONE` and the analogous `UncertaintyDefinition` values), so
+callers such as `EditAgeWidget` don't have to re-derive that logic themselves.
+
+Every setter is independent and side-effect-free with respect to the other
+fields: setting an absolute age does not clear a named age, and setting the
+plus-or-minus uncertainty does not clear the range uncertainty. The header
+states this is deliberate — callers (typically a UI populating every field
+explicitly from its widgets) are expected to clear what they mean to clear
+themselves, rather than have the setters guess and silently drop data.
 
 ## Declared types
 
@@ -86,9 +105,20 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlAge tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- No field is authoritative over another: `d_age_absolute` and `d_age_named`
+  can disagree, and the header explicitly declines to define which one wins
+  once both are present — that decision is left to callers.
+- The uncertainty range fields (`d_uncertainty_youngest_absolute`/`_named`,
+  `d_uncertainty_oldest_absolute`/`_named`) are constrained to hold at most one
+  of absolute-or-named per end (a design choice the header attributes to
+  keeping the `EditAgeWidget` UI tractable), but nothing in the type system
+  enforces this — it is only upheld by convention in the setters.
+- `set_timescale()` records the timescale name only; it does not convert any
+  already-stored absolute ages into that timescale, nor validate that any
+  named age actually belongs to it.
+- `deep_clone()` is equivalent to `clone()` here, since every field is a
+  `boost::optional` of a value type or a `StringSet`-backed handle, not a
+  pointer to another mutable `PropertyValue`.
 
 ## Used by
 

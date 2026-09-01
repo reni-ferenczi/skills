@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportDeformationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportDeformationAnimationStrategy` is the `ExportAnimationStrategy` (Gamma et al. Strategy role, driven by `ExportAnimationContext`) that writes per-frame deformation output — principal strain, dilatation strain, dilatation and second-invariant strain rate, and strain-rate style — for the `TopologyReconstructedFeatureGeometry` objects produced by active reconstruct layers. Its nested `Configuration` carries the shared options; `GpmlConfiguration` and `GMTConfiguration` extend it with the fields specific to each output format, and `do_export_iteration()` `dynamic_cast`s `d_configuration` to whichever of the two matches `file_format` before writing.
+
+Free functions in the anonymous namespace walk from `ViewState` down to the actual geometries to export: `get_visible_reconstruct_visual_layers()` finds the visible reconstruct `VisualLayer`s, `get_visible_reconstruct_layer_proxies()` resolves each to its `ReconstructLayerProxy` output, and `populate_visible_deformed_feature_geometry_seq()` pulls their `ReconstructedFeatureGeometry` results and filters them down to `TopologyReconstructedFeatureGeometry` instances — the only ones deformation applies to. The actual file writing is delegated to `GPlatesFileIO::DeformationExport`.
 
 ## Declared types
 
@@ -56,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportDeformationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`do_export_iteration()` assumes `d_configuration` actually points to a `GpmlConfiguration` or `GMTConfiguration` matching its own `file_format`; the `dynamic_cast` to the derived type throws `std::bad_cast` if that invariant is broken (for example if a `Configuration` is constructed directly rather than through one of the two subclasses). Like the sibling reconstructed-geometry export strategy, `d_loaded_files` is captured once in the constructor and not refreshed for later frames.
 
 ## Used by
 

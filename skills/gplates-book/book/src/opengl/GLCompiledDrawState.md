@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLCompiledDrawState tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLCompiledDrawState` is an opaque, reference-counted bundle of an OpenGL state change and an optional sequence of draw calls, produced by `GLRenderer` when it compiles a block of rendering commands. It plays the same role as an OpenGL display list, but is implemented so it can be replayed across different OpenGL contexts — a constraint that matters because `GLVertexArrayObject` cannot normally share native vertex array objects across contexts.
+
+The class exposes almost nothing to general client code: `get_state` is documented as being for the render framework's own use, and construction is private, reachable only by `GLRenderer` and `GLRendererImpl::StateBlock`. Callers elsewhere in the codebase (for example `GLAgeGridMaskSource`) simply hold a compiled draw state's `non_null_ptr_type` and hand it back to `GLRenderer` to replay, without inspecting its contents.
 
 ## Declared types
 
@@ -41,9 +41,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLCompiledDrawState tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The state returned by `get_state` is not immutable in the usual sense of "const": it reflects the compiled state at the time of the call and can change later if more state is compiled into the same `GLCompiledDrawState`.
+- Construction is private; only `GLRenderer` and `GLRendererImpl::StateBlock` can create instances, so this type should be treated as an opaque handle rather than something to build directly.
 
 ## Used by
 

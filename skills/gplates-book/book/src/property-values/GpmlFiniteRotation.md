@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlFiniteRotation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlFiniteRotation` is the property-value wrapper around a `GPlatesMaths::FiniteRotation`, i.e. a single pole-and-angle rotation used as one sample within a total reconstruction sequence (`GpmlIrregularSampling` holds a time series of these). Alongside the rotation it carries an optional `GPlatesModel::MetadataContainer` recording provenance metadata (e.g. rotation-file comment fields) attached to that sample.
+
+Three overloaded `create` functions build an instance from an already-constructed `GPlatesMaths::FiniteRotation`, from a raw `(longitude, latitude)` Euler-pole pair plus an angle in degrees, or from `GmlPoint`/`GpmlMeasure` property values holding the same data; a fourth, `create_zero_rotation`, builds the identity rotation. The two Euler-pole overloads exist, per the header's own comment, purely to support ad hoc hard-coded feature construction and are not necessarily the "proper" way to build a rotation going forward. `is_zero_rotation` delegates to `GPlatesMaths::represents_identity_rotation` on the wrapped unit quaternion; a zero rotation has no determinate Euler pole, so callers that need to extract a pole from a `GpmlFiniteRotation` must check this first.
 
 ## Declared types
 
@@ -56,9 +56,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlFiniteRotation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- A zero (identity) rotation has no determinate Euler pole; the header warns that attempting to compute an Euler pole from a zero-rotation instance throws.
+- The header itself flags `MetadataContainer` as a known weak spot: a `const` `GpmlFiniteRotation::metadata()` reference still allows the caller to mutate the contained metadata objects in place, bypassing the model's revisioning.
+- Copy-assignment is declared `private` and never defined; use `clone()` instead.
 
 ## Used by
 

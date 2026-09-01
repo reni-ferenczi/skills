@@ -10,9 +10,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CreateSmallCircleDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CreateSmallCircleDialog` lets the user add one or a family of small circles
+(latitude/longitude parallels around an arbitrary centre) to a `SmallCircleWidget`,
+which owns the resulting collection. It supports two independent ways of choosing
+the centre: type latitude/longitude directly, or check "stage pole" and let
+`handle_calculate()` derive the centre from the stage rotation between two plate
+IDs at two reconstruction times, computed through `RotationUtils::get_stage_pole()`
+against the `ReconstructionTree`s for those times and converted to a
+`GPlatesMaths::LatLonPoint` via the file-local `get_axis_llp_from_rotation()`. The
+radius can likewise be a single value or a range (start/stop/step), stepped over
+in `handle_preview()` to build a `GPlatesMaths::SmallCircle` per radius; `radio_button_single`
+and `radio_button_multiple` toggle which set of spin boxes is enabled.
 
 ## Declared types
 
@@ -50,9 +58,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CreateSmallCircleDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`handle_preview()` silently does nothing for the "multiple" case when
+`fields_are_valid()` rejects the range (non-positive radius, non-positive step, or
+end before start) beyond calling `highlight_invalid_radius_fields()` to turn the
+radius fields red; it does not stop the "single" circle (if also requested) from
+being added. The dialog is deliberately left open after `handle_preview()` adds
+circles (a `// FIXME` notes this may be revisited) rather than closing on each
+addition. `init()` must be called after construction to seed `spinbox_time_1` with
+the current reconstruction time; it is not called from the constructor.
 
 ## Used by
 

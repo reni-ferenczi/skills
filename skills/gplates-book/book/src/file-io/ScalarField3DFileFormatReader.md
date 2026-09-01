@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ScalarField3DFileFormatReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Reader` opens a file laid out per `GPlatesFileIO::ScalarField3DFileFormat` and validates its header before exposing any data: it checks the file is long enough to hold a header, verifies `MAGIC_NUMBER` byte by byte, compares the stored total file size against the actual size on disk (catching a file left truncated by a GPlates instance that crashed or was killed mid-write), and reads the version number to decide how to parse the rest.
+
+The public interface hides format-versioning behind a small Pimpl/strategy split: the constructor picks a concrete `ReaderImpl` — currently only `VersionOneReader` — based on the version field, and every accessor and `read_*` method on `Reader` simply forwards to `d_impl`. The `.cc` shows this is meant to scale: a comment sketches how a later `VersionThreeReader` could take over for newer versions while `VersionOneReader` keeps serving older ones, without changing `Reader`'s public API. `VersionOneReader::VersionOneReader` reads the fixed-size header fields (tile/depth-layer counts, radii, summary statistics) once at construction and records the file offsets of the field-data, mask-data and tile-metadata blocks that follow; `read_tile_meta_data`, `read_field_data` and `read_mask_data` then `QFile::seek` to the relevant offset on each call rather than streaming sequentially, so callers can request an arbitrary sub-range of layers or tiles (e.g. to stream a scalar field incrementally into `GLScalarField3D` textures).
 
 ## Declared types
 
@@ -60,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ScalarField3DFileFormatReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The constructor throws `ErrorOpeningFileForReadingException` if the file cannot be opened, `FileFormatNotSupportedException` for a bad magic number, wrong file length, or other header inconsistency, and `ScalarField3DFileFormat::UnsupportedVersion` for a recognised-but-unhandled version number. Each `read_*` method also throws `FileFormatNotSupportedException` if its seek fails. `Reader` is `boost::noncopyable` and keeps the `QFile` open for the object's lifetime, since `read_tile_meta_data`, `read_field_data` and `read_mask_data` seek and read from it lazily on every call rather than buffering the whole file up front; the `boost::shared_array` buffers they return are independent in-memory copies that remain valid after the `Reader` is destroyed.
 
 ## Used by
 

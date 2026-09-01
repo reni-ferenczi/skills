@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ArbitraryXmlProfile tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ArbitraryXmlProfile` is a small abstract interface for plugging a schema-specific XML parsing strategy into `ArbitraryXmlReader`. It declares no state of its own, only three pure virtual operations: populate a `File::Reference` in place, populate an already-created `FeatureCollectionHandle::weak_ref` from an in-memory `QByteArray` of XML, and count the features a chunk of XML would produce without fully loading it. The one concrete implementation, `GeoscimlProfile`, supplies the GeoSciML-specific logic for turning arbitrary XML documents into GPlates features; `ArbitraryXmlReader` holds a profile through this interface and delegates to it, so the reader itself stays independent of any particular XML vocabulary.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ArbitraryXmlProfile tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

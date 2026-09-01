@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/VelocityFieldCalculatorLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VelocityFieldCalculatorLayerParams` is the `LayerParams` specialisation for a velocity-field-calculator layer: it holds the single `VelocityParams` value (delta time, delta time type, solving method and so on) that configures how the layer's `VelocityFieldCalculatorLayerProxy` computes velocities, and nothing else. Like other `LayerParams` subclasses it is a thin, signal-emitting wrapper around its data rather than a place where any velocity computation happens — that lives in the layer proxy.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/VelocityFieldCalculatorLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_velocity_params()` is a no-op when the new value equals the current one (`VelocityParams::operator==`); only an actual change emits `modified_velocity_params` and the base class's `modified` signal. Code that depends on those signals firing every time must not assume calling the setter always triggers them.
 
 ## Used by
 

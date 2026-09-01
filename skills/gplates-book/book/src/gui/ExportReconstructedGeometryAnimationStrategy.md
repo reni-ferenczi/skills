@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportReconstructedGeometryAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportReconstructedGeometryAnimationStrategy` is the concrete `ExportAnimationStrategy` that writes reconstructed feature geometries (RFGs) to file at each animation frame, in one of `SHAPEFILE`, `OGRGMT`, `GMT` or `GEOJSON` format. Its `Configuration` reuses `ExportOptionsUtils::ExportFileOptions` for the single-file/multiple-file/per-directory choices, and adds `wrap_to_dateline` for geometries that cross the antimeridian.
+
+At construction it snapshots two file lists from the current `GPlatesAppLogic::ApplicationState`: every currently loaded feature collection file (`d_loaded_files`), and the input files feeding the active `RECONSTRUCTION`-type layers in the `ReconstructGraph` (`d_loaded_reconstruction_files`). `do_export_iteration` passes these lists, along with the current rendered geometry collection, anchored plate id and view time, straight through to `GPlatesViewOperations::VisibleReconstructionGeometryExport::export_visible_reconstructed_feature_geometries`, which does the actual geometry extraction and file writing.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportReconstructedGeometryAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_loaded_files` and `d_loaded_reconstruction_files` are captured once, in the constructor, from the file state at strategy-creation time; files loaded or unloaded after that are not reflected in later frames of the same export run.
 
 ## Used by
 

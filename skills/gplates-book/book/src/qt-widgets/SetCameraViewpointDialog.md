@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SetCameraViewpointDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SetCameraViewpointDialog` is a small modal dialog, built from `SetCameraViewpointDialogUi.ui`, that lets the user type an explicit latitude/longitude for the camera instead of dragging the globe. It fixes its own window flags (no resize, no minimize/maximize, no context help button) via `Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::MSWindowsFixedSizeDialogHint`, so it behaves as a plain fixed-size prompt rather than a normal resizable window.
+
+`set_lat_lon()` both seeds the two spin boxes with the camera's current position and pre-selects the latitude field so a caller who opens the dialog can start typing a replacement value immediately; `latitude()` and `longitude()` then read back whatever the user entered once the dialog is accepted.
 
 ## Declared types
 
@@ -40,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SetCameraViewpointDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionLayerProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionLayerProxy` is the `LayerProxy` for a rotation-file layer: it turns the connected rotation `GPlatesModel::FeatureCollectionHandle`s into `ReconstructionTree` objects on demand, for whatever reconstruction time and anchor plate ID a caller asks for. Trees are built lazily and cached by a `CachedReconstructionTreeCreatorImpl` (`d_cached_reconstruction_trees`), which is constructed on first use and can hold up to `DEFAULT_MAX_NUM_RECONSTRUCTION_TREES_IN_CACHE` (512) trees — sized that large specifically so flowlines, which query many distinct reconstruction times, do not thrash the cache; the header documents the roughly 370MB memory cost of a fully-populated cache versus 150MB for the ordinary size-64 case.
+
+Because other code needs to hold onto a `ReconstructionTreeCreator` across time even though this proxy's internal cache is destroyed and rebuilt whenever its inputs change, `get_reconstruction_tree_creator()` never returns that internal cache directly. Instead it wraps `this` in the anonymous-namespace `DelegateReconstructionTreeCreator`, which forwards every call back through the proxy's own `get_reconstruction_tree` methods — so a client's cached `ReconstructionTreeCreator` handle stays valid and picks up later changes (new feature collections, a different anchor plate, a larger cache-size hint) without the client having to requery the layer graph.
+
+Mutators like `set_current_anchor_plate_id`, `set_current_reconstruction_params`, `add_reconstruction_feature_collection` and `remove_reconstruction_feature_collection` all route through the private `invalidate()`, which drops the cached trees, resets the cache size back to its default, and fires `d_subject_token` so polling observers (typically downstream layers) know to recompute. `set_current_reconstruction_time`, by contrast, deliberately does *not* invalidate anything: an uncached time simply builds a new tree on request, and notifying observers on every time change would force them to discard time-keyed caches of their own for no benefit.
 
 ## Declared types
 
@@ -75,9 +77,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionLayerProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The cache size hint passed to `get_reconstruction_tree_creator` can only raise the cache above `d_default_max_num_reconstruction_trees_in_cache`, never below it; a smaller hint is silently clamped back to the default so one caller cannot degrade caching for others.
+- Any call that invalidates the cache (anchor plate change, reconstruction params change, feature-collection add/remove/modify) also resets the current cache size to the default, so a previously granted larger-cache hint must be re-requested after invalidation.
+- `set_current_reconstruction_time` skips both cache invalidation and the subject-token notification by design — see the `#if 0`-guarded comment in the `.cc` explaining why notifying on every time change would be counterproductive for observers that cache per-time results.
 
 ## Used by
 

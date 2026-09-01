@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/FunctionTypes tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::FunctionTypes` is a hand-written, pre-C++11 substitute for
+`Boost.FunctionTypes`, kept because the codebase originally targeted a Boost
+version older than 1.35. `component_types<FunctionType>` is specialised by
+hand for every combination of arity (0 through 9 arguments) and calling
+convention (free function pointer, non-const member function pointer, const
+member function pointer) that the codebase actually needs; each
+specialisation exposes a `types` typedef that is a `boost::mpl::vector` of
+the result type followed by the parameter types, with a member-pointer's
+implicit `Class` receiver type counted as the first parameter to match
+Boost's own convention. `function_arity<FunctionType>` then derives the
+parameter count from the size of that vector. Because only the exact
+signatures used elsewhere in the tree are specialised, volatile functions,
+variadic functions and arities beyond 9 are unsupported — anything else fails
+to compile as an undefined-template error rather than falling back to a
+generic implementation.
 
 ## Declared types
 
@@ -251,9 +263,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/FunctionTypes tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The header comment notes that once the project's minimum Boost version rose
+to 1.35, `Boost.FunctionTypes` could replace this namespace outright, with
+only a namespace change needed in client code — this file was never migrated.
 
 ## Used by
 

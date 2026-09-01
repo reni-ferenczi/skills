@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapRenderedGeometryCollectionPainter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MapRenderedGeometryCollectionPainter` is the map view's counterpart to the
+globe's rendered-geometry painter: it walks a
+`GPlatesViewOperations::RenderedGeometryCollection` via the
+`ConstRenderedGeometryCollectionVisitor` interface and draws each active,
+non-empty `RenderedGeometryLayer` with a per-layer
+`MapRenderedGeometryLayerPainter`, accumulating each layer's `paint()`
+result into a `cache_handle_type` vector to hand back to the caller.
+`get_custom_child_layers_order()` overrides the visit order for the
+reconstruction main layer only, delegating to
+`GPlatesPresentation::VisualLayers::get_layer_order()` so that layers paint in
+the user's configured stacking order rather than the collection's own order;
+every other main layer uses the base visitor's default order.
+
+`paint()` stashes the renderer, zoom and pixel-ratio arguments in a transient
+`PaintParams`, invokes the visitor over the collection, then clears
+`d_paint_params` again — this state exists only for the duration of one
+`paint()` call and is not valid outside it. `d_map_projection` and
+`d_gl_visual_layers` are passed straight through to each layer painter so
+projection and cached OpenGL resources are shared consistently across layers.
 
 ## Declared types
 
@@ -52,9 +68,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapRenderedGeometryCollectionPainter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_paint_params` is only populated between the start and end of a `paint()`
+  call; the private visitor callbacks (`visit_main_rendered_layer`,
+  `visit_rendered_geometry_layer`) assume it is set and will dereference a
+  `boost::none` if invoked outside that window.
+- `initialise()` must be called once with a valid `GLRenderer` before the first
+  `paint()`, since it initialises the shared `LayerPainter`.
+- `set_scale()` is used when this painter draws a scaled-down copy of the map
+  (e.g. an overview/thumbnail view); the scale is forwarded to each layer's
+  `MapRenderedGeometryLayerPainter`.
 
 ## Used by
 

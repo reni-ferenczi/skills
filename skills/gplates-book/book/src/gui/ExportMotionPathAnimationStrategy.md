@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportMotionPathAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportMotionPathAnimationStrategy` is the `ExportAnimationStrategy` (Gamma et al. Strategy role, driven by `ExportAnimationContext`) that writes motion path geometries per animation frame, in GMT, shapefile, OGR-GMT or GeoJSON format according to `Configuration::file_format`. It is structured identically to `ExportFlowlineAnimationStrategy` — same constructor logic for snapshotting loaded feature-collection files and active reconstruction input files, same `substitute_placeholder()`/`calculate_output_basename()` filename-templating helpers — with motion paths substituted for flowlines as the exported geometry type.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportMotionPathAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The class's own Doxygen comment ("writing plate velocity meshes") is stale, copy-pasted from another export strategy — the code exports motion paths, not velocity meshes.
 
 ## Used by
 

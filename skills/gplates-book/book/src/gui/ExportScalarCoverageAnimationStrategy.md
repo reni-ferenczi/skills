@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportScalarCoverageAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportScalarCoverageAnimationStrategy` writes reconstructed scalar coverages (per-point scalar values attached to reconstructed geometries, such as crustal thickness or strain) to file at each animation frame, in either `GPML` or `GMT` format. Unlike the sibling export strategies, its `Configuration` is abstract for the shared fields (file options, and whether to include dilatation strain, dilatation strain rate and the second invariant of strain rate); callers must actually construct one of the two subclasses, `GpmlConfiguration` or `GMTConfiguration` — the latter adding a `DomainPointFormatType` for whether domain points are written lon/lat or lat/lon — matching the `file_format` they set.
+
+`do_export_iteration` collects the currently visible `GPlatesAppLogic::ReconstructedScalarCoverage` objects via `populate_visible_reconstructed_scalar_coverage_seq`, `dynamic_cast`s the configuration to the subclass matching `file_format`, and forwards to `GPlatesFileIO::ReconstructedScalarCoverageExport::export_reconstructed_scalar_coverages_to_gpml_format` or `..._to_gmt_format` accordingly.
 
 ## Declared types
 
@@ -57,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportScalarCoverageAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_configuration->file_format` must agree with the runtime type of the `Configuration` object passed in: `do_export_iteration` `dynamic_cast`s to `GpmlConfiguration` for `GPML` and to `GMTConfiguration` for `GMT`, and a mismatch throws `std::bad_cast`. `wrap_up` is currently a no-op placeholder for any finishing step a future export format might need.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructParams` is a plain value object holding the tunable options that steer how a feature is turned into `ReconstructedFeatureGeometry` objects, separate from the per-feature data a `ReconstructMethodInterface` reads off the feature itself. Two groups of settings live here: whether to reconstruct by-plate-id features outside their active time period (used by raster-plus-age-grid reconstruction, so ocean floor polygons stay available even after the age grid has made them disappear), and a larger set of topology-reconstruction controls — the begin/end time and time increment for incremental topological reconstruction, whether to use natural-neighbour interpolation for deformation, whether to key the starting time off a feature's time of appearance instead of its `gpml:geometryImportTime`, line tessellation, and the thresholds that drive lifetime detection (deactivating points that migrate off a network boundary or move too fast relative to it).
+
+It is comparable (`boost::equality_comparable`, `boost::less_than_comparable`) so layer params objects that embed it can detect configuration changes, and it is `Scribe`-transcribable so its settings persist in sessions and projects.
 
 ## Declared types
 
@@ -84,9 +84,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Default construction sets `reconstruct_by_plate_id_outside_active_time_period` to `false` and seeds the topology time range to end=0, begin=20, increment=1 (Ma) with a 0.5-degree line tessellation — these are UI/session defaults, not physically meaningful values, and callers that care about correctness for a given dataset must set them explicitly.
 
 ## Used by
 

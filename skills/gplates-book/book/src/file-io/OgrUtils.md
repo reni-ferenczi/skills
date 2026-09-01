@@ -9,9 +9,30 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OgrUtils` is the free-function toolbox shared by `OgrReader` and the OGR export
+path (`OgrWriter`, `OgrFeatureCollectionWriter`, the `OgrFormat*Export` units). It
+covers two unrelated jobs bundled under one historical name (the header's original
+guard, `GPLATES_FILEIO_SHAPEFILEUTILS_H`, dates from when OGR support meant
+shapefiles specifically).
+
+The first job is mapping between old PLATES-style two-letter feature codes (`"CB"`,
+`"TR"`, `"IS"`, …) and GPGIM feature type strings via `build_feature_map`, plus
+matching an OGR `wkb_type` against the structural types a GPGIM property allows
+(`wkb_type_belongs_to_structural_types`, `get_structural_type_of_wkb_type`); these
+support the attribute-mapping workflow in `OgrReader`, together with
+`make_ogr_xml_filename` and `save_attribute_map_as_xml_file`, which locate and
+persist the `<name>.<ext>.gplates.xml` sidecar that remembers a shapefile's
+field-to-property mapping between loads.
+
+The second job, the bulk of the `add_*_to_kvd` functions, builds a
+`GpmlKeyValueDictionary` of a feature's standard properties (plate ID, feature
+type, valid time, name, feature ID, conjugate/left/right plate, reconstruction
+method, …) for writing out as shapefile attributes on export —
+`add_standard_properties_to_kvd` calls each of them in turn. `create_default_kvd_from_collection`
+scans every feature in a collection and unions the keys of whatever
+`GpmlKeyValueDictionary` each one already carries, so every feature in an exported
+shapefile is written with the same attribute schema even if individual features
+had different keys.
 
 ## Declared types
 
@@ -77,9 +98,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `build_feature_map`'s two-letter-code table is a second, independent copy of the
+  mapping also used in `PlatesLineFormatReader`; the header's own `FIXME` notes
+  they should come from one common source.
+- A feature-type field can instead hold the full GPGIM-style type string rather
+  than a two-letter code; `feature_type_field_is_gpgim_type` distinguishes the two
+  so callers know which lookup to use.
+- `create_default_kvd_from_collection` keeps the *last* value seen for any key
+  that appears in more than one feature's dictionary — earlier features'
+  attribute values for that key are overwritten, not merged.
 
 ## Used by
 

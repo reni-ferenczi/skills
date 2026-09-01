@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/SpatialReferenceSystem tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SpatialReferenceSystem` wraps GDAL/OGR's `OGRSpatialReference`, giving GPlates code a reference-counted handle it can pass around (via `non_null_ptr_type`) instead of managing the C-API's own reference counting directly. `create()` clones the given `OGRSpatialReference` into a freshly allocated one owned by this object, and `get_WGS84()` provides a shared, lazily-constructed constant for the common WGS84 case, including a GDAL-3.0-specific `SetAxisMappingStrategy()` call to keep longitude-first, latitude-second axis order across GDAL versions.
+
+`get_ogr_srs()` exposes the wrapped `OGRSpatialReference` by reference for callers — such as `CoordinateTransformation` and the OGR/GDAL readers and writers — that need to hand it directly to OGR/GDAL APIs.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/SpatialReferenceSystem tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The wrapped `OGRSpatialReference` is deliberately allocated with `OSRNewSpatialReference()` rather than `new`, so it lives in OGR's own memory heap — on Windows, each DLL can have a separate heap, so an object allocated by GPlates and freed by OGR (or vice versa) could otherwise corrupt memory. `OGRSpatialReferenceReleaser` releases it via `OSRRelease()` (an OGR reference-count decrement, not necessarily a delete) instead of a plain destructor call, because `get_ogr_srs()` lets external OGR/GDAL code take its own reference to the same object; the underlying `OGRSpatialReference` is only actually destroyed once every such reference, not just this wrapper, has released it.
 
 ## Used by
 

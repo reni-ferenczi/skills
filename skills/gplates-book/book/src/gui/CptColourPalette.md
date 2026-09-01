@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/CptColourPalette tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header implements GMT-style CPT (colour palette table) files as in-memory `ColourPalette<T>` subclasses. `CptColourPalette<EntryType>` is the shared base: it holds an ordered `std::vector<EntryType>` plus optional background, foreground and NaN colours, and `get_colour()` walks the entries linearly, falling back to background/foreground/NaN as appropriate. The template is instantiated two ways to cover the two CPT file variants described in the GMT documentation linked in the header: `RegularCptColourPalette` (`EntryType = ColourSlice`) interpolates a colour gradient between two real-valued bounds per row, while `CategoricalCptColourPalette<T>` (`EntryType = ColourEntry<T>`) maps discrete keys to flat colours, with a `T`-dependent specialisation of `ColourEntry` — a non-integral `T` compares by label, an integral `T` compares by an integer key — chosen via `boost::enable_if`/`disable_if` on `boost::is_integral<T>`.
+
+The `CptColourPaletteInternals` and `CategoricalCptColourPaletteInternals` namespaces hold the compile-time-dispatched helpers (`MakeColourEntry`, `UseForegroundBackgroundColour`, `GetRange`, `AcceptVisitor`) that let the same `CategoricalCptColourPalette<T>` template behave correctly whether `T` is an integer key type (where background/foreground colours and a numeric range make sense) or an arbitrary label type (where they do not, and `accept_visitor()` only forwards to a `ColourPaletteVisitor` for the two integer specialisations, `boost::int32_t` and `boost::uint32_t`, that the visitor interface actually supports). `ColourScaleAnnotation::Type` and its `GPlatesUtils::Parse` specialisation exist to parse the `A`/`L`/`U`/`B` annotation flags GMT uses to mark which end of a colour-scale slice should be labelled when rendered.
 
 ## Declared types
 
@@ -254,9 +254,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/CptColourPalette tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`add_entry()` requires entries to be appended in increasing order for regular CPT files and for categorical files with an integer value type — `use_background_colour()`/`use_foreground_colour()` and `get_colour()`'s linear scan both assume sorted, non-overlapping entries and give wrong answers silently if that invariant is violated. `ColourSlice::can_handle()` and the foreground/background comparisons deliberately avoid epsilon comparisons on floating-point values, trading strict correctness at slice boundaries for speed when classifying millions of raster pixels. For categorical palettes whose value type is not integral, background, foreground and range queries are unconditionally disabled (`GetRange` returns `boost::none`, `UseForegroundBackgroundColour` always returns `false`) because label values have no defined order. `CptColourPalette` is reference-counted through `GPlatesUtils::non_null_intrusive_ptr` (via `RegularCptColourPalette`/`CategoricalCptColourPalette`'s `create()` factories and private constructors) rather than being constructed directly.
 
 ## Used by
 

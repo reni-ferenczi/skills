@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTimeSample tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlTimeSample` is a plain value type, not a `PropertyValue` itself: it is the element type held inside `GpmlIrregularSampling`, pairing a sampled `PropertyValue` (`value()`) with the `GmlTimeInstant` at which it was sampled (`valid_time()`), an optional human-readable `description()`, the sample's `StructuralType` (fixed at construction, no setter, since a sampling sequence must keep a single value type across all its samples), and an `is_disabled()` flag that lets a sample be switched off without removing it from the sequence.
+
+This is the model used most heavily for total reconstruction sequences: `file-io/PlatesRotationFormatReader` and `qt-widgets/EditTotalReconstructionSequenceWidget` build and edit rotation sequences as lists of `GpmlTimeSample`, and `feature-visitors/TotalReconstructionSequenceRotationInterpolater` interpolates finite rotations between consecutive samples. `deep_clone()` recursively clones the wrapped value, the time instant and the optional description rather than sharing them, and `operator==` compares all fields by value (including a null-safe comparison of the optional description).
 
 ## Declared types
 
@@ -53,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTimeSample tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`description()` may hold a null `boost::intrusive_ptr<XsString>`; callers must check it before dereferencing, and `operator==`/`deep_clone()` already handle the null case correctly, so prefer them over ad hoc comparisons.
 
 ## Used by
 

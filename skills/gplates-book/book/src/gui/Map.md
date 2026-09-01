@@ -9,9 +9,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Map tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::Map` is the flat-map counterpart to `Gui::Globe`: it holds the
+state behind `MapCanvas`/`MapView` and draws the map background, the lat/lon
+`MapGrid`, and every visible `RenderedGeometry` (via a
+`MapRenderedGeometryCollectionPainter` it owns), analogous to how `Globe`
+composes `Stars`/`OpaqueSphere`/`SphericalGrid`/`GlobeRenderedGeometryCollectionPainter`.
+Unlike the globe, it also owns a `MapProjection` and exposes
+`projection_type()`/`set_projection_type()` and `central_meridian()`/
+`set_central_meridian()` so the same rendered-geometry data can be reprojected
+(e.g. Mercator, Robinson) and recentred without touching the underlying model.
+As with `Globe`, `d_background` and `d_grid` are `boost::optional` because
+they wrap OpenGL resources that cannot be built before `initialiseGL()` runs
+against a bound context.
 
 ## Declared types
 
@@ -53,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Map tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

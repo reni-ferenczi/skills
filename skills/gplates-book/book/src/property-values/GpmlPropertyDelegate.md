@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlPropertyDelegate tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlPropertyDelegate` is a `GPlatesModel::PropertyValue` that points at a property on a *different* feature, rather than holding a value itself: it stores the target's `GPlatesModel::FeatureId`, the `GPlatesModel::PropertyName` of the property to read on that feature, and the expected `StructuralType` of that property's value. It is how GPML topology geometry — `GpmlTopologicalLineSection`, `GpmlTopologicalPoint`, `GpmlTopologicalNetwork` — refers to the source features that supply its boundary or section geometry, since a topology is defined in terms of other features' geometry rather than owning coordinates directly.
+
+The value type is fixed at construction and has no setter, since resolving a delegate depends on the referenced property actually having that type. `print_to()` renders the delegate as `<feature-id>:<aliased-property-name>` for diagnostic output.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlPropertyDelegate tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

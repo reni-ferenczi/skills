@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlFile tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlFile` is the `PropertyValue` for `gml:File`: it records a referenced file's name,
+structure, optional MIME type and compression, plus `range_parameters` describing the
+GML "range set" the file provides. Its distinguishing feature is that when the
+referenced file is a raster, `create()` immediately builds a `ProxiedRasterCache` from
+`file_name_`, and `proxied_raw_rasters()` / `get_spatial_reference_system()` just
+forward to it — so a `GmlFile` property value doubles as the entry point through which
+raster layers (see `app-logic/RasterLayerProxy`) get at proxied `RawRaster` bands and
+the raster's spatial reference system, without loading the raster data itself until
+something actually asks for it.
+
+`set_file_name()` re-creates the raster cache for the new filename (and can report
+read errors through an optional `GPlatesFileIO::ReadErrorAccumulation`), but changing
+`file_structure`, `mime_type` or `compression` never touches the cache — those fields
+are metadata about the file, not about how it is opened.
 
 ## Declared types
 
@@ -64,9 +75,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlFile tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`clone()` shares the same `d_proxied_raster_cache` pointer between original and copy
+rather than duplicating it, and `deep_clone()` is a plain `clone()` on the stated
+assumption that the class holds no *mutable* objects by pointer — so a clone and its
+original see the same cached raster bands until one of them calls `set_file_name()`,
+which only rebinds that instance's own `d_proxied_raster_cache` pointer to a newly
+created cache rather than mutating the shared object.
 
 ## Used by
 

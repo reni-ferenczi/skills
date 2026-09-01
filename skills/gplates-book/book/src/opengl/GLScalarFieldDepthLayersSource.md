@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLScalarFieldDepthLayersSource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLScalarFieldDepthLayersSource` is a `GLMultiResolutionRasterSource` implementation that feeds `GLScalarField3DGenerator`: it wraps a set of proxied depth-layer rasters (each a `RawRaster` at a normalised `[0,1]` sphere depth radius) and, for whichever depth layer is currently selected via `set_depth_layer()`, produces tiles whose floating-point RGBA texels hold a scalar value in the red channel and its gradient in green/blue/alpha — the same layout `GPlatesFileIO::ScalarField3DFileFormat::FieldDataSample` expects on disk. Because a gradient needs neighbouring samples, `load_tile()` loads the target layer plus its two adjacent depth layers into working-space buffers (`d_tile_scalar_data_working_space[3]`) before `generate_scalar_gradient_values()` differentiates across them; when an adjacent layer's tile can't be loaded, `load_default_scalar_gradient_values()` fills in a fallback.
+
+`create()` validates its input up front, returning `boost::none` if any raster in `depth_layers` is not a proxy, is uninitialised, isn't numeric (as opposed to colour RGBA), if the rasters have mismatched dimensions, or if `is_supported()` fails; layers need not be pre-sorted by depth. Rendering the depth-layer source itself requires the `GL_ARB_texture_float` extension (for the `GL_RGBA32F_ARB` target format) plus vertex/fragment shader support.
 
 ## Declared types
 
@@ -66,9 +66,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLScalarFieldDepthLayersSource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `set_depth_layer()` mutates which layer subsequent `load_tile()` calls read from; callers must serialise depth-layer selection and tile loading rather than interleaving requests for different layers concurrently.
+- A tile-load failure is logged only once per source instance (`d_logged_tile_load_failure_warning`), so repeated failures after the first are silent.
 
 ## Used by
 

@@ -8,9 +8,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeometryType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryType::Value` is a lightweight runtime tag for the four concrete
+`GeometryOnSphere` shapes (point, multi-point, polyline, polygon), plus
+`NONE` for "no geometry". It exists so code that needs to know or store which
+kind of geometry it is dealing with — GUI widgets picking a digitisation tool,
+geometry builders tracking what the user is constructing, feature-geometry
+lookups — can do so with a plain enum comparison or switch, instead of
+dispatching through a `ConstGeometryOnSphereVisitor` or testing dynamic types
+every time. Its very wide fan-in across `view-operations`, `gui`,
+`qt-widgets` and `app-logic` reflects that it is the common vocabulary these
+layers use to talk about "what kind of geometry is this" without depending on
+the geometry classes themselves.
 
 ## Declared types
 
@@ -38,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeometryType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

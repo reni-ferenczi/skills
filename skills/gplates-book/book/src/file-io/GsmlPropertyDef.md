@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GsmlPropertyDef tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header is the property table for GPlates' GeoSciML (GSML) reader: each
+`PropertyInfo` constant pairs an XPath-like query string with the
+`GsmlPropertyHandlers` member function that parses the matched element into
+GPML property values. `GsmlNodeProcessorFactory` and `GsmlFeaturesDef` build
+their per-feature-type property lists by referencing these constants, so
+adding support for a new GSML property is a matter of declaring one more
+`PropertyInfo` here (as the comment above `PropertyInfo` spells out) and
+wiring it into the callback list in `GsmlFeaturesDef.h`.
+
+The queries themselves are simple, single-purpose XPath fragments (`//gml:name`,
+`//gsml:shape`, `//gpml:rock_type`, …) rather than a general query language;
+`GmlValidTime` and `GpmlValidTimeRange` both carry the description "gml
+validTime property" even though they target different elements, reflecting
+that the two were added for related but distinct GSML profiles (MapUnits and
+Macrostrat rock units).
 
 ## Declared types
 
@@ -46,9 +58,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GsmlPropertyDef tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every `PropertyInfo` here is a file-scope `static const` object, so each
+translation unit that includes this header gets its own copy; the constants
+are meant to be read, never mutated, and compared only by the handler pointer
+or query string.
 
 ## Used by
 

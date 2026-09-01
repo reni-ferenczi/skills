@@ -8,9 +8,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/OpenGL tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OpenGL.h` is the module's platform-portability shim: it pulls in the correct
+platform GL headers (`<OpenGL/gl.h>`/`<OpenGL/glu.h>` on macOS,
+`<windows.h>` then `<GL/gl.h>`/`<GL/glu.h>` on Windows — carefully guarding
+`NOMINMAX` so `windows.h` does not clobber `std::numeric_limits::max()` — and
+plain `<GL/gl.h>`/`<GL/glu.h>` elsewhere) behind one `extern "C"` block, and
+defines `__CONVENTION__` to the platform calling convention. Deliberately
+*not* included here is GLEW: the comment explains that GLEW must precede any
+other OpenGL header, but since other modules transitively include this header
+alongside Qt headers (which themselves drag in `<GL/gl.h>`), getting a
+consistent include order project-wide would be impractical — so GLEW is
+included only from `opengl` module `.cc` files, keeping it out of the public
+interface entirely.
+
+The two macros, `GPLATES_OPENGL_BOOL` and `GPLATES_OPENGL_BUFFER_OFFSET`, are
+small conveniences used throughout the module: the former normalises a
+`GLboolean` (typically an `unsigned char`) to a real boolean test, the latter
+turns a byte offset into the `void *` that buffer-object drawing calls
+expect.
 
 ## Declared types
 
@@ -31,9 +46,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/OpenGL tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Never include `<GL/glew.h>` before this header in a shared/`.h` context;
+GLEW must only be included in `opengl` module `.cc` files, and always before
+any other OpenGL header in that file.
 
 ## Used by
 

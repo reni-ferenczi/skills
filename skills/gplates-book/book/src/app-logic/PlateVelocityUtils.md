@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/PlateVelocityUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PlateVelocityUtils` computes surface velocities, the core of what a `VelocityFieldCalculatorLayerProxy` and the deprecated `PlateVelocityWorkflow` produce. `solve_velocities_on_surfaces` is the entry point: for each point of each velocity-domain `ReconstructedFeatureGeometry`, it tests the point against a `GeometryCookieCutter` built from reconstructed static polygons and resolved topological boundaries, and against a `TopologicalNetworksVelocities` built from resolved topological networks, resolving overlaps with a fixed precedence — networks first, then topological boundaries, then static polygons — and writing one `MultiPointVectorField` per domain geometry. When a `VelocitySmoothingOptions` is supplied, points near a boundary get their velocity interpolated with the boundary's averaged velocity instead of taking whichever side's raw value they landed on, via `solve_velocity_on_surfaces_with_boundary_smoothing`, `solve_velocity_at_boundary` and `solve_average_velocity_at_boundary`.
+
+Underneath that surface-testing machinery sit the basic building blocks: `calculate_velocity_vector`/`calculate_velocity_colat_lon` turn either two explicit `GPlatesMaths::FiniteRotation`s or a plate id resolved through a `ReconstructionTreeCreator` at two nearby times into a velocity, falling back to zero and retrying with an adjusted delta-time window when a plate id is missing from the reconstruction tree at one of the two times (see the header comments on both overloads for the exact fallback rules); `calculate_stage_rotation` exposes the underlying stage rotation directly. Two private `GPlatesModel::ConstFeatureVisitor`s, `DetectVelocityMeshNodes` and `AddVelocityFieldFeatures`, implement the `gpml:MeshNode` → `gpml:VelocityField` feature conversion used by `detect_velocity_mesh_nodes(_node)` and `create_velocity_field_feature_collection`, the older, feature-based way of describing a set of velocity domain points (one `gml:domainSet` per `meshPoints` property found).
 
 ## Declared types
 
@@ -85,9 +85,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/PlateVelocityUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Surface-type precedence is fixed: a point inside both a topological network and a topological boundary (or static polygon) always gets the network's velocity, never a blend, unless boundary smoothing is explicitly requested.
+- `calculate_velocity_vector`/`calculate_velocity_colat_lon` (the plate-id overloads) return the zero vector whenever the plate id cannot be found in the reconstruction tree at *either* delta-time endpoint, except for two documented retry cases (a negative younger time, or a plate id present only at the younger time) where the delta-time window is shifted and the lookup retried — see the Doxygen on the header for the exact conditions before assuming a zero result means "no motion".
+- `solve_velocities_on_surfaces` uses each domain's *reconstructed* geometry (not present-day) for surface testing, so a velocity domain feature with a non-zero plate id can move between calls; assigning it plate id zero pins it to the spin axis (still subject to a non-zero anchor plate id).
+- `create_velocity_field_feature_collection` can return an empty feature collection if the input has no `gpml:MeshNode` features; call `detect_velocity_mesh_nodes` first to avoid that.
 
 ## Used by
 

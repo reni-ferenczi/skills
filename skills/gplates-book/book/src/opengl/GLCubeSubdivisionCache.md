@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLCubeSubdivisionCache tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLCubeSubdivisionCache` memoises the per-tile queries of a `GLCubeSubdivision` (projection transforms, frustums, bounding polygons, oriented bounding boxes) against nodes of a `GPlatesMaths::CubeQuadTree`, so that repeated visits to the same quad-tree tile — e.g. while traversing a raster pyramid and its reconstructed polygon mesh in lockstep — don't recompute the same view/projection maths each time. `get_quad_tree_root_node` and `get_child_node` lazily create quad-tree nodes as they are visited, returning a `NodeReference` that carries the node's cube face, level of detail and tile offsets; each `get_*` accessor looks up (or lazily computes and caches) the corresponding value on that node.
+
+Which queries are actually cached is controlled entirely by eight boolean template parameters (`CacheProjectionTransform`, `CacheLooseProjectionTransform`, `CacheFrustum`, `CacheLooseFrustum`, `CacheBoundingPolygon`, `CacheLooseBoundingPolygon`, `CacheBounds`, `CacheLooseBounds`), each selecting between an empty `Implementation::No*` policy struct and one holding a `boost::optional` result, mixed together via `boost::mpl::if_c` into a single `Element` type. This means a caller enables only the caches it actually needs, and the corresponding `get_*` method on `GLCubeSubdivisionCache` will fail to compile if its cache flag was left `false` — there is no runtime fallback for an uncached query. The view transform is the one exception: since it depends only on the cube face, it is stored unconditionally as one of six precomputed transforms rather than through the cache.
 
 ## Declared types
 
@@ -159,9 +159,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLCubeSubdivisionCache tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Each `get_*` accessor only compiles when its corresponding `Cache*` template parameter is `true`; passing `false` (the default for all eight) and calling the accessor anyway is a compile error, not a runtime one.
+- `max_num_cached_elements` passed to `create` bounds the underlying `GPlatesUtils::ObjectCache`; the default of `1` effectively disables caching and turns the class into a plain traverser of `GLCubeSubdivision`, useful when each quad-tree node is visited only once.
+- A value returned by `get_cached_element` (indirectly, via the public accessors) cannot be recycled by the cache until every `shared_ptr` referencing it is released, so holding onto a returned element longer than necessary can defeat the cache's recycling.
 
 ## Used by
 

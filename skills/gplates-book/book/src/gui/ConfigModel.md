@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ConfigModel tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConfigModel` is the `QAbstractTableModel` that lets a `QTableView` display and edit an arbitrary `GPlatesUtils::ConfigInterface` (a `ConfigBundle` or `UserPreferences` instance) as a two-column name/value table. It builds its row list once, at construction, by calling the free function `initialise_basic_schema()`, which enumerates `config.subkeys()` into a flat `SchemaType` list of `SchemaEntry { key, label }` pairs — currently just the key name repeated as its own label, though the header notes this indexing step could later be replaced by a user-supplied or Python-generated schema. Because `ConfigInterface` itself has no concept of row order or display metadata, this schema is what gives the table a stable row-to-key mapping.
+
+When `use_icons` is enabled, the name column's `Qt::DecorationRole` shows one of three icons per row — `d_user_overriding_default_icon`, `d_user_no_default_icon` or `d_default_value_icon` — chosen from `d_config_ptr->has_been_set()` and `default_exists()`, so a `QTableView` can indicate at a glance whether a preference is at its default, user-overridden with a default behind it, or user-set with no default. `setData()` also honours a private role, `ROLE_RESET_VALUE_TO_DEFAULT`, that `ConfigValueDelegate` uses to route a "reset to default" click straight to `d_config_ptr->clear_value()` rather than through the normal `Qt::EditRole` path.
 
 ## Declared types
 
@@ -58,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ConfigModel tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_config_ptr` is a `QPointer`, not an owning reference, so the model tolerates its backing `ConfigInterface` being destroyed but does not extend its lifetime; the constructor connects `key_value_updated` into `react_key_value_updated()` so external changes to the backend still repaint the affected row via `dataChanged()`. The schema built by `initialise_basic_schema()` is captured once at construction — keys added to the `ConfigInterface` afterwards will not appear as new rows since nothing rebuilds `d_schema`. The class is `boost::noncopyable`, and only the value column is editable (`flags()` and `setData()` both refuse edits on `COLUMN_NAME`).
 
 ## Used by
 

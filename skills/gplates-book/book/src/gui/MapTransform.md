@@ -9,9 +9,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapTransform tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MapTransform` is the map view's equivalent of a camera: it holds the centre of
+the viewport (in projected scene coordinates), the rotation angle, and forwards
+the current zoom factor from a `ViewportZoom` it wraps. `GPlatesQtWidgets::MapView`
+and `MapCanvasTool` subclasses read and drive it to pan, rotate and zoom the
+map, and it emits `transform_changed()` whenever any of the three change so
+the view can re-render — including when `ViewportZoom` itself changes,
+relayed through the private `handle_zoom_changed()` slot.
+
+It does not own a `QTransform` or perform any projection maths itself; it is
+purely the small piece of mutable state that describes the current view, which
+callers translate into an actual transform when painting.
 
 ## Declared types
 
@@ -55,9 +63,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapTransform tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `set_centre_of_viewport()` (and therefore `translate()`) rejects the move
+  entirely if either coordinate falls outside
+  `MIN`/`MAX_CENTRE_OF_VIEWPORT_X`/`Y` — it does **not** clamp. The source notes
+  this is deliberate: clamping one axis while a rotated map is dragged would
+  make the map appear to slide diagonally along an edge instead of stopping.
+- `set_rotation()` wraps the stored angle back into `(-360, 360)` but does not
+  further normalise it to `[0, 360)` or `[-180, 180)`.
+- `d_viewport_zoom` is stored as a reference, so the referenced `ViewportZoom`
+  must outlive the `MapTransform`.
 
 ## Used by
 

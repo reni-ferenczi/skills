@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/SphericalArea tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A free-function namespace for computing signed spherical areas, on a unit-radius sphere, of `PolygonOnSphere` rings and of triangles bounded by points and `GreatCircleArc` edges. `calculate_polygon_signed_area()` (and the exterior/interior ring variants) triangulate by fanning from `polygon.get_boundary_centroid()`: for each boundary edge it forms a spherical triangle centroid-to-edge-start-to-edge-end-back-to-centroid and sums `calculate_spherical_triangle_signed_area()` over the edges. Each triangle's signed area is the spherical excess — the sum of its three internal angles minus pi for a counter-clockwise triangle, or plus pi for clockwise — computed via the internal `calculate_angle_between_adjacent_non_zero_length_edges()` helper.
+
+Interior rings are not required to carry the opposite winding to the exterior ring (unlike some other libraries); `calculate_polygon_signed_area()` instead forces each interior ring's contribution to oppose the exterior ring's sign, so holes always reduce the exterior area regardless of how they were wound. Every `..._area()` function is a thin `abs()` wrapper around its `..._signed_area()` counterpart. Callers who already have both a point and its bounding `GreatCircleArc` should prefer the two-argument `calculate_spherical_triangle_signed_area()` overload over building points and calling the three-point overload, since the header calls it out as more efficient. To convert any of these unit-sphere areas to Earth's actual surface area, multiply by the square of `GPlatesUtils::Earth`'s radius.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/SphericalArea tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`calculate_polygon_area()` is guaranteed less than `2 * PI` (a hemisphere): a polygon's boundary always bounds two areas on the sphere (the small "inside" and the large "outside"), and which one a *signed* calculation actually lands on depends on the polygon's orientation, but `calculate_polygon_area()` always reports the smaller of the two, making it orientation-agnostic.
 
 ## Used by
 

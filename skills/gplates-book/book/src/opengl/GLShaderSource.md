@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLShaderSource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLShaderSource` assembles the concatenated source string that `GLShaderObject::gl_shader_source()` compiles, from one or more code segments added via `add_code_segment()`/`add_code_segment_from_file()`, while remembering which segment came from which file (or an inline string) so a compile error's line number can later be traced back to it. It also owns the `#version` directive: rather than requiring callers to put `"#version 120"` at the top of whichever segment happens to be concatenated first — awkward when the segment defining `main()` (which typically needs the directive) is added last because it depends on the others — `GLShaderSource` generates its own leading segment from a `ShaderVersion` enum value and prepends it. `get_code_segments()` also hoists any `#extension` directive found in a later segment up into that same initial segment (commenting it out in place), since `#extension` is likewise required to precede ordinary source code.
+
+`create_shader_source_from_file()` is a convenience for the common single-file case; `GLSL_1_2` is `DEFAULT_SHADER_VERSION` since it maps to OpenGL 2.1, which nearly all hardware supporting the OpenGL 2.0 baseline (`GLSL_1_1`) also supports.
 
 ## Declared types
 
@@ -53,9 +53,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLShaderSource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Callers must not put a `#version` (or `#extension`) directive of their own in an added code segment — `GLShaderSource` synthesises and manages that segment itself, and moves any `#extension` it finds up front automatically.
+- The `const char *` constructor and `add_code_segment(const char *)` copy the source internally, so the caller's buffer need not outlive the call.
 
 ## Used by
 

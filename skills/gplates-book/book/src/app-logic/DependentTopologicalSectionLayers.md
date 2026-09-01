@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/DependentTopologicalSectionLayers tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DependentTopologicalSectionLayers` is a helper embedded in topology-resolving layer
+proxies (`TopologyGeometryResolverLayerProxy`, `TopologyNetworkResolverLayerProxy`, and
+others that consume resolved topologies such as `ScalarField3DLayerProxy`,
+`VelocityFieldCalculatorLayerProxy`) to avoid recomputing resolved topologies whenever
+an unrelated section layer changes. Topological features reference their sections
+(reconstructed geometries via `ReconstructLayerProxy`, or resolved lines via
+`TopologyGeometryResolverLayerProxy`) indirectly by feature ID, so a layer holding many
+candidate section layers cannot tell which of them actually matter without scanning
+feature references; this class does that scan once via
+`set_topological_section_feature_ids()` and caches the resulting *dependency* subset
+so that `update_topological_section_layer()` can cheaply answer "does this particular
+section layer's update actually affect my resolved topologies" without a full rescan.
+
+Both the reconstructed-geometry and resolved-line cases are handled by the same
+private template methods (`set_dependency_topological_section_layers()`,
+`update_topological_section_layer()`, `get_dependent_topological_section_layers()`),
+parameterised on the layer proxy type, with the public overloads simply forwarding to
+the corresponding `d_dependency_*_layers` set and `d_*_layers` full list.
 
 ## Declared types
 
@@ -53,9 +68,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/DependentTopologicalSectionLayers tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_topological_section_feature_ids()` must be called (typically whenever the
+topological features themselves change) before `update_topological_section_layer()`
+results are meaningful, since the dependency sets are derived from the feature IDs
+captured at that call — they are not automatically kept in sync with the topological
+features afterward. The class holds raw, non-owning pointers in
+`d_dependency_reconstructed_geometry_layers`/`d_dependency_resolved_line_layers`; the
+owning references are the `non_null_ptr_type` vectors (`d_reconstructed_geometry_layers`,
+`d_resolved_line_layers`), which must be kept up to date via `set_topological_section_layers()`
+whenever the candidate layer set changes.
 
 ## Used by
 

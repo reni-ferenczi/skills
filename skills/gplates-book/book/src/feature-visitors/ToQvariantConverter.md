@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/ToQvariantConverter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ToQvariantConverter` is the general-purpose counterpart to `FromQvariantConverter`: it visits a property value and renders it as a `QVariant`, covering most of the property-value zoo (`GmlTimeInstant`, `GmlTimePeriod`, `GpmlAge`, `GpmlPlateId`, `GpmlPolarityChronId`, `GpmlMeasure`, `GpmlOldPlatesHeader`, `Enumeration`, `UninterpretedPropertyValue`, the `Xs*` scalar types), and is what `FeaturePropertyTableModel` uses to populate its cells.
+
+`set_desired_role()` toggles between `Qt::DisplayRole` (human-readable strings — distant-past/future wording for `GeoTimeInstant`, a formatted range for `GmlTimePeriod`, the fixed-width packed string for `GpmlOldPlatesHeader`) and `Qt::EditRole` (raw values suited to an editing delegate, e.g. a `QList` of two `QVariant`s for a time period's begin/end). `GpmlConstantValue` is transparently unwrapped by re-visiting the value it carries, and separately recorded into `d_found_time_dependencies` for debugging.
 
 ## Declared types
 
@@ -69,9 +69,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/ToQvariantConverter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Unlike `TopologySectionsFinder`, this visitor has no override for `GpmlPiecewiseAggregation` or `GpmlIrregularSampling` — only `GpmlConstantValue` is unwrapped — so a genuinely time-dependent property value produces no entry in `d_found_values` at all, rather than a stale or mistimed one.
 
 ## Used by
 

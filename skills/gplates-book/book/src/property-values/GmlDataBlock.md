@@ -9,9 +9,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlDataBlock tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlDataBlock` is the `GPlatesModel::PropertyValue` for GML's `gml:DataBlock`: a
+sequence (`tuple_list_type`) of `GmlDataBlockCoordinateList` elements, each one a
+named list of scalar coordinate values. It is how GPlates attaches scalar coverages —
+per-point data such as crustal thickness or strain — to a geometry, with one
+`GmlDataBlockCoordinateList` per scalar field so a single point geometry can carry
+several parallel scalar sequences at once.
+
+Like other property values, it is stack-unconstructible (protected constructors) and
+non-copy-assignable; all copying goes through `clone()`/`deep_clone()`. `deep_clone()`
+differs from `clone()` only in that it also clones each element of the tuple list
+rather than sharing the child `GmlDataBlockCoordinateList` pointers, since those
+children are themselves reference-counted and mutable.
 
 ## Declared types
 
@@ -55,9 +64,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlDataBlock tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`tuple_list_clear()` and `tuple_list_push_back()` both call `update_instance_id()`,
+so mutating the tuple list in place is tracked the same way as replacing the whole
+property value. `print_to()` is a stub (`"{ GmlDataBlock }"`) rather than a real
+dump of the contained coordinate lists.
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CanvasToolBarDockWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Tabbed toolbar organizer for canvas editing tools grouped by workflow (digitization, topology, pole manipulation, etc.). Each workflow tab contains a toolbar with mutually-exclusive tool buttons managed by a `QActionGroup`. Listens to `CanvasToolWorkflows` for tool enable/disable and activation events, updating button states accordingly. Supports keyboard shortcuts for both individual tools and entire workflows, and provides tool actions suitable for inclusion in the main menu bar. Emits `canvas_tool_triggered_by_user()` to distinguish explicit user selections from automatic tool changes.
 
 ## Declared types
 
@@ -74,9 +72,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CanvasToolBarDockWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Each workflow maintains a `QActionGroup` with a single checked action at any time. The widget does not own the tool actions themselves (those belong to the main window or CanvasToolWorkflows), but it manages the creation and lifetime of the toolbars and action groups.
 
 ## Used by
 

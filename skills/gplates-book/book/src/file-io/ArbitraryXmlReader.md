@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ArbitraryXmlReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ArbitraryXmlReader` is a singleton driver that reads XML into a `FeatureCollectionHandle` by delegating the schema-specific work to an injected `ArbitraryXmlProfile`. Each of its three entry points — `read_file`, `read_xml_data` and `count_features` — installs the caller's `ReadErrorAccumulation` for the duration of the call via the RAII helper `SetXmlProfileAccess`, then calls straight through to the matching `ArbitraryXmlProfile` method; the reader itself never inspects the XML.
+
+The error accumulation is exposed to the profile only while a read is in progress: `get_read_error_accumulation` throws `AccessedOutsideXmlProfileMethodException` if a profile implementation calls it outside that window, which keeps profile code from holding onto a stale accumulator between reads. The `TODO` comment on `instance()` records that the singleton is not thread-safe and that per-thread instances were the intended fix.
 
 ## Declared types
 
@@ -45,9 +45,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ArbitraryXmlReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `instance()` is a lazily-constructed, non-thread-safe singleton (documented `TODO` in the header) — do not call it concurrently from multiple threads.
+- `get_read_error_accumulation()` throws unless called from within `read_file`, `read_xml_data` or `count_features`, since `d_read_errors` is only non-null while `SetXmlProfileAccess` holds it for the duration of one of those calls.
 
 ## Used by
 

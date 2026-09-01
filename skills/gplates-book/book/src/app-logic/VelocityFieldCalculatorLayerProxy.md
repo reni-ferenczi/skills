@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/VelocityFieldCalculatorLayerProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VelocityFieldCalculatorLayerProxy` is the `LayerProxy` behind a velocity layer. It takes up to six kinds of input layer proxy — a "domain" set (`ReconstructLayerProxy`, `TopologyGeometryResolverLayerProxy`, `TopologyNetworkResolverLayerProxy` feeding the mesh points velocities are wanted at) and, separately, a "surface" set of the same three kinds (the reconstructed polygons or resolved topologies the domain points are considered to sit on) — and turns the current `VelocityParams` into a sequence of `MultiPointVectorField` results, lazily, on request from `get_velocity_multi_point_vector_fields()`.
+
+Which inputs actually get used depends on `VelocityParams::get_solve_velocities_method()`. `SOLVE_VELOCITIES_OF_DOMAIN_POINTS` ignores the surface proxies entirely and asks each domain proxy directly for the velocities of its own reconstructed/resolved geometries. `SOLVE_VELOCITIES_OF_SURFACES_AT_DOMAIN_POINTS` instead collects the domain geometries as plain point locations and hands them, together with the reconstructed static polygons and resolved topological boundaries/networks from the surface proxies, to `PlateVelocityUtils::solve_velocities_on_surfaces()` — the case that also honours the params' boundary-smoothing options.
+
+Like other layer proxies it recomputes lazily and caches: results are keyed by `(reconstruction_time, VelocityParams)` in a bounded `KeyValueCache` sized by `MAX_NUM_VELOCITY_RESULTS_IN_CACHE`, so that a rendering client and an export client asking for different delta times or params in the same frame don't repeatedly invalidate each other's cached result.
 
 ## Declared types
 
@@ -79,9 +81,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/VelocityFieldCalculatorLayerProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`MAX_NUM_VELOCITY_RESULTS_IN_CACHE` (2 by default) trades memory for avoiding recomputation: raising it holds more distinct `(time, params)` results in memory at once, which the header calls out as a direct memory-usage knob. Adding, removing or changing any input layer proxy invalidates the whole cache and the `SubjectToken` (via `check_input_layer_proxies()` / `reset_cache()`) rather than invalidating only the affected cache entries — a single upstream change forces every cached reconstruction time and param combination to be recomputed on next access. If more `VelocityParams::SolveVelocitiesMethod` values are ever added, `cache_velocities()` has a `BOOST_STATIC_ASSERT(NUM_SOLVE_VELOCITY_METHODS == 2)` that will fail to compile until the new case is handled.
 
 ## Used by
 

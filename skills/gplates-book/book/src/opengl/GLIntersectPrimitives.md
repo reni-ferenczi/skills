@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLIntersectPrimitives tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLIntersectPrimitives` supplies the geometric primitive types — `Plane`, `Ray`, `Sphere`, `OrientedBoundingBox` — that `GLIntersect`'s culling and projection routines operate on. Each `Plane` and `OrientedBoundingBox` distinguishes between a cheap "unnormalised" form (working directly with a possibly non-unit normal or non-orthonormal axes) and a slower "true" form that normalises first, so hot culling paths can stay in the unnormalised form and only pay the extra cost (an inverse-square-root) when an exact distance or normal is actually needed.
+
+`OrientedBoundingBoxBuilder` incrementally grows an `OrientedBoundingBox` around a fixed set of axes by tracking, per axis, the min/max projection of every point, arc, polygon or nested OBB added to it (`add`/`add_filled_polygon`); `get_oriented_bounding_box()` turns that running projection range into the final box. The free `create_oriented_bounding_box_builder` overloads pick a starting axis frame — from an explicit z-axis, from a z-axis plus an approximate y-axis, or from a `GPlatesMaths::BoundingSmallCircle` — when the caller does not already have an orthonormal basis to hand.
 
 ## Declared types
 
@@ -112,9 +112,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLIntersectPrimitives tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Prefer the `_unnormalised` methods on `Plane` unless a true distance or normal is required; the normalised forms are documented as slower because they force a `1/magnitude` computation, which `Plane` lazily caches in `d_inv_magnitude_normal` on first use.
+- `OrientedBoundingBox`'s half-length axis vectors and `OrientedBoundingBoxBuilder`'s input axes are expected to be orthogonal/orthonormal but this is not checked; near-orthogonal input still yields a convex (if slightly trapezoidal) volume rather than failing.
+- `OrientedBoundingBoxBuilder::get_oriented_bounding_box()` throws `PreconditionViolationError` if no points were ever added, and clamps degenerate axes (all projected points coincide) to `DEGENERATE_HALF_LENGTH_THRESHOLD` rather than producing a zero-length axis.
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructMethod::Type` enumerates the ways a feature can be turned into `ReconstructedFeatureGeometry` objects — `BY_PLATE_ID`, `HALF_STAGE_ROTATION`, `SMALL_CIRCLE`, `VIRTUAL_GEOMAGNETIC_POLE`, `FLOWLINE`, `MOTION_PATH` — and is the key `ReconstructMethodRegistry` uses to look up and select a `ReconstructMethodInterface` implementation for a feature. It applies only to features that produce reconstructed *geometries*; topological features are handled elsewhere and are not represented here.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The enumerator order is meaningful and must be kept from least to most specialised: `ReconstructMethodRegistry` matches a feature against methods from the highest value down, so a more specialised method (e.g. `FLOWLINE`, which `HALF_STAGE_ROTATION` could also handle) must sort after the less specialised one it overrides, and `BY_PLATE_ID` — the catch-all — must stay first. `NUM_TYPES` is a sentinel count, not a usable method type.
 
 ## Used by
 

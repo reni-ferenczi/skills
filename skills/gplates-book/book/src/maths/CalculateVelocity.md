@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/CalculateVelocity tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Turns a pair of `FiniteRotation`s at two nearby reconstruction times into a
+plate velocity at a point, in centimetres per year. `calculate_stage_rotation`
+first derives the stage rotation between the two absolute rotations `fr_t1`
+and `fr_t2` (t1 more recent than t2), taking care to pick the shorter of the
+two quaternion paths between them since a quaternion and its negation
+represent the same rotation; `calculate_velocity_vector` then converts that
+stage rotation's angle and axis, divided by `delta_time`, into an angular
+velocity and cross-multiplies it with the point's position and the Earth's
+radius (`GPlatesUtils::Earth::EQUATORIAL_RADIUS_KMS`) to get a Cartesian
+velocity vector. `calculate_velocity_vector_and_omega` additionally exposes
+the angular velocity itself.
+
+The remaining free functions convert a velocity `Vector3D` between the
+geocentric (x, y, z) frame and a local frame at the point, using
+`CartesianConvMatrix3D` to build the change-of-basis matrix: colatitude/longitude
+components (`VectorColatitudeLongitude`, `convert_vector_from_xyz_to_colat_lon`
+and its inverse) and magnitude/angle or magnitude/azimuth pairs
+(`calculate_vector_components_magnitude_angle`,
+`calculate_vector_components_magnitude_and_azimuth`). These are the functions
+that produce the north/east-referenced velocities used by the velocity file
+exporters and the kinematics plots.
 
 ## Declared types
 
@@ -45,9 +63,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/CalculateVelocity tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`calculate_velocity_vector` returns `Vector3D(0, 0, 0)` if the stage rotation
+is the identity, rather than dividing by a zero angle. The angular velocity
+`omega` returned by `calculate_velocity_vector_and_omega` is always positive:
+because a stage rotation's pole/angle pair is only defined up to a
+simultaneous negation of both, the sign is not physically meaningful and was
+deliberately normalised away — the earlier sign, tied to whether the rotation
+was clockwise or counter-clockwise about a particular choice of pole, is
+documented in the header as a past source of confusion. Callers must pass
+`t1` more recent than `t2` and `delta_time = t2 - t1` for the sign
+conventions in the rest of the module to hold.
 
 ## Used by
 

@@ -9,9 +9,41 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedVertexSourceInfo tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Resolving a topology throws away provenance. A resolved topological boundary is
+assembled from sub-segments clipped out of other resolved geometries, which were
+themselves assembled from `ReconstructedFeatureGeometry` objects, and by the time
+the boundary polygon exists nothing in it says which plate moved any particular
+vertex. Velocity calculation needs exactly that. `ResolvedVertexSourceInfo` is the
+small, shared, reference-counted record that carries it: enough of the originating
+RFG — a `ReconstructionTreeCreator` plus either a reconstruction plate ID or the RFG
+itself — to recompute a stage rotation at an arbitrary time and delta time, long
+after resolution finished. `ResolvedTopologicalBoundary`, `ResolvedTopologicalLine`,
+`ResolvedTopologicalNetwork` and the sub-segment classes each hold a
+`resolved_vertex_source_info_seq_type` running parallel to their vertex sequence, one
+entry per vertex, and build it lazily on first request; sharing one instance across a
+whole run of vertices from the same source is the point of the reference counting.
+
+`d_source` is a five-way `boost::variant` and every public operation is a
+`boost::apply_visitor` over it. Two cases are leaves derived from an RFG:
+`create_source_from_reconstruction_properties` picks `HalfStageRotationProperties`
+when the RFG's reconstruct method is `ReconstructMethod::HALF_STAGE_ROTATION` and
+`PlateIdProperties` otherwise, defaulting a missing plate ID to zero. One case,
+`StageRotation`, wraps an already-computed rotation, used by
+`ResolvedTriangulation::Network` for interpolated points such as subdivided edge
+mid-points that have no single source feature. The remaining two are composites built
+by `ResolvedTopologicalSubSegmentImpl` when it rubber-bands adjacent sections:
+`FixedPointVelocityAdapter` pins velocity evaluation to a section end point, and
+`InterpolateVertexSourceInfos` blends two of those for a rubber-band vertex lying
+between two sections.
+
+The two velocity entry points deliberately disagree on the interpolated case.
+`get_stage_rotation` interpolates the two child stage rotations with
+`GPlatesMaths::interpolate`, whereas `get_velocity_vector` computes each child's
+velocity separately and interpolates the resulting `Vector3D`s. That is not
+redundancy: a `FixedPointVelocityAdapter` child substitutes its own fixed point for
+the caller's point, and interpolating rotations first would evaluate the blended
+rotation at the caller's point, discarding both fixed points. If you touch the
+visitors, preserve that asymmetry.
 
 ## Declared types
 
@@ -78,9 +110,38 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedVertexSourceInfo tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The caches are mutable, so the const methods are not thread safe.**
+`d_cached_stage_rotation` is a single-slot memo keyed on the tuple
+(reconstruction time, velocity delta time, delta time type); a call with a different
+key overwrites it. This is tuned for the intended access pattern — every vertex
+sharing one source info asks for the same parameters in immediate succession —
+and degenerates to no caching at all if callers alternate parameters. Because an
+instance is shared across many vertices and reached through
+`non_null_ptr_to_const_type`, two threads calling `get_stage_rotation` on the same
+object race on that member. `HalfStageRotationProperties::reconstruction_params` is
+a second mutable lazy cache with the same caveat; it runs a
+`ReconstructionFeatureProperties` visitor over the RFG's feature reference on first
+use, so the source feature must still be alive at that point, not merely at
+construction.
+
+**Equality is structural, not identity, and is deliberately loose.** The templated
+fallback in `EqualityVisitor` makes any two different variant cases unequal.
+`PlateIdProperties` compares plate IDs *only* — two source infos from different
+rotation models compare equal. `HalfStageRotationProperties` compares the five
+half-stage inputs (left and right plate IDs, geometry import time, spreading
+asymmetry, reconstruction method) rather than the features. `InterpolateVertexSourceInfos`
+also treats the mirrored pair — ratio `1 - r` with the two sources swapped — as
+equal. `StageRotation` compares unit quaternions, so it is decided by the rotation
+value, not by whatever produced it. Callers use this to collapse runs of vertices
+that would give identical velocities; do not use it to test whether two vertices
+came from the same feature.
+
+**Chains keep their children alive.** `FixedPointVelocityAdapter` and
+`InterpolateVertexSourceInfos` hold `non_null_ptr_to_const_type` to their operands,
+so an adapter over an interpolation over two leaves retains the whole chain,
+including the RFG referenced by any half-stage leaf. Velocity and equality both
+recurse down that chain, so depth costs time as well as memory — the composites are
+only ever built one or two levels deep by the current callers.
 
 ## Used by
 

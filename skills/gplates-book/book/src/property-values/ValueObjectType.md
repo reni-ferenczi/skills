@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/ValueObjectType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ValueObjectType` is a `GPlatesModel::QualifiedXmlName<ValueObjectTypeFactory>` instantiation, giving namespace-qualified XML names (namespace, alias and local name, each interned) to the "value objects" that appear inside `GmlDataBlockCoordinateList` and related scalar-coverage machinery — for example the type tag identifying which named scalar a coordinate list holds. `ValueObjectTypeFactory` is never instantiated; its only role is to bind `QualifiedXmlName` to a `GPlatesUtils::StringSet` singleton, again with a private constructor.
+
+Notably, `ValueObjectTypeFactory::instance()` returns `GPlatesModel::StringSetSingletons::property_name_instance()` — the same interning pool used for property names — rather than a pool dedicated to value-object types, so `ValueObjectType` values share their interned-string space with `GPlatesModel::PropertyName`.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/ValueObjectType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`ValueObjectType` interns into the same `StringSet` singleton (`property_name_instance()`) as `GPlatesModel::PropertyName`, so the two conceptually distinct name kinds share one underlying string pool even though `QualifiedXmlName`'s comparison operators only ever compare same-typed values.
 
 ## Used by
 

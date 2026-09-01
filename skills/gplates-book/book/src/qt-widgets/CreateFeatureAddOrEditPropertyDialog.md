@@ -10,9 +10,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CreateFeatureAddOrEditPropertyDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CreateFeatureAddOrEditPropertyDialog` is the single modal dialog used both to add a
+new property to a feature and to edit an existing one, chosen by which of
+`add_property()` or `edit_property()` the caller invokes. It wraps an
+`EditWidgetGroupBox`, which owns one edit widget per supported property value type;
+the dialog itself only figures out which structural type is in play and asks the
+group box to activate the matching widget. Adding a property lets the user pick the
+value type from `combobox_property_type` (populated from the `GpgimProperty`'s
+allowed structural types via `GpgimProperty::get_default_structural_type()`), while
+editing shows that combobox with the feature's existing type only, since the type
+of an existing property cannot be changed.
+
+The property type combobox is populated as encoded strings such as
+`gpml:PiecewiseAggregation<gpml:FiniteRotation>` for template types, and
+`set_appropriate_edit_widget_by_property_value_type()` parses that string back apart
+to resolve the `GPlatesPropertyValues::StructuralType` and, for templates, the value
+type, before asking the group box to activate the right widget. `is_property_supported()`
+lets callers (such as `CreateFeatureDialog`) skip GPGIM properties that have no
+edit widget at all before ever showing this dialog.
 
 ## Declared types
 
@@ -50,9 +65,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CreateFeatureAddOrEditPropertyDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`add_property()` and `edit_property()` are mutually exclusive entry points into the
+same dialog instance: each rewires `buttonBox`'s `accepted()` signal to a different
+slot (`create_property_from_edit_widget()` vs. `update_property_from_edit_widget()`)
+and reconfigures the standard buttons, so the two must not be interleaved on the
+same call. `add_property()` returns `boost::none` both when the user cancels and
+when property creation fails after "OK" is pressed; `d_add_property` is only valid
+between entering `add_property()` and its return, and is reset to `boost::none`
+before returning either way. Editing offers no "Cancel" button, since a user
+edit cannot be undone once applied to the widget; if no edit widget is available,
+`update_property_from_edit_widget()` calls `reject()` to close the dialog since
+there is no button to do it for the user.
 
 ## Used by
 

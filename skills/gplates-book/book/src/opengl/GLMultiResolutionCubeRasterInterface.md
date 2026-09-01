@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionCubeRasterInterface tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionCubeRasterInterface` is the common interface for anything that presents raster data as a cube-map quad tree of texture tiles, so that consumers of a cube raster (map view, reconstructed-raster rendering, `GLVisualLayers`) do not need to know whether the tiles come from a plain `GLMultiResolutionCubeRaster` or from a reconstructed source such as `GLMultiResolutionCubeReconstructedRaster`. Traversal happens through the nested `QuadTreeNode`, a value type that forwards to a polymorphic `ImplInterface` supplied by whichever concrete raster created it — `is_leaf_node()` reports whether the requested resolution has been reached, and `get_tile_texture()` returns the tile's texture, rendering it on demand if it is not already cached.
+
+`set_world_transform()` repositions the raster within the cube map — its main use is aligning the cube map to the central meridian of a 2D map projection — and invalidates any cached tile textures and, for some implementations, the previously obtained quad tree nodes themselves; callers are expected to restart traversal from `get_quad_tree_root_node()` after calling it rather than continuing an in-progress walk.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionCubeRasterInterface tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A texture returned by `get_tile_texture()` uses nearest-neighbour filtering when it is a floating-point texture, because older hardware that supports floating-point textures cannot filter them in fixed-function sampling; callers needing smooth sampling must emulate bilinear filtering themselves in a fragment shader. Calling `set_world_transform()` mid-traversal is unsafe for implementations (such as `GLMultiResolutionCubeRaster`) that invalidate outstanding `QuadTreeNode`s on a transform change; restart traversal from the root afterwards. Some derived classes have no leaf nodes and `is_leaf_node()` always returns `false` for them.
 
 ## Used by
 

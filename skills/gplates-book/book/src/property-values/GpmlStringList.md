@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlStringList tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlStringList` implements the `gpml:StringList` property value: a resizable, order-preserving list of plain strings (stored as `TextContent`, not `XsString` property values) attached to a feature. It offers a vector-like interface — `push_back`, `insert`, `erase`, `clear`, `swap`, iteration via `begin()`/`end()` — rather than the simple getter/setter pair used by scalar property values, because callers such as `qt-widgets/EditStringListWidget` need to edit the list in place.
+
+It provides three ways to construct an instance: `create_empty()` for building up a list incrementally, `create_copy()` for copying from any container or iterator range of `TextContent`/`UnicodeString`, and `create_swap()` to adopt an existing `string_list_type` without copying it. `TextContent` is assumed to intern/share its backing string data, so copying or resizing the vector is cheap even for long lists.
 
 ## Declared types
 
@@ -68,9 +68,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlStringList tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every mutating operation (`push_back`, `insert`, `erase`, `clear`, `swap`) calls `update_instance_id()`, so code that mutates a `GpmlStringList` in a loop should batch changes rather than assume each call is free; `insert`/`erase` also convert the `const_iterator` back to a mutable one via `std::distance`/`std::advance`, which is O(1) only because the backing container is `std::vector`.
 
 ## Used by
 

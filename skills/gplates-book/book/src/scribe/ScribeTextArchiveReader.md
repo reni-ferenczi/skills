@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeTextArchiveReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TextArchiveReader` is the `ArchiveReader` implementation that parses the human-readable text archive format written by `TextArchiveWriter`, reconstructing a `Transcription` from an `std::istream`. On construction it imbues the stream with the classic "C" locale and skips leading whitespace, so parsing is unaffected by the application's global locale, then validates the archive signature and checks that both the text-archive format version and the Scribe version that wrote the archive are not newer than what this build supports.
+
+`read_transcription()` replays the archive's structure back into a fresh `Transcription`: the object tag names, the pool of unique strings, and then the objects themselves, read in contiguous id-ranged groups (`read_object_group()`) so the archive does not need to spell out every object id individually. Each object's leading type code selects which `Transcription::add_*` call reconstructs it, and a composite object's child keys and child object ids are read recursively via the protected `read(Transcription::CompositeObject &)` overload. The primitive-reading `read<ObjectType>()` template has explicit specialisations for `float`, `double` and `std::string` because those need special handling beyond `operator>>`: floats and doubles must recognise the writer's textual infinity/NaN tokens, and strings are stored length-prefixed rather than whitespace-delimited.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeTextArchiveReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_input_stream_*_saver` members are `boost::io` state savers, not tracking data — their sole job is to restore the stream's original flags, precision and locale when the reader is destroyed, since the constructor changes all three. Any malformed or truncated archive data — a bad signature, an unreadable primitive, a stream that runs out mid-read — surfaces as an exception (`Exceptions::InvalidArchiveSignature`, `Exceptions::UnsupportedVersion` or `Exceptions::ArchiveStreamError`) rather than a silently wrong `Transcription`. This class must stay format-compatible with `TextArchiveWriter`: the object type codes, the infinity/NaN sentinel strings, and the length-prefixed string encoding are shared conventions (`ArchiveCommon`) between the two, so changing one without the other breaks round-tripping.
 
 ## Used by
 

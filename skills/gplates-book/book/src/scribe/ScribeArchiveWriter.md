@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeArchiveWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ArchiveWriter` is the write-side counterpart to `ArchiveReader`: an abstract interface that lets the rest of `GPlatesScribe` serialise a `Transcription` without knowing whether the destination is a text, binary or XML archive. `ScribeBinaryArchiveWriter`, `ScribeTextArchiveWriter` and `ScribeXmlArchiveWriter` implement `write_transcription()` and `close()` against their own format, sharing the constants defined in `ArchiveCommon`; callers such as `ProjectSession` and `InternalSession` work only against this base type.
+
+An archive can hold multiple transcriptions written back to back with successive calls to `write_transcription()`.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeArchiveWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Unlike `ArchiveReader::close()`, an implementation's destructor is expected to call `close()` itself if the caller never did, so a dropped `ArchiveWriter` still flushes any final writes rather than silently truncating the archive.
 
 ## Used by
 

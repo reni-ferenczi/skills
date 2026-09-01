@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLStreamPrimitiveWriters tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Both classes implement the same informal, non-virtual `StreamWriter` interface
+documented in the file's top comment (`write`, `count`, `remaining`), so
+`GLStreamPrimitives` (the actual streaming logic, in the neighbouring unit)
+can be templated on either one interchangeably rather than depending on a
+concrete buffer type. `StreamElementType` stands for either a vertex
+attribute type or an index type (`GLuint`/`GLushort`/`GLubyte`).
+
+`GLStaticBufferStreamWriter` writes into a caller-supplied fixed-size raw
+buffer — the intended use is a mapped vertex buffer object, where only write
+access to memory is available and the total vertex/index count isn't known in
+advance, so the caller streams until the buffer fills and then flushes it to
+the GPU. `GLDynamicBufferStreamWriter` instead appends to a `std::vector`,
+for the case where the data is generated once (e.g. building a static, reused
+vertex buffer) and the final size isn't known up front either, but repeated
+GPU uploads are not needed.
 
 ## Declared types
 
@@ -53,9 +65,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLStreamPrimitiveWriters tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `GLStaticBufferStreamWriter` does no bounds checking on `write` — the caller
+  must consult `remaining()` itself to avoid writing past
+  `max_num_stream_elements`.
+- `GLStaticBufferStreamWriter` neither owns nor reads the buffer it wraps; it
+  only ever writes through the pointer, matching write-only mapped GPU
+  memory.
+- `GLDynamicBufferStreamWriter::remaining()` always returns the vector's
+  `max_size()` rather than the true remaining capacity, since that limit is
+  effectively unreachable in practice — it is not a precise "space left"
+  count.
 
 ## Used by
 

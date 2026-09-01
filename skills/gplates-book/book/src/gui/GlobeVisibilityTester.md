@@ -9,9 +9,14 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GlobeVisibilityTester tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GlobeVisibilityTester` answers a single question — is a given point on the
+near or far side of the globe as currently oriented — by comparing it against
+the camera position read from a `GlobeCanvas` (`camera_llp()`, converted to a
+`PointOnSphere`) using `calculate_closeness()`; a non-negative closeness means
+the point is on the visible hemisphere. It holds only a non-owning pointer to
+the `GlobeCanvas`, so it is cheap to construct and pass around. It is used
+heavily by `GlobeRenderedGeometryLayerPainter` and related painters to decide
+which geometries to draw solid versus faded/gray on the globe's far side.
 
 ## Declared types
 
@@ -37,9 +42,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GlobeVisibilityTester tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Holds a raw, non-owning pointer to its `GlobeCanvas`; the tester must not
+outlive the canvas it was constructed from.
 
 ## Used by
 

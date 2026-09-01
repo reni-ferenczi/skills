@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeBinaryArchiveWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`BinaryArchiveWriter` is the `ArchiveWriter` implementation for the binary format, encoding a `Transcription` onto a `QDataStream` in the exact byte layout `BinaryArchiveReader` expects. Its constructor writes the archive header — the signature bytes (written unencoded, one `qint8` at a time, since the reader must confirm the signature before it can trust any varint decoding), the binary format version and the current `Scribe` version.
+
+`write_transcription()` writes the object-tag-name table and the unique-string table, then walks the transcription's object ids. Unused ids are skipped and used ids are coalesced into contiguous runs, each written as a start id plus a count, so a densely populated transcription avoids repeating an id for every object. The primitive `write()` overloads encode integers as variable-length (varint) values, mirroring the reader's decoding scheme.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeBinaryArchiveWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every write asserts `d_output_stream.status() == QDataStream::Ok`, so a failing output stream (for example, a full disk) is reported immediately via `Exceptions::ArchiveStreamError` rather than producing a silently truncated archive. `close()` is a no-op, since the binary format needs no trailing marker to be readable back; changing the object encoding or the contiguous-group scheme here must stay in lockstep with `BinaryArchiveReader` and, for a breaking change, bump `ArchiveCommon::BINARY_ARCHIVE_FORMAT_VERSION`.
 
 ## Used by
 

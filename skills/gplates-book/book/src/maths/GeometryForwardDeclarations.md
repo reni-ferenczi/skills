@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeometryForwardDeclarations tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Forward declarations for the spherical geometry classes (`PointOnSphere`, `PolylineOnSphere`, `PolygonOnSphere`, `MultiPointOnSphere`). These declarations support lightweight headers that need only type names and can use `intrusive_ptr` without full class definitions, reducing compilation dependencies. Use this header instead of including the full geometry headers when only a pointer or reference to a geometry type is needed.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeometryForwardDeclarations tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

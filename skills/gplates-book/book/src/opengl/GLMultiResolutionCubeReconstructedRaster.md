@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionCubeReconstructedRaster tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionCubeReconstructedRaster` wraps a `GLMultiResolutionStaticPolygonReconstructedRaster` (the source, which reconstructs a raster per-polygon and is itself indexed by its own cube quad tree) so that it can be consumed anywhere a `GLMultiResolutionCubeRasterInterface` is expected. It is the reconstructed-raster counterpart of `GLMultiResolutionCubeRaster`, which performs the same role for un-reconstructed rasters.
+
+Unlike `GLMultiResolutionCubeRaster`, its `QuadTreeNodeImpl::is_leaf_node()` always returns `false`: because reconstruction rasterises polygon edges and possibly a higher-resolution age grid, there is no fixed depth at which the source data's own resolution is exhausted, so traversal has no natural leaf and the caller decides how deep to go (typically driven by view-dependent level of detail). Tile textures are rendered on demand in `render_raster_data_into_tile_texture()` using a `view_transform`/`projection_transform` pair and a `level_of_detail` computed by `get_level_of_detail()`, and `MIN_TILE_TEXEL_DIMENSION` bounds how small a tile can get, since going too small would otherwise multiply the number of tiles needed at the unbounded traversal depth.
 
 ## Declared types
 
@@ -69,9 +69,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionCubeReconstructedRaster tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The tile texel dimension can end up as a power-of-two multiple of the source reconstructed raster's own tile dimension, if that dimension is below `MIN_TILE_TEXEL_DIMENSION`; `d_level_of_detail_offset_for_scaled_tile_dimension` compensates for this when computing the final level of detail, so the two must be kept in sync if this logic is changed. The source raster's cache handle is always retained via `ClientCacheTile::source_cache_handle` regardless of `d_cache_tile_textures`, only the cube-map tile texture itself is optional to cache.
 
 ## Used by
 

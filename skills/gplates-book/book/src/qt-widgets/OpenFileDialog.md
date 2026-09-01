@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/OpenFileDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A thin wrapper around `QFileDialog::getOpenFileName`/`getOpenFileNames` that remembers a per-purpose "last used directory" instead of a single global one. The two filter-taking constructors bind `d_directory_configuration` to a caller-supplied `GPlatesGui::DirectoryConfiguration &`, letting different callers (e.g. raster import vs. scalar-field import) each track their own remembered directory. The third constructor is a convenience that pulls a fixed configuration — `feature_collection_configuration()` — out of `GPlatesPresentation::ViewState::get_file_io_directory_configurations()`, for the common case of opening a feature collection file.
+
+Both `get_open_file_name` and `get_open_file_names` feed the current directory into the Qt dialog and, on a non-cancelled result, write the containing directory of the chosen file back into the configuration via `update_last_used_directory`, so the next dialog constructed against the same `DirectoryConfiguration` opens where the user left off. `d_selected_filter` records which filter the user had active, matching Qt's out-parameter for that purpose, though it is not otherwise read here.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/OpenFileDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_directory_configuration` is a `GPlatesGui::DirectoryConfiguration &`: whatever `DirectoryConfiguration` (or the `ViewState` it comes from) was passed to the constructor must outlive the dialog. `get_open_file_name`/`get_open_file_names` return an empty string/list on cancel, matching the underlying `QFileDialog` behaviour, and skip updating the remembered directory in that case.
 
 ## Used by
 

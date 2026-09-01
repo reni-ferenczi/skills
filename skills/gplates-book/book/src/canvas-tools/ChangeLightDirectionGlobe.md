@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/ChangeLightDirectionGlobe tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ChangeLightDirectionGlobe` is the globe canvas tool for dragging the rendered light-direction arrow to change how lit rasters and other shaded layers are illuminated. Almost all of its own logic is delegated to `GPlatesViewOperations::ChangeLightDirectionOperation`: `handle_left_drag()` calls `start_drag()`/`update_drag()` on it (tracked by `d_is_in_drag` so the drag is only started once), `handle_left_release_after_drag()` calls `end_drag()`, and every non-drag mouse move forwards to `mouse_move()` so the operation can update hover highlighting.
+
+The plain left-drag handlers move the light direction; the `ctrl_left_drag`/`shift_ctrl_left_drag` handlers (and their `_release_after_drag` counterparts) instead delegate to `GlobeCanvasTool`'s base-class reorientation handling to spin the globe, then call `d_change_light_direction_operation.mouse_move()` afterwards to keep the light-direction arrow correctly positioned when it is attached to the view frame rather than to the globe, since reorienting the view would otherwise leave it stale.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/ChangeLightDirectionGlobe tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

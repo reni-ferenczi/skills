@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/StringSetSingletons tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit is the interning backend for the model's qualified-name and short-string types: `FeatureType`, `PropertyName`, `StructuralType`, `XmlAttributeName`, `XmlElementName`, `XmlNamespace`, `EnumerationContent`, `EnumerationType`, and similar types all resolve, through their factory classes, to one of the accessor functions declared here. Each accessor lazily creates and returns a process-wide `GPlatesUtils::StringSet` (or, for feature IDs, `GPlatesUtils::IdStringSet`) via `GPlatesUtils::Singleton`, so equal strings anywhere in the loaded model share one interned entry.
+
+The empty tag structs (`FeatureTypeInstance`, `PropertyNameInstance`, and so on) exist purely as distinct template arguments to `GPlatesUtils::Singleton`. Because `Singleton<GPlatesUtils::StringSet, ..., Tag>` instantiates a separate static instance per `Tag`, one otherwise-identical template gives every string category (feature types, property names, XML attribute names, and the rest) its own independent `StringSet`, rather than all of them sharing a single global one.
 
 ## Declared types
 
@@ -107,9 +107,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/StringSetSingletons tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Each `*_instance()` function returns a singleton with process lifetime (`GPlatesUtils::DefaultLifetime`); the returned `StringSet`/`IdStringSet` is never destroyed until the corresponding `Singleton` decides to, so entries interned here persist for the life of the application even after every `QualifiedXmlName` referencing them goes away.
 
 ## Used by
 

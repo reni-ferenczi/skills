@@ -8,9 +8,15 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/EnumerationType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EnumerationType` identifies *which* GPML enumeration a given `Enumeration` property
+value belongs to (e.g. `gpml:SubductionZoneType`), as opposed to `EnumerationContent`
+which holds the selected member of that enumeration. It is
+`GPlatesModel::QualifiedXmlName<EnumerationTypeFactory>` — a namespace-qualified XML
+name whose factory supplies the dedicated
+`GPlatesModel::StringSetSingletons::enumeration_type_instance()` string pool, so every
+`EnumerationType` value is interned separately from other qualified-name kinds
+(structural types, property names, feature types) even though they all share the same
+`QualifiedXmlName` template.
 
 ## Declared types
 
@@ -39,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/EnumerationType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

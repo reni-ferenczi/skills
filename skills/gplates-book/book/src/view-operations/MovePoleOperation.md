@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/MovePoleOperation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MovePoleOperation` is the reference-counted backend for the "Move Pole" canvas tools on both the globe and map views, structurally similar to `ChangeLightDirectionOperation` but manipulating a `GPlatesQtWidgets::MovePoleWidget`'s pole location instead of the light direction. Because the globe and map use different coordinate systems, it implements two separate hit tests: `test_proximity_to_pole_on_globe` uses the same spherical dot-product test as `ChangeLightDirectionOperation`, while `test_proximity_to_pole_on_map` compares planar distance in map *scene* coordinates (scaled by `GPlatesGui::ViewportZoom`), since a spherical proximity test is meaningless once the sphere has been projected onto the map. `start_drag_on_globe`/`start_drag_on_map` both defer to `MovePoleWidget::can_change_pole()` before allowing a drag, since the widget can refuse to move the pole (for example when it is constrained to the focused feature's stage pole).
+
+As a `GPlatesUtils::ReferenceCount`-based type its constructor is private; instances are obtained only through the static `create()` factory, matching the `non_null_ptr_type` convention used elsewhere in the codebase.
 
 ## Declared types
 
@@ -77,9 +77,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/MovePoleOperation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The connection to `MovePoleWidget::pole_changed` is made in `activate()` and torn down in `deactivate()`, not held permanently, so `react_pole_changed()` can safely assume the pole is always unhighlighted when it fires (the mouse cannot be hovering the globe/map and editing the task-panel widget at the same time). Like `ChangeLightDirectionOperation`, pole moves are applied straight to `MovePoleWidget` and are not pushed onto the undo stack by this class.
 
 ## Used by
 

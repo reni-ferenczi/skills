@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLScreenRenderTarget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLScreenRenderTarget` wraps an off-screen `GLTexture` (with an optional depth and/or stencil buffer) sized to the viewport, for render passes that need to draw to a texture rather than the main framebuffer — for example the intermediate surface-fill-mask and volume-fill passes in `GLScalarField3D`. `begin_render()`/`end_render()` bracket the pass, resizing the underlying storage to the requested dimensions and rebinding whatever framebuffer object was active beforehand when the scope ends; `RenderScope` is an RAII wrapper around that pair for exception-safe use. Unlike a raw OpenGL framebuffer object, which cannot be shared across contexts, `GLScreenRenderTarget` creates one underlying FBO per context it is used from internally, so a single instance — and the texture/renderbuffer it wraps — can be reused freely across multiple `GLRenderer` contexts.
+
+`is_supported()` gates the requested texture-internal-format/depth/stencil combination against `GL_EXT_framebuffer_object`, non-power-of-two texture support (since the target tracks the viewport size), and `GL_EXT_packed_depth_stencil` when a stencil buffer is requested.
 
 ## Declared types
 
@@ -45,9 +45,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLScreenRenderTarget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_texture()` throws if called between `begin_render()` and `end_render()` — the texture cannot be read while it is still the active render target.
+- Instances are held by `boost::shared_ptr` rather than the usual `non_null_intrusive_ptr` specifically so they can live in a `GPlatesUtils::ObjectCache`; use `create_as_unique_ptr()` instead when single ownership must be guaranteed.
 
 ## Used by
 

@@ -9,9 +9,15 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChooseColourButton tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ChooseColourButton` is a small self-contained swatch widget: a `QToolButton`
+whose icon is a solid-fill pixmap of the current `GPlatesGui::Colour`, whose
+tooltip shows its RGB values, and which pops up `QtWidgetUtils::get_colour_with_alpha()`
+on click to let the user pick a new colour (including alpha). It is a
+building block used by several rendering-configuration dialogs
+(`ConfigureCanvasToolGeometryRenderParametersDialog`, `ConfigureGraticulesDialog`,
+`ConfigureTextOverlayDialog`) wherever a colour setting needs a compact
+in-place control rather than a full colour-picker dialog embedded in the
+form.
 
 ## Declared types
 
@@ -39,9 +45,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChooseColourButton tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_colour()` is a no-op if the new colour equals `d_colour`, so
+`colour_changed` fires only on an actual change, whether triggered by the
+user or by a caller invoking `set_colour()` directly. The default colour
+before any call is white (`GPlatesGui::Colour::get_white()`).
 
 ## Used by
 

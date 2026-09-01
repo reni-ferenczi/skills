@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLFilledPolygonsMapView tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLFilledPolygonsMapView` is the 2D-map counterpart to `GLFilledPolygonsGlobeView`: it fills polygons and polylines using the same stencil-based technique — draw boundary triangles fanned from a centroid and let the stencil test resolve the interior — instead of tessellating a polygon mesh, because tessellation is too slow to redo every frame for dynamic topological polygons. Because the map projection is already flat, there is no cube-quad-tree spatial partition or per-tile level-of-detail here: geometry is given directly as `QPointF` line geometries in projected map space and rendered in a single pass.
+
+Callers accumulate drawables into a `FilledDrawables` instance via `add_filled_polygon` (single ring, or multiple rings for a polygon with holes) or the `begin_filled_triangle_mesh`/`add_filled_triangle_to_mesh`/`end_filled_triangle_mesh` sequence for individually supplied triangles, then hand the whole batch to `render`, which writes it into a shared vertex array and issues one draw call per accumulated drawable.
 
 ## Declared types
 
@@ -51,9 +51,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLFilledPolygonsMapView tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `render` requires a stencil buffer; if the context's `QGLFormat` has none it logs one warning and returns without drawing, so filled polygons silently disappear on such hardware (rare in practice).
+- `begin_filled_drawable`/`end_filled_drawable` must bracket each drawable exactly once, and `FilledDrawables::clear()` should be reused across render calls rather than replaced, to avoid repeated vector reallocation.
+- Colours are expected pre-multiplied by alpha; `render` sets up blending accordingly.
 
 ## Used by
 

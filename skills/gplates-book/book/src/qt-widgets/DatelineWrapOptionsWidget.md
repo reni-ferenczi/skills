@@ -10,9 +10,16 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/DatelineWrapOptionsWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DatelineWrapOptionsWidget` is a small, reusable options panel — a single
+checkbox plus a help button — embedded by several export option widgets
+(`ExportFlowlineOptionsWidget`, `ExportResolvedTopologyOptionsWidget` and others)
+to let the user opt into clipping polyline and polygon geometries at the dateline
+and wrapping the pieces to the other side. Its own `InformationDialog`, wired to
+`push_button_help_dateline_wrap`, explains that wrapping is meant for ArcGIS
+compatibility and is irreversible once a file is saved with it applied. The widget
+holds no other state: `get_wrap_to_dateline()` reads the checkbox directly and
+`set_options()`/`reset_options()` write it, so callers persist the option
+themselves (typically in an export configuration).
 
 ## Declared types
 
@@ -42,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/DatelineWrapOptionsWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

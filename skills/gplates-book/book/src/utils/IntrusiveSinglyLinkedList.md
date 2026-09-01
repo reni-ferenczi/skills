@@ -8,9 +8,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/IntrusiveSinglyLinkedList tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`IntrusiveSinglyLinkedList` is a low-level linked list for cases where a
+`std::list` is too heavy: an element becomes part of the list by inheriting
+publicly from `IntrusiveSinglyLinkedList<ElementNodeType>::Node`, which adds
+only a single `mutable` next-pointer, and the list itself stores nothing but
+a head pointer. Because the "next" pointer lives inside the element rather
+than in a separate node allocation, the list never allocates — `push_front`
+and `pop_front` just relink an existing object, and the client retains
+ownership and is responsible for the elements' memory throughout.
+
+Copying or assigning a list does not copy elements: both copies share
+(tail-share) the same underlying chain, which the header calls out as a
+deliberate feature for traversing directed-acyclic-graph structures, where
+each node's list of ancestors can share a common tail with its siblings'
+lists instead of duplicating it. An `ElementNodeType` that must belong to
+more than one such list at once inherits from `Node` multiple times, once
+per list, disambiguated with a distinct `NodeTag` type parameter for each —
+`push_front`, `pop_front` and the iterator's increment all use a
+tag-qualified `tagged_base_node_type` typedef to pick the right base when an
+element has more than one `Node` base.
 
 ## Declared types
 
@@ -46,9 +62,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/IntrusiveSinglyLinkedList tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `front()`, `pop_front()` or dereferencing/incrementing `end()` on an
+empty list is undefined behaviour (a likely crash) — the class does no bounds
+checking. `clear()` and `pop_front()` only detach elements; they never
+destroy or free them, since the client owns the elements' memory. The header
+itself notes that now the project's minimum Boost version is 1.35 or higher,
+`boost::intrusive::slist` should be used instead of this class for new code.
 
 ## Used by
 

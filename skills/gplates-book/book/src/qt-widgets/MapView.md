@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/MapView tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The map counterpart to `GlobeCanvas`: a `QGraphicsView` (implementing [`SceneView`](SceneView.md)) whose viewport is a custom `QGLWidget` (`MapViewport`) and whose `QGraphicsScene` is `MapCanvas` (`d_map_canvas_ptr`). It exists so [`qt-widgets/GlobeAndMapWidget`](GlobeAndMapWidget.md) can offer a flat-projection view alongside the 3D globe using the same OpenGL resources: the constructor takes `share_gl_widget`/`share_gl_context`/`share_gl_visual_layers` from the globe's context so textures, vertex buffers and other persistent OpenGL objects (`d_gl_visual_layers`) are not duplicated for high-resolution rasters. `d_map_transform` (owned by `ViewState`, not this class) holds the current zoom/rotation/pan state; `handle_transform_changed`, connected to its `transform_changed` signal, recomputes a `QTransform` via the free functions `calc_world_transform`/`calc_world_transform_scale_factor` and applies it with `setTransform`, so all panning/zooming/rotating is expressed as transform changes rather than scene edits.
+
+Mouse handling reimplements `QGraphicsView`'s event handlers to distinguish clicks from drags manually: `mousePressEvent` records a `MousePressInfo` snapshot (screen position, scene position, lat/lon, surface-or-not), and `mouseMoveEvent`/`mouseReleaseEvent` promote it to a drag once the pointer has moved far enough, emitting `mouse_pressed`/`mouse_clicked`/`mouse_dragged`/`mouse_released_after_drag`/`mouse_moved_without_drag` for canvas tools ([`canvas-tools/CanvasToolAdapterForMap`](../canvas-tools/CanvasToolAdapterForMap.md) and the `gui/*CanvasToolWorkflow` classes) to consume instead of driving behaviour directly. `setInteractive(false)` disables `QGraphicsView`'s own item-interaction machinery so these custom handlers are the sole source of mouse behaviour.
 
 ## Declared types
 
@@ -95,9 +95,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/MapView tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only the left mouse button drives `d_mouse_press_info`/click-drag tracking; other buttons are ignored in `mousePressEvent`/`mouseReleaseEvent`. `mouseReleaseEvent` guards against `d_mouse_press_info` being unset — the comment notes a fast double-click on the map can reach release without a matching press having initialised it, so it returns early rather than dereferencing a `boost::none`. `orientation()` always returns `boost::none` — the map projection has no meaningful single "camera orientation" the way the globe does, unlike its `set_orientation()`, which still applies a rotation to `d_map_transform`. Screen-space measurements (`get_viewport_size`, the transforms computed in `handle_transform_changed`/`render_to_qimage`/`render_opengl_feedback_to_paint_device`) are all in device-*independent* pixels, not OpenGL device pixels — the device pixel ratio only matters to the `QGLWidget` viewport itself.
 
 ## Used by
 

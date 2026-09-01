@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/InformationDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InformationDialog` is a minimal, reusable pop-up for showing a block of read-only text under a caller-supplied title — an "about this feature" or help note rather than a full-featured message box. It is built from the `InformationDialogUi.ui` form and simply forwards `set_text()`/`set_title()` calls to the generated `text_information` label and the window title, which is why its constructor also takes `text_` and `title_` directly. The window hints passed to `QDialog` (`CustomizeWindowHint | WindowTitleHint | WindowSystemMenuHint`) strip the dialog down to just a title bar and system menu, deliberately hiding the minimize/maximize/help buttons that a plain `QDialog` would otherwise get.
+
+Its long "Used by" list across the qt-widgets component reflects that it is the standard, low-ceremony way many other dialogs and layer-options widgets show a short explanatory note to the user.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/InformationDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

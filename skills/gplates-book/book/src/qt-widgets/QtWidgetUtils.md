@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/QtWidgetUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A grab-bag of Qt widget/dialog helpers used across the dozens of `*Dialog` and `*Widget` classes in this module (see the long "Used by" list) so each one does not reimplement common Qt boilerplate. `add_widget_to_placeholder` is the standard trick for dropping a hand-constructed widget into a spot reserved by a Designer `.ui` form. `reposition_to_side_of_parent` and `pop_up_dialog` paper over platform differences in how dialogs position and raise themselves — the latter's `activateWindow()`/`raise()` sequence exists specifically because re-selecting a menu action for an already-open dialog needs to refocus it, and some platforms do not keep child dialogs on top of their parent by default.
+
+`get_colour_with_alpha` wraps `QColorDialog::getColor` with `ShowAlphaChannel` and converts the result to `GPlatesGui::Colour`, working around the Qt 4.5 `QColorDialog` API change (the older `getRgba()` is deprecated). `is_control_c` normalises the Ctrl+C vs. Cmd+C distinction between macOS and other platforms so callers can check for a single logical shortcut. `create_transparent_checkerboard` renders the usual light/dark grey checkerboard pattern used as a background behind semi-transparent imagery, by painting a 2x2 tile once and tiling it across the requested size.
 
 ## Declared types
 
@@ -36,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/QtWidgetUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`resize_based_on_size_hint` only works correctly if any vertical spacers in the dialog's layout have a `sizeHint()` height of 0 (see `SetProjectionDialog` for an example); otherwise the computed height will be wrong. All functions here are free functions with no shared state, so there is nothing to synchronise.
 
 ## Used by
 

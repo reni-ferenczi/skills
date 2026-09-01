@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyGeometryResolverLayerProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyGeometryResolverLayerProxy` is the `LayerProxy` behind topology layers: it turns topological line and boundary features into resolved geometries (`ResolvedTopologicalLine`, `ResolvedTopologicalBoundary`) at a given reconstruction time, plus the velocities at points on those geometries. Resolving a topology means walking its referenced sections, which live in other layers, so the proxy takes its reconstructed-geometry and resolved-line inputs from `ReconstructLayerProxy` and other `TopologyGeometryResolverLayerProxy` instances via `set_current_topological_sections_layer_proxies()`, tracking exactly which section features each cached result depends on through `DependentTopologicalSectionLayers`.
+
+Boundaries and lines are resolved and cached separately because of a deliberate ordering restriction: a resolved boundary may reference a resolved line as one of its sections, but a resolved line may only reference plain reconstructed geometry, never another resolved line or boundary. Since topological references are looked up by feature ID rather than by querying input layers directly, this one-way restriction is what lets the resolver guarantee its inputs are already resolved before it needs them, without a general dependency solver. `get_resolved_boundary_time_span()` exists purely as a performance optimisation on top of `get_resolved_topological_boundaries()`: it caches a whole `TimeSpanUtils::TimeRange` of resolved boundaries once, so that multiple clients stepping through the same sequence of times (as `TopologyReconstruct` does) share one computation instead of each repeating it.
 
 ## Declared types
 
@@ -96,9 +96,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyGeometryResolverLayerProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Resolved lines and resolved boundaries are cached and invalidated independently, each behind its own `SubjectToken` (`get_subject_token()` for either, `get_resolved_lines_subject_token()` for lines alone). `get_resolved_lines_subject_token()` deliberately skips the resolved-line topological-sections check that `get_subject_token()` performs, because resolved lines can never depend on other resolved lines — checking anyway would recurse infinitely through the same set of proxies. Input layer proxy changes are not pushed to this proxy; `check_input_layer_proxies()` polls them lazily, on every `get_subject_token()`/`get_resolved_lines_subject_token()` call and before resolving, so a stale cache is only ever detected when a client next asks for one of these.
 
 ## Used by
 

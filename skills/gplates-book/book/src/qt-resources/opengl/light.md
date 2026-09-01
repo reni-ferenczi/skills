@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=shaders/light tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLLight` uses this pair to precompute a directional light's direction as a function of position on the map, storing the result in a cube texture that other shaders (for example the normal-mapped raster fragment shader) sample by world-space sphere normal instead of recomputing the light direction themselves. This exists because a 2D map view can rotate independently of the light, so the light direction relative to the map is not constant the way it is for the ambient/diffuse shortcut used elsewhere in map-view lighting.
+
+The vertex shader takes the light direction in view-space and rotates it into world-space using the inverse of `gl_ModelViewMatrix`. Rather than compute that inverse itself, it repurposes the fixed-function `GL_MODELVIEW` matrix slot to hold the view transform, letting OpenGL's driver supply `gl_ModelViewMatrixInverse` for free. The fragment shader just outputs that direction unchanged per texel of the cube map, remapped from `[-1,1]` to `[0,1]` for storage in an unsigned 8-bit render target.
 
 ## Declared types
 
@@ -27,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=shaders/light tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The vertex shader's trick of loading the view transform into `GL_MODELVIEW` to get a free matrix inverse means callers must not rely on `gl_ModelViewMatrix` here for anything else — it does not hold an actual model-view transform for this draw.
 
 ## Used by
 

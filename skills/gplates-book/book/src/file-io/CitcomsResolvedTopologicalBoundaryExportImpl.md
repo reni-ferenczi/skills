@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/CitcomsResolvedTopologicalBoundaryExportImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit supplies the data types and classification logic shared by the CitcomS resolved-topology exporters (`CitcomsResolvedTopologicalBoundaryExport` and its GMT/OGR format backends). `ResolvedTopology` pairs a resolved `ReconstructionGeometry` with a `ResolvedTopologyType` (plate, slab or network polygon); `SubSegment` pairs a `ResolvedTopologicalGeometrySubSegment` with a `SubSegmentType`; `SubSegmentGroup` bundles one `ResolvedTopology` with only the subset of its subsegments relevant to a given output file, since a single polygon's boundary is split across several export files (for example, ridge-transform boundaries versus left/right subduction boundaries).
+
+`get_sub_segment_type` and `get_slab_sub_segment_type` classify a subsegment's source feature into a `SubSegmentType` (subduction zone left/right/unknown, or one of the slab-edge categories), and each is implemented as a `ConstFeatureVisitor` — `DetermineSubSegmentFeatureType` and `DetermineSlabSubSegmentFeatureType` respectively — because the polarity or feature-type information can be buried inside a time-dependent property value (`GpmlConstantValue`, `GpmlIrregularSampling`, `GpmlPiecewiseAggregation`) that must be evaluated at the given reconstruction time rather than read directly off the feature.
 
 ## Declared types
 
@@ -130,9 +130,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/CitcomsResolvedTopologicalBoundaryExportImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- If a subduction-zone subsegment's polarity enumeration is absent or `"Unknown"`, `DetermineSubSegmentFeatureType` falls back to reading the `sL`/`sR` data-type code out of the feature's `oldPlatesHeader` property before giving up and returning `SUB_SEGMENT_TYPE_SUBDUCTION_ZONE_UNKNOWN`.
+- `SubSegment`, `ResolvedTopology` and `SubSegmentGroup` hold raw, non-owning pointers into `GPlatesAppLogic` objects (a `ReconstructionGeometry` and a `ResolvedTopologicalGeometrySubSegment`); callers must keep the underlying resolved topology alive for as long as these structs are used.
 
 ## Used by
 

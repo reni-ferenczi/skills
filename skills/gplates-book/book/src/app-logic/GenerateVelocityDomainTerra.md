@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/GenerateVelocityDomainTerra tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenerateVelocityDomainTerra` is the Terra-mesh equivalent of `GenerateVelocityDomainCitcoms`: it builds the point grid on which the mantle-convection code Terra expects velocities, split by Terra's own MPI processor decomposition, so GPlates can export a velocity domain matching a Terra run's parallel layout. Terra's mesh is an icosahedron subdivided into 10 diamonds, each stored in `Grid`'s private `Diamond` helper as an `(mt+1) x (mt+1)` array of `GPlatesMaths::UnitVector3D` points (`Diamond::allocate()`/`Diamond::get()`); `Grid`'s constructor takes Terra's own `mt`, `nt` and `nd` parameters, validates them (`nd` must be 5 or 10, `mt` and `nt` must each be a power of two, `mt >= nt`) via `GPlatesGlobal::Assert`, and precomputes `d_num_processors` from `calculate_num_processors()`.
+
+`get_processor_sub_domain()` returns the subset of grid points assigned to one Terra local processor as a `MultiPointOnSphere`; when `nd == 5`, the 10 diamonds are split into two sets so the mesh still decomposes correctly with half as many diamond-level processors as the `nd == 10` case.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/GenerateVelocityDomainTerra tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both the `Grid` constructor and `calculate_num_processors()` throw `GPlatesGlobal::PreconditionViolationError` (not a return-code or optional) if `mt`/`nt`/`nd` violate Terra's constraints, and `get_processor_sub_domain()` throws the same if `processor_number >= get_num_processors()` — callers must validate Terra parameters against Terra's own conventions before constructing a `Grid`.
 
 ## Used by
 

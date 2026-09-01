@@ -9,9 +9,14 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/GpgimInitialisationException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpgimInitialisationException` is the `GPlatesGlobal::Exception` thrown when
+`Gpgim` fails to read or parse `gpgim.xml` at startup. It carries the GPGIM
+filename, the line number in that file, and a message describing what went
+wrong, and formats them into a single diagnostic line in `write_message()`
+("Error initialising GPGIM from file '...' at line '...': ..."). Since GPGIM
+parsing happens once, early in startup, this exception exists to give that
+one failure mode a precise, file-and-line error report rather than a generic
+one.
 
 ## Declared types
 
@@ -41,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/GpgimInitialisationException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

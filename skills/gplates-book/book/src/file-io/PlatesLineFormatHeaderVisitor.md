@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PlatesLineFormatHeaderVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PlatesLineFormatHeaderVisitor` reconstructs the fixed-format PLATES4 header line
+(region number, reference number, plate ID, ages of appearance/disappearance, data
+type code, colour code, …) for a feature that is about to be written out in
+PLATES line format or GMT format, both of which carry this header as a comment
+line. `OldPlatesHeader` is the plain-data record of that header's fields, with a
+`create_gpml_old_plates_header` method to turn it into a `GpmlOldPlatesHeader`
+property value for storage back on a feature.
+
+The visitor's `get_old_plates_header` is the entry point: it walks the feature's
+properties looking first for an existing `gpml:oldPlatesHeader` (`visit_gpml_old_plates_header`)
+and, failing that, for the individual properties a header is built from —
+`gpml:reconstructionPlateId`/`gpml:conjugatePlateId` (`visit_gpml_plate_id`),
+`gml:validTime` (`visit_gml_time_instant`/`visit_gml_time_period`) and
+`gml:description`/`gml:name` (`visit_xs_string`) — accumulating whatever it finds
+into `d_accum`. This lets a feature that was never loaded from a PLATES4 file (a
+GPML feature with no old-header property) still be exported in that format with a
+best-effort synthetic header.
 
 ## Declared types
 
@@ -69,9 +83,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PlatesLineFormatHeaderVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- When no `gpml:oldPlatesHeader` is found, the synthesized header deliberately
+  uses `99`/`9999` placeholder numbers rather than `0`, because some Fortran
+  tooling and Intertec treat a `0` region/reference/string number as valid data —
+  see the comment in `get_old_plates_header`.
+- Even when an existing `gpml:oldPlatesHeader` is found and reused verbatim, the
+  feature ID is still appended to the geographic description afterwards (unless
+  `append_feature_id_to_geographic_description` is false), and any GPlates-side
+  plate ID, conjugate plate ID, or validity-time properties override the
+  corresponding fields of the reused header — so the returned header is not always
+  identical to the one stored on the feature.
+- The visitor is reset (`d_accum = PlatesHeaderAccumulator()`) at the start of
+  every `get_old_plates_header` call, so one instance can be reused across
+  multiple features.
 
 ## Used by
 

@@ -10,9 +10,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ApplyReconstructionPoleAdjustmentDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This file provides two collaborating classes for the "manually adjust a
+reconstruction pole" workflow used by `ModifyReconstructionPoleWidget`. The
+dialog, `ApplyReconstructionPoleAdjustmentDialog`, is pure display and input:
+it shows the moving plate ID, the original and resulting `FiniteRotation`
+(via the free `fill_in_fields_for_finite_rotation()`/`fill_in_fields_for_rotation()`
+helpers), and a `table_pole_sequences` listing every total-reconstruction-
+sequence feature the user could choose to store the adjustment into.
+
+`AdjustmentApplicator` does the actual work and is not a widget at all — a
+plain `QObject` that the dialog's owner wires up to receive the dialog's
+`pole_sequence_choice_changed`/`pole_time_changed` signals. It holds the
+pending adjustment `Rotation`, the `ReconstructionTree` it was computed
+against, and the list of `ApplyReconstructionPoleAdjustmentDialog::PoleSequenceInfo`
+candidates; `apply_adjustment()` looks up the feature the user picked and
+inserts the new pole into it with a
+`GPlatesFeatureVisitors::TotalReconstructionSequenceRotationInserter`, wrapped
+in a `GPlatesModel::NotificationGuard` so the edit is reported to the model as
+one change instead of several.
 
 ## Declared types
 
@@ -74,9 +89,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ApplyReconstructionPoleAdjustmentDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`AdjustmentApplicator::d_adjustment`, `d_adjustment_rel_fixed` and
+`d_reconstruction_tree` are all `boost::optional` and start unset; several
+slots (`handle_pole_sequence_choice_changed()`, `apply_adjustment()`) simply
+log to `std::cerr` and return if the container of sequence choices or these
+optionals are empty, rather than asserting, since they can legitimately be
+invoked before `set()` has populated them. The `#if 0`-guarded `change_value`
+/`propagate_value` block in the header is dead code, left in place rather
+than removed.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionGraphPopulator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionGraphPopulator` is the `GPlatesModel::FeatureVisitor` that turns Total Reconstruction Sequence features (as loaded from a rotation file) into calls to `ReconstructionGraphBuilder::insert_total_reconstruction_sequence`. It visits each feature's `gpml:fixedReferenceFrame` and `gpml:movingReferenceFrame` plate-ID properties and its `GpmlIrregularSampling` of `GpmlFiniteRotation` time samples, accumulating them in the private `ReconstructionSequenceAccumulator` until `finalise_post_feature_properties` has all three pieces — a fixed plate ID, a moving plate ID, and at least two enabled pole time samples — and only then inserts the completed sequence into the graph builder; a feature missing any of these, or with fewer than two enabled samples, is silently dropped without reaching the builder.
+
+The anonymous-namespace helper `IsReconstructionFeature` implements the static `can_process` check used by callers to decide, ahead of time, whether a given `FeatureHandle` is worth visiting at all: it runs the same three-property test (a `GpmlFiniteRotation` somewhere inside an irregular sampling, plus both reference-frame plate IDs) as a cheap, read-only probe via `GPlatesModel::ConstFeatureVisitor`, without touching the graph builder.
 
 ## Declared types
 
@@ -62,9 +62,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionGraphPopulator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `visit_gpml_irregular_sampling` assumes every value it contains is a `GpmlFiniteRotation`; it sets `d_is_expecting_a_finite_rotation` before visiting each enabled time sample and relies on `visit_gpml_finite_rotation` only acting when that flag is set, so a differently-typed sample would simply be ignored rather than reported as an error.
+- Disabled time samples in a `GpmlIrregularSampling` are skipped, so the two-sample minimum applies to enabled samples only.
+- The accumulator is reset both before and after each feature (`initialise_pre_feature_properties` / `finalise_post_feature_properties`), so state never leaks between features visited by the same populator instance.
 
 ## Used by
 

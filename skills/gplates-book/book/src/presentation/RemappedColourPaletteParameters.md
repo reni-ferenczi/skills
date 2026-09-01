@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/RemappedColourPaletteParameters tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesPresentation::RemappedColourPaletteParameters` bundles a real-valued `GPlatesGui::RasterColourPalette` with an optional remapping of its input range, so that a layer can show the palette either over its natural (loaded or default) range or stretched/compressed to a range chosen by the user. It keeps the colour palette itself (loaded from a CPT file, a built-in `GPlatesGui::BuiltinColourPaletteType`, or auto-generated) separate from the palette *range*, tracking an unmapped `ColourPaletteInfo` and a mapped `ColourPaletteInfo` side by side; `get_colour_palette()` and `get_palette_range()` transparently return whichever one is current.
+
+The class exists to back `RemappedColourPaletteWidget` and to be the piece of visual-layer state that widget edits — raster, scalar-field and reconstructed-scalar-coverage layers each keep one of these for their colour ramps. `set_deviation_from_mean()` records a "number of standard deviations" value that the widget uses to derive a mapped range from a scalar field's statistics (`[mean - deviation, mean + deviation]` for colour-by-scalar, `[-mean - deviation, mean + deviation]` for colour-by-gradient); this class only stores the parameter, it does not compute the mean itself.
 
 ## Declared types
 
@@ -61,9 +61,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/RemappedColourPaletteParameters tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Loading or switching the underlying colour palette (`load_colour_palette`, `load_builtin_colour_palette`, `use_default_colour_palette`) preserves an existing mapping by re-applying `map_palette_range()` with the previous mapped bounds to the new palette; if that re-mapping fails, the change is rolled back to the previous filename, name, built-in type and unmapped palette so the object never ends up with a mapped range that does not correspond to any palette.
+- An integer (categorical) colour palette cannot be mapped: `map_palette_range()` fails and leaves the palette unmapped, and `load_colour_palette()` only allows loading an integer palette when the raster is integer-valued and no mapping is in effect.
+- `map_palette_range()` nudges `lower_bound`/`upper_bound` apart by a relative `1e-6` when they compare equal, so the palette always has a non-zero range.
+- `get_mapped_palette_range()` returns the most recently mapped range even when the palette is currently unmapped, so callers can restore a previous mapping without having to cache the bounds themselves.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=shaders/multi_resolution_raster tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionRaster` uses these two fragment shaders (paired with a shared vertex shader not part of this unit) to populate cube-map tiles from a source raster before the tiles are draped onto the globe. `render_raster_fragment_shader.glsl` is compiled in one of three mutually exclusive modes selected by preprocessor defines: `SOURCE_RASTER_IS_FLOATING_POINT` bilinearly filters a data raster whose value and coverage are packed into the red/green channels (needed because older hardware has no native bilinear filtering for floating-point textures); `SURFACE_NORMALS` converts a tangent-space normal sampled from a normal-map raster into world-space, using per-fragment tangent/binormal/normal vectors interpolated from the vertex shader; `SCALAR_GRADIENT` combines a scalar and a partially pre-computed gradient from the source texture with the same tangent frame to produce a full world-space gradient.
+
+`render_sphere_normals_fragment_shader.glsl` is a separate, much simpler program used to clear a render target with the globe's own unperturbed sphere normal before a normal-map raster is drawn into it — so that any texels a *regional* normal-map raster does not cover still hold a sensible default normal rather than whatever was left in the buffer.
 
 ## Declared types
 
@@ -27,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=shaders/multi_resolution_raster tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The three `render_raster_fragment_shader.glsl` modes are mutually exclusive at compile time; the caller must define exactly one of `SOURCE_RASTER_IS_FLOATING_POINT`, `SURFACE_NORMALS`, or `SCALAR_GRADIENT` (or none, for a plain colour raster) rather than combining them.
 
 ## Used by
 

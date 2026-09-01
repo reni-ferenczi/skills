@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/BuildTopology tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`BuildTopology` is the canvas tool for the "build" phase of constructing a topological line, boundary or network: clicking a feature on the globe or map adds it to the clicked-features table so the user can pick it as a topological section in `GPlatesQtWidgets::TopologyToolsWidget`. Which `GPlatesAppLogic::TopologyGeometry::Type` it is building (`LINE`, `BOUNDARY` or `NETWORK`) is fixed at construction and drives `d_topology_sections_filter`, one of `GPlatesAppLogic::TopologyInternalUtils::can_use_as_resolved_line_topological_section` and its boundary/network counterparts, which `handle_left_click()` uses to restrict which reconstructed/resolved geometries under the cursor are eligible sections.
+
+On activation the tool saves whatever feature is currently focused so it can restore it on deactivation, which lets the build tools work even while a feature is focused elsewhere in the GUI; on deactivation it restores that focus (falling back to the feature's first geometry if the saved geometry property is no longer valid) and repopulates the clicked-features table from the restored focus so the "Clicked" panel reflects it. `handle_left_control_click()` is currently just an alias for `handle_left_click()`, with a `TODO` noting the intent to also add the hit feature as a topological section directly.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/BuildTopology tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

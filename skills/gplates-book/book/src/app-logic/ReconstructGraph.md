@@ -9,9 +9,46 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructGraph tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructGraph` is the mutable dataflow graph that sits between the loaded
+files and the computation. Its nodes are layers and input files; its edges are
+input connections on named channels. The graph itself holds the only owning
+references — layers live as `boost::shared_ptr<ReconstructGraphImpl::Layer>` in
+`d_layers`, input files as `ReconstructGraphImpl::Data` held by `InputFileInfo`
+in `d_input_files` — and everything it hands back to callers (`Layer`,
+`Layer::InputFile`, `Layer::InputConnection`) is a lightweight weak reference
+into that implementation. So the public API is a handle API: handles are cheap
+to copy and store, and they silently go invalid when the graph drops the thing
+they point at. `Layer` is a `friend`, which is how the handle class reaches the
+private `emit_*` helpers to raise signals on the graph's behalf.
+
+`ApplicationState` is the only driver. It calls `add_files` / `remove_file` when
+`FeatureCollectionFileState` reports files loaded or about to be unloaded, and
+it calls `update_layer_tasks` once per reconstruction. `update_layer_tasks` is
+the whole "run the engine" step and it is deliberately simple: pick the
+`ReconstructionLayerProxy` to serve as the default rotation source, create a
+`Reconstruction` for this time and anchored plate, walk the active layers once
+to register every layer proxy on the `Reconstruction`, then walk them again
+calling `LayerTask::update`. The two passes exist because some layers (topology
+layers in particular) reach other layers through the `Reconstruction` rather
+than through their own input channels, so the full set of active proxies must be
+known before any layer updates. Within each pass order does not matter — layers
+compute lazily, pulling from their dependencies on demand, so there is no
+topological sort here and no dependency-ordered execution.
+
+The rest of the class is the convenience layer that makes loading a file "just
+work". `auto_create_layers_for_new_input_file` asks `LayerTaskRegistry` which
+layer task types can process the file's feature collection — possibly several
+for one file — creates a layer per type, marks it auto-created, and wires it to
+its main input channel. `auto_connect_layers` then does a second, quadratic
+sweep over all layer pairs honouring the `auto_connect` flag on each
+`LayerInputChannelType::InputLayerType` (this is what joins velocity layers to
+topology layers). The inverse path runs on unload:
+`auto_destroy_layers_for_input_file_about_to_be_removed` removes only layers
+that were auto-created *and* whose main channel has exactly this one file as its
+sole input; anything the user created by hand survives and must be removed by
+hand. The same registry query is repeated by `modified_input_file` whenever a
+loaded feature collection changes, so saving a topology feature into a
+previously non-topological collection spawns the topology layer it now needs.
 
 ## Declared types
 
@@ -91,9 +128,61 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructGraph tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Handles are weak; the graph owns.** `remove_layer` drops the last owning
+`shared_ptr` and the layer is destroyed inside that call, so every `Layer` handle
+to it becomes invalid immediately. Likewise, unloading a file invalidates its
+`Layer::InputFile` and drops all connections into it. Always test `is_valid()`
+on a stored handle before use — including on `get_default_reconstruction_tree_layer()`,
+which returns a default-constructed (invalid) `Layer` when no default is set.
+`get_input_file` and `remove_file` assert (`PreconditionViolationError`) if the
+file is not currently in `d_input_files`, and `remove_layer` asserts if the layer
+is already gone.
+
+**Use `add_files`, not a loop over `add_file`.** `add_files` adds every file to
+the graph before auto-creating any layers, precisely because layer creation
+emits signals and a slot that reaches for a file not yet in the map will throw.
+Calling `add_file` repeatedly reintroduces that hazard.
+
+**The default reconstruction tree layer is a stack, not a slot.**
+`d_default_reconstruction_tree_layer_stack` records every layer that has been
+made the default, so unloading the current default falls back to the most recent
+previous one rather than to nothing. `set_default_reconstruction_tree_layer`
+only ever pushes; removal is what pops, in
+`handle_default_reconstruction_tree_layer_removal`, which also erases *all*
+occurrences of a layer since the same layer can sit in the stack several times.
+`add_layer` does not set the default even for a reconstruction tree layer — only
+auto-creation does, and only when `AutoCreateLayerParams::update_default_reconstruction_tree_layer`
+is set. Note the stack is not popped when a layer is merely deactivated.
+
+**The identity rotation proxy is a single long-lived instance.**
+`d_identity_rotation_reconstruction_layer_proxy` is created once in the
+constructor and has its time and anchor plate mutated in place each
+`update_layer_tasks`. Reusing the instance is intentional: replacing it would
+make dependent layers believe the default rotation source changed on every
+frame and invalidate their caches. The source comments flag this whole
+default-tree mechanism as due for rework.
+
+**Add/remove signal grouping is refcounted, not scoped.**
+`emit_begin_add_or_remove_layers` / `emit_end_add_or_remove_layers` emit only at
+nesting depth zero, so nested `AddOrRemoveLayersGroup` instances collapse into
+one begin/end pair. The constructor deliberately does *not* start the group —
+you must call `begin_add_or_remove_layers()` yourself; the destructor closes it
+if you did, swallowing any exception. Batch bulk additions and removals inside
+one group: the Visual Layers dialog relayout cost is proportional to the number
+of begin/end pairs, not the number of layers.
+
+**Not all connection changes are announced.**
+`layer_about_to_remove_input_connection` and `layer_removed_input_connection`
+fire only for an explicit `Layer::InputConnection::disconnect()`. Connections
+torn down implicitly, because their layer or input file went away, emit nothing.
+Also, `layer_added` is emitted from `add_layer` *before* the caller has made any
+input connections, so a slot must not assume the new layer has inputs.
+
+**The modification callback is deliberately not shared.** `InputFileInfo` keeps
+its own private `FeatureCollectionHandle::const_weak_ref` for the
+`FeatureCollectionModified` callback because copying a weak ref copies its
+callbacks, which would fire `modified_input_file` more than once per edit. Do
+not hand that weak ref out.
 
 ## Used by
 

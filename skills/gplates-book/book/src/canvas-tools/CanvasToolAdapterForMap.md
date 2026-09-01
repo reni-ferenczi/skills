@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/CanvasToolAdapterForMap tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CanvasToolAdapterForMap` is the map-side counterpart of `CanvasToolAdapterForGlobe`: it implements `GPlatesGui::MapCanvasTool`, whose events arrive as flat `QPointF` scene coordinates, and forwards them to the same widget-agnostic `CanvasTool` interface used by the globe. Unlike the globe adapter, which just repackages already-spherical coordinates, this one does real work — `invoke_canvas_tool_func()` converts each scene point to a `GPlatesMaths::PointOnSphere` via `qpointf_to_point_on_sphere()` and the map's `GPlatesGui::MapProjection`, computes the proximity-inclusion threshold at that point through `MapView::current_proximity_inclusion_threshold()`, and only then calls through a member-function pointer (`canvas_tool_click_func`, `canvas_tool_drag_func_with_default`/`_without_default`) into `d_canvas_tool_ptr`. The three private overloads of `invoke_canvas_tool_func()` centralise that conversion once for clicks, once for two-point drags, and once for drags with a "cancel/no-op" default action, so each public `handle_*` override is a short one-line call into whichever overload fits its signature.
+
+If a click or drag point is not on the map surface, or fails to project back to a point on the sphere, the corresponding `handle_*` call is silently dropped — the code notes this is a known limitation until map clicks can snap to the map's edge the way globe clicks snap to the horizon.
 
 ## Declared types
 
@@ -54,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/CanvasToolAdapterForMap tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+As with the globe adapter, `handle_deactivation()` checks `map_view().isVisible()` before forwarding, specifically to avoid deactivating the wrapped `CanvasTool` twice when both a globe and a map adapter wrap the same instance. `handle_shift_ctrl_left_release_after_drag` is commented out in the header because the corresponding virtual is itself commented out in `MapCanvasTool`.
 
 ## Used by
 

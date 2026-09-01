@@ -8,9 +8,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerProxyVisitor tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A header-only Visitor over the closed set of `LayerProxy` subclasses. `LayerProxy`
+declares two pure virtual `accept_visitor` overloads, one taking a
+`ConstLayerProxyVisitor` and one a `LayerProxyVisitor`; each concrete proxy
+implements them inline as `visitor.visit(GPlatesUtils::get_non_null_pointer(this))`,
+which is the second half of the double dispatch. The visitor's overload set is
+therefore the authoritative enumeration of the layer kinds the application knows
+about — co-registration, raster, reconstruct, reconstruct-scalar-coverage,
+reconstruction, 3D scalar field, topological geometry, topological network and
+velocity field.
+
+Const and non-const visitation share one definition. `LayerProxyVisitorBase` is
+templated on the visited type, and every concrete proxy typedef is run through
+`GPlatesUtils::CopyConst<LayerProxyType, X>`, which copies the const-ness of the
+template argument onto `X`. Instantiating with `LayerProxy` gives visit overloads
+taking `non_null_intrusive_ptr<RasterLayerProxy>`; instantiating with
+`const LayerProxy` gives `non_null_intrusive_ptr<const RasterLayerProxy>`. The two
+typedefs at the top of the header name those two instantiations, and callers use
+those names rather than the template.
+
+In practice this is used less for open-ended traversal than as a type-safe
+substitute for `dynamic_cast`. `LayerProxyUtils::LayerProxyDerivedTypeFinder<T>`
+derives from the visitor, overrides the single `visit` overload for `T`, and
+collects what it finds; `LayerProxyUtils::get_layer_proxy_derived_type<T>()` and
+`get_layer_proxy_derived_type_sequence()` wrap that into a
+`boost::optional<T *>` or a filtered container. Most of the fan-in listed below
+reaches this header through those two functions, not by writing a visitor of its
+own.
 
 ## Declared types
 
@@ -62,9 +86,26 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerProxyVisitor tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every `visit` overload has an empty inline body, so a derived visitor overrides
+only the cases it cares about and silently ignores the rest — there is no
+"unhandled proxy type" diagnostic. That default is also why the destructor is
+declared pure virtual and then given an out-of-line definition: without it nothing
+in the class would be pure and the class would not be abstract.
+
+Overriding one overload hides the whole overload set, so a derived visitor must
+write `using base_class_type::visit;` (as `LayerProxyDerivedTypeFinder` does) or
+its remaining `accept_visitor` calls will not compile.
+
+Adding a new `LayerProxy` subclass means editing this header: a forward
+declaration, a `CopyConst` typedef and a `visit` overload. Skipping it is normally
+a compile error in the new subclass's `accept_visitor`, but a proxy derived from an
+*existing* proxy will bind to the base's overload and be reported as the base type
+by `get_layer_proxy_derived_type`.
+
+`visit` receives a `non_null_intrusive_ptr`, so the proxy is reference-counted for
+the duration of the call, but `LayerProxyDerivedTypeFinder` stores raw pointers
+(`layer_proxy.get()`). Results from `get_layer_proxy_derived_type` are only valid
+while the caller still holds its own reference to the proxy.
 
 ## Used by
 

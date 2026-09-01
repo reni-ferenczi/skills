@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VisualLayers tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayers` mirrors the layers held by `GPlatesAppLogic::ReconstructGraph` with a parallel collection of `VisualLayer` objects, one per app-logic `Layer`, and is the object the rest of the presentation and Qt-widgets code queries for layer ordering, visibility and rendered-geometry output. It listens to `ReconstructGraph`'s layer-lifecycle signals (`layer_added`, `layer_about_to_be_removed`, `layer_activation_changed`, `layer_params_changed`, the input-connection signals, and the default-reconstruction-tree-layer signal — see the connections in Related) and reacts by creating, destroying or refreshing the matching `VisualLayer` in its private handlers, so callers never have to keep the two collections in sync themselves.
+
+Each `VisualLayer` owns a dedicated child layer inside the `RenderedGeometryCollection`'s `RECONSTRUCTION_LAYER`, which lets `VisualLayers` control draw order independently of app-logic layer order; `d_layer_order` records that ordering (front to back) and `d_index_map` maps a rendered-geometry child-layer index back to its owning `VisualLayer`. `create_rendered_geometries`, connected to `ApplicationState::reconstructed` as well as to render-settings and draw-style change signals, walks the active visual layers and turns the most recent reconstruction geometries into rendered geometries without triggering a new reconstruction — the comment on the method spells out that distinction because it is easy to assume calling it also re-reconstructs.
+
+`notify_visual_layer_params` forwards a modified app-logic layer to its `VisualLayerParams::handle_layer_modified`, which is how a params object stays in sync with input-connection changes on its owning layer without polling. `get_index_of_new_layer` decides where a freshly created layer lands in the ordering, consulting `VisualLayerRegistry` for the new layer's group.
 
 ## Declared types
 
@@ -91,9 +93,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VisualLayers tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All signals and slots on this class are declared with fully namespace-qualified argument types (e.g. `GPlatesAppLogic::ReconstructGraph &`, not an unqualified local alias); the header calls this out explicitly because Qt's string-based signal/slot matching fails silently at runtime if a signal and slot for the same connection are declared with differently-spelled but equivalent types. `d_layer_order` stores layers in increasing z-order — drawing proceeds front to back, the opposite of what the name might suggest — and this is also the reverse of the order `VisualLayerRegistry::register_visual_layer_type` describes for registering layer types.
 
 ## Used by
 

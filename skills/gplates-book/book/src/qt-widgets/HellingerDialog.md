@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HellingerDialog` is the main window for GPlates' Hellinger three-plate fitting tool: it hosts the picks tab (`HellingerPickWidget`) and the fit tab (`HellingerFitWidget`), owns the `HellingerModel` that both tabs edit, and drives seven `RenderedGeometryCollection` child layers (picks, hover, selection, results, editing, feature highlight, pole estimate) that visualise picks and fitted poles on the globe. `CanvasOperationType` and the `is_in_*_state()` queries track which interactive editing mode (`SELECT_OPERATION`, `EDIT_POINT_OPERATION`, `NEW_POINT_OPERATION`, `EDIT_SEGMENT_OPERATION`, `NEW_SEGMENT_OPERATION`) the canvas tools `AdjustFittedPoleEstimate` and `SelectHellingerGeometries` are currently in, since those tools report picks and edits back into this dialog rather than owning the model themselves.
+
+The actual pole-fitting computation is not done in this class: `handle_calculate_fit()` and related handlers write the current picks to a temporary file and hand it to `d_hellinger_thread` (a `HellingerThread`), which runs a bundled Python script (`d_python_file`, located under the `paths/python_system_script_dir` user preference) in the background and reports back through `handle_thread_finished()`. `create_feature_collection()` is the path back into the main GPlates model once a fit is accepted. `Configuration` bundles the colours, symbols and sizes used to render picks and results, editable via `HellingerConfigurationDialog`/`HellingerConfigurationWidget` and applied through `handle_configuration_changed()`.
 
 ## Declared types
 
@@ -243,9 +243,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`hide()` overrides `QDialog::hide()` specifically so that this dialog's child dialogs (`HellingerPointDialog`, `HellingerSegmentDialog`, `HellingerStatsDialog`, `HellingerConfigurationDialog`) are hidden along with it via `hide_child_dialogs()` — hiding via a base-class pointer would skip that step. The pole-fit and uncertainty calculations run on `d_hellinger_thread`, a background `QThread`; UI updates from that work happen only after `handle_thread_finished()` fires, not while the thread is running. `d_plate_1_id`/`d_plate_2_id`/`d_plate_3_id` are documented in the header as "not currently used".
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The visitor interface that stands between `RenderedGeometry`'s pimpl handle and the many concrete `RenderedGeometryImpl` subclasses: `RenderedGeometry::accept_visitor()` dispatches to one `visit_rendered_*` method per concrete type, and every method takes its argument by const reference — the header notes this is deliberate, since `RenderedGeometry` objects are meant to be treated as immutable once built. Painters (`GlobeRenderedGeometryLayerPainter`, `MapRenderedGeometryLayerPainter`) and canvas tools that need to react differently per geometry kind subclass this rather than adding a type switch.
+
+Every `visit_*` method has an empty default body, so a subclass only needs to override the handful of geometry kinds it actually cares about; unhandled kinds are silently skipped rather than causing a compile error or an assertion. `visit_rendered_reconstruction_geometry()` and `visit_rendered_multi_reconstruction_geometry()` are called out as composite objects, unlike the other, purely geometric kinds — they wrap the underlying `ReconstructionGeometry` (and, for the multi- variant, its per-instance associations) rather than describing a shape directly.
 
 ## Declared types
 
@@ -60,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Adding a new `RenderedGeometryImpl` subclass means adding a matching `visit_*` method here and to every existing subclass that needs to handle it specifically — the empty-default-body design means a forgotten override fails silently (the new geometry kind is just never visited) rather than failing to compile.
 
 ## Used by
 

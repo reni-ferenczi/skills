@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTopologicalLine tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlTopologicalLine` implements the `gpml:TopologicalLine` property value: a topological polyline defined as an ordered sequence of `GpmlTopologicalSection` elements, each of which contributes part of the line's geometry (typically by delegating to another feature's line geometry, possibly clipped between two points). It is the line counterpart of the topological-polygon/network property values, letting a feature such as a plate boundary segment be defined in terms of shared sections rather than duplicating coordinates.
+
+`app-logic/TopologyGeometryResolver` and `app-logic/TopologyInternalUtils` walk the section sequence via `sections_begin()`/`sections_end()` to resolve the referenced features into an actual polyline geometry at a given reconstruction time.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTopologicalLine tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The sections vector holds *non-const* `non_null_intrusive_ptr`s, so a section reachable through this property value can be mutated by holders elsewhere; `directly_modifiable_fields_equal()` therefore compares sections by deep value equality (`operator==` on each `GpmlTopologicalSection`) rather than by pointer identity, and `deep_clone()` clones every section rather than sharing them. The header notes this as a known wart it would rather avoid by using const pointers throughout, but that would require const feature visitors and is a broader change.
 
 ## Used by
 

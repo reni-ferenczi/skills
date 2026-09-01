@@ -9,9 +9,42 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/ReconstructionGeometryRenderer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionGeometryRenderer` is the single place that knows how to turn
+any concrete `ReconstructionGeometry` (RFGs, resolved topologies and
+networks, resolved rasters and scalar fields, flowlines, motion paths, VGPs,
+multi-point vector fields, co-registration data) into `RenderedGeometry`
+objects, via `GPlatesAppLogic::ConstReconstructionGeometryVisitor` double
+dispatch. `LayerOutputRenderer` is its usual caller: it hands each layer
+proxy's output to `render()`, one reconstruction geometry at a time, bracketed
+by `begin_render()`/`end_render()` (which cannot nest, and accumulate into
+whatever the target `RenderedGeometryLayer` already holds — clearing it is
+the caller's job). Rendering is controlled entirely through the `RenderParams`
+struct, a flat bag of per-layer-type settings (fill colours, line widths,
+scalar/raster colour palettes, VGP visibility predicate, topological network
+triangulation mode, and so on); `RenderParamsPopulator` builds one by visiting
+whichever concrete `VisualLayerParams` a layer has, so this class itself never
+has to know about `RasterVisualLayerParams`, `ReconstructVisualLayerParams`
+and the rest directly.
+
+Colouring and symbol lookup are centralised in the free functions `get_colour()`
+and `get_symbol()`: `get_colour()` picks, in order, an explicit override
+colour, a Python `DrawStyle` (when the Python component is enabled and a
+`StyleAdapter` is supplied), or else a `ColourProxy` that defers to the
+legacy hard-coded colouring schemes; `get_symbol()` looks up a
+`GPlatesGui::Symbol` by feature type in an optional `symbol_map_type`. Shared
+topological sub-segments are handled specially: `add_topological_shared_sub_segments()`
+accumulates, per rendered layer, which resolved boundaries/networks share
+each `ResolvedTopologicalSharedSubSegment`, and `render_topological_shared_sub_segments()`
+draws each one once at `end_render()` — as ordinary polylines, or with
+subduction teeth when `get_subduction_polarity()` finds a `gpml:SubductionZone`
+feature with a `gpml:subductionPolarity` of `Left` or `Right` — associating
+the rendered geometry with *all* the topologies that share it so clicking it
+selects the right features. The large block of `render_topological_network_*`
+private methods handles the several ways a `ResolvedTopologicalNetwork`'s
+Delaunay triangulation can be drawn: filled by draw style, coloured by
+smoothed or unsmoothed strain rate (barycentric or natural-neighbour
+subdivision, each with its own angular subdivision threshold), rigid blocks,
+and per-point velocities.
 
 ## Declared types
 
@@ -92,9 +125,24 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/ReconstructionGeometryRenderer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`begin_render()`/`end_render()` calls cannot nest and must be paired —
+mismatches throw `GPlatesGlobal::PreconditionViolationError`, as does calling
+the templated `render()` outside such a pair. `render()` dispatches through
+`accept_visitor()` rather than calling a `visit()` overload directly because
+some derived reconstruction-geometry types (for example flowlines) derive
+from another visited type (RFG), so full virtual dispatch is required to hit
+the right overload. Only rendered geometries that represent a
+`ReconstructionGeometry`'s own `GeometryOnSphere` should go through
+`render_reconstruction_geometry_on_sphere()` (which honours the current
+spatial-partition location); everything else — velocity arrows, shared
+sub-segments, network fills — must go through the plain `render(RenderedGeometry)`
+overload, which always adds to the spatial partition root. `d_render_settings`,
+`d_topological_sections` and `d_all_resolved_topological_shared_sub_segments`
+are held by reference, not owned, so the renderer must not outlive whatever
+constructed those. `d_resolved_topological_shared_sub_segments_map` is
+per-rendered-geometry-layer bookkeeping only valid between `begin_render()`
+and `end_render()`; shared sub-segments accumulate there and are drawn only
+once, at the end, regardless of how many topologies reference them.
 
 ## Used by
 

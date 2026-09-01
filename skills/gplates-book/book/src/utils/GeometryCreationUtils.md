@@ -8,9 +8,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/GeometryCreationUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryCreationUtils` is the header-only front door for turning raw
+`GPlatesMaths::PointOnSphere` sequences supplied by the user (digitised
+vertices, imported coordinates) into a validated `GPlatesMaths::GeometryOnSphere`
+derivation. Each `create_*_on_sphere` function is templated on a forward
+iterator and also offered as an inline overload taking a
+`std::vector<PointOnSphere>` for the common case; `create_geometry_on_sphere`
+dispatches on a `GPlatesMaths::GeometryType::Value` to the right one of these
+and upcasts the result to the common `GeometryOnSphere` pointer type.
+
+Rather than letting invalid input throw or assert, every function reports
+success or failure through a `GeometryConstruction::GeometryConstructionValidity`
+out-parameter and returns `boost::none` on failure, so a UI-facing caller
+(such as the digitisation and topology-building tools) can turn a bad vertex
+count or antipodal segment endpoints into a user-facing message instead of a
+crash. `GeometryConstructionValidity` deliberately collapses the more
+detailed `ConstructionParameterValidity` enums of `PolylineOnSphere`,
+`PolygonOnSphere` and `MultiPointOnSphere` into one shared set of failure
+reasons, since those individual types' invalid states overlap.
 
 ## Declared types
 
@@ -49,9 +64,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/GeometryCreationUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`create_point_on_sphere` silently uses only the first point and ignores any
+others if more than one is supplied, rather than reporting an error. The
+`default` branch of each `switch` on the underlying type's own construction
+validity enum is unreachable in practice but only logs via `qDebug()` and
+returns `boost::none` — it is not converted into an exception, despite the
+`// FIXME: Exception` comments in the code.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/RasterLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterLayerParams` is the `LayerParams` subclass a raster layer uses to hold the parts of a raster feature that other layers (and the presentation-side `RasterVisualLayerParams`) need without re-visiting the feature: which band is selected, that band's `GPlatesPropertyValues::RasterStatistics`, the full list of band names and per-band statistics, the raster's `Georeferencing`, `SpatialReferenceSystem` and `RasterType`. `set_raster_feature` re-derives all of this from the feature by running an `ExtractRasterFeatureProperties` visitor at present day, since georeferencing, band names and statistics live in the feature's properties rather than on this object; `set_band_name` only re-selects which already-extracted band's statistics are exposed through `get_band_statistic`, falling back to band index zero when the requested name is not one of the raster's actual bands.
+
+Both setters emit Qt signals — `modified_band_name` plus the inherited `modified` — so that downstream layers and presentation params can react to a raster or band swap, for example to refresh a colour palette built from the previous band's statistics.
 
 ## Declared types
 
@@ -53,9 +53,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/RasterLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- For time-dependent rasters, `get_band_statistic`/`get_band_statistics` are always the statistics computed at present day, not at the current reconstruction time — `set_raster_feature` visits the feature without specifying a reconstruction time.
+- `set_raster_feature` clears every derived field (band names, statistics, georeferencing, spatial reference system, raster type) up front and unconditionally calls `emit_modified()`, even when the new feature turns out to be equivalent to the old one or when there is no feature at all (`boost::none`).
+- If the current band name is not among the feature's actual band names, both `set_band_name` and `set_raster_feature` silently fall back to band index 0 rather than leaving the selection unset.
 
 ## Used by
 

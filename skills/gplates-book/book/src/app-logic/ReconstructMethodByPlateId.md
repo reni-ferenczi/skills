@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodByPlateId tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructMethodByPlateId` is the default `ReconstructMethodInterface` implementation: it reconstructs a feature's present-day geometry by rotating it with the finite rotation for the feature's reconstruction plate ID, resolved through the plate circuit passed in via `Context`. `can_reconstruct_feature` accepts any feature with a non-topological geometry, even one without a plate ID — `reconstruct_feature_geometries` still produces a result in that case, falling back to plate id zero (the spin axis) via the identity-defaulted `ReconstructionInfo`.
+
+The method actually supports two distinct reconstruction paths. When the `Context` carries a `TopologyReconstruct`, geometries are instead advanced incrementally through resolved topological plates/networks — built once per feature by `get_topology_reconstruction_info` into a cached `topology_reconstructed_geometry_time_span_sequence_type` — so that points can migrate across plate boundaries over time and optionally deactivate when they fall outside a network or exceed lifetime-detection thresholds from `ReconstructParams`. When no topology reconstruction is configured, geometries and velocities are computed directly with rigid rotations via `ReconstructUtils::reconstruct_by_plate_id` and `PlateVelocityUtils`. The anonymous-namespace `Transform` wraps the resolved `FiniteRotation` as a `ReconstructMethodFiniteRotation`, and the `CanReconstructFeature` / `GetPresentDayGeometries` visitors implement the present-day-geometry extraction and reconstructability test by walking the feature's `GmlPoint`/`GmlLineString`/`GmlPolygon`/`GmlMultiPoint`/`GpmlConstantValue` properties.
 
 ## Declared types
 
@@ -96,9 +96,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodByPlateId tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_present_day_geometries`, `d_reconstruction_info` and `d_topology_reconstructed_geometry_time_spans` are `mutable` caches computed lazily on first use and reused for every subsequent reconstruction of the same feature; they are invalidated only by destroying the object, so a `ReconstructMethodByPlateId` must not outlive changes to the underlying feature's geometry or plate ID properties.
+- Once topology reconstruction is set up for a feature (`get_topology_reconstruction_info` succeeds), the object commits to that path for its lifetime; `reconstruct_feature_geometries`/`reconstruct_feature_velocities` always check for a topology time span first and only fall back to rigid-rotation-by-plate-id when none exists.
 
 ## Used by
 

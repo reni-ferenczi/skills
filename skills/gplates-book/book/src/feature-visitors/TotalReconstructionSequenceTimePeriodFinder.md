@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/TotalReconstructionSequenceTimePeriodFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TotalReconstructionSequenceTimePeriodFinder` scans the `gpml:totalReconstructionPole` property of a total reconstruction sequence (TRS) feature and derives the sequence's overall begin and end times from its `GpmlIrregularSampling` of `GpmlTimeSample`s. It assumes the samples are ordered most-recent first and progressively earlier, so it can take the first sample's time as a running `d_end_time` and the last non-anomalous sample's time as `d_begin_time`, tracking both as it iterates in `visit_gpml_irregular_sampling`.
+
+By default the constructor sets `d_skip_over_disabled_samples` to `true`, which is what most callers want: disabled time samples are excluded from the begin/end calculation. Passing `false` keeps disabled samples in the scan instead, which is needed when displaying the raw contents of a rotation file, as in `TotalReconstructionSequencesDialog`, where every sample and every sequence should be shown regardless of its enabled state. It plays the same role as `TotalReconstructionSequencePlateIdFinder` but extracts the time period rather than the plate IDs.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/TotalReconstructionSequenceTimePeriodFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+If a time sample's position is not a real value (i.e. distant-past or distant-future), or if samples appear out of the expected most-recent-first order (and are not disabled), `visit_gpml_irregular_sampling` logs a warning to `std::cerr` and otherwise ignores the anomaly rather than failing; both cases are marked `FIXME` as unresolved in the source. `begin_time()` and `end_time()` return `boost::none` when the sequence contained no usable (non-disabled) time samples, so callers must check before dereferencing.
 
 ## Used by
 

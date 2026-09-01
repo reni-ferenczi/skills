@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/CommandLineParser tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::CommandLineParser` wraps `boost::program_options` to give both
+the GUI and headless entry points a shared way to define, parse and layer
+command-line arguments, response files and configuration files.
+`InputOptions` groups a caller's options into `generic_options`
+(command-line only, e.g. `--help`/`--version`), `config_options` (allowed on
+the command line or in a config file) and `hidden_options` (parsed but not
+shown in usage text); `add_simple_options()` seeds `generic_options` with the
+help, version, response-file and config-file switches every executable needs.
+`get_cmdline_options()`, `get_config_file_options()` and `get_visible_options()`
+each recombine those three groups differently depending on which parsing pass
+or which help text is being produced.
+
+`parse_command_line_options()` is the single entry point callers use: it
+parses `argv` first, then any `@filename` response file (`at_option_parser()`
+recognises the `@` prefix and redirects it to the response-file option), then
+any config files named on the command line or in the response file, in that
+fixed order — because command-line values must win over config-file values
+for scalar options and because a response file can itself name config files.
+On macOS it additionally tolerates the stray `-psn_...` argument that Finder
+or the `open` command inject, treating any other unrecognised option as a
+hard error.
 
 ## Declared types
 
@@ -58,9 +76,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/CommandLineParser tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Parsing order is significant and fixed: command line, then response file,
+  then config files. For a scalar option this makes the command line take
+  precedence over the config file; for a `composing()` option, boost merges
+  values from all three sources instead of overriding.
+- `parse_command_line_options()` can throw `std::exception` (from
+  `boost::program_options`, e.g. `unknown_option`) or
+  `GPlatesFileIO::ErrorOpeningFileForReadingException` if a named response or
+  config file cannot be opened; callers must handle both.
+- On macOS, a `-psn_...` argument is silently ignored rather than treated as
+  unrecognised; any other unrecognised option still throws
+  `boost::program_options::unknown_option`.
 
 ## Used by
 

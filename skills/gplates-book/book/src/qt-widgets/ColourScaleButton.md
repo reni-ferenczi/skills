@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ColourScaleButton tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourScaleButton` renders an unannotated preview of a
+`GPlatesGui::RasterColourPalette` as a clickable button, used as the
+launching control for the full colour-scale/palette picker (see
+`ChooseBuiltinPaletteDialog`, its dominant caller). It subclasses
+`QToolButton` rather than `QPushButton` specifically because `QToolButton`
+respects the widget's size hints, which matters for a button whose entire
+purpose is displaying an image at a controlled aspect ratio.
+
+`populate()` hands the palette (and an optional log-scale distribution
+parameter) to `GPlatesGui::ColourScale::generate()`, which does the actual
+pixmap rendering into `d_colour_scale_pixmap` and
+`d_disabled_colour_scale_pixmap`; `regenerate_contents()` re-runs that
+generation whenever the button is resized, since the pixmap must be
+regenerated at the new pixel dimensions rather than simply scaled.
+`paintEvent()` composites the appropriate pixmap over the button's palette
+background and draws a hover/pressed highlight tracked by
+`d_mouse_inside_button` and `d_mouse_pressed`.
 
 ## Declared types
 
@@ -55,9 +69,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ColourScaleButton tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`populate()` returns `false` if `ColourScale::generate()` cannot extract a
+usable scale from the given palette — callers should check the return value
+rather than assume the button always ends up showing something.
+`enterEvent()` forces an explicit repaint on hover because, per a comment in
+the source, Qt 4.8 needed this on Mac but not on Windows or Ubuntu to redraw
+the highlight.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/FeatureHandleTest tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureHandleTest` is a Boost.Test fixture registered through `FeatureHandleTestSuite`, which builds on `GPlatesTestSuite` the same way every other suite in this directory does. In principle it exercises `GPlatesModel::FeatureHandle` construction and property assignment via the `d_model` member, but in practice almost none of that testing exists: `test_case_2` and `test_case_4` through `test_case_7` are empty stubs ("Add you test code here"), and `test_case_1` and `test_case_3` contain real code that is wrapped in `#if 0` and therefore never compiled into the running test.
+
+The disabled bodies are a memory-efficiency experiment rather than a correctness test: they build features with a `GpmlKeyValueDictionary` of eighty attributes to see how much memory a populated `FeatureHandle` consumes, and separately benchmark `boost::singleton_pool` allocation against ordinary `malloc` for a fixed-size `TestStruct`. The free helpers at the top of the `.cc` — `MyPoolTag`, `TestStruct`, `my_pool`, the `operator new(size_t, bool)`/`operator delete(void*, bool)` overloads, and `print_memory_usage()` (Windows-only, via `GetProcessMemoryInfo`) — exist solely to support that disabled experiment.
 
 ## Declared types
 
@@ -75,9 +75,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/FeatureHandleTest tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`#define new new(true)` near the top of the `.cc` is unmatched by any `#undef`: every subsequent `new` expression in the rest of the file — not just the ones inside the disabled test bodies — is silently rewritten to call the custom `operator new(size_t, bool)`, which pool-allocates only when `size == sizeof(TestStruct)` and otherwise falls back to `malloc`. Because the code that actually exercises this is inside `#if 0`, the overload is currently dead weight, but it would surprise anyone who added a new, unrelated test case below this point in the file expecting ordinary `new` semantics.
 
 ## Used by
 

@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlPoint tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlPoint` is the `GPlatesModel::PropertyValue` for `gml:Point`, and it exists
+to bridge two representations of "where" that GML allows and GPlates both
+needs: a spherical `GPlatesMaths::PointOnSphere` for the reconstruction engine,
+and a 2D `(lat, lon)` pair (or an arbitrary projected 2D coordinate, when
+created via `create_from_pos_2d()`) in the order GPML files store it. Rather
+than picking one canonical form and converting on every access, the class
+stores whichever form it was constructed from and lazily computes the other
+the first time it is asked for, caching the result in the `mutable`
+`d_point_2d` / `d_point_on_sphere` optionals so repeated calls to `point()` or
+`point_2d()` are cheap.
+
+The `GmlProperty` enum (`POS` vs `COORDINATES`) preserves which GML element —
+`gml:pos` or `gml:coordinates` — the point was originally read from, since the
+two have minor semantic differences the header calls out as worth round-tripping
+rather than normalising away. `create_from_lon_lat()` exists as a convenience
+that swaps GML's `(lon, lat)` argument order into the `(lat, lon)` order used
+internally and by `create_from_pos_2d()`.
 
 ## Declared types
 
@@ -61,9 +75,21 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlPoint tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Invariant: at least one of `d_point_2d` or `d_point_on_sphere` is always
+  populated; `point()` and `point_2d()` each assert the other is present
+  before deriving it, via `GPlatesGlobal::Assert<AssertionFailureException>`.
+- `point()` and `point_in_lat_lon()`/`point_2d()` can throw
+  `InvalidLatLonException` if the stored 2D coordinate is not actually a valid
+  latitude/longitude (possible when the instance was built via
+  `create_from_pos_2d()` with projected, non-geographic coordinates).
+- `set_point()` invalidates the cached 2D form (`d_point_2d = boost::none`), so
+  the next `point_2d()` call recomputes it from the new spherical point rather
+  than returning stale data.
+- Prefer `point_in_lat_lon()` over `point()` followed by
+  `GPlatesMaths::make_lat_lon_point()`: when the point was constructed from a
+  lat/lon pair with latitude ±90°, converting through the spherical
+  representation loses the original longitude, whereas `point_in_lat_lon()`
+  recovers it from the cached 2D form where possible.
 
 ## Used by
 

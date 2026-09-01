@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructedVirtualGeomagneticPole tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructedVirtualGeomagneticPole` is the `ReconstructedFeatureGeometry` specialisation produced by `ReconstructMethod::VIRTUAL_GEOMAGNETIC_POLE`: the paleomagnetic pole geometry itself, plus the palaeomagnetic parameters (`ReconstructedVirtualGeomagneticPoleParams` — site point and property iterator, VGP point and property iterator, `a95`/`dm`/`dp` error radii, plate ID, begin/end time and age) carried alongside it in `vgp_params()`. It deliberately derives from `ReconstructedFeatureGeometry`, rather than composing one, specifically so that code searching for RFGs (RFG collectors, exporters) picks up VGP geometries automatically without special-casing them; the sample-site geometry itself is a separate, ordinary `ReconstructedFeatureGeometry`.
+
+`create()` accepts an optional reconstruction plate ID because a VGP can legitimately be "reconstructed" with the identity rotation when the feature has none, and an optional time of formation for the same reason as other reconstruction geometries.
 
 ## Declared types
 
@@ -61,9 +61,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructedVirtualGeomagneticPole tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

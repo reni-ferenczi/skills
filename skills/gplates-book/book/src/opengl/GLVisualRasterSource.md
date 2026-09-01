@@ -9,9 +9,32 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVisualRasterSource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVisualRasterSource` is a `GLMultiResolutionRasterSource` that supplies the
+tiled textures for a raster meant to be *displayed*: it resolves regions and
+mip levels from a `ProxiedRasterResolver` and, if the source raster is not
+already RGBA, converts it through a `RasterColourPalette`, always producing
+fixed-point `GL_RGBA8` tiles regardless of the original raster's storage
+format. `change_raster` lets a caller swap in a same-dimensioned raster (for
+a time-dependent sequence) without rebuilding the whole
+`GLMultiResolutionRaster`, and `change_modulate_colour` recolours/re-opacifies
+the raster after the fact by drawing `d_full_screen_quad_drawable` over the
+loaded tile.
+
+The output is deliberately stored in premultiplied-alpha form (RGB channels
+already multiplied by alpha) rather than the usual straight alpha, because
+tiles are frequently rendered into an intermediate render texture that is
+itself later blended into the final view; using straight-alpha blending at
+each stage would double-count the alpha contribution of overlapping
+reconstructed polygons, whereas premultiplied alpha composites correctly
+across any number of such stages (with blend factors `(1, 1-src_alpha)`
+instead of `(src_alpha, 1-src_alpha)`).
+
+Internally, `d_levels` holds one `LevelOfDetail` per mip level, each an
+`num_x_tiles` by `num_y_tiles` grid of `Tile` objects; each `Tile` lazily
+allocates a volatile object from `d_raster_texture_cache` (sized relative to
+`RASTER_CACHE_SIZE_FACTOR`) to hold its raw, unmodulated raster texture, kept
+separate from the caller-supplied `target_texture` that `load_tile` writes
+the final, colour-modulated tile into.
 
 ## Declared types
 
@@ -70,9 +93,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVisualRasterSource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`create` returns `boost::none` if `raster` is not a proxied raster or is
+uninitialised — callers must check the `boost::optional` result.
+`change_raster` returns `false` and leaves the source unchanged if the new
+raster's dimensions differ from the current one; a georeferencing change
+(without a dimension change) instead requires building a new
+`GLMultiResolutionRaster`, not a call here. If a tile fails to load from the
+proxied raster resolver, `render_error_text_into_texture` draws an error
+image into the tile in place of raster data and logs a `qWarning` — but only
+once per `GLVisualRasterSource` instance (`d_logged_tile_load_failure_warning`),
+so repeated failures for the same source are silent after the first.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/MeasureDistanceState tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MeasureDistanceState` holds all the data behind the Measure Distance canvas tool, decoupled from rendering so the globe and map views (each with their own `MeasureDistance` instance) share one measurement session. It tracks two independent measurements: the "Quick Measure" pair of arbitrary clicked points (`d_quick_measure_start`/`d_quick_measure_end`), and the "Feature Measure" total length and area of whichever geometry is currently being digitised or is the focused feature's geometry.
+
+The Feature Measure side follows the active `GPlatesViewOperations::GeometryBuilder` rather than owning geometry itself: `GeometryOperationState` broadcasts `switched_geometry_builder` whenever the tool workflow changes which builder is in use, and `MeasureDistanceState` reconnects its `stopped_updating_geometry_excluding_intermediate_moves` listener to the new builder each time (`switch_geometry_builder`, `make_signal_slot_connections_for_geometry_builder`). Whenever the geometry changes, `process_geometry_builder` walks the current geometry's points, summing great-circle distances between consecutive points with `calculate_distance_on_surface_of_sphere`, and — for polygons — computes an area via the anonymous `PolygonAreaVisitor`, which visits the geometry and scales `PolygonOnSphere::get_area()` by the earth radius squared. Distances and areas use the state's own `real_t` (`d_radius`, default `DEFAULT_RADIUS_OF_EARTH`), so changing the radius with `set_radius()` re-derives both measurements without needing a new geometry pass. All updates are exposed as Qt signals (`quick_measure_updated`, `feature_measure_updated`, highlight-changed signals) that the TaskPanel widgets and canvas tools listen to, rather than being polled.
 
 ## Declared types
 
@@ -91,9 +91,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/MeasureDistanceState tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_current_geometry_builder_ptr` is a non-owning pointer set by `switch_geometry_builder`; each switch disconnects the previous builder's signal before reconnecting to the new one, so listeners never accumulate across geometry-builder changes.
+- A geometry builder with zero or one point is treated as "no selection" for Feature Measure, and multipoint geometries are excluded entirely — only `POLYLINE`/`POLYGON` builds are measured.
+- `set_radius()` is a no-op when the new radius is almost exactly equal to the current one (`GPlatesMaths::are_almost_exactly_equal`), so repeated calls with the same value do not re-emit updates or repeat the distance/area recomputation.
 
 ## Used by
 

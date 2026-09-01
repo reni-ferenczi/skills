@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/DockState tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DockState` keeps `ViewportWindow`'s own bookkeeping about which `GPlatesQtWidgets::DockWidget` currently sits where, out of `ViewportWindow` itself. Qt's `QMainWindow` docking API does not expose which docks are tabified together or which edge each dock occupies, so `DockState` tracks eight `QList<QPointer<DockWidget>>` — one docked list and one tabified list per edge (top, bottom, left, right), plus a floating list — by listening to each registered dock's `location_changed` signal (`register_dock()`) and updating those lists in `react_dockwidget_location_change()`.
+
+`move_dock()` is the intended replacement for calling `ViewportWindow::addDockWidget()`/`tabifyDockWidget()` directly: it consults `can_dock()`/`can_tabify()` and the private `tabify()` helper to decide whether a requested move should tabify the dock with an existing occupant of the target area or simply place it there, falling back to letting Qt resolve the placement when tabification is not applicable. `dock_configuration_changed()` is emitted after every dock move so that menu items reflecting current dock state (e.g. enabling/disabling "move to X" actions) stay in sync.
 
 ## Declared types
 
@@ -57,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/DockState tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`DockState` does not own the `DockWidget`s it tracks — every list stores `QPointer`s specifically because destruction of a dock is not expected to happen before application exit, but the guarded pointers avoid dangling references if it ever does. `remove_from_tabified_lists()` treats a tabified group of exactly one remaining dock as no longer tabified and clears that list, since tabification is meaningless with a single member. `move_dock()`'s tabify attempt is deliberately tried before the plain-dock fallback, and the actual `tabifyDockWidget()`/`addDockWidget()` call always happens last in each path because it triggers Qt's own `location_changed` signal, which re-enters `DockState` through `react_dockwidget_location_change()` — internal list state must already be consistent before that call.
 
 ## Used by
 

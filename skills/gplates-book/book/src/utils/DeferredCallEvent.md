@@ -9,9 +9,30 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/DeferredCallEvent tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header lets code running on a background thread — most notably the
+embedded Python interpreter driven by `PythonExecutionThread` — get a piece of
+work executed on the Qt GUI thread, since Qt widgets and much of the
+application state may only be touched there. Each concrete class wraps a
+`boost::function<...>` callable as a `QEvent` (`AbstractDeferredCallEvent::TYPE`
+is a custom event type registered once via `QEvent::registerEventType()`);
+posting the event with `QApplication::postEvent(qApp, ...)` gets it delivered
+and `execute()`d inside the GUI thread's event loop. `DeferredCallEvent` is
+fire-and-forget; `BlockingDeferredCallEvent` and the templated
+`DeferredCallWithResultEvent<ResultType>` additionally hold a `QMutex` and
+`QWaitCondition` so the posting thread can block until `execute()` has run on
+the GUI thread, and in the result-returning case retrieve the call's return
+value afterwards.
+
+`DeferCall<ResultType>::defer_call()` (and its `DeferCall<void>`
+specialisation) is the entry point callers actually use: it checks whether it
+is already running on the GUI thread — via `QThread::currentThread() ==
+qApp->thread()` — and if so calls `deferred_call` directly rather than
+posting an event at all, avoiding an unnecessary round trip and the risk of a
+thread waiting on itself. The `DeferredCallWithResultEventInternals::traits`
+machinery exists solely to let `ResultType` be a reference: since a
+`boost::optional<ResultType&>` isn't meaningful the way a value type is, the
+`traits_helper` partial specialisation stores a pointer instead when
+`boost::is_reference<ResultType>::value` is true.
 
 ## Declared types
 
@@ -112,9 +133,21 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/DeferredCallEvent tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- If `deferred_call()` throws inside `BlockingDeferredCallEvent::execute()`
+  (or the `DeferredCallWithResultEvent` equivalent), the mutex is never
+  locked and `condition.wakeAll()` is never called, so the thread blocked in
+  `defer_call()` waits forever. The source comment flags this directly: the
+  called function is assumed not to throw.
+- These classes only make sense for dispatching to the GUI thread: `defer_call()`
+  is documented as unsuitable for running work on an arbitrary other thread —
+  for that, construct and post an `AbstractDeferredCallEvent` subclass
+  directly, with the receiver's `event()` handler living on the target
+  thread.
+- `QApplication::postEvent()` takes ownership of the heap-allocated event
+  object; callers must not also delete it after posting.
+- `DeferCall<ResultType>::defer_call()`'s `blocking` parameter is always
+  ignored (it always blocks); only `DeferCall<void>::defer_call()` honours
+  it, since a non-blocking call has no way to return a result at all.
 
 ## Used by
 

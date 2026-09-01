@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLScalarField3D tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLScalarField3D` ray-traces a sub-surface scalar field (e.g. seismic tomography data) loaded from a cube-map file of concentric depth layers, and draws it either as an iso-surface or as vertical cross-sections through arbitrary geometry. The field data, per-tile metadata and a depth-radius-to-layer lookup are all uploaded as texture arrays; rendering itself happens in shader programs compiled from `src/qt-resources/opengl/scalar_field_3d`, driven by a `GPlatesViewOperations::ScalarField3DRenderParameters` bundle that selects render mode, colour mode, depth restriction and quality/performance trade-offs, and lit via a shared `GLLight`.
+
+Both render entry points accept an optional `SurfaceFillMask`, built from surface polygon/polyline geometry, which extrudes the surface region towards the globe centre to restrict where the ray-tracer draws (and can additionally render the mask's vertical walls). Producing that mask, and the associated volume-fill boundary and wall passes, involves several private `ConstGeometryOnSphereVisitor` subclasses that stream cross-section, fill-mask and boundary vertices through `GLStaticStreamPrimitives`, plus intermediate off-screen passes rendered into `GLScreenRenderTarget`s. A separate always-drawn white inner sphere, built by recursively subdividing a hierarchical triangular mesh (`SphereMeshBuilder`), represents the solid Earth beneath the field.
+
+Instances are only ever produced through the static `create()` factory (the constructor is private), after checking `is_supported()`/`supports_surface_fill_mask()` for the required OpenGL 3.0 features. `change_scalar_field()` lets a time-dependent field swap its underlying data in place as long as the new file has the same dimensions as the current one.
 
 ## Declared types
 
@@ -159,9 +161,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLScalarField3D tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `change_scalar_field()` returns `false`, without modifying state, when the new file's dimensions don't match the current internal field; the caller must then construct a fresh `GLScalarField3D` instead.
+- `render_iso_surface()` requires an isosurface render mode, not `RENDER_MODE_CROSS_SECTIONS`.
+- `SHADER_VERSION` is pinned to `GLShaderSource::DEFAULT_SHADER_VERSION` (GLSL 1.2) rather than the 1.3 that the OpenGL 3.0 features technically call for, because of uncertainty over Mac OS X Snow Leopard's OpenGL 3.0 support; the code instead relies on the `GL_EXT_texture_array` shader `#extension` where it can.
+- Callers observe `get_subject_token()` to know when they must re-render cached output; `d_light_observer_token` similarly tracks changes to the shared `GLLight` so lighting-dependent shader state stays in sync.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TopologySectionsContainer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::TopologySectionsContainer` is the GUI-agnostic back-end data model behind the Topology Sections table shown while a topology is being built or edited by `TopologyTools`. It stores an ordered `std::vector` of `TableRow`s, each describing one topological section: the section's `FeatureId` plus a resolved `FeatureHandle::weak_ref`, the geometry property to use, an optional reverse-order flag, and optional begin/end times that further restrict when this section participates beyond the referenced feature's own lifespan. `TopologySectionsTable` (the Qt view) and `TopologySectionsTableColumns` translate this model into an actual `QTableWidget`; `feature-visitors/TopologySectionsFinder` and `api/PyTopologyTools` consume it from the app-logic and Python-API sides respectively.
+
+The container has no public mutable iterator or `push_back()`; every insertion goes through the "Insertion Point", a movable index (`insertion_point()`/`move_insertion_point()`) that determines where `insert()` places new rows, and which automatically advances past what it just inserted. All mutation methods emit signals (`entries_inserted`, `entry_modified`, `entry_removed`, `insertion_point_moved`, `cleared`, and the catch-all `container_changed`) so the table view and other listeners (like the topology tools driving the build) stay synchronised without the container needing any Qt-widget knowledge of its own. The free function `find_properties_iterator()` resolves a `GpmlTopologicalSection`'s property delegate down to the concrete `FeatureHandle::iterator` it targets.
 
 ## Declared types
 
@@ -75,9 +75,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TopologySectionsContainer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The insertion point always refers to a valid position usable with `at()` (0 to `size()` inclusive), and moving it, inserting, or removing rows keeps it consistent — callers should not track row indices independently across a mutation, since removing or inserting shifts every subsequent index. `TableRow::d_geometry_property` must be declared after `d_feature_ref` in the class because its construction depends on it. A `TableRow`'s `FeatureId` may not resolve to a currently loaded feature (`d_feature_ref`/`d_geometry_property` can be invalid) — callers must check `is_valid()` before using them. Signal/slot parameters are declared with fully qualified `GPlatesGui::TopologySectionsContainer::` scope deliberately, because Qt's string-based signal/slot matching requires identical spelling between sender and receiver declarations. A block of `#if 0`-disabled testing slots (`insert_test_data()`, etc.) remains in the header but is compiled out.
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/TextContent tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TextContent` is a `GPlatesModel::StringContentTypeGenerator<TextContentFactory>` instantiation: an interned Unicode string used wherever a property value stores free-text content, most notably as the payload type behind `XsString`. `TextContentFactory` exists only to hand `StringContentTypeGenerator` the process-wide `GPlatesUtils::StringSet` it should intern into, via `GPlatesModel::StringSetSingletons::text_content_instance()`; its constructor is private, so the class is never instantiated and serves purely as a compile-time tag.
+
+Because `StringContentTypeGenerator` stores a shared-string iterator rather than a copy of the text, every `TextContent` instance with the same characters shares one underlying string, and equality reduces to comparing iterators instead of strings.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/TextContent tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

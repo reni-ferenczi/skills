@@ -10,8 +10,8 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 
 | Name | Unit | Description |
 |---|---|---|
-| [`ADD_TESTCASE`](../src/unit-test/GPlatesTestSuite.md#free-functions-and-macros) | [unit-test/GPlatesTestSuite](../src/unit-test/GPlatesTestSuite.md) | — |
-| [`ADD_TESTSUITE`](../src/unit-test/GPlatesTestSuite.md#free-functions-and-macros) | [unit-test/GPlatesTestSuite](../src/unit-test/GPlatesTestSuite.md) | — |
+| [`ADD_TESTCASE`](../src/unit-test/GPlatesTestSuite.md#free-functions-and-macros) | [unit-test/GPlatesTestSuite](../src/unit-test/GPlatesTestSuite.md) | Registers a member test case into d\_test\_cases\_map under its name |
+| [`ADD_TESTSUITE`](../src/unit-test/GPlatesTestSuite.md#free-functions-and-macros) | [unit-test/GPlatesTestSuite](../src/unit-test/GPlatesTestSuite.md) | Instantiates a child test suite one level deeper and registers it into d\_test\_suites\_map |
 
 ## B
 
@@ -25,7 +25,7 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 
 | Name | Unit | Description |
 |---|---|---|
-| [`__CONVENTION__`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | Assume compilation on Mac OS X. \*/ |
+| [`__CONVENTION__`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | Platform calling convention for OpenGL API calls (WINAPI on Windows, empty elsewhere) |
 | [`CALL_STACK_MAGIC1`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | Do not invoke this macro directly. |
 | [`CALL_STACK_MAGIC2`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | Do not invoke this macro directly. |
 | [`CGAL_DT2_USE_RECURSIVE_PROPAGATE_CONFLICTS`](../src/app-logic/ResolvedTriangulationDelaunay2.md#free-functions-and-macros) | [app-logic/ResolvedTriangulationDelaunay2](../src/app-logic/ResolvedTriangulationDelaunay2.md) | — |
@@ -40,7 +40,7 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`DECLARE_PROPERTY_VALUE_FINDER`](../src/feature-visitors/PropertyValueFinder.md#free-functions-and-macros) | [feature-visitors/PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | NOTE: DECLARE\_PROPERTY\_VALUE\_FINDER must be placed at the top of every derivation of GPlatesModel::PropertyValue in order for the get property functions in this file to work with that type of property value. |
 | [`DECLARE_PROPERTY_VALUE_FINDER_CLASS`](../src/feature-visitors/PropertyValueFinder.md#free-functions-and-macros) | [feature-visitors/PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | Macro to declare a template specialisation of class PropertyValueFinder. |
 | [`DEFINE_COLOUR`](../src/gui/Colour.md#free-functions-and-macros) | [gui/Colour](../src/gui/Colour.md) | Define a function (eg, "get\_black()") that creates a local static colour object and returns it. |
-| [`DEFINE_FUNCTION_DEEP_CLONE_AS_INTERP_FUNC`](../src/property-values/GpmlInterpolationFunction.md#free-functions-and-macros) | [property-values/GpmlInterpolationFunction](../src/property-values/GpmlInterpolationFunction.md) | This macro is used to define the virtual function 'deep\_clone\_as\_interp\_func' inside a class which derives from InterpolationFunction. |
+| [`DEFINE_FUNCTION_DEEP_CLONE_AS_INTERP_FUNC`](../src/property-values/GpmlInterpolationFunction.md#free-functions-and-macros) | [property-values/GpmlInterpolationFunction](../src/property-values/GpmlInterpolationFunction.md) | Emits the boilerplate deep\_clone\_as\_interp\_func override in each interpolation-function subclass |
 | [`DEFINE_FUNCTION_DEEP_CLONE_AS_PROP_VAL`](../src/model/PropertyValue.md#free-functions-and-macros) | [model/PropertyValue](../src/model/PropertyValue.md) | This macro is used to define the virtual function 'deep\_clone\_as\_prop\_val' inside a class which derives from PropertyValue. |
 | [`DEFINE_FUNCTION_DEEP_CLONE_AS_TOPO_SECTION`](../src/property-values/GpmlTopologicalSection.md#free-functions-and-macros) | [property-values/GpmlTopologicalSection](../src/property-values/GpmlTopologicalSection.md) | This macro is used to define the virtual function 'deep\_clone\_as\_topo\_section' inside a class which derives from TopologicalSection. |
 | [`DISABLE_GCC_WARNING`](../src/global/CompilerWarnings.md#free-functions-and-macros) | [global/CompilerWarnings](../src/global/CompilerWarnings.md) | — |
@@ -72,8 +72,8 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`GPLATES_ICU_BOOL`](../src/utils/IdStringSet.md#free-functions-and-macros) | [utils/IdStringSet](../src/utils/IdStringSet.md) | — |
 | [`GPLATES_ICU_BOOL`](../src/utils/StringSet.md#free-functions-and-macros) | [utils/StringSet](../src/utils/StringSet.md) | — |
 | [`GPLATES_ICU_BOOL`](../src/utils/UnicodeString.md#free-functions-and-macros) | [utils/UnicodeString](../src/utils/UnicodeString.md) | The ICU UnicodeString binary comparison operators returned a UBool rather than a bool, which caused problems. |
-| [`GPLATES_OPENGL_BOOL`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | — |
-| [`GPLATES_OPENGL_BUFFER_OFFSET`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | — |
+| [`GPLATES_OPENGL_BOOL`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | Normalises a GLboolean value to a real C++ boolean test |
+| [`GPLATES_OPENGL_BUFFER_OFFSET`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | Casts a byte offset into the void pointer expected by buffer-object drawing calls |
 | [`GPLATES_PINCH_ZOOM_ENABLED`](../src/qt-widgets/GlobeAndMapWidget.md#free-functions-and-macros) | [qt-widgets/GlobeAndMapWidget](../src/qt-widgets/GlobeAndMapWidget.md) | — |
 | [`GPLATES_QTWIDGETS_VelocityFieldCalculatorLayerOptionsWidget_H`](../src/qt-widgets/VelocityFieldCalculatorLayerOptionsWidget.md#free-functions-and-macros) | [qt-widgets/VelocityFieldCalculatorLayerOptionsWidget](../src/qt-widgets/VelocityFieldCalculatorLayerOptionsWidget.md) | — |
 | [`GPLATES_SCRIBE_ACCESS_CONSTRUCT_MAX_CONSTRUCTOR_ARGS`](../src/scribe/ScribeAccess.md#free-functions-and-macros) | [scribe/ScribeAccess](../src/scribe/ScribeAccess.md) | The maximum number of object constructor arguments supported in Access::construct\_object(). |
@@ -85,9 +85,9 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`GPLATES_SCRIBE_ARRAY_TEMPLATE_INDICES_MACRO`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Returns array template index as, eg, '\[N3\]'. |
 | [`GPLATES_SCRIBE_ARRAY_TEMPLATE_PARAMETER_INDICES`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Array template parameter indices returned as a sequence (eg, '(int N1) (int N2) (int N3)'). |
 | [`GPLATES_SCRIBE_ARRAY_TEMPLATE_PARAMETER_INDICES_MACRO`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Returns array template parameter index as, eg, '(int N3)'. |
-| [`GPLATES_SCRIBE_CONSTRUCT_MAX_CONSTRUCTOR_ARGS`](../src/scribe/ScribeConstructObject.md#free-functions-and-macros) | [scribe/ScribeConstructObject](../src/scribe/ScribeConstructObject.md) | The maximum number of object constructor arguments supported in ConstructOjbect\<\>::construct\_object(). |
-| [`GPLATES_SCRIBE_CONSTRUCT_OBJECT`](../src/scribe/ScribeConstructObject.md#free-functions-and-macros) | [scribe/ScribeConstructObject](../src/scribe/ScribeConstructObject.md) | — |
-| [`GPLATES_SCRIBE_CONSTRUCT_OBJECT_PARAM`](../src/scribe/ScribeConstructObject.md#free-functions-and-macros) | [scribe/ScribeConstructObject](../src/scribe/ScribeConstructObject.md) | The following preprocessor macros generate the following code: template \<typename A1\> void construct\_object( const A1 &a1); template \<typename A1, typename A2\> void construct\_object( const A1 &a1, const A2 &a2); template \<typename A1, ... |
+| [`GPLATES_SCRIBE_CONSTRUCT_MAX_CONSTRUCTOR_ARGS`](../src/scribe/ScribeConstructObject.md#free-functions-and-macros) | [scribe/ScribeConstructObject](../src/scribe/ScribeConstructObject.md) | Maximum constructor argument count supported by ConstructObject::construct\_object() |
+| [`GPLATES_SCRIBE_CONSTRUCT_OBJECT`](../src/scribe/ScribeConstructObject.md#free-functions-and-macros) | [scribe/ScribeConstructObject](../src/scribe/ScribeConstructObject.md) | Preprocessor helper generating one construct\_object() overload for N arguments |
+| [`GPLATES_SCRIBE_CONSTRUCT_OBJECT_PARAM`](../src/scribe/ScribeConstructObject.md#free-functions-and-macros) | [scribe/ScribeConstructObject](../src/scribe/ScribeConstructObject.md) | Preprocessor helper emitting one 'const Ai &ai' constructor parameter |
 | [`GPLATES_SCRIBE_DELEGATE_DOUBLE_ARG_FUNCTIONS_ARRAY_CALL`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Generates double argument function delegate overloads for native \*arrays\* for a specific multi-level pointer level. |
 | [`GPLATES_SCRIBE_DELEGATE_DOUBLE_ARG_FUNCTIONS_NON_ARRAY_CALL`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Generates double argument function delegate overloads for \*non-arrays\* for a specific multi-level pointer level. |
 | [`GPLATES_SCRIBE_DELEGATE_DOUBLE_ARG_NON_POINTER_FUNCTIONS`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Double \*non-pointer\* argument function delegates. |
@@ -118,7 +118,7 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`GPLATES_SINGLETON_CONSTRUCTOR_DEF`](../src/utils/Singleton.md#free-functions-and-macros) | [utils/Singleton](../src/utils/Singleton.md) | Adds a default (protected) constructor implementation and friend declaration. |
 | [`GPLATES_SINGLETON_PUBLIC_CONSTRUCTOR_DECL`](../src/utils/Singleton.md#free-functions-and-macros) | [utils/Singleton](../src/utils/Singleton.md) | Adds a default (public) constructor and friend declaration. |
 | [`GPLATES_SINGLETON_PUBLIC_CONSTRUCTOR_DEF`](../src/utils/Singleton.md#free-functions-and-macros) | [utils/Singleton](../src/utils/Singleton.md) | Adds a default (public) constructor implementation and friend declaration. |
-| [`GPLATES_USE_NATIVE_FILE_DIALOG`](../src/qt-widgets/SaveFileDialog.md#free-functions-and-macros) | [qt-widgets/SaveFileDialog](../src/qt-widgets/SaveFileDialog.md) | — |
+| [`GPLATES_USE_NATIVE_FILE_DIALOG`](../src/qt-widgets/SaveFileDialog.md#free-functions-and-macros) | [qt-widgets/SaveFileDialog](../src/qt-widgets/SaveFileDialog.md) | Compile-time switch selecting the native save dialog on Windows/macOS |
 
 ## H
 
@@ -142,8 +142,8 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`LOKI_ANONYMOUS_VARIABLE`](../src/system-fixes/loki/ScopeGuard.md#free-functions-and-macros) | [system-fixes/loki/ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | — |
 | [`LOKI_CONCATENATE`](../src/system-fixes/loki/ScopeGuard.md#free-functions-and-macros) | [system-fixes/loki/ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | — |
 | [`LOKI_CONCATENATE_DIRECT`](../src/system-fixes/loki/ScopeGuard.md#free-functions-and-macros) | [system-fixes/loki/ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | — |
-| [`LOKI_ON_BLOCK_EXIT`](../src/system-fixes/loki/ScopeGuard.md#free-functions-and-macros) | [system-fixes/loki/ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | — |
-| [`LOKI_ON_BLOCK_EXIT_OBJ`](../src/system-fixes/loki/ScopeGuard.md#free-functions-and-macros) | [system-fixes/loki/ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | — |
+| [`LOKI_ON_BLOCK_EXIT`](../src/system-fixes/loki/ScopeGuard.md#free-functions-and-macros) | [system-fixes/loki/ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | Macro declaring an anonymous ScopeGuard bound via MakeGuard, run at block exit |
+| [`LOKI_ON_BLOCK_EXIT_OBJ`](../src/system-fixes/loki/ScopeGuard.md#free-functions-and-macros) | [system-fixes/loki/ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | Macro declaring an anonymous ScopeGuard bound via MakeObjGuard, run at block exit |
 
 ## M
 
@@ -156,7 +156,7 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | Name | Unit | Description |
 |---|---|---|
 | [`name`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | Starts profiling until the end of the current scope in which this PROFILE\_BLOCK call was made. |
-| [`new`](../src/unit-test/FeatureHandleTest.md#free-functions-and-macros) | [unit-test/FeatureHandleTest](../src/unit-test/FeatureHandleTest.md) | — |
+| [`new`](../src/unit-test/FeatureHandleTest.md#free-functions-and-macros) | [unit-test/FeatureHandleTest](../src/unit-test/FeatureHandleTest.md) | Redefines new for the rest of the file to route through the pool-aware operator new(size\_t,bool) |
 | [`NO_IMPORT_ARRAY`](../src/global/python.md#free-functions-and-macros) | [global/python](../src/global/python.md) | — |
 | [`NOMINMAX`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | — |
 | [`NON_NULL_INTRUSIVE_PTR_HPP_INCLUDED`](../src/utils/non_null_intrusive_ptr.md#free-functions-and-macros) | [utils/non_null_intrusive_ptr](../src/utils/non_null_intrusive_ptr.md) | — |
@@ -193,7 +193,7 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 
 | Name | Unit | Description |
 |---|---|---|
-| [`SAVE_LOAD_CLASS_DATA_USING_VARIANT`](../src/unit-test/TranscribeTest.md#free-functions-and-macros) | [unit-test/TranscribeTest](../src/unit-test/TranscribeTest.md) | There's two ways to construct class Data (one using 'int' constructor and one using 'variant' constructor). |
+| [`SAVE_LOAD_CLASS_DATA_USING_VARIANT`](../src/unit-test/TranscribeTest.md#free-functions-and-macros) | [unit-test/TranscribeTest](../src/unit-test/TranscribeTest.md) | Notes that Data can be constructed via either its int or variant constructor |
 | [`SCRIBE_EXPORT_DATA_MINING`](../src/data-mining/ScribeExportDataMining.md#free-functions-and-macros) | [data-mining/ScribeExportDataMining](../src/data-mining/ScribeExportDataMining.md) | Macro that maps data-mining filter configs to stable string identifiers for serialization |
 | [`SCRIBE_EXPORT_EXTERNAL`](../src/scribe/ScribeExportExternal.md#free-functions-and-macros) | [scribe/ScribeExportExternal](../src/scribe/ScribeExportExternal.md) | Registers fundamental types, Qt types, and standard library types for transcription |
 | [`SCRIBE_EXPORT_GPLATES`](../src/entry-points/ScribeExportGPlates.md#free-functions-and-macros) | [entry-points/ScribeExportGPlates](../src/entry-points/ScribeExportGPlates.md) | Combines data-mining and external type groups for main application export registration |
@@ -208,7 +208,7 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 
 | Name | Unit | Description |
 |---|---|---|
-| [`TEMPORARY_HACK_NO_DIRECTIONAL_LIGHT_FOR_NORMAL_MAPS`](../src/opengl/GLMultiResolutionStaticPolygonReconstructedRaster.md#free-functions-and-macros) | [opengl/GLMultiResolutionStaticPolygonReconstructedRaster](../src/opengl/GLMultiResolutionStaticPolygonReconstructedRaster.md) | Temporarily remove directional lighting for normal maps until GPlates 1.4 (when introduce light canvas tool)... |
+| [`TEMPORARY_HACK_NO_DIRECTIONAL_LIGHT_FOR_NORMAL_MAPS`](../src/opengl/GLMultiResolutionStaticPolygonReconstructedRaster.md#free-functions-and-macros) | [opengl/GLMultiResolutionStaticPolygonReconstructedRaster](../src/opengl/GLMultiResolutionStaticPolygonReconstructedRaster.md) | Standing workaround disabling directional lighting on normal maps until a light canvas tool exists |
 | [`TRACK_CALL_STACK`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | Track the call stack. |
 | [`TRANSCRIBE_SOURCE`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | — |
 | [`TRANSCRIBE_SOURCE`](../src/scribe/TranscribeEnumProtocol.md#free-functions-and-macros) | [scribe/TranscribeEnumProtocol](../src/scribe/TranscribeEnumProtocol.md) | — |

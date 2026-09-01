@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyGeometryResolver tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `FeatureVisitor` that turns `GpmlTopologicalPolygon` and `GpmlTopologicalLine` property values into `ResolvedTopologicalBoundary` and `ResolvedTopologicalLine` geometries at a given reconstruction time. It is the engine behind resolving topological closed-plate-boundary and topological-line features: as it visits each topological section it looks up the section's already-reconstructed geometry (via `record_topological_section_reconstructed_geometry`, restricted to the `ReconstructHandle`s in `topological_sections_reconstruct_handles` so stale reconstruction geometries from an earlier pass are not picked up), accumulates the sections in `ResolvedGeometry`, and then chains them into one continuous boundary or line by intersecting each section with its neighbour (`process_resolved_boundary_topological_section_intersection` / `process_resolved_line_topological_section_intersection`, via `TopologyIntersections`). Boundaries are closed loops, so their intersection processing wraps the last section around to the first; lines are open and skip that wraparound.
+
+Three constructor overloads let a caller resolve just lines, just boundaries, or both in a single visitation pass, appending results into caller-owned vectors (`d_resolved_topological_lines`/`d_resolved_topological_boundaries` are optional references, populated only for the requested kind or kinds). `ReconstructionFeatureProperties` is used per-feature to pick up standard reconstruction parameters (such as the reconstruction plate ID) alongside the topological-section-specific work.
 
 ## Declared types
 
@@ -67,9 +67,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyGeometryResolver tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `topological_sections_reconstruct_handles` filter matters for correctness, not just performance: without it, a topological section could resolve against an outdated reconstruction geometry left over from a previous reconstruction pass rather than the current one. `boost::noncopyable` and the caller-owned output-vector references mean an instance is meant to be constructed, run over a feature collection once, and discarded — it is not designed to be copied or reused across independent resolution passes. Self-referencing sections (the same source geometry appearing more than once in a topology's section list) are explicitly detected and skipped during intersection processing rather than intersected with themselves.
 
 ## Used by
 

@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RotationAttributesRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RotationMetadataRegistry` is a `GPlatesUtils::Singleton` schema for the
+metadata attribute names that can appear in a GPlates-extended PLATES4
+rotation (`.rot`) file — things like `DC:creator:name`, `MPRS:pid`, `GTS`,
+`REF`, `HELL:kappahat`. Its constructor registers every known attribute name
+against a `MetadataAttribute` describing which category it belongs to
+(`HEADER`, `DC` for Dublin Core, `MPRS` for the moving-plate rotation
+sequence, or `POLE` for a single pole), whether it is `MANDATORY`, whether it
+can occur more than once (`MULTI_OCCUR`), and — for `REFERENCE` attributes
+such as `REF`, `DOI`, `AU`, `GTS` and `CHRONID` — which other registered
+attribute's value it points back to (carried in `ref_name`).
+
+Readers and dialogs that parse or display rotation-file metadata (notably
+`PlatesRotationFileProxy` and `PlatesRotationFormatReader`) look attribute
+names up here rather than hard-coding the schema, and can also pull the
+subset matching a combination of `MetadataType` flags via the bitmask
+overload of `get()`.
 
 ## Declared types
 
@@ -62,9 +75,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RotationAttributesRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get(const QString &name)` returns a default-constructed `MetadataAttribute`
+(`type_flag == MetadataType::Invalid`) for an unregistered name rather than
+signalling failure some other way — callers must check the flag, not assume a
+non-null return means the name was recognised.
 
 ## Used by
 

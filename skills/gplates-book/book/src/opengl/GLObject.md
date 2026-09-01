@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLObject` is the common, non-copyable root for every wrapped OpenGL resource type — texture, buffer, framebuffer, shader and program objects, and the rest of the `GL*Object` family. It contributes nothing but a virtual destructor and the pointer typedefs those subclasses share.
+
+It exposes `boost::shared_ptr`/`weak_ptr` typedefs rather than the `non_null_intrusive_ptr` used elsewhere in `opengl`, specifically so that instances can be managed by `GPlatesUtils::ObjectCache`, which needs ordinary shared/weak pointer semantics (including the ability to have no live owner) to recycle GL resources.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

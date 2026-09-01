@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLPixelBufferImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLPixelBufferImpl` is the fallback `GLPixelBuffer` implementation used when the pixel buffer object extension (`GL_ARB_pixel_buffer_object`) is not supported by the runtime system; the constructor asserts that it is indeed absent. Rather than truly transferring pixel data through a bound buffer object, it simulates the pixel buffer contract with plain OpenGL 1.1 client-side memory arrays: `gl_bind_unpack`/`gl_bind_pack` explicitly unbind any pixel pack/unpack buffer object, and each `gl_tex_image_*`/`gl_tex_sub_image_*`/`gl_draw_pixels`/`gl_read_pixels` call forces client-array mode before delegating straight to the matching `GLRenderer` method (or raw `glTexImage*`/`glTexSubImage*` calls), so the pointer/offset arguments are treated as ordinary CPU pointers into client memory rather than buffer-relative offsets.
+
+It exists purely to give `GLPixelBuffer`'s callers — texture streaming and framebuffer readback code — a uniform interface regardless of whether hardware pixel buffer objects are available, so that call sites do not need their own fallback branch when the extension is missing.
 
 ## Declared types
 
@@ -57,9 +57,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLPixelBufferImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Constructing this class when `GL_ARB_pixel_buffer_object` (and `GL_ARB_vertex_buffer_object`) *is* actually supported trips an assertion failure — it is meant only as the no-extension fallback, selected by whatever factory chooses between it and the real buffer-object-backed implementation.
+- `create_as_unique_ptr` exists specifically to guarantee single ownership before the object is optionally handed off to a `shared_ptr` via `create`.
 
 ## Used by
 

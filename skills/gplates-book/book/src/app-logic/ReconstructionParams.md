@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionParams` is a small value type holding the one user-configurable setting a rotation layer needs beyond its input feature collections and time/anchor state: whether `ReconstructionGraphBuilder` should extend each moving-plate rotation sequence back to the distant past rather than letting it end at its oldest data point. It is passed into `ReconstructionLayerProxy::set_current_reconstruction_params` and stored per-layer by `ReconstructionLayerTask`/`ReconstructionLayerParams`, and its `boost::less_than_comparable`/`boost::equality_comparable` mixins let a layer proxy cheaply detect "params unchanged" and skip invalidating its cached reconstruction trees.
+
+Its `transcribe` method participates in the `GPlatesScribe` serialisation used for sessions and projects; on a failed read it falls back to a default-constructed instance's value rather than failing the whole transcription, which is what lets older or newer saved sessions load even if this parameter set gains or loses fields in a future version.
 
 ## Declared types
 
@@ -43,9 +43,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Defaults to `extend_total_reconstruction_poles_to_distant_past = false`, preserving the original behaviour of respecting each sequence's own time range.
+- A transcription failure for the one stored field is not treated as an error: it is replaced with the default-constructed value so forward/backward compatibility across GPlates versions is preserved.
 
 ## Used by
 

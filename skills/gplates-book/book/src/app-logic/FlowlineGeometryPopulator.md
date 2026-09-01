@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/FlowlineGeometryPopulator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FlowlineGeometryPopulator` is the `GPlatesModel::FeatureVisitor` that turns a flowline feature's seed points into `ReconstructedFlowline` geometries. On each feature it first runs `FlowlineUtils::DetectFlowlineFeatures` and a `FlowlineUtils::FlowlinePropertyFinder` to check whether the feature actually is a flowline and can supply a seed point; if it can, `initialise_pre_feature_properties()` pre-computes the left- and right-hand stage-pole rotations (`d_left_rotations`/`d_right_rotations`) and the matching seed-point rotations once per feature, using the `ReconstructionTreeCreator` to obtain the `ReconstructionTree` for the current reconstruction time. The `visit_gml_point()`/`visit_gml_multi_point()` overrides then apply those precomputed rotations to each seed point via `create_flowline_geometry()`.
+
+When the property finder can locate a seed point but cannot process a full flowline — for example the left or right plate ID or the time samples are missing — the populator falls back to `reconstruct_seed_geometry_with_recon_plate_id()`, which reconstructs the seed geometry using the ordinary reconstruction plate ID instead of building a flowline, so the feature still renders a point rather than disappearing.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/FlowlineGeometryPopulator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_reconstructed_feature_geometries` is a reference to a caller-owned vector, not something this class owns; the populator only appends `ReconstructedFeatureGeometry`/`ReconstructedFlowline` objects to it as it visits features, so the caller must keep that vector alive for the populator's lifetime.
 
 ## Used by
 

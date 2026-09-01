@@ -8,9 +8,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/GpgimEnumerationType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpgimEnumerationType` extends `GpgimStructuralType` with the extra data an
+enumeration structural type needs: the set of allowed enumeration values,
+each paired with its own description in a `Content` struct. Where
+`GpgimStructuralType` alone is enough to describe a plain structural type such
+as `gml:Point`, an enumeration type (e.g. a `gpml:` enumeration property) also
+has to enumerate and document its legal values, and `d_contents` is that list.
+
+Like its base class it is created only through `create()`, which forwards a
+`ContentForwardIter` range into `d_contents` — callers pass begin/end iterators
+over whatever container holds the enumeration's `Content` values rather than a
+fixed container type. Readers such as `GpmlOutputVisitor` and the property-edit
+widgets (`EditEnumerationWidget`, `CreateFeatureDialog`) use `get_contents()` to
+populate combo boxes and to validate a property's value against the GPGIM.
 
 ## Declared types
 
@@ -40,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/GpgimEnumerationType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

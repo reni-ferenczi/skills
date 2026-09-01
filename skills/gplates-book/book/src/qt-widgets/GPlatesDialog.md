@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GPlatesDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesDialog` is the base class every major GPlates dialog inherits from instead of `QDialog` directly. It exists to work around platform-specific quirks in how dialogs open and close, and to standardise a couple of behaviours that plain `QDialog` leaves to each caller: `pop_up()` centralises the show-or-raise logic (delegating to `QtWidgetUtils::pop_up_dialog`) so a dialog that is already open is brought to the front rather than spawning a duplicate, and the constructor requires a parent widget so a dialog can never pop up parentless in the middle of the screen.
+
+`GPlatesGui::Dialogs` is the intended owner of instances of these dialogs, keeping `ViewportWindow` from accumulating direct references to every dialog in the application.
 
 ## Declared types
 
@@ -37,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GPlatesDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Subclasses must still declare `Q_OBJECT` themselves; inheriting from `GPlatesDialog` does not provide it. `pop_up()` is a `Q_SLOT` intended for menu-item wiring rather than direct C++ calls, though nothing prevents the latter.
 
 ## Used by
 

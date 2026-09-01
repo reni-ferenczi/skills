@@ -8,9 +8,14 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/FeatureCollectionFileFormat tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header contributes a single closed enumeration, `Format`, naming every
+file format the application can read or write a feature collection as: the
+native `GPML`/`GPMLZ` formats plus PLATES4 line and rotation files, GPlates
+rotation files, shapefiles, OGR GMT, GeoJSON, GeoPackage, KML, a write-only
+plain-XY GMT variant, VGP ("GMAP") and GSML. It is a leaf header with no
+behaviour, used throughout `file-io` and beyond as the tag that identifies
+which reader/writer implementation, file extension and
+`FeatureCollectionFileFormatConfiguration` subtype apply to a given file.
 
 ## Declared types
 
@@ -47,9 +52,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/FeatureCollectionFileFormat tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`NUM_FORMATS` must stay last and the enumerators before it must not skip a
+value, since it is used elsewhere as the count of formats (e.g. to size an
+array indexed by `Format`); inserting a new format requires adding it before
+`NUM_FORMATS`, not after.
 
 ## Used by
 

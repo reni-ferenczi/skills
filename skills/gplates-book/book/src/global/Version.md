@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/Version tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Version` is a namespace of free functions exposing the build's version numbers to the rest of the application, split into two independent version streams: GPlates itself (`get_GPlates_version*`) and the `pyGPlates` Python bindings (`get_pyGPlates_version*`). Each stream reports major/minor/patch components plus an optional pre-release suffix, since the two components can ship different version numbers even from the same source tree.
+
+The two streams also use different formatting conventions for the pre-release suffix: GPlates follows a Semantic-Versioning-like scheme (e.g. `"2.3.0-dev1"`, `"2.3.0-rc.1"`), while pyGPlates follows PEP 440 (e.g. `"1.0.0.dev1"`, `"1.0.0rc1"`). Callers needing a human-readable version string (about dialogs, log headers, command-line tools) use `get_GPlates_version()`; code needing to compare numerically uses the `_major`/`_minor`/`_patch` accessors.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/Version tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

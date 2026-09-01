@@ -9,9 +9,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlMultiPoint tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlMultiPoint` is the `GPlatesModel::PropertyValue` for the GML `gml:MultiPoint`
+element. It wraps a `GPlatesMaths::MultiPointOnSphere` (held via
+`internal_multipoint_type`, a `non_null_intrusive_ptr` to a const multipoint) and
+adds the one thing spherical geometry alone can't carry: which GML property each
+point was originally encoded with, `gml:pos` or `gml:coordinates`. That per-point
+choice is tracked in `d_gml_properties`, a parallel vector of `GmlPoint::GmlProperty`
+that `fill_gml_properties()` keeps the same size as the multipoint (defaulting every
+point to `GmlPoint::POS` when none is supplied).
+
+Like other `PropertyValue` subclasses, instances are only ever reached through
+`non_null_ptr_type`/`non_null_ptr_to_const_type`; construction is `protected` and
+copying goes through the virtual `clone()` rather than assignment, which is
+declared `private` and never defined.
 
 ## Declared types
 
@@ -57,9 +67,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlMultiPoint tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `set_gml_properties()` asserts (via `GPlatesGlobal::Assert`) that the supplied
+  vector's size matches the current multipoint's point count; mismatched sizes
+  raise `AssertionFailureException` rather than being silently truncated or padded.
+- `set_multipoint()` unconditionally resets every point's GML property back to
+  `GmlPoint::POS`, discarding any `gml:coordinates` provenance previously recorded
+  for those points.
+- `print_to()` is a stub (`{ GmlMultiPoint }`) and does not serialise the actual
+  geometry.
 
 ## Used by
 

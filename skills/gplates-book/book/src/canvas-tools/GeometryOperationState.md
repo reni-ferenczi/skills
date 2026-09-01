@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/GeometryOperationState tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryOperationState` is a small Qt signal hub that tracks which single `GPlatesViewOperations::GeometryOperation` and which single `GPlatesViewOperations::GeometryBuilder` are currently active, since several canvas tools (delete/move/split/add-vertex, and more) share this state but only one operation and one builder are ever active at a time. A `GeometryOperation` calls `set_active_geometry_operation()` on activation and `set_no_active_geometry_operation()` on deactivation; each mutator emits `switched_geometry_operation()` (or `switched_geometry_builder()`) only when the pointer actually changes, letting task-panel widgets such as `ModifyGeometryWidget` and `DigitisationWidget` react to whichever tool just took over geometry editing without depending on any specific tool class.
+
+There is no corresponding `.cc` file — the whole class is defined inline in the header.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/GeometryOperationState tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A `NULL` argument to either `switched_*` signal means no operation/builder is currently active — listeners must check for it. The header's own comment warns that signal/slot argument types must all be given in namespace scope, otherwise Qt's moc-generated connections silently fail to match a signal to a slot at runtime.
 
 ## Used by
 

@@ -21,12 +21,12 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [CptPaletteTest](../src/unit-test/CptPaletteTest.md) | 3 | 224 | 3 | Unit tests for CPT color palette parsing and retrieval |
 | [DataAssociationDataTableTest](../src/unit-test/DataAssociationDataTableTest.md) | 3 | 181 | 0 | Unit test for DataTable heterogeneous data container |
 | [DataMiningTestSuite](../src/unit-test/DataMiningTestSuite.md) | 3 | 102 | 0 | Aggregate test suite for data-mining subsystem |
-| [FeatureHandleTest](../src/unit-test/FeatureHandleTest.md) | 2 | 424 | 31 | (pending) |
+| [FeatureHandleTest](../src/unit-test/FeatureHandleTest.md) | 2 | 424 | 31 | Boost.Test fixture for FeatureHandle whose test cases are stubs or disabled memory-pool experiments |
 | [FeatureVisitorsTestSuite](../src/unit-test/FeatureVisitorsTestSuite.md) | 3 | 91 | 0 | Placeholder test suite for feature visitor patterns |
 | [FileIoTestSuite](../src/unit-test/FileIoTestSuite.md) | 3 | 91 | 0 | Container for Boost.Test cases exercising file I/O operations |
 | [FilterTest](../src/unit-test/FilterTest.md) | 3 | 276 | 0 | Test fixtures for filter operations in data-mining workflows |
 | [GPlatesGlobalFixture](../src/unit-test/GPlatesGlobalFixture.md) | 3 | 49 | 1 | Global Boost.Test fixture redirecting test logging to file |
-| [GPlatesTestSuite](../src/unit-test/GPlatesTestSuite.md) | 2 | 158 | 333 | (pending) |
+| [GPlatesTestSuite](../src/unit-test/GPlatesTestSuite.md) | 2 | 158 | 333 | Common base for the hand-written Boost.Test suite hierarchy, filtering suites/cases via TestSuiteFilter |
 | [GenerateVelocityDomainCitcomsTest](../src/unit-test/GenerateVelocityDomainCitcomsTest.md) | 3 | 345 | 0 | Tests for velocity domain generation from CitCOMS geodynamic models |
 | [GeometryVisitorsTestSuite](../src/unit-test/GeometryVisitorsTestSuite.md) | 3 | 92 | 0 | Container for test cases exercising geometry visitor patterns |
 | [GlobalTestSuite](../src/unit-test/GlobalTestSuite.md) | 3 | 92 | 0 | Container for global-scope test cases |
@@ -40,16 +40,16 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [PropertyValuesTestSuite](../src/unit-test/PropertyValuesTestSuite.md) | 3 | 93 | 0 | Test suite container for property value type tests |
 | [RealTest](../src/unit-test/RealTest.md) | 3 | 165 | 0 | Tests floating-point utility functions for classifying special values |
 | [ScribeExportUnitTest](../src/unit-test/ScribeExportUnitTest.md) | 3 | 54 | 0 | Registers test classes with the Scribe serialization framework |
-| [ScribeTestSuite](../src/unit-test/ScribeTestSuite.md) | 3 | 98 | 0 | (pending) |
-| [SmartNodeLinkedListTest](../src/unit-test/SmartNodeLinkedListTest.md) | 3 | 298 | 0 | (pending) |
-| [StringSetTest](../src/unit-test/StringSetTest.md) | 3 | 134 | 0 | (pending) |
-| [TestCase](../src/unit-test/TestCase.md) | 3 | 188 | 0 | (pending) |
-| [TestSuiteFilter](../src/unit-test/TestSuiteFilter.md) | 2 | 237 | 43 | (pending) |
-| [TestSuiteFilterTest](../src/unit-test/TestSuiteFilterTest.md) | 3 | 187 | 0 | (pending) |
-| [TranscribeTest](../src/unit-test/TranscribeTest.md) | 2 | 3375 | 70 | (pending) |
-| [UnitTestTestSuite](../src/unit-test/UnitTestTestSuite.md) | 3 | 93 | 0 | (pending) |
-| [UtilsTestSuite](../src/unit-test/UtilsTestSuite.md) | 3 | 96 | 0 | (pending) |
-| [ViewOperationsTestSuite](../src/unit-test/ViewOperationsTestSuite.md) | 3 | 92 | 0 | (pending) |
+| [ScribeTestSuite](../src/unit-test/ScribeTestSuite.md) | 3 | 98 | 0 | test suite for the GPlatesScribe serialization framework |
+| [SmartNodeLinkedListTest](../src/unit-test/SmartNodeLinkedListTest.md) | 3 | 298 | 0 | test suite for smart-pointer-managed linked-list operations |
+| [StringSetTest](../src/unit-test/StringSetTest.md) | 3 | 134 | 0 | test suite for string interning data structure |
+| [TestCase](../src/unit-test/TestCase.md) | 3 | 188 | 0 | template files for generating new test case classes |
+| [TestSuiteFilter](../src/unit-test/TestSuiteFilter.md) | 2 | 237 | 43 | Singleton parsing a /- and ,-delimited filter string to decide which test suites/cases run |
+| [TestSuiteFilterTest](../src/unit-test/TestSuiteFilterTest.md) | 3 | 187 | 0 | test suite for selective test execution with hierarchical patterns |
+| [TranscribeTest](../src/unit-test/TranscribeTest.md) | 2 | 3375 | 70 | Round-trip test suite for the GPlatesScribe serialisation framework across text, binary and XML archives |
+| [UnitTestTestSuite](../src/unit-test/UnitTestTestSuite.md) | 3 | 93 | 0 | hierarchical test suite for the unit-test framework |
+| [UtilsTestSuite](../src/unit-test/UtilsTestSuite.md) | 3 | 96 | 0 | hierarchical test suite for GPlates utility classes |
+| [ViewOperationsTestSuite](../src/unit-test/ViewOperationsTestSuite.md) | 3 | 92 | 0 | hierarchical test suite for view operations |
 
 ## Other files
 

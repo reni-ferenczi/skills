@@ -9,9 +9,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlTimeInstant tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlTimeInstant` is the `GPlatesModel::PropertyValue` for `gml:TimeInstant`: a
+single point in geological time, held as a `GeoTimeInstant`, plus whatever XML
+attributes were attached to the `gml:timePosition` element in the source file.
+It is the leaf time value that `GmlTimePeriod` and `GpmlTimeSample` build on to
+express begin/end ranges and time-stamped samples respectively, which is why
+it is by far the most heavily used property value in this batch.
+
+As with the other simple property values in this component, `time_position()`
+has no non-`const` accessor by design — the header states this is intentional,
+and callers must go through `set_time_position()` to change it, which also
+bumps the revision via `update_instance_id()`.
 
 ## Declared types
 
@@ -53,9 +61,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlTimeInstant tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `directly_modifiable_fields_equal()` compares only
+  `d_time_position_xml_attributes`, not `d_time_position` itself — two
+  instances with different temporal positions but the same XML attributes are
+  reported equal by this check. As elsewhere, a failed `dynamic_cast` is
+  treated as unreachable and returns `false` rather than throwing.
+- `time_position_xml_attributes()` has both `const` and non-`const` overloads,
+  the latter returning a mutable reference to the attribute map; the header
+  flags (via `FIXME` comments) that per-element mutation through this
+  reference bypasses the revisioning that per-index setters would otherwise
+  trigger.
 
 ## Used by
 

@@ -8,9 +8,16 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLTransform tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLTransform` is a thin, reference-counted wrapper around a `GLMatrix`,
+giving a 4x4 transform (model-view, projection, or a tile/cube-face
+adjustment on top of one) a shared-pointer identity that can be passed around
+and cached without copying the underlying matrix. It can be built as an
+identity matrix, from an existing `GLMatrix`, from a raw column-major
+`GLdouble[16]` array, or from a `GPlatesMaths::UnitQuaternion3D` (which fills
+in only the 3x3 rotation submatrix, leaving the rest zeroed) — the last of
+these is how a plate rotation becomes an OpenGL transform. Because
+`ReferenceCount` makes the class non-copy-constructible, `clone()` is the
+supported way to get an independent copy.
 
 ## Declared types
 
@@ -45,9 +52,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLTransform tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Constructing from a `UnitQuaternion3D` only initialises the 3x3 rotation
+  block; the remaining entries (translation column, bottom row, and scale)
+  are zero, not identity — treat the result as a pure rotation matrix, not a
+  general transform.
+- `get_matrix()` returns a mutable reference to the internal `GLMatrix`, so a
+  `GLTransform` shared through a `non_null_ptr_type` can be mutated in place
+  by any holder; use `non_null_ptr_to_const_type` where that must not happen.
 
 ## Used by
 

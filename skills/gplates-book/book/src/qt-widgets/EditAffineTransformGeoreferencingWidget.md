@@ -10,9 +10,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditAffineTransformGeoreferencingWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EditAffineTransformGeoreferencingWidget` edits a raster's
+`GPlatesPropertyValues::Georeferencing` in place, offering two equivalent views on
+`main_stackedwidget` toggled by `advanced_checkbox`: a simple lat/lon extents form
+(top/bottom latitude, left/right longitude) or the full six-parameter affine
+transform, both ultimately reading and writing the same `Georeferencing` object
+via `get_lat_lon_extents()`/`set_lat_lon_extents()` and
+`get_parameters()`/`set_parameters()`. `grid_line_registration_checkbox` switches
+between pixel registration (extents describe pixel *areas*) and grid-line
+registration (extents describe pixel *centres*); toggling it converts the
+georeferencing's existing values in place via `expand_pixel_to_grid_line_registration()`
+or `contract_grid_line_to_pixel_registration()` rather than reinterpreting them,
+so the raster's placement on the globe does not jump when the checkbox is
+toggled. `Georeferencing::get_lat_lon_extents()` can fail to express the current affine
+transform as plain lat/lon extents and returns `boost::none` in that case;
+`populate_lat_lon_extents_spinboxes()` then hides the extents form and shows
+`cannot_convert_to_extents_label` instead.
 
 ## Declared types
 
@@ -60,9 +73,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditAffineTransformGeoreferencingWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_georeferencing` is a reference to a `non_null_ptr_type` owned by the caller, not
+a copy, so every edit here mutates the caller's `Georeferencing` object directly
+and `georeferencing_changed()` is emitted to tell it (and other observers) to
+react. `update_extents_if_necessary()` and `update_affine_transform_if_necessary()`
+compare against `d_last_known_*_values` (via the file-local `any_changed()`) before
+writing anything back, because `editingFinished()` fires even when a spinbox's
+value did not actually change; after writing, they re-read the value from
+`Georeferencing` rather than trusting the spinbox, since what was set may not be
+exactly what is returned. `reset()` must be called with the raster's actual
+dimensions before the widget can do anything meaningful, since `d_raster_width`/
+`d_raster_height` default to 0 at construction.
 
 ## Used by
 

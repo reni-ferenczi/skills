@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PointInPolygon tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit implements spherical point-in-polygon testing for `PolygonOnSphere`, including non-simple (self-intersecting) polygons and polygons with interior rings. The test counts how many polygon edges (exterior and interior rings) are crossed by the great circle arc running from the polygon's antipodal centroid to the test point; an odd number of crossings means the point is inside. `use_point_on_polygon_threshold` treats a point extremely close to an edge as inside, which matters for cases such as a point that falls exactly on the dateline against a polygon edge aligned with it.
+
+There are two ways to run the test. The free function `is_point_in_polygon` is O(n) in the number of edges and does no bounds pre-processing, so it is only worthwhile for a handful of test points against a given polygon. `Polygon` wraps a `PolygonOnSphere` and, when profiling justifies it (`build_ologn_hint`), builds a `SphericalLuneTree`: a recursive partition of the sphere into spherical lunes sharing the centroid/antipodal axis, which lets a query descend to the small subset of edges that could possibly be crossed and brings the cost down to O(log n). Both paths always do cheap bounding-small-circle rejection first, which is where most of the practical speed-up over the naive edge count comes from.
+
+Callers rarely construct a `SphericalLuneTree` directly — `Polygon` is the intended entry point, and `PolygonOnSphere` itself caches one internally (passing `keep_shared_reference_to_polygon = false` to avoid a reference cycle) so that most call sites just call `PolygonOnSphere::is_point_in_polygon` or use `Polygon` when testing many points against the same polygon, such as topology resolution and reconstructed-raster meshing.
 
 ## Declared types
 
@@ -90,9 +92,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PointInPolygon tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- If an interior ring intersects the exterior ring, a test point outside the exterior ring but inside the interior ring can still be classified as inside, because the algorithm only counts total edge crossings rather than reasoning about ring containment. This mirrors how filled polygons are rendered elsewhere, so it is treated as acceptable rather than as a bug.
+- `Polygon` and `SphericalLuneTree` keep the polygon alive via `d_polygon_shared_pointer` only when `keep_shared_reference_to_polygon` is true; `PolygonOnSphere` passes `false` when it owns the tree itself, since otherwise the shared pointers would form a reference cycle and leak.
+- The "on the outline counts as inside" threshold is an extremely small angular epsilon (`POINT_ON_POLYGON_OUTLINE_COSINE`/`_SINE`), tuned to catch essentially-coincident points such as ones exactly on the dateline — it is not a general-purpose tolerance for nearby points.
 
 ## Used by
 

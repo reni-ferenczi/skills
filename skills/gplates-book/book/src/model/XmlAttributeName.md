@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/XmlAttributeName tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`XmlAttributeName` is one of the small interned-string types built on `QualifiedXmlName`: the header itself is a thin instantiation, `typedef QualifiedXmlName<XmlAttributeNameFactory> XmlAttributeName`, that represents the name of an XML attribute (namespace plus local part) attached to a property or element. `XmlAttributeNameFactory` exists only to plug the right backing store into `QualifiedXmlName`'s template: its `instance()` method returns the process-wide `GPlatesUtils::StringSet` from `StringSetSingletons::xml_attribute_name_instance()`, so every `XmlAttributeName` with the same qualified name shares one interned entry.
+
+Following the same pattern as `XmlElementName`, `PropertyName`, and `FeatureType`, the private, never-defined constructor on the factory class exists solely to prevent it from ever being instantiated — it is used purely as a namespace-like carrier for `instance()`.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/XmlAttributeName tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

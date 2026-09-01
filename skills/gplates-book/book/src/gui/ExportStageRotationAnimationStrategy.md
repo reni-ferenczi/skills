@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportStageRotationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportStageRotationAnimationStrategy` writes finite *stage* rotations — the rotation from time `t + delta_t` back to `t` — at each animation frame, rather than the total rotations from present day. `Configuration::RotationType` selects both the rotation kind (`RELATIVE`, between a moving/fixed plate pair, or `EQUIVALENT`, relative to the anchor plate) and the output field separator (comma, semicolon or tab) in one enum; the shared `ExportOptionsUtils::ExportRotationOptions` and `ExportOptionsUtils::ExportStageRotationOptions` supply the identity/Euler-pole formatting and the `time_interval` used as `delta_t`.
+
+`do_export_iteration` builds two `GPlatesAppLogic::ReconstructionTree`s from the same reconstruction-tree creator, one at the current view time and one at `view_time + time_interval`, then calls `get_relative_stage_rotation` or `get_equivalent_stage_rotation` to derive the `GPlatesMaths::UnitQuaternion3D` stage rotation between them for the configured plate(s) before writing it out.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportStageRotationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The two reconstruction trees are built at `view_time` and `view_time + stage_rotation_options.time_interval`; `get_relative_stage_rotation`/`get_equivalent_stage_rotation` compute the rotation from the second tree's time back to the first, so a positive `time_interval` looks forward in time from the current frame.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/DeleteVertex tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DeleteVertex` is a thin `CanvasTool` shell around `GPlatesViewOperations::DeleteVertexGeometryOperation`, which does the actual work of removing a vertex from the geometry currently being digitised or the focused feature's geometry. Every handler — activation, deactivation, left-click and hover — just forwards to the correspondingly named method on `d_delete_vertex_geometry_operation`, so this class exists mainly to plug that operation into the canvas-tool framework (`CanvasTool::create()`, the status-bar message, and the `handle_*` dispatch that `GPlatesGui::CanvasToolWorkflows` drives).
+
+The operation object owns the interaction with `GPlatesViewOperations::GeometryBuilder` and `GeometryOperationState`, and is constructed once in `DeleteVertex`'s constructor with all the collaborators (rendered-geometry collection, canvas tool workflows, proximity threshold) it needs to highlight the vertex nearest the cursor and delete it on click.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/DeleteVertex tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_delete_vertex_geometry_operation` is a `boost::scoped_ptr` to a forward-declared type, so `DeleteVertex` needs a defined (non-inline) destructor even though it does nothing but note that the complete type must be visible at that point.
 
 ## Used by
 

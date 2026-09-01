@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeBinaryArchiveReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`BinaryArchiveReader` implements `ArchiveReader` for the binary archive format: it decodes a `Transcription` back out of a `QDataStream`, mirroring the layout `BinaryArchiveWriter` produces. Its constructor checks the archive signature byte-by-byte (deliberately not as a Qt string, since a corrupt stream's length prefix could be arbitrary), then validates that both the binary format version and the `Scribe` version the archive was written with are not newer than what this build supports.
+
+Integers are decoded as Protocol-Buffers-style varints in `read_unsigned()`, with `read_signed()` layering a zigzag-style transform on top so small-magnitude negative values still encode in few bytes. `read_transcription()` reconstructs the object tags, the unique-string table, and then the objects themselves, which are stored on disk in contiguous id ranges (`read_object_group()`) so consecutive object ids don't each need their own id written out.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeBinaryArchiveReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every read helper asserts `d_input_stream.status() == QDataStream::Ok` and throws `Exceptions::ArchiveStreamError` on failure, so a truncated or corrupted archive fails fast rather than silently producing a partial `Transcription`. `close()` is a no-op here — the binary format needs no end-of-stream bookkeeping — which is why `read_transcription()` alone determines when the archive is exhausted (`read_object_group()` returns `false` once its group-size varint reads as zero).
 
 ## Used by
 

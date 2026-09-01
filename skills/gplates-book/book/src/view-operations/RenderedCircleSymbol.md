@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedCircleSymbol tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RenderedCircleSymbol` is a header-only `RenderedGeometryImpl` for a filled or outlined circle symbol centred on a point on the sphere, drawn by `GlobeRenderedGeometryLayerPainter`/`MapRenderedGeometryLayerPainter` and used by canvas tools such as `AdjustFittedPoleEstimate` and `SelectHellingerGeometries` to mark a point of interest with a circle instead of the usual point marker. Its own doc comment calls it a "first attempt", flagging it as a minimal implementation rather than a fully worked-out symbol type.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedCircleSymbol tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`test_proximity` delegates entirely to the centre `PointOnSphere`'s own proximity test, so `d_size` and `d_line_width_hint` are purely display hints for the painters (pixel-space circle radius and outline width) and have no effect on hit-testing — a large rendered circle is no easier to click than a bare point at its centre.
 
 ## Used by
 

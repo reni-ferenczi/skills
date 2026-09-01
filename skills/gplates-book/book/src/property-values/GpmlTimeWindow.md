@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTimeWindow tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlTimeWindow` is a plain value type — not a `PropertyValue` — that pairs a time-dependent `PropertyValue` with the `GmlTimePeriod` over which it is valid, plus the fixed `StructuralType` of the wrapped value. It is the element type of `GpmlPiecewiseAggregation`, the piecewise-constant time-dependent property representation: a feature property that changes value over discrete time ranges (for example, plate boundary topology that differs before and after a reorganisation) is stored as a sequence of `GpmlTimeWindow`s, each covering one interval.
+
+This mirrors `GpmlTimeSample` (used by `GpmlIrregularSampling`) but covers a time *period* rather than a single time *instant*, matching the different sampling models GPML supports for time-dependent properties. `app-logic/TopologyInternalUtils` and the raster/scalar-field feature-property extractors are the heaviest consumers, picking the window whose period covers the reconstruction time being evaluated.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTimeWindow tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

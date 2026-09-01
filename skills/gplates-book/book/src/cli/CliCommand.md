@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliCommand tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Command` is the pure abstract interface every headless CLI sub-command implements, so the surrounding infrastructure can treat "reconstruct", "convert file format", "equivalent total rotation" and the rest uniformly rather than special-casing each one. `GPlatesCli::CommandDispatcher` instantiates one `Command` per registered type (listed in `CliCommandTypes`), keyed by `get_command_name()`, then dispatches to whichever name the user typed on the command line.
+
+The four virtual methods mirror the lifecycle a `boost::program_options`-driven CLI needs: `get_command_name()` and `get_command_description()` support listing available commands to the user, `add_options()` lets each command contribute its own generic, config-file, hidden and positional options into the shared parser, and `run()` executes the command against the resulting `variables_map` once parsing succeeds.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliCommand tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`run()` is documented to throw an exception on failure rather than return a status code; callers such as `CommandDispatcher` are expected to catch and report it. `get_command_description()` deliberately omits the options themselves, since `boost::program_options::options_description` cannot be rendered as a description string — option help comes from `add_options()` populating the parser directly.
 
 ## Used by
 

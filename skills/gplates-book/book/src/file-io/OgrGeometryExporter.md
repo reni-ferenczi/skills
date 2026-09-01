@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrGeometryExporter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OgrGeometryExporter` adapts the visitor-based `GeometryOnSphere` hierarchy to
+`OgrWriter`'s per-geometry-type write calls. Each call to `export_geometry` or
+`export_geometries` clears any geometries buffered from the previous call, visits
+the incoming geometry (or geometries), sorting each one into its own bucket by
+concrete type (`d_point_geometries`, `d_multi_point_geometries`,
+`d_polyline_geometries`, `d_polygon_geometries`), then writes each non-empty bucket
+out through `d_ogr_writer`. A bucket holding exactly one geometry is written with
+the corresponding single-geometry `OgrWriter` call; a bucket holding more than one
+is written as a multi-geometry feature, so a feature with several points of the
+same type collapses into one multi-point rather than several point features.
+
+`export_geometries` exists specifically for callers that want a whole sequence of
+geometries treated as one feature: same-type geometries within the sequence are
+merged into a single multi-part feature, but geometries of different types still
+end up in separate files, since a single OGR feature (and, for the Shapefile
+driver, a single file) can only hold one geometry type. The `multiple_geometry_types`
+and `wrap_to_dateline` constructor flags are passed straight through to `OgrWriter`,
+which owns the actual output file(s).
 
 ## Declared types
 
@@ -52,9 +67,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrGeometryExporter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Owns its `OgrWriter` (`d_ogr_writer`) via a raw pointer allocated in the
+  constructor and deleted in the destructor; the class is `boost::noncopyable`, so
+  this ownership is never duplicated.
+- A single feature whose geometries mix types (e.g. a point and a polyline) gets
+  split across the OGR writer's separate per-type outputs — the comment in
+  `write_geometries()` calls this out explicitly as "splitting up a feature across
+  different files".
+- The OGR Shapefile driver can merge two nested, non-intersecting polygons into one
+  polygon with exterior/interior rings, re-orienting the rings itself; the code
+  does not rely on this and instead passes `PolygonOnSphere`'s own exterior and
+  interior rings straight through to OGR.
 
 ## Used by
 

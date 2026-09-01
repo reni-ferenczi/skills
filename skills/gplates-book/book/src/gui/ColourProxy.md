@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ColourProxy` lets code that builds a `RenderedGeometry` (in `view-operations`
+and `presentation`) attach a colour without knowing yet which
+`ColourScheme` will eventually render it — resolution happens later, when
+`get_colour(colour_scheme)` is actually called at paint time. This matters
+because a `ReconstructionGeometry`'s colour can depend on GUI state (the
+active colouring scheme) that is not settled at the point the rendered
+geometry is constructed.
+
+Internally it is a small pimpl: `ColourProxyImpl` is the polymorphic
+interface, and the two implementations are chosen by which constructor is
+used. The `ReconstructionGeometry` constructor creates a
+`DeferredColourProxyImpl`, which asks the given `ColourScheme` for the
+colour of that geometry when `get_colour` is finally invoked, then optionally
+runs the result through a `ColourFilter` (for cases like colouring a
+velocity arrow a modified shade of the colour used for its associated
+geometry). The `Colour`/`boost::optional<Colour>` constructors — deliberately
+non-`explicit`, to allow an implicit `Colour` to `ColourProxy` conversion at
+call sites — create a `FixedColourProxyImpl` instead, which ignores the
+`ColourScheme` argument entirely and always returns the fixed colour it was
+built with; this is the path for GUI elements not derived from a
+`ReconstructionGeometry`.
 
 ## Declared types
 
@@ -66,9 +84,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_colour` can return `boost::none` (when a deferred lookup's `ColourScheme`
+declines to colour the geometry at all) — callers must check before
+dereferencing, as the header comment stresses. For a `FixedColourProxyImpl`,
+the `colour_scheme` argument to `get_colour` is accepted but unused, so
+passing a different scheme has no effect on a proxy built from a fixed
+`Colour`.
 
 ## Used by
 

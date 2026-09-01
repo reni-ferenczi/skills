@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/OverloadResolution tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header solves a narrow C++ template-metaprogramming problem: taking the address of an overloaded member or free function requires a pointer expression of the exact overload's type, which is awkward to spell out by hand at every call site (for example when binding a function into `boost::lambda`). `resolve<Class, Ret, Params<...>>(&Class::method)` lets a caller specify the class, return type and up to five parameter types instead, and `DeduceMemberFunctionPointerType` (a chain of `boost::mpl`-style partial specializations keyed on the number of non-`NullType` arguments in `Params`) builds the corresponding function-pointer type at compile time. Passing `NonMemberFunction` as the class selects the free-function-pointer specializations instead of member-function-pointer ones.
+
+`mem_fn_types` and `mem_fn_types_for_maps` are a convenience layer on top of `resolve()` for the specific overloaded STL/Qt members GPlates actually needs to disambiguate — `std::map`/`std::multimap::find`/`erase`, and `QString::prepend`. Because `map_type::erase`'s signature differs across standard library implementations and MSVC versions, `mem_fn_types_for_maps` uses `HasEraseMember` (from `HasFunction.h`) to detect the actual signature at compile time via `boost::mpl::if_`, rather than hard-coding it per compiler.
 
 ## Declared types
 
@@ -132,9 +132,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/OverloadResolution tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The current `DeduceMemberFunctionPointerType` specializations only go up to 5 parameters; a function needing more cannot be resolved with this facility.
+- `mem_fn_types_for_maps::CheckMapEraseType` inherits from `map_type` on MSVC specifically to pull `erase()` out of any base class before signature-checking it; on other compilers it is just `map_type` itself, which the comment notes only works because none of the map types used here inherit from a class that also declares `erase()`.
 
 ## Used by
 

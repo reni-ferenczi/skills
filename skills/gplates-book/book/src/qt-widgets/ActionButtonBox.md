@@ -9,9 +9,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ActionButtonBox tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ActionButtonBox` turns a set of `QAction` objects into a row (or grid) of icon
+buttons without requiring a Qt Designer `.ui` form: it builds its own
+`QGridLayout` by hand and hands out a fresh `QToolButton` per `add_action()`
+call, wiring each button to its action with `setDefaultAction()` so the button
+tracks the action's enabled state, icon and tooltip automatically. `next_cell()`
+walks the grid left to right, wrapping to a new row every `d_num_columns`
+buttons.
+
+It is used wherever a dock or panel needs a compact strip of toolbar-style
+buttons alongside a widget rather than in the main toolbar, such as
+`TaskPanel` and `TopologySectionsTable`.
 
 ## Declared types
 
@@ -42,9 +50,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ActionButtonBox tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Neither `ActionButtonBox` nor the `QToolButton` it creates takes ownership of
+the `QAction` passed to `add_action()` — the caller must keep the action
+alive. `add_action()` explicitly clears the button's shortcut
+(`setShortcut(QKeySequence())`) because `setDefaultAction()` otherwise copies
+the action's mnemonic onto the button, which fights with the same mnemonic on
+the action's menu item elsewhere in the UI; this assumes every action added
+here is already reachable from a menu.
 
 ## Used by
 

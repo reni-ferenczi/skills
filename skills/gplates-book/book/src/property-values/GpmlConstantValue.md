@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlConstantValue tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlConstantValue` is the GPML `TimeConstantPropertyValue` wrapper: it holds a single inner `PropertyValue` (`d_value`) that is presented as being constant across all reconstruction times, plus the `StructuralType` of that inner value and an optional textual `description`. It exists because GPML property values that can vary in time (e.g. irregular samples, piecewise aggregations) share a structural-type slot with values that never vary, and `GpmlConstantValue` is the "never varies" case in that time-dependent-property-value family.
+
+Because GPlates property values are always heap-allocated and managed through `non_null_intrusive_ptr`, construction goes exclusively through the `create` factory functions, with the constructors kept `protected`. `deep_clone` recurses into the wrapped value via `deep_clone_as_prop_val`, so cloning a `GpmlConstantValue` also clones whatever it wraps rather than sharing it. `accept_visitor` dispatches to `visit_gpml_constant_value` on `GPlatesModel::FeatureVisitor`/`ConstFeatureVisitor`, which is how feature visitors that only care about the wrapped value (rather than the constant-value envelope) get at it.
 
 ## Declared types
 
@@ -57,9 +57,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlConstantValue tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `value_type()` has no setter: the structural type of the wrapped value is fixed at construction and must never change for the life of the instance.
+- `directly_modifiable_fields_equal` compares the wrapped value by dereferenced equality (`*d_value == *other.d_value`) after a `dynamic_cast`, and treats a failed cast as inequality rather than propagating the exception.
+- Copy-assignment is declared `private` and never defined; use `clone()` (which uses the protected copy constructor) instead of assigning instances.
 
 ## Used by
 

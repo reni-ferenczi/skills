@@ -9,9 +9,31 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLReconstructedStaticPolygonMeshes tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Bridges the app-logic reconstruction of static polygons to the GPU: it turns a
+present-day set of polygon geometries into GPU-ready `PolygonMeshDrawable`s once,
+then, on each `update`, re-groups the already-reconstructed
+`ReconstructContext::Reconstruction`s (from a
+`reconstructions_spatial_partition_type` cube quad tree partition) by their
+`GPlatesMaths::UnitQuaternion3D` finite rotation into
+`ReconstructedPolygonMeshTransformGroup`s. `GLMultiResolutionStaticPolygonReconstructedRaster`
+and other raster-reconstruction consumers call `get_reconstructed_polygon_meshes`
+each frame to get those groups back, filtered to the polygons visible in the
+current view frustum via `PresentDayPolygonMeshMembership` bitsets, so a whole
+transform group can be drawn with a single model-view transform instead of one
+draw call per polygon.
+
+Because polygon interiors need to be tested against raster tiles cube-face by
+cube-face, the class precomputes `PresentDayPolygonMeshesNodeIntersections`: a
+conservative (may include false positives, never false negatives) cube quad tree
+recording which present-day polygon meshes can possibly intersect each node,
+built once from the present-day geometries and reused for the lifetime of the
+object. The present-day drawables and this intersection tree are both constant
+for the object's lifetime; only the per-transform-group membership changes as
+`update` is called with a new reconstruction time and spatial partition. A
+separate `active_or_inactive_reconstructions_spatial_partition` argument lets
+`update` also track polygons that are reconstructed but inactive at the current
+time, which raster reconstruction needs when an age grid — rather than the
+polygons' own begin time — decides where to mask off oceanic crust.
 
 ## Declared types
 
@@ -70,9 +92,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLReconstructedStaticPolygonMeshes tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+If the present-day polygons themselves change, the header is explicit that
+callers must create a new `GLReconstructedStaticPolygonMeshes` rather than
+continue using an existing one — `update` only re-reconstructs against the
+polygon meshes fixed at construction. The "inactive" and "active-or-inactive"
+membership accessors on `ReconstructedPolygonMeshTransformGroup` and
+`ReconstructedPolygonMeshTransformsGroups` return empty memberships whenever
+`update` was last called without an `active_or_inactive_reconstructions_spatial_partition`,
+so a caller must check which overload of `update` was used before relying on
+those results. `get_subject_token` lets dependents (such as cached rasters)
+detect that they need to re-fetch reconstructed polygon meshes after an
+`update`, rather than polling.
 
 ## Used by
 

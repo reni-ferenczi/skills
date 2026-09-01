@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedCrossSymbol tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered visual symbol of a cross at a location on the sphere. The cross is north-south aligned, with one arm pointing north and the other pointing south, centred at the specified `PointOnSphere`. The class stores the centre point, a colour, a size in pixels, and a line width hint for rendering.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedCrossSymbol tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

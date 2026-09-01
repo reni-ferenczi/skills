@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/Application tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Application` is the top-level singleton that owns the three layers of GPlates
+state and wires them together at startup: `GPlatesAppLogic::ApplicationState`
+(model and file state), `GPlatesPresentation::ViewState` (how it is displayed)
+and `GPlatesQtWidgets::ViewportWindow` (the main window). It constructs them in
+that order — `ViewState` is given the `ApplicationState`, `ViewportWindow` is
+given both — then runs `initialise()` to make the cross-cutting signal/slot
+connections that `ViewportWindow` itself should not have to know about, such as
+routing `GPlatesGui::FeatureFocus::focused_feature_modified` into the search
+results dock and the shapefile attribute viewer, and connecting the anchored
+plate id dialog and the create-feature dialog back into
+`ApplicationState::reconstruct()`. It also performs the first reconstruction,
+initialises the animation controller's default time range and starts up
+`SessionManagement`, all after the three constructors have run.
+
+Because `Application` sits above `ApplicationState` and depends on
+`ViewportWindow` and other GUI classes, code at the application-logic level or
+below must never include or reference it. It also hosts a `GPlatesGui::CommandServer`
+and, lazily, a `GPlatesGui::ExternalSyncController` used to let GPlates act as
+master or slave to another running application instance.
 
 ## Declared types
 
@@ -43,9 +59,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/Application tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`Application` is a `GPlatesUtils::Singleton` created with the "public
+constructor" variant specifically so a single instance can live on the C++
+stack (typically in `main()`), giving it deterministic destruction when that
+scope exits rather than leaving it as a leaked global. `initialise()` relies on
+construction order: `d_application_state`, `d_view_state`, `d_main_window` and
+`d_cmd_server` must already exist because it wires signals between objects
+reachable from `d_main_window` and slots on `d_application_state`. The
+`d_external_sync_controller` is constructed lazily, on the first call to
+`enable_syncing_with_external_applications()`, not at startup.
 
 ## Used by
 

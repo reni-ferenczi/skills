@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/UniqueId tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`generate_unique_id()` creates globally unique string identifiers by wrapping Qt's `QUuid::createUuid()` and formatting the result as a string that conforms to XML ID rules (matching the pattern `[A-Za-z_][-A-Za-z_0-9.]*`). The generated identifiers follow a `GPlates-<hex>` format suitable for use as feature IDs in GPML files.
 
 ## Declared types
 
@@ -30,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/UniqueId tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

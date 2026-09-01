@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTopologicalSection tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlTopologicalSection` is the abstract common base for the property values that can appear as one element of a topological boundary or interior: `GpmlTopologicalLineSection` (a reversible reference to a line geometry, used with reconstructed plate boundaries) and `GpmlTopologicalPoint` (a reference to a single point). Containers such as `GpmlTopologicalPolygon`, `GpmlTopologicalLine` and `GpmlTopologicalNetwork` store their sections through this base so they can treat both kinds uniformly.
+
+The `DEFINE_FUNCTION_DEEP_CLONE_AS_TOPO_SECTION()` macro exists because every derived class needs an identical override of `deep_clone_as_topo_section()` that forwards to that class's own non-virtual `deep_clone()` — the base class cannot provide this itself since `deep_clone()` returns the derived type and is not virtual.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTopologicalSection tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

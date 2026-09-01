@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/ProjectSession tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ProjectSession` is the `Session` subclass for sessions saved to a project
+file on disk, as opposed to `InternalSession`, which lives in the user
+preferences store. It adds the concerns that only apply to an archive file
+that can be moved or copied independently of the data it references: whether
+the project file itself has moved since it was saved
+(`has_project_file_moved()`, by comparing the current filename against the
+saved one after adjusting for a Windows drive letter or share name via
+`GPlatesScribe::TranscribeUtils::convert_file_path()`), and whether to resolve
+its data files by the absolute paths recorded at save time or by paths
+relative to the project file's current location (`set_load_relative_file_paths()`),
+which supports the common case of zipping a project together with its data
+and unzipping elsewhere.
+
+`has_session_state_changed()` gives callers dirty-checking without a separate
+change-tracking mechanism: it re-runs `TranscribeSession::save()` into a fresh
+`Scribe` transcription and compares it, via `Transcription::operator!=`,
+against `d_last_saved_or_restored_session_state`, the transcription captured
+the last time this `ProjectSession` was saved or restored. This only detects
+changes to session state (layers, view settings, and so on) transcribed the
+same way both times — it explicitly does not catch unsaved edits to feature
+collection files, which is `UnsavedChangesTracker`'s job.
 
 ## Declared types
 
@@ -54,9 +72,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/ProjectSession tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_last_saved_or_restored_session_state` is `mutable` and stays unset (`boost::none`)
+on a `ProjectSession` created by `create_restore_session()` until
+`restore_session()` actually runs; `has_session_state_changed()` treats that
+unset state as "unchanged" rather than as an error. A pending
+`set_remapped_file_paths()` remapping is always considered a change, since it
+has not yet been saved back into the project file. `d_project_filename_when_saved`
+deliberately keeps the drive letter/share name as recorded on the saving
+system (unlike the paths returned by `get_absolute_file_paths()`), because it
+must be compared against the original save location, not the local one.
 
 ## Used by
 

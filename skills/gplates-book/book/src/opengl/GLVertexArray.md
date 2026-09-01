@@ -9,9 +9,31 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexArray tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexArray` is the abstract interface for binding vertex/vertex-element
+buffers to attribute slots and issuing indexed draws, abstracting over
+whether the driver actually supports `GL_ARB_vertex_array_object`.
+`create_as_unique_ptr` checks `GLCapabilities::buffer.gl_ARB_vertex_array_object`
+and returns a `GLVertexArrayObject` when the extension is present or a
+`GLVertexArrayImpl` (its two subclasses) otherwise, which re-issues the
+individual `glVertexPointer`/`glEnableVertexAttribArray`-style calls on every
+bind instead of relying on a real VAO — so calling code writes to one
+interface regardless of hardware support.
+
+The interface covers both the fixed-function attribute slots
+(`set_vertex_pointer`, `set_color_pointer`, `set_normal_pointer`,
+`set_tex_coord_pointer`, gated by `set_enable_client_state`/
+`set_enable_client_texture_state`) and shader-only generic attributes
+(`set_vertex_attrib_pointer`, plus the `_i_` and `_l_` integer/double
+variants, gated by `set_enable_vertex_attrib_array`); a single vertex array
+can mix both, though the file's comments warn that on nVidia hardware the
+generic indices alias the built-in attributes, so mixing them within one
+array should be avoided in practice. `set_vertex_array_data` and the two
+`compile_vertex_array_draw_state` overloads at the bottom are convenience
+templates: the former builds fresh vertex/element buffers from `std::vector`s
+and attaches them (useful for one-off static geometry, not for updating
+existing data), and the latter wrap a bind-and-draw sequence into a
+`GLCompiledDrawState` that outlives the `GLVertexArray` object it was built
+from.
 
 ## Declared types
 
@@ -58,9 +80,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexArray tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- A vertex element buffer must be set with `set_vertex_element_buffer` before
+  drawing; `gl_draw_range_elements` throws `PreconditionViolationError`
+  otherwise.
+- All arrays and generic attribute arrays are disabled by default; enabling
+  one (`set_enable_client_state`, `set_enable_client_texture_state`,
+  `set_enable_vertex_attrib_array`) and pointing it at a buffer
+  (`set_*_pointer`) are separate calls, and both are required.
+- `clear()` detaches buffers and disables attribute arrays, but the effect is
+  deferred until the next `gl_bind` — it does not take effect immediately.
+- Generic attribute methods require `GL_ARB_vertex_shader` (plus
+  `GL_EXT_gpu_shader4` for `set_vertex_attrib_i_pointer`, or
+  `GL_ARB_vertex_attrib_64bit` for `set_vertex_attrib_l_pointer`), and
+  `attribute_index` must stay below `GL_MAX_VERTEX_ATTRIBS_ARB`
+  (`GLCapabilities::shader.gl_max_vertex_attribs`).
+- Uses `boost::enable_shared_from_this` and is managed via `boost::shared_ptr`
+  rather than the codebase's usual `non_null_intrusive_ptr`, specifically so
+  instances can live in a `GPlatesUtils::ObjectCache`.
 
 ## Used by
 

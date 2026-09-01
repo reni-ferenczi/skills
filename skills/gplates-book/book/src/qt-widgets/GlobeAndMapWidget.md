@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GlobeAndMapWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GlobeAndMapWidget` owns both a `GlobeCanvas` and a `MapView` inside a `QStackedLayout` and switches which one is visible whenever the projection changes: `ViewportProjection`'s `projection_type_changed`/`central_meridian_changed` signals drive `change_projection()`, which reconfigures the map's projection, chooses the globe for `ORTHOGRAPHIC` and the map otherwise, and re-applies the camera position captured just beforehand in `about_to_change_projection()` so the switch feels seamless to the user. `get_active_view()`/`is_globe_active()`/`is_map_active()` let callers query which `SceneView` is current without caring which concrete widget backs it.
+
+The private cloning constructor and `clone_with_shared_opengl_context()` build a second `GlobeAndMapWidget` that shares the original's OpenGL context and copies which view is active, for use where a second, independently rendered view onto the same OpenGL resources is needed (for example an export preview). Because a `ColourScheme` is threaded through many of the constructors it clones from but is not actually needed for this shared-context clone, the `.cc` file's `DummyColourScheme` (a trivial `SingleColourScheme` subclass) is passed in purely to satisfy those call signatures.
 
 ## Declared types
 
@@ -79,9 +79,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GlobeAndMapWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_map_view_ptr` must be declared after `d_globe_canvas_ptr` in the class (the map view is constructed using the globe canvas's OpenGL context, so the globe canvas must already exist). `get_viewport_size()` and `render_to_qimage()` work in device-*independent* pixels; OpenGL-side sizes use device pixels and differ by the device pixel ratio. Pinch-zoom handling (`event()` override, `viewport_zoom_at_start_of_pinch`) is compiled in only under `GPLATES_PINCH_ZOOM_ENABLED`, which is defined for macOS only.
 
 ## Used by
 

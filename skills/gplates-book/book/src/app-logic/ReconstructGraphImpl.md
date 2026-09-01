@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructGraphImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructGraphImpl` holds the private node-and-edge representation behind the public `ReconstructGraph`/`Layer` API: `ReconstructGraphImpl::Layer` is the graph node wrapping a `LayerTask`, `Data` is either an input `FeatureCollectionFileState::file_reference` or the `LayerProxy` output of a layer, and `LayerInputConnection` is the edge tying one layer's named input channel (`LayerInputChannelName::Type`) to one `Data` source; `LayerInputConnections` indexes a layer's connections by channel name. Connecting or disconnecting a `LayerInputConnection` also pushes the change straight into the receiving layer's `LayerTask` (`add_input_file_connection`/`add_input_layer_proxy_connection` and their `remove_*` counterparts), and — for a file input — installs a `WeakReferenceCallback` (`FeatureCollectionModified`) so the layer task is told when the underlying feature collection changes.
+
+Ownership flows outward from `Layer`: a layer's `d_output_data` `Data` is shared with every `LayerInputConnection` on the receiving end, and a layer owns its own `LayerInputConnections` (hence its inbound `LayerInputConnection`s) outright. `Layer::activate` propagates an active/inactive transition to every connection reading from its output (`input_layer_activated`) so a downstream layer's task knows not to pull from an inactive input, then activates its own `LayerTask`. `detect_cycle_in_graph` is the hook `ReconstructGraph` would use to reject a connection that closes a cycle.
 
 ## Declared types
 
@@ -100,9 +100,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructGraphImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `detect_cycle_in_graph` is a stub: its real body is compiled out (`#if 0`) and it unconditionally `return`s `false`. The accompanying comment explains why cycle checking was disabled — a connection graph cycle (e.g. a raster layer using an age grid, and that age grid using the raster as a normal map) does not necessarily imply a dependency cycle, and disabling the check was judged safer than a check that could reject a legitimate wiring.
+- `LayerInputConnection`'s destructor and `disconnect_from_parent_layer` both special-case a connection whose parent layer is in the middle of being destroyed (`d_layer_receiving_input.expired()`): a layer connected to its own output does not try to notify or detach from a parent that is already unwinding.
+- A `LayerInputConnection` is owned exclusively by its receiving `Layer` (via `LayerInputConnections`); destroying or disconnecting it is what actually tears it down; the input-side `Data` merely holds a non-owning back-pointer in its output-connections list for notification purposes.
 
 ## Used by
 

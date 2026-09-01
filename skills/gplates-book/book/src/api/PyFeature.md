@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyFeature tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApi::Feature` is the Python-facing wrapper around a single
+`GPlatesModel::FeatureHandle::weak_ref`, exposed to Python by `export_feature()`
+as the `Feature` class. It translates the model's feature representation into
+plain Python values: `feature_id()` and `feature_type()` return strings,
+`valid_time()`/`begin_time()`/`end_time()` return the feature's time range as
+numbers, and `plate_id()` resolves the reconstruction plate ID via
+`GPlatesUtils::get_recon_plate_id_as_int`, defaulting to `0` when none is set.
+Every accessor first checks `d_handle.is_valid()` and returns an empty
+Python object (or `0`) if the underlying feature has since been destroyed,
+since a `weak_ref` does not keep the feature alive.
+
+Property access goes through `get_all_property_names()` and
+`get_properties_by_name()` rather than exposing the property value objects
+directly. `get_all_property_names()` walks the feature's top-level properties
+and, for shapefile-imported features, unpacks the `shapefileAttributes`
+`GpmlKeyValueDictionary` into individual `"shapefileAttributes:<key>"` names.
+`get_properties_by_name()` reverses that: given a name, it either converts the
+property value to a Python object with `GetPropertyAsPythonObjVisitor`, or,
+for a shapefile attribute name, looks it up with
+`GPlatesFeatureVisitors::ShapefileAttributeFinder` and converts the matching
+`QVariant` by hand. `get_properties()` is just `get_all_property_names()`
+combined with a `get_properties_by_name()` call per name.
 
 ## Declared types
 
@@ -48,9 +67,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyFeature tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_handle` is a `weak_ref`, not an owning reference: every method must (and
+does) check `is_valid()` before dereferencing it, because the underlying
+`FeatureHandle` can be destroyed while a `Feature` wrapper is still held on the
+Python side. `get_property()` is declared under a `//protected:` comment but is
+actually public — the access-control comment does not match the code.
+`export_feature()` binds `feature_id`, `feature_type` and `valid_time` only as
+methods; the commented-out `add_property` calls for the same names were never
+enabled, so they must be called as `feature.feature_id()`, not accessed as
+attributes, despite the "attribute" rows shown in Related above.
 
 ## Used by
 

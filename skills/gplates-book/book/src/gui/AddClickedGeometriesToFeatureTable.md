@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/AddClickedGeometriesToFeatureTable tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A small set of free functions that turn a mouse click on the globe or map into
+rows in the "Clicked" feature table. `get_clicked_geometries` runs
+proximity-hit testing (via `GPlatesViewOperations::test_proximity`) against the
+currently rendered geometries and reduces the hits to their unique
+`GPlatesAppLogic::ReconstructionGeometry` objects, optionally filtered by a
+caller-supplied `filter_reconstruction_geometry_predicate_type` predicate (the
+default accepts everything). `add_clicked_geometries_to_feature_table` then
+populates a `GPlatesGui::FeatureTableModel` from that sequence, updates the
+`GPlatesQtWidgets::ViewportWindow` status bar, and drives which row gets
+highlighted in the search results dock. `get_and_add_clicked_geometries_to_feature_table`
+is a convenience wrapper chaining the two, and
+`add_geometry_to_top_of_feature_table` is used separately to prepend a single
+already-known geometry (for tools that add a feature programmatically rather
+than through a click).
+
+This unit exists to give every canvas tool that reacts to clicking on
+geometry (`ClickGeometry`, `BuildTopology`, `EditTopology`, and others) a
+single shared implementation, so hit-testing, table population and focus
+handling stay consistent across tools instead of being reimplemented per
+tool.
 
 ## Declared types
 
@@ -38,9 +55,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/AddClickedGeometriesToFeatureTable tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`add_clicked_geometries_to_feature_table` always clears the clicked-table
+model first, and unsets the feature focus entirely if nothing survives the
+predicate filter. Whether the first clicked feature is force-highlighted or
+the previously focused feature is re-highlighted instead is controlled by
+`highlight_first_clicked_feature_in_table`; the "restore previous state"
+(`false`) path calls `FeatureTableModel::handle_rendered_geometry_collection_update()`
+before re-highlighting because the reconstruction geometries in the newly
+cleared table may otherwise be stale pointers from a different
+reconstruction time than the currently focused feature.
 
 ## Used by
 

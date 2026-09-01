@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyReconstructedFeatureGeometry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyReconstructedFeatureGeometry` is the `ReconstructedFeatureGeometry` subclass used when a feature's geometry was carried through the topology reconstruction pipeline rather than reconstructed by a single rigid rotation. Unlike a plain reconstructed geometry, its points can be subducted going forward in time or consumed by a mid-ocean ridge going backward in time, and each point can accumulate deformation from passing through resolved deforming networks.
+
+All of the actual work is delegated to the `TopologyReconstruct::GeometryTimeSpan` held in `d_topology_reconstruct_geometry_time_span`: `reconstructed_geometry()` and `get_geometry_data()` simply ask the time span for the geometry, per-point topology locations, strain rates and total strains at the current reconstruction time. This class itself is a thin, visitable wrapper that plugs that per-point history into the `ReconstructionGeometryVisitor` / weak-observer machinery shared by all reconstruction geometries.
 
 ## Declared types
 
@@ -52,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyReconstructedFeatureGeometry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every accessor asserts (via `GPlatesGlobal::Assert<PreconditionViolationError>`) that the geometry time span is valid at the object's current reconstruction time. An instance must therefore only ever be created for a reconstruction time within the time range covered by its `TopologyReconstruct::GeometryTimeSpan` — the constructor is private and creation goes only through `create()`, but callers building the time span still need to keep the two in sync. The constructor is private specifically to prevent stack allocation; instances are always managed through `non_null_ptr_type`.
 
 ## Used by
 

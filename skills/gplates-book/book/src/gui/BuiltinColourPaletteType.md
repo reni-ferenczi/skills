@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/BuiltinColourPaletteType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A tagged union identifying one of GPlates' built-in colour palettes — age,
+topography, Scientific Colour Maps (SCM), or ColorBrewer sequential/diverging
+— together with the `Parameters` needed to instantiate it (inverted, number
+of classes, continuous vs. discrete). It exists to avoid a combinatorial
+explosion of enum values: rather than one flat enum covering every
+ColorBrewer variant, `BuiltinColourPaletteType` pairs a `PaletteType`
+discriminant with the specific sub-enum (`BuiltinColourPalettes::Age::Type`,
+`BuiltinColourPalettes::ColorBrewer::Sequential::Type`, etc.) that applies to
+that kind of palette; only the matching `d_*_type` field and constructor are
+relevant for a given `d_palette_type`.
+
+`create_palette()` switches on `d_palette_type` and calls the corresponding
+`BuiltinColourPalettes` factory to build the actual
+`RasterColourPalette::non_null_ptr_type`, and `get_palette_name()` similarly
+produces the display string shown in palette-choosing widgets such as
+`ChooseBuiltinPaletteDialog`. The type is also `GPlatesScribe`-transcribable,
+so a chosen built-in palette (and its parameters) can be saved into and
+restored from sessions and projects.
 
 ## Declared types
 
@@ -71,9 +86,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/BuiltinColourPaletteType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only the accessor matching the current `get_palette_type()` is meaningful;
+the other `d_*_type` fields hold whatever default they were constructed or
+transcribed with. `create_palette()` and `get_palette_name()` both abort via
+`GPlatesGlobal::Abort` if `d_palette_type` falls outside the switch, so a new
+`PaletteType` value must be handled in every switch over it, including the
+`transcribe` free function — the header's comment on the enum flags this
+explicitly.
 
 ## Used by
 

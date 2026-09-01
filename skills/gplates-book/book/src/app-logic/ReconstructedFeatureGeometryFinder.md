@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructedFeatureGeometryFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructedFeatureGeometryFinder` walks the weak observers of a `GPlatesModel::FeatureHandle` to collect the `ReconstructedFeatureGeometry` instances currently observing that feature. Since RFGs are produced fresh by each reconstruction pass and only weakly reference the feature they came from, this finder is the standard way to go from a feature back to its most recent reconstructed geometries, rather than every caller re-deriving that link by hand.
+
+Each constructor narrows the search: by the `ReconstructionTree` the RFG must have been reconstructed with, by the `GPlatesModel::PropertyName` of the source geometry property, or by a specific `GPlatesModel::FeatureHandle::iterator` (which can match at most one RFG). The `reconstruct_handles_to_match` parameter further restricts results to RFGs produced by one of a given set of `ReconstructHandle` values, letting a caller isolate the output of one particular reconstruction call.
 
 ## Declared types
 
@@ -56,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructedFeatureGeometryFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Reconstruction-tree matching compares trees by `created_from_same_graph_with_same_parameters`, not by pointer or object equality: reconstruction-tree caches can evict and recreate an equivalent tree as a new instance, so pointer comparison would silently miss matches.
 
 ## Used by
 

@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ModifyReconstructionPoleWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The task panel widget behind the "Manipulate Pole" canvas tool ([`canvas-tools/ManipulatePole`](../canvas-tools/ManipulatePole.md)): the user drags the focused feature's geometry around on the globe/map, and this widget accumulates that drag into a candidate rotation, then hands it off to a dialog for the user to confirm which total reconstruction sequence it should be applied to. It works in two phases. First, dragging: `populate_initial_geometries` collects every `ReconstructedFeatureGeometry` sharing the focused feature's plate ID (`d_plate_id`) into `d_reconstructed_feature_geometries`, and `start_new_drag`/`update_drag_position` (translation) or `start_new_rotation_drag`/`update_rotation_drag_position` (spin about the viewport centre) accumulate the gesture into `d_accum_orientation`, a `GPlatesGui::SimpleGlobeOrientation` despite the misleading name — it is a rotation accumulator, not a globe camera orientation. `draw_dragged_geometries` re-renders the initial geometries under that accumulated rotation so the user sees a live preview.
+
+Second, applying: `apply()` calls the free function `find_trses` to locate every total reconstruction sequence whose fixed or moving plate ID matches `d_plate_id`, feeds the choices and the accumulated `FiniteRotation` into `d_applicator_ptr` (an `AdjustmentApplicator`), and shows `d_dialog_ptr` (`ApplyReconstructionPoleAdjustmentDialog`) so the user can pick which sequence receives the adjustment. If [`qt-widgets/MovePoleWidget`](MovePoleWidget.md) has an adjustment pole set, dragging is constrained to rotation about that pole (translation drags snap to the closest point on its equator via the free function `get_closest_point_on_equator_of_pole`) and free rotation-dragging is disabled entirely; without an adjustment pole, rotation-dragging pivots about the point on the horizon closest to the drag (`get_closest_point_on_horizon`).
 
 ## Declared types
 
@@ -90,9 +90,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ModifyReconstructionPoleWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The widget starts disabled (`setEnabled(false)` in the constructor) and is only enabled by `activate()`/`deactivate()`, which the owning canvas tool calls — this prevents interaction while the Manipulate Pole tool isn't the active tool. `d_accum_orientation` can be reset mid-drag (e.g. via a reset shortcut key) without `update_drag_position` being told, so that slot must tolerate a null `d_accum_orientation` rather than assert. `apply()` does nothing if the focused feature has no reconstruction plate ID (`d_plate_id`/`d_reconstruction_tree` both need to be set) — no plate ID means there is nothing to attach an adjustment to. In `apply()`, `d_applicator_ptr` must be given its new state (`set(...)`) before `d_dialog_ptr->setup_for_new_pole(...)` is called, because populating the dialog selects the first row of the sequence-choice table, which signals a slot on the applicator that assumes it has already been set. `d_dialog_ptr` is owned by Qt's parent/child ownership, not by this class.
 
 ## Used by
 

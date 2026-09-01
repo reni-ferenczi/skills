@@ -10,9 +10,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/VelocityMethodWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VelocityMethodWidget` is a small reusable form for configuring how velocities
+are computed at a reconstruction time: which of the three finite-difference
+schemes to use (`T_TO_T_MINUS_DT`, `T_PLUS_DT_TO_T`, `T_PLUS_MINUS_HALF_DT`,
+selected by radio buttons in `button_group_velocity_method`), the `dt` interval,
+and, optionally, the yellow/red velocity-magnitude thresholds used to colour
+velocity vectors. The threshold spinboxes can be hidden via the constructor's
+`show_threshold_spinboxes` flag for embedding contexts (such as
+`ExportNetRotationOptionsWidget`) that only need the method and `dt`.
+
+The widget owns no reconstruction logic itself; it only tracks the current
+selection and emits `configuration_changed(bool valid)` whenever any control
+changes, so an embedding dialog can enable or disable its own "Apply"/"Export"
+button. `valid` is false only while `dt` is exactly zero.
 
 ## Declared types
 
@@ -60,9 +70,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/VelocityMethodWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A `dt` of exactly zero paints `spinbox_dt`'s background red (via
+`GPlatesMaths::are_almost_exactly_equal`) and emits `configuration_changed(false)`;
+any other value restores `d_spin_box_palette`, the palette captured at
+construction. The yellow/red threshold spinboxes always report
+`configuration_changed(true)` regardless of value, so out-of-range thresholds
+are not caught here — validation of those, if any, happens in the caller. The
+`button_group_velocity_method` button IDs are set to the `VelocityMethod` enum
+values and are persisted to preferences by callers, so the enum's numeric
+values are an on-disk format detail and must not be renumbered.
 
 ## Used by
 

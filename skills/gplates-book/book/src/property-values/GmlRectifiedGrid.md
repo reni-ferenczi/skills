@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlRectifiedGrid tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlRectifiedGrid` is the `GPlatesModel::PropertyValue` for `gml:RectifiedGrid`,
+GML's way of describing a raster's placement in space: a `GmlGridEnvelope`
+giving the grid's index limits, a list of axis names (`d_axes`), a `GmlPoint`
+origin, and a list of per-axis offset vectors. It is also the bridge between
+GML's generic grid model and GPlates' own `Georeferencing`, which is what the
+rest of the raster pipeline actually consumes. The two-argument `create()`
+overload builds a `GmlRectifiedGrid` directly from a `Georeferencing` plus a
+raster's width and height — assuming longitude/latitude axes and placing the
+origin at the georeferencing's top-left corner — while `convert_to_georeferencing()`
+does the inverse, reconstructing a `Georeferencing` from the grid's own
+axes and offset vectors when one wasn't supplied at construction.
+
+The class does not validate that the dimensionality of the axes list, the
+offset vectors and the origin all agree with each other or with any `dimension`
+XML attribute present — the header states this explicitly, so a caller
+supplying an inconsistent combination will not be caught here.
 
 ## Declared types
 
@@ -65,9 +78,22 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlRectifiedGrid tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `convert_to_georeferencing()` caches its result in the `mutable`
+  `d_cached_georeferencing`; `set_origin()` and `set_offset_vectors()` each
+  invalidate that cache (reset it to `boost::none`) since both feed into the
+  derived `Georeferencing`, but `set_limits()`, `set_axes()` and
+  `set_xml_attributes()` do not, because those fields don't affect it.
+  `convert_to_georeferencing()` also gives up and returns `boost::none` if
+  `d_offset_vectors` does not have exactly 2 entries.
+- The two-argument raster `create()` overload populates
+  `d_cached_georeferencing` with the `Georeferencing` it was given, so a
+  `GmlRectifiedGrid` built that way returns it from `convert_to_georeferencing()`
+  without recomputation, even before any offset vectors are inspected.
+- `convert_to_georeferencing()` reads the origin via `d_origin->point_2d()`
+  rather than `point_in_lat_lon()`, deliberately skipping latitude/longitude
+  range validation: georeferenced origins may be in a projected coordinate
+  system, or offset by half a pixel for a gridline-registered global raster,
+  and so can legitimately fall outside valid lat/lon ranges.
 
 ## Used by
 

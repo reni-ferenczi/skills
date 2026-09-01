@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyNetworkParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyNetworkParams` is the plain value object holding the deformation settings for one topological network layer: how to smooth computed strain rates (`StrainRateSmoothing`), whether and how to clamp them (`StrainRateClamping`), and the stretching-profile parameters used when a network represents a rift (`RiftParams`, applicable only when the network feature carries rift left/right plate IDs). `TopologyNetworkLayerParams` stores one instance per layer and hands it to the resolving code in `TopologyNetworkResolverLayerProxy` and `ResolvedTriangulationNetwork`, while `qt-widgets::TopologyNetworkResolverLayerOptionsWidget` is what lets a user edit it. Full value comparability (`operator==`, `operator<`) lets `TopologyNetworkLayerParams::set_topology_network_params()` detect a genuine change and skip re-resolving otherwise.
 
 ## Declared types
 
@@ -57,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyNetworkParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Strain rate fields are compared after scaling by `COMPARE_STRAIN_RATE_SCALE` (1e17) before being wrapped in `GPlatesMaths::real_t`, because raw strain rates (around 1e-17 1/s) are far smaller than `GPlatesMaths::EPSILON` and would otherwise all compare equal.
 
 ## Used by
 

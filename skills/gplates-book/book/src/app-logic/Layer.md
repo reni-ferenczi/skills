@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/Layer tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Layer` is the public face of a node in the reconstruct graph. The node itself is
+`ReconstructGraphImpl::Layer`, owned by `ReconstructGraph` in a
+`std::list<boost::shared_ptr<...>>`; everything outside `app-logic` — the layer
+options widgets, `VisualLayers`, the session save/restore code — holds this
+handle instead, which is nothing but a `boost::weak_ptr` to that implementation
+node plus the operations that are safe to expose. The two nested wrappers follow
+the same pattern: `InputFile` wraps a `ReconstructGraphImpl::Data` created from a
+loaded file, and `InputConnection` wraps a
+`ReconstructGraphImpl::LayerInputConnection`, the edge joining one data object to
+one input channel of one layer. Because all three are weak, copying them freely
+and storing them in GUI objects is safe; the graph decides lifetime, and a stale
+handle reports `is_valid() == false` rather than dangling.
+
+The three things a layer is made of are reached through here but implemented
+elsewhere. Its behaviour is a `LayerTask` (`get_type`,
+`get_input_channel_types`, `get_main_input_feature_collection_channel` all just
+forward to it, and `set_layer_task` swaps it wholesale); its user-visible
+settings are a `LayerParams`; and its output is a `LayerProxy`, the lazily
+evaluated pull-model result described on that page. `get_layer_output()` is the
+normal way into the second half of the pipeline, and the templated overload
+combines the fetch with a `LayerProxyUtils::get_layer_proxy_derived_type` cast so
+callers that know they are talking to, say, a `ReconstructionLayerProxy` can skip
+the visitor.
+
+The connect/disconnect methods are also the graph's mutation API: there is no
+separate edge-building interface. Each of them performs the structural change on
+the implementation objects and then asks the owning `ReconstructGraph` to emit
+the matching Qt signal, so the GUI stays in step without `Layer` knowing anything
+about it. `LayerInputChannelName::Type` identifies the channel in every one of
+these calls, and a channel is a multimap key, not a slot — several inputs may
+share one channel, which is why the disconnect helpers search the channel's
+connections for a match instead of indexing.
 
 ## Declared types
 
@@ -59,9 +88,37 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/Layer tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Validity is a precondition, not a return code.** Nearly every method opens
+  with `GPlatesGlobal::Assert<PreconditionViolationError>(is_valid(), ...)` and
+  then constructs a `boost::shared_ptr` from the weak one. Check `is_valid()`
+  before calling anything on a handle you have been holding across graph edits or
+  file unloads. `get_layer_output()` layers a second condition on top: it returns
+  `boost::none` for a valid but *inactive* layer, deliberately, so that a
+  disabled layer cannot be made to compute by a caller that got hold of its
+  proxy. `get_layer_proxy_handle()` bypasses that check and always returns the
+  proxy.
+- **`CycleDetectedInReconstructGraph` is currently dead.** `connect_input_to_layer_output`
+  still calls `ReconstructGraphImpl::detect_cycle_in_graph`, but that function's
+  body is inside `#if 0` and it unconditionally returns false — the comment
+  explains why (a raster consuming an age grid that in turn uses the raster as a
+  normal map is a graph cycle but not a dependency cycle). Keep catching the
+  exception, but do not rely on the graph being acyclic.
+- **Signal ordering in `InputConnection::disconnect()` is deliberate.**
+  `layer_about_to_remove_input_connection` is emitted first; then the last owning
+  `shared_ptr` is dropped inside its own scope so that
+  `~LayerInputConnection` — which notifies the connected layers — completes
+  while app-logic state is still private; only then is
+  `layer_removed_input_connection` emitted. Do not flatten that scope. Note also
+  that `this` is invalid on return, and that no signal at all is emitted when a
+  connection dies because its parent layer was removed.
+- **Ownership of connections is one-directional.** A returned `InputConnection`
+  is a weak reference and does not need to be kept alive; the parent layer holds
+  the only owning reference. Conversely, `Data` holds raw
+  `LayerInputConnection *` back-pointers in its output list, so a connection must
+  outlive nothing and unregister itself on destruction.
+- `get_auto_created` / `set_auto_created` are marked in the header as wanting to
+  be private; they are public only so session save/restore can reach them. Do not
+  treat them as general API.
 
 ## Used by
 

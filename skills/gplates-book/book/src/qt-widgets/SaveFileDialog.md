@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SaveFileDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SaveFileDialog` is the recommended replacement for `QFileDialog` when GPlates needs a save-file name from the user. It is a thin façade over a pimpl, `SaveFileDialogInternals::SaveFileDialogImpl`, with two concrete implementations selected at compile time by the `GPLATES_USE_NATIVE_FILE_DIALOG` macro: `NativeSaveFileDialog` on Windows and macOS, `QtSaveFileDialog` elsewhere. Both implementations share the same responsibilities the header lists — remembering the last directory chosen, picking a default filename prefix based on the selected filter, and using whichever native or Qt widget behaves best on the current platform — so callers write against one interface regardless of OS.
+
+Construction takes either a `GPlatesPresentation::ViewState`, from which it obtains the feature-collection `GPlatesGui::DirectoryConfiguration`, or a `DirectoryConfiguration` directly; both end up initialising the chosen impl with the same directory-remembering configuration object.
 
 ## Declared types
 
@@ -43,9 +43,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SaveFileDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Unlike most `*Dialog` classes in this module, `SaveFileDialog` does not derive from `QObject` or `QWidget`. The `parent` argument only sets the parent window for the underlying dialog box; the `SaveFileDialog` object itself is not destroyed automatically and callers must manage its lifetime themselves.
+- `get_file_name()` returns `boost::none` when the user cancels; callers must check before treating the result as a path.
 
 ## Used by
 

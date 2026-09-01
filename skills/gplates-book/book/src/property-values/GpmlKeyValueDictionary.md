@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlKeyValueDictionary tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlKeyValueDictionary` is the property value for a GPML `KeyValueDictionary`: an ordered `std::vector<GpmlKeyValueDictionaryElement>`, each element pairing a key with a typed value. It is how GPlates represents arbitrary attribute tables attached to a feature — most visibly the shapefile/OGR attribute-mapping machinery (`OgrUtils`, `OgrFeatureCollectionWriter`, `EditShapefileAttributesWidget`) round-trips shapefile attribute columns through this type, since GPML has no native per-source attribute schema of its own.
+
+`elements()` exposes the underlying vector by reference (both const and non-const overloads), so callers add, remove or reorder key/value pairs directly on the vector rather than through dedicated mutator methods.
 
 ## Declared types
 
@@ -54,9 +54,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlKeyValueDictionary tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The protected copy constructor only forwards to `PropertyValue(other)`; it never initialises `d_elements` from `other.d_elements`. As a result, `clone()` (which uses this copy constructor) produces a dictionary with an **empty** element vector, silently dropping every key/value pair. `deep_clone()` happens to still work correctly, because it repopulates `dup->d_elements` itself by iterating `d_elements` on the original and pushing deep-cloned elements — but any code that calls `clone()` directly on a non-empty dictionary loses its contents.
+- `num_elements()` returns `int`, not `std::vector<T>::size_type`, per the header's own `FIXME`.
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionCubeRaster tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionCubeRaster` re-projects a `GLMultiResolutionRaster` (which is tiled in the raster's own native, lat/lon-like scheme) onto the cube-map quad tree used throughout the rendering backend, by rendering the source raster's tiles into a `cube_quad_tree_type` of square `CubeQuadTreeNode` tiles. This is the step that lets georeferenced raster data be sampled consistently alongside everything else that is organised as a cube quad tree — reconstructed rasters, the globe view, age grids — instead of every consumer having to understand the source raster's own tiling.
+
+Each cube tile texture is produced lazily on `get_tile_texture()` by rendering the relevant source-raster tiles into it via `render_raster_data_into_tile_texture()`, using a `world_model_view_transform`/`projection_transform` pair (from `GLCubeSubdivisionCache`) stored per node. `create()` chooses `d_tile_texel_dimension` and the number of levels of detail actually used (`d_num_source_levels_of_detail_used`, which can be fewer than the source raster's own LOD count) so that the cube quad tree's resolution steps line up with the source raster's, controlled by `adapt_tile_dimension_to_source_resolution`. `CacheTileTexturesType` governs whether rendered tile textures are kept only individually (the default, appropriate when just a small part of the raster is visible at once), across the whole tree, or not cached at all; `FixedPointTextureFilterType` selects the magnification filter for non-floating-point rasters, since floating-point textures are always sampled with nearest-neighbour filtering (older hardware cannot filter them in the fixed-function pipeline, so any smoothing has to happen in a shader on the client side).
+
+`set_world_transform()` and `get_subject_token()` let a caller reposition the raster within the cube map (for example to apply a reconstruction) and be notified when previously rendered tiles are stale and need re-rendering.
 
 ## Declared types
 
@@ -83,9 +85,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionCubeRaster tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A texture returned by `get_tile_texture()` can be recycled and overwritten by a later call unless the caller keeps the accompanying `cache_handle_type` alive; a plain shared pointer to the texture is not enough to protect it, so `CacheTileTexturesType` must be `CACHE_TILE_TEXTURES_INDIVIDUAL_TILES` (or `..._ENTIRE_CUBE_QUAD_TREE`) and the handle retained for the texture's contents to stay valid. `CACHE_TILE_TEXTURES_ENTIRE_CUBE_QUAD_TREE` should be used with care since it lets the internal texture cache grow to cover every existing tile, which can consume excessive memory when only part of the raster is ever visible. If the `GL_ARB_texture_non_power_of_two` extension is unsupported, the requested tile texel dimension is silently rounded up to the next power of two.
 
 ## Used by
 

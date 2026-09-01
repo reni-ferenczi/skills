@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/FiniteRotationSnapshotTable tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A snapshot of the finite rotation hierarchy at a specific geological time. This class captures the rotation state at a point in time, allowing queries to retrieve the rotation (`FiniteRotation`) for a given rotation id (`rot_id_t`). The interface is minimal: construct a snapshot and look up rotations by identifier.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/FiniteRotationSnapshotTable tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

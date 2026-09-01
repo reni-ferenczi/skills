@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLTextureUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLTextureUtils` is a namespace of free functions that do the repetitive,
+low-level parts of populating `GLTexture` objects, used throughout the raster
+and mask sources in `opengl` (`GLDataRasterSource`, `GLVisualRasterSource`,
+`GLAgeGridMaskSource`, `GLScalarFieldDepthLayersSource`, and others). The
+`initialise_texture_object_*D` functions allocate a texture's storage
+(`glTexImage*D`) without specifying image contents; the `load_*_into_*texture_2D`
+and `fill_float_texture_2D` overloads then upload actual data with the faster
+`glTexSubImage2D` path, either from a raw pointer, a `QImage`, a single fill
+colour, or a `GLPixelBuffer` (for pixel-buffer-object-based asynchronous
+uploads). Distinct overloads exist per source shape — 8-bit RGBA, floating
+point with one to four components, `GL_ARB_texture_float` formats — so
+callers don't have to work out `glTexSubImage2D` format/type arguments
+themselves.
+
+`create_xy_clip_texture_2D`, `create_z_clip_texture_2D` and
+`get_clip_texture_clip_space_to_texture_space_transform` are a small,
+self-contained group used to build clip textures: small textures whose
+texel values gate rendering by shape (a lit square in the middle, or a
+black/white ramp) rather than holding image data, together with the matrix
+that maps clip-space coordinates into the interior region of the 4x4 xy-clip
+texture.
 
 ## Declared types
 
@@ -47,9 +65,21 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLTextureUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- All the `load_*`/`fill_*` functions require the destination texture to
+  already exist and be large enough (created via `initialise_texture_object_2D`
+  or equivalent, or with existing content from a prior `glTexImage2D`) —
+  they upload into a sub-region with `glTexSubImage2D` rather than allocate
+  storage.
+- `load_colour_into_rgba32f_texture_2D` and the four-value overload of
+  `fill_float_texture_2D` require the `GL_ARB_texture_float` extension; the
+  single/two/three-value `fill_float_texture_2D` overloads require a
+  matching floating-point-friendly `format` (documented per overload) and
+  the same extension.
+- `load_image_into_texture_2D` temporarily sets `GL_UNPACK_ALIGNMENT` to 1
+  (since texel rows aren't necessarily 4-byte aligned) and restores it to 4
+  afterward, making raw `glPixelStorei` calls outside `GLRenderer`'s state
+  tracking — a `FIXME` in the source flags this as something that should be
+  routed through `GLRenderer` instead.
 
 ## Used by
 

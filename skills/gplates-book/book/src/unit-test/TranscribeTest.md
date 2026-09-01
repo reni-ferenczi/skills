@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/TranscribeTest tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit is the test suite for the `GPlatesScribe` serialisation framework (`Scribe`, `ArchiveWriter`/`ArchiveReader` and the `transcribe()` protocol), organised as four fixtures under `TranscribeTestSuite`: `TranscribePrimitivesTest` for built-in types, pointers, C-style arrays and STL/Qt containers; `TranscribeUntrackedTest` for the tracking rules around pointers and shared objects; `TranscribeInheritanceTest` for polymorphic base-class pointers, multiple inheritance and reconstructing objects via `TranscribeContext`/`ConstructObject`; and `TranscribeCompatibilityTest` for interchanging different smart-pointer wrapper types over the same transcribed data. Every test case follows the same shape: write a populated object graph out through a `_write` helper, then read it back through a matching `_read` helper, and each of these is run three times, once per archive backend (`TextArchiveWriter`/`Reader`, `BinaryArchiveWriter`/`Reader`, `XmlArchiveWriter`/`Reader`), so a bug specific to one archive format is caught even when the others pass.
+
+`TranscribeCompatibilityTest::SmartPtrData::transcribe()` is the clearest illustration of what "compatibility" means here: on load it deliberately reads a `boost::scoped_ptr` under the object tag that was written for a `GPlatesUtils::non_null_intrusive_ptr`, a `boost::shared_ptr` under a tag written for a `std::unique_ptr`, and so on, to prove the smart-pointer transcribe protocol does not depend on the specific pointer type used at either end. The helper types with `friend class GPlatesScribe::Access` (`Data`, `B`, `A`, `D`, `Derived`, …) exist purely as fixtures for this: their private `transcribe()`/`transcribe_construct_data()` members and the free `transcribe_construct_data()` overloads at file scope are the very code paths under test, not incidental plumbing.
 
 ## Declared types
 
@@ -112,9 +112,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/TranscribeTest tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Several `BOOST_CHECK_THROW` assertions in `TranscribeUntrackedTest::test_case_untracked_exception()` (pointer-before-object and unreferencing-a-tracked-object checks) are compiled out under `#ifndef GPLATES_DEBUG`, because in a debug build the same violations are caught by `GPlatesGlobal::Assert()` aborting the process rather than throwing — so this test only exercises those exception paths in a release build. `D::relocated()` and the `boost::optional<int> y` comment ("Test relocation") mark the one place this suite checks the Scribe relocation callback, which fires when a tracked object's address changes between save and load (e.g. a value moved out of a `boost::optional`); get this wrong in `GPlatesScribe` and this is the test that will catch it. To run only this suite: `gplates-unit-test.exe --G_test_to_run=*/Transcribe`, as noted in the header above `TranscribeTestSuite`.
 
 ## Used by
 

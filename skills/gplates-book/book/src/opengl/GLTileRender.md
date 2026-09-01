@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLTileRender tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLTileRender` drives the tiled-rendering pattern used whenever a destination
+image (an export raster, a high-resolution screenshot) is larger than a
+single render target can hold. Rather than rendering the scene once, the
+caller iterates tiles with `first_tile`/`next_tile`/`finished`, and for each
+one re-renders the *entire* scene using a narrowed `get_tile_projection_transform`
+that restricts the view frustum to just that tile's portion of the
+destination, then copies the render target's `get_tile_source_viewport`
+region to the destination's `get_tile_destination_viewport` region.
+
+The constructor divides `destination_viewport` into a grid of tiles no larger
+than `render_target_width` x `render_target_height`, with `d_num_tile_columns`
+and `d_num_tile_rows` computed to cover the destination completely (the last
+row/column may be smaller). The optional `border` widens the render target
+and view frustum by that many pixels on each side of every tile without
+widening the tile's final source/destination region, which is why a caller
+must additionally set the scissor rectangle (`get_tile_render_target_scissor_rectangle`)
+to clip the border away — the viewport and projection transform do not do
+that clipping themselves. The border exists because "fat" points and wide
+lines are only rasterized within the frustum they're clipped against, so
+without a border, geometry that straddles a tile boundary or has a nonzero
+point size/line width can pop in and out of tiles.
 
 ## Declared types
 
@@ -55,9 +73,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLTileRender tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor throws `PreconditionViolationError` if either render target
+  dimension is not larger than `2 * border` (there must be room for an actual
+  tile inside the border).
+- After construction, `d_current_tile` is unset; callers must call
+  `first_tile()` before using any of the per-tile accessors, and must check
+  `finished()` after `next_tile()` before reading a (no longer valid) tile.
+- The render-target viewport can have negative offsets and extend outside the
+  render target's bounds — it is only the NDC-to-window-coordinate mapping,
+  not a clip; the projection transform and scissor rectangle do the actual
+  clipping, and skipping the scissor call when a border is in use will let
+  fat points/wide lines bleed into neighbouring tiles.
 
 ## Used by
 

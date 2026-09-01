@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/XmlElementName tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesModel::XmlElementName` is the type used to hold the name of an XML element (namespace, namespace alias and local name together) throughout GPML parsing and writing. It is a `typedef` for `QualifiedXmlName<XmlElementNameFactory>`, which stores each of the three parts as an iterator into a shared `GPlatesUtils::StringSet` rather than as its own `QString`, so element names that recur across a document — or across every document of a given feature type — share one interned copy and compare in constant time.
+
+`XmlElementNameFactory` exists only to give `QualifiedXmlName` the singleton it interns into, by forwarding `instance()` to `StringSetSingletons::xml_element_name_instance()`; it is never itself instantiated. The counterpart for attribute values is `XmlAttributeValue`, which uses the same `StringSet`-backed sharing but without the namespace/alias structure, since an attribute's value has no qualified name.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/XmlElementName tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+As with `XmlAttributeValue`, the underlying `StringSet` entries are reference-counted, so an interned namespace, alias or local name is freed once the last `XmlElementName` referencing it goes away rather than persisting for the whole process.
 
 ## Used by
 

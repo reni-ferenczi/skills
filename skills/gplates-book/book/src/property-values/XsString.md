@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/XsString tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`XsString` is the `GPlatesModel::PropertyValue` wrapping a text string, corresponding to XML Schema `xsi:string` (`get_structural_type()` returns `StructuralType::create_xsi("string")`). It stores its text as `TextContent` rather than a raw `QString`/`UnicodeString`, so the actual characters are interned and shared across every `XsString` (and other `TextContent` holder) with the same text. Like the other `xsi:*` property values it registers with the visitor-dispatch machinery via `DECLARE_PROPERTY_VALUE_FINDER(GPlatesPropertyValues::XsString, visit_xs_string)`.
+
+Construction goes only through the `create()` factory, returning a `non_null_ptr_type`; the constructors are protected so `XsString` can never be created on the stack, only behind an intrusive pointer.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/XsString tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_value()` calls the inherited `update_instance_id()`, breaking the shared clone-identity link with whatever `XsString` it was cloned from. There is no direct accessor for the raw string: `value()` returns a `const TextContent &`, so callers go through `TextContent::get()` to reach the `GPlatesUtils::UnicodeString`. `clone()` and `deep_clone()` are equivalent since `TextContent` holds only an interned-string iterator, nothing to recursively clone.
 
 ## Used by
 

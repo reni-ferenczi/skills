@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportAnimationRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportAnimationRegistry` is a type-erased factory table that decouples the export-animation UI from the many concrete `ExportAnimationStrategy` subclasses (reconstructed geometries, rasters, rotations, velocities, topologies, and so on). For each `ExportAnimationType::ExportID` it stores a default configuration plus three `boost::function` callbacks — one to create the strategy, one to create its `GPlatesQtWidgets::ExportOptionsWidget`, and one to validate a filename template — so that dialog code such as `qt-widgets/ConfigureExportParametersDialog` can enumerate and drive every exporter through one interface without depending on any of their headers.
+
+The `.cc` file supplies the registration side: a `create_animation_strategy<ExportAnimationStrategyType>()` template wraps each strategy's static `create()` in the common function signature, and `dynamic_cast_export_configuration<>()` recovers the concrete configuration type from the stored `const_configuration_base_ptr` inside each strategy's own creation callback. `register_default_export_animation_types()` is the single entry point called at startup; it just delegates, one call per export category, to the per-category `register_default_export_*_animation_types()` free functions that actually call `register_exporter()` with the strategy- and widget-specific callbacks bound via `boost::bind`.
 
 ## Declared types
 
@@ -74,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportAnimationRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`create_export_animation_strategy()`, `create_export_options_widget()` and `validate_filename_template()` all require the export ID to have been registered first via `register_exporter()`; calling them for an unregistered ID either returns `boost::none`/empty results or trips the internal `GPlatesGlobal::Assert` in the cast helper, depending on which path is taken. `dynamic_cast_export_configuration()` asserts rather than failing gracefully if the stored configuration is not of the expected derived type, since a mismatch there indicates a registration bug, not a runtime condition.
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AboutDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Modal dialog displaying application version and copyright information. The constructor sets the GPlates version label from the global version string, fetches the GPGIM version from `Gpgim::instance()`, and populates a text box with the HTML copyright notice. A License button in the dialog opens a full `LicenseDialog` on click through a `QPointer<LicenseDialog>` member.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AboutDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

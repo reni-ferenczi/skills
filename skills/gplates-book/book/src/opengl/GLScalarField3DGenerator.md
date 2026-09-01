@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLScalarField3DGenerator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLScalarField3DGenerator` is the offline counterpart to `GLScalarField3D`: instead of rendering an already-built field, it builds one, converting a stack of georeferenced 2D depth-layer rasters into the cube-map scalar-field file that `GLScalarField3D::create()` later loads. Each input layer is described by a `DepthLayer` (a raster filename plus its normalised `[0,1]` sphere depth radius); layers are supplied in any order since `create()` sorts them by depth. Internally it reprojects each layer onto the cube-map tiling via a `GLScalarFieldDepthLayersSource` feeding a `GLMultiResolutionRaster`, then walks the resulting tiles per depth layer to write per-tile scalar/gradient data, mask data and running min/max/mean/standard-deviation statistics to the output file with a `QDataStream`.
+
+Like `GLScalarField3D`, it is only constructed via the static `create()` factory, and its hardware requirement (`is_supported()`) is deliberately lower — roughly OpenGL 2.0 versus the OpenGL 3.0 needed to later render the field — so generation can succeed on machines that cannot display the result. `generate_scalar_field()` performs the actual conversion and reports recoverable problems (e.g. per-layer read failures) through a `GPlatesFileIO::ReadErrorAccumulation`, returning `false` only on outright failure.
 
 ## Declared types
 
@@ -57,9 +57,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLScalarField3DGenerator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create()` does not require `depth_layers` to be pre-sorted by depth; sorting happens internally.
+- `is_supported()` checks a lower hardware bar than `GLScalarField3D::is_supported()` — generation works on roughly OpenGL 2.0, while rendering the generated field requires OpenGL 3.0.
 
 ## Used by
 

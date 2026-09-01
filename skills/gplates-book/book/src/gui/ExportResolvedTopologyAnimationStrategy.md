@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportResolvedTopologyAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportResolvedTopologyAnimationStrategy` writes resolved topological geometries — lines, polygons, networks and (optionally) their boundary sub-segments — to file at each animation frame, in a general format rather than the CitcomS-specific one used elsewhere. Its `Configuration` mirrors `ExportReconstructedGeometryAnimationStrategy`'s file-format and `ExportOptionsUtils::ExportFileOptions` fields, and adds independent toggles for exporting topological lines, polygons, networks, sections and line sub-segments, plus an optional forced `GPlatesMaths::PolygonOrientation` that applies only when polygons or networks are exported.
+
+Like its reconstructed-geometry counterpart, the constructor snapshots the currently loaded feature collection files and the input files of the active reconstruction layers into `d_loaded_files` and `d_loaded_reconstruction_files`; `do_export_iteration` passes these, together with the configuration flags, to `GPlatesViewOperations::VisibleReconstructionGeometryExport::export_visible_resolved_topologies`, which resolves and writes the topologies for the current frame.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportResolvedTopologyAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`Configuration::force_polygon_orientation` is only consulted when `export_topological_polygons` or `export_topological_networks` is true; otherwise it has no effect. As with `ExportReconstructedGeometryAnimationStrategy`, the loaded-file lists are captured once at construction and do not track files loaded or unloaded mid-export.
 
 ## Used by
 

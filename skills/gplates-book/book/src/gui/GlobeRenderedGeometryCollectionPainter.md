@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GlobeRenderedGeometryCollectionPainter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GlobeRenderedGeometryCollectionPainter` walks a `RenderedGeometryCollection`
+via the `ConstRenderedGeometryCollectionVisitor` double-dispatch interface and
+draws each active, non-empty `RenderedGeometryLayer` onto the globe with a
+per-layer `GlobeRenderedGeometryLayerPainter`, accumulating the results
+through a shared `LayerPainter`. It is used from `Globe` in two passes:
+`paint_surface()` for geometries on the sphere's surface, and
+`paint_sub_surface()` for geometries below it (currently 3D scalar fields),
+which needs a `surface_occlusion_texture` of the already-rendered front
+surface to occlude sub-surface detail correctly and can be told to reduce
+quality while the globe is being dragged. `get_custom_child_layers_order()`
+overrides the default child-layer traversal for `RECONSTRUCTION_LAYER`,
+substituting the user-configured order from `VisualLayers::get_layer_order()`
+(optionally reversed via `set_visual_layers_reversed()`) in place of the
+collection's own layer sequence, since visual layer stacking order is a
+user-visible drawing-order preference rather than a property of the
+underlying data.
+
+The anonymous-namespace helper `HasRenderableSubSurfaceLayers` is a second,
+throwaway visitor used only to answer
+`has_renderable_sub_surface_geometries()`: it stops early if it finds any
+`RenderedResolvedScalarField3D`, since sub-surface rendering may be
+unavailable if the runtime GPU lacks OpenGL 3 support.
 
 ## Declared types
 
@@ -68,9 +87,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GlobeRenderedGeometryCollectionPainter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_paint_params` is only populated for the duration of a single
+`paint_surface()`/`paint_sub_surface()` call and reset to `boost::none`
+immediately afterwards; visitor callbacks (`visit_main_rendered_layer`,
+`visit_rendered_geometry_layer`) dereference it unconditionally, so they must
+never be invoked outside of a paint call.
 
 ## Used by
 

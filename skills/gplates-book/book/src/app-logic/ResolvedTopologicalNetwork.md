@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalNetwork tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTopologicalNetwork` is the `ReconstructionGeometry` produced by
+resolving a topological network feature — the deforming-region counterpart
+to `ResolvedTopologicalBoundary`. Its shape is not a plain polygon but a
+`ResolvedTriangulation::Network`, which triangulates the interior of a
+boundary made of `ResolvedTopologicalGeometrySubSegment` sections
+(`d_boundary_sub_segment_seq`) and can carve out non-deforming interior
+regions ("rigid blocks") as holes; `boundary_polygon()` and
+`boundary_polygon_with_rigid_block_holes()` expose the two variants of the
+boundary, both delegated straight through to the underlying
+`ResolvedTriangulation::Network`.
+
+Like the other `ResolvedTopological*` classes it duplicates the
+`WeakObserver<FeatureHandle>`-based feature bookkeeping (property iterator,
+cached plate ID and time of formation) rather than deriving from
+`ResolvedTopologicalGeometry`, because a network's resolved shape isn't a
+single `GeometryOnSphere`. As with `ResolvedTopologicalLine`, per-boundary-vertex
+provenance (`get_boundary_vertex_source_infos()`) is computed lazily by
+walking the boundary sub-segments and cached in `d_boundary_vertex_source_infos`.
 
 ## Declared types
 
@@ -64,9 +79,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalNetwork tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `create()` factory and constructor are templated on the boundary
+sub-segment iterator type, and the constructor is private, so instances are
+always heap-allocated via `create()`, never built on the stack. `plate_id()`
+and `time_of_formation()` are `boost::optional` and can be absent when the
+source feature lacks the corresponding property, same as on
+`ResolvedTopologicalGeometry`. `INCLUDE_SUB_SEGMENT_RUBBER_BAND_POINTS_IN_RESOLVED_NETWORK_BOUNDARY`
+is `false` for the same reason as its `ResolvedTopologicalLine` counterpart:
+rubber-band points don't change the boundary's shape, only the shape of the
+individual contributing sub-segments.
 
 ## Used by
 

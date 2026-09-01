@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/StringFormattingUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`formatted_double_to_string()` and `formatted_int_to_string()` right-justify a number into a fixed-width, fixed-precision string, which is what the fixed-column ASCII export formats GPlates writes — PLATES4 rotation/line format, GMT, Citcoms, Terra — need for their column layout. `formatted_double_to_string()` optionally elides unnecessary trailing zeroes (via the internal `remove_trailing_zeroes()` helper) after formatting, and `IGNORE_PRECISION` tells it to use the default `ostringstream` precision instead of a fixed number of decimal digits. Both functions validate their `width`/`prec` arguments and throw `InvalidFormattingParametersException` (a `GPlatesGlobal::Exception`) rather than producing malformed output or silently truncating.
 
 ## Declared types
 
@@ -43,9 +41,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/StringFormattingUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `formatted_double_to_string()` asserts `width >= prec + 3` (room for sign, integral digit and decimal point) when a precision is given; violating either that or `width > 0` throws `InvalidFormattingParametersException` instead of returning a clipped string.
+- `remove_trailing_zeroes()` always leaves one digit after the decimal point (e.g. `123.000` becomes `123.0`, not `123`), and if the input has no `.` it returns the string unchanged on the assumption that this indicates a caller error.
 
 ## Used by
 

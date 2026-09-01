@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructedScalarCoverage tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructedScalarCoverage` pairs a domain `ReconstructedFeatureGeometry` (the reconstructed, possibly deformed, points/polyline/polygon) with a range of per-point scalar values, whose evolution over time is delegated to a `ScalarCoverageTimeSpan`. It deliberately inherits from `ReconstructionGeometry` and `GPlatesModel::WeakObserver<GPlatesModel::FeatureHandle>` directly rather than from `ReconstructedFeatureGeometry`, because the domain geometry is already an RFG in its own right — making this class an RFG too would cause code that collects "all RFGs" (for example export) to see the domain geometry twice.
+
+`get_reconstructed_points` dispatches on whether the domain geometry is actually a `TopologyReconstructedFeatureGeometry`: when it is, it asks that class directly for its reconstructed points (cheaper for large point counts than extracting them from the assembled geometry), and otherwise falls back to `GeometryUtils::get_geometry_exterior_points` on the plain reconstructed geometry. `get_reconstructed_point_scalar_values` and `get_reconstructed_points` are guaranteed to return values indexed the same way, one scalar per point.
 
 ## Declared types
 
@@ -60,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructedScalarCoverage tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_reconstructed_point_scalar_values` asserts (`PreconditionViolationError`) that `d_scalar_coverage_time_span` has valid scalar values at the current reconstruction time; a coverage is expected never to be constructed for a time at which its scalar time span is invalid, so hitting this assertion indicates a bug in the caller that built the coverage, not a normal runtime condition to guard against.
 
 ## Used by
 

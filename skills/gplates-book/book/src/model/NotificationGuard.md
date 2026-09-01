@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/NotificationGuard tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`NotificationGuard` is the RAII handle for `Model`'s notification-batching
+mechanism: acquiring one increments the model's guard count, and releasing one
+(explicitly via `release_guard()`, or implicitly in the destructor) decrements
+it. While the count is above zero, `Handle`-derived objects in the model queue
+their modification, deactivation and reactivation notifications instead of
+firing them straight away, and repeated notifications of the same kind from the
+same handle collapse into one — so code that makes several related edits (for
+example, modifying a feature and adding another to the same collection) wraps
+them in a guard to have listeners see one merged update instead of several.
+
+The `boost::optional<Model&>` constructor exists because many model-data query
+functions already carry an optional model reference; passing `boost::none`
+through makes the guard a no-op rather than forcing every caller to branch on
+whether a model is present. `acquire_guard()`/`release_guard()` are idempotent —
+calling either while already in that state does nothing — which lets a caller
+temporarily lift the block (to let queued notifications flow before a small
+section of code) and then reinstate it with the same object.
 
 ## Declared types
 
@@ -41,9 +55,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/NotificationGuard tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Notifications about a handle's impending C++ destruction are always sent
+immediately, regardless of any active guard. The destructor calls
+`release_guard()` inside a `try`/`catch(...)` that swallows any exception, since a
+destructor must not let one escape — so a failure while flushing queued
+notifications is silently dropped rather than propagated. The class is
+noncopyable, since copying would leave two guards independently tracking the
+same acquire/release state against one model.
 
 ## Used by
 

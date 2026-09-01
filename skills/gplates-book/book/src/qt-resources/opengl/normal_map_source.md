@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=shaders/normal_map_source tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLNormalMapSource` uses this pair to derive a normal-map texture from a height-field raster, so rasters supplied as elevation data can be lit the same way as rasters supplied with ready-made normal maps. The fragment shader estimates the surface gradient at each texel from its eight neighbours (a Sobel-like central-difference scheme) rather than just the immediate left/right and up/down pairs, averaging whichever of the three horizontal (or vertical) neighbour pairs actually have height coverage, so a texel with partial data still gets a usable gradient instead of one skewed by missing samples. A texel with no coverage at all is discarded outright, leaving the render target's pre-existing default normal in place.
+
+The vertex shader's only job is to remap normal-map texture coordinates into height-field texture coordinates, because the height-field texture is padded with extra border texels beyond what the normal map covers (needed by the fragment shader's neighbour sampling) and because a normal-map tile near the edge of the source raster may only be partially filled.
 
 ## Declared types
 
@@ -27,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=shaders/normal_map_source tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

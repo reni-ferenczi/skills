@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/InsertVertexGeometryOperation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InsertVertexGeometryOperation` is the `GeometryOperation` behind the "Insert Vertex" canvas tool. On `left_click` it first tests proximity against the line-segments `RenderedGeometryLayer`; a hit projects the click onto that segment (`project_point_onto_line_segment`) and inserts there via `insert_vertex_on_line_segment`, while a miss falls through to `insert_vertex_off_line_segment`, which appends the new vertex at whichever end of the geometry `get_closest_geometry_end_point_to` finds nearer to the click. Every insertion is pushed as a `GeometryBuilderInsertPointUndoCommand` (from `GeometryBuilderUndoCommands`) alongside a `GPlatesGui::ChooseCanvasToolUndoCommand` that restores the Insert Vertex tool itself via `d_canvas_tool_workflows` when the edit is undone or redone, so vertex insertion is part of the shared undo/redo history rather than a private one.
+
+It maintains three rendered layers — line segments, points, and a single highlight layer for whichever point or segment the cursor is closest to — which it fully rebuilds from `GeometryBuilder` state whenever the builder signals `stopped_updating_geometry`.
 
 ## Declared types
 
@@ -72,9 +72,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/InsertVertexGeometryOperation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_line_to_point_mapping` maps rendered *line-segment* indices back to point indices, not the other way around, because a line segment is not rendered between two points that are too close together — the two index spaces diverge whenever that happens, so code indexing this vector must not assume segment index equals point index.
 
 ## Used by
 

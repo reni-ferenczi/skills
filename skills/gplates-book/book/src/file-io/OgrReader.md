@@ -9,9 +9,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OgrReader` is the GDAL/OGR-backed reader for shapefiles and other vector formats
+GDAL supports, historically named `ShapefileReader` before OGR support widened
+beyond shapefiles. Its public surface is entirely static (`read_file`,
+`read_field_names`, `remap_shapefile_attributes`, `set_property_mapper`); the
+constructor is private, and `read_file` creates one short-lived `OgrReader`
+instance on the stack to hold per-file OGR state (`d_data_source_ptr`,
+`d_layer_ptr`, `d_feature_ptr`, the running geometry counts) for the duration of
+the read.
+
+`read_file` opens the datasource with `GdalUtils::open_vector`, validates it via
+`check_file_format` (must have at least one layer with at least one feature; only
+the first layer is read, and a second layer only produces a warning), reads the
+spatial reference system and builds a `CoordinateTransformation` to WGS84 via
+`read_srs_and_set_transformation`, then resolves how OGR attribute fields map onto
+GPlates model properties. That mapping is looked up first from a sidecar
+`.gplates.xml` file (`OgrUtils::make_ogr_xml_filename`); if none exists it falls
+back to the shared `PropertyMapper` (typically backed by a Qt dialog) and persists
+the result for next time. `handle_geometry` then dispatches each OGR feature's
+geometry by `OGRwkbGeometryType` to one of the `handle_point`/`handle_multi_point`/
+`handle_linestring`/`handle_multi_linestring`/`handle_polygon`/`handle_multi_polygon`
+handlers, which build the corresponding `PointOnSphere`/`PolylineOnSphere`/
+`PolygonOnSphere` geometry and a `FeatureHandle` for it, and `add_attributes_to_feature`
+converts the OGR attribute row into model properties via `map_attributes_to_properties`.
+
+`remap_shapefile_attributes` reruns the attribute-to-property mapping on an already
+loaded feature collection without touching its geometry, for when the user changes
+the field mapping after the initial load.
 
 ## Declared types
 
@@ -110,9 +134,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Only the first OGR layer in a datasource is read; a datasource with more than one
+  layer produces a `MultipleLayersInFile` warning and the remaining layers are
+  silently ignored.
+- The OGR datasource pointer (`d_data_source_ptr`) is closed in the destructor via
+  `GdalUtils::close_vector`, wrapped in a `try`/`catch (...)` that swallows any
+  exception — a destructor-time close failure is deliberately not surfaced.
+- `read_file` throws `ErrorOpeningFileForReadingException` if the file cannot be
+  opened or fails `check_file_format`, and `FileLoadAbortedException` if the user
+  cancels the attribute-mapping dialog; both leave `file_ref`'s feature collection
+  unpopulated.
+- The static `s_property_mapper` is process-wide state set once via
+  `set_property_mapper` and consulted by every subsequent `read_file` call that
+  needs a new attribute mapping.
 
 ## Used by
 

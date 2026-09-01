@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GdalRasterReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GDALRasterReader` is the `RasterReaderImpl` that reads any raster format GDAL supports (GeoTIFF, GMT GRD, NetCDF, and others) into GPlates' `RawRaster` types. On construction it opens the file with `GdalUtils::open_raster()`, reads the raster dimensions and georeferencing, and classifies each GDAL band: three or four byte-typed R/G/B(/A) bands are folded into a single `RGBA8` pseudo-band (`RasterBand::GDALRgbaBands`), while any other band becomes its own numerical `RasterBand` whose element type is mapped from the GDAL type by `get_raster_type_from_gdal_type()`. Because GDAL access can be slow for windowed reads of large files, the reader does not read pixel data directly from the source on every request; instead each `RasterBand` is backed by a `SourceRasterFileCacheFormatReader` over a `RasterFileCacheFormat` cache file, which `create_source_raster_file_cache()` builds (or rebuilds) once per source file by walking the raster in Hilbert-curve block order (`hilbert_curve_traversal()`) and accumulating min/max/mean statistics as it writes.
+
+Colour conversion is handled by a family of anonymous-namespace helper templates: `ConvertIntegerBandsToRgbaPixels` widens/narrows integer band samples into 8-bit RGBA channels (with a signed-integer specialisation that remaps the value range), and `ConvertRgbaBandData` additionally makes a pixel transparent when its per-channel values match the band's no-data value. `d_flip` records whether the source file's rows need reversing before use, a historical workaround for a GDAL bug (fixed by GDAL's 1 Dec 2009 release) that stored GMT-style GRDs upside down relative to GPlates' top-to-bottom raster convention.
 
 ## Declared types
 
@@ -106,9 +106,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GdalRasterReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `d_dataset` is owned by this reader and released via `GdalUtils::close_raster()` in the destructor; a `NULL` dataset means the file failed to open and `can_read()` returns false for the object's whole lifetime.
+- The GDAL row-flip workaround (`d_flip`) is compiled based on `GDAL_RELEASE_DATE` and applies to the whole file, not per band; the constructor's comment documents the specific GDAL changesets involved and warns that later netCDF-driver flipping bugs are not fully worked around.
+- `create_source_raster_file_cache()` is a fallback path taken only when no usable cache exists; if the source raster's directory is not writable, `RasterFileCacheFormat::get_writable_source_cache_filename()` may return nothing and the reader fails to construct the band. A partially-written cache file is deleted if writing it throws.
+- `get_no_data_value`, `get_statistics`, `add_data` and `update_statistics` are explicitly specialised for `GPlatesGui::rgba8_t`/`Rgba8RawRaster` in the `.cc` file, since "no data" and statistics have no meaning for colour pixels the same way they do for numeric bands.
+- `MIN_IMAGE_ALLOCATION_BYTES_TO_ATTEMPT` bounds how far the reader will keep halving a failed large-image allocation before giving up and throwing.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/SimpleGlobeOrientation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::SimpleGlobeOrientation` is the concrete `GlobeOrientation` used for the standalone globe view: its rotation is self-contained and has no coupling to any other globe's orientation (contrast with the linked orientations used when synchronising multiple views). Internally it tracks one accumulated `GPlatesMaths::Rotation` (plus its precomputed reverse, `d_rev_accum_rot`, to avoid recomputing it on every `reverse_orient_point()` call) and exposes it through `orient_geometry()`, `orient_point()` and `reverse_orient_point()`.
+
+Interactive re-orientation follows a "handle" model: `set_new_handle_at_pos()` records where a drag started (conveniently the mouse-press position), and each subsequent `move_handle_to_pos()` computes the `GPlatesMaths::Rotation` that carries the old handle position to the new one and composes it onto the accumulated rotation — this is what `qt-widgets/GlobeCanvas` and `qt-widgets/ModifyReconstructionPoleWidget` drive during a mouse drag. The keyboard-camera slots (`move_camera_up/down/left/right`, `rotate_camera*`, `orient_poles_vertically`) instead compose small fixed-angle rotations (`s_nudge_camera_amount`, 5 degrees) about the appropriate basis axis. All mutators emit `orientation_changed()` for the globe/map to redraw.
 
 ## Declared types
 
@@ -58,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/SimpleGlobeOrientation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`move_handle_to_pos()` always emits `orientation_changed()`, even when the handle position hasn't changed (e.g. on mouse-button release without motion) — this is deliberate, so views that temporarily lower rendering quality during a drag get a final refresh at full quality. `orient_poles_vertically()` returns early without rotating if the current view looks directly along the polar axis, because the north-pole vector projected onto the canvas plane is then zero and cannot be normalised (would throw `IndeterminateResultException`).
 
 ## Used by
 

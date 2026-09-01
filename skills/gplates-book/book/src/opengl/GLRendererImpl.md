@@ -8,9 +8,31 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLRendererImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GLRendererImpl` namespace of private helper classes that back `GLRenderer`'s
+implementation; nothing here is meant to be used outside that class. It
+supplies the machinery for `GLRenderer`'s two stacks: a stack of `StateBlock`s
+tracking OpenGL state through nested `begin_state_block`/`end_state_block`
+scopes, and a stack of `RenderTargetBlock`s tracking nested render-to-texture
+scopes.
+
+Each `StateBlock` records either a full `GLState` snapshot or, when
+`GLRenderer` is compiling a `GLCompiledDrawState` for later reuse, just the
+state *change* relative to the block's begin state — `get_state_to_apply`
+reconstructs the full state to apply to OpenGL in either case. `Drawable` is
+the interface every queued draw command implements; by default a `Drawable`
+applies all of `state_to_apply`, but the header notes that letting it apply
+only the state subset it actually needs (e.g. `glClear` touching only clear
+colour and stencil test) avoids large, unnecessary round-trips of state
+changes when switching to and from a render target. `RenderOperation` pairs a
+`Drawable` with the state to apply before drawing it, and a `RenderQueue`
+batches these up so draw calls can be deferred instead of issued immediately.
+
+`RenderTextureTarget` and `RenderTargetBlock` track a render-to-texture scope
+including its own nested `state_block_stack` and `render_queue_stack`, and
+support two backends: a real `FrameBufferObject` when
+`GL_EXT_framebuffer_object` is available, or `MainFrameBuffer` — which tiles
+the render via `GLTileRender` and saves/restores the main framebuffer via
+`GLSaveRestoreFrameBuffer` — when it is not.
 
 ## Declared types
 
@@ -121,9 +143,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLRendererImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The header warns that state can be applied to OpenGL even while a `StateBlock`
+is compiling draw state — for example, binding a buffer turns on immediate
+applies and calls `get_state_to_apply` itself — so `d_current_state` cannot
+always be assumed to hold only the uncommitted state change while compilation
+is in progress.
 
 ## Used by
 

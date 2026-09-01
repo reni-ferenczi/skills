@@ -9,9 +9,35 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeometryDistance tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryDistance` is the single home for "how far apart are these two
+geometries" queries between any pair of the four `GeometryOnSphere` derived
+types (`PointOnSphere`, `MultiPointOnSphere`, `PolylineOnSphere`,
+`PolygonOnSphere`). Rather than a distance method per class, every combination
+is exposed as a free `minimum_distance` overload, plus one type-erased
+overload that dispatches at runtime through the anonymous-namespace
+`MinimumDistanceBetweenGeometryOnSpheres`, a `ConstGeometryOnSphereVisitor`
+that resolves both arguments to their concrete types and forwards to the
+matching typed overload.
+
+Every overload can optionally report *where* the geometries are closest — the
+closest `UnitVector3D` position on each geometry and the index of the
+underlying point or segment (`PolylineOnSphere::get_segment()` /
+`PolygonOnSphere::get_segment()`) it lies on — and can be given a
+`minimum_distance_threshold` so callers uninterested in the exact value beyond
+some cutoff can stop early; `AngularDistance::PI` in the result signals the
+threshold was exceeded, in which case none of the optional outputs are
+written. Polygon overloads additionally take a `..._interior_is_solid` flag
+that makes anything overlapping the polygon's interior collapse to zero
+distance, using the same odd-crossing point-in-polygon rule used elsewhere,
+even when the exterior and interior rings intersect each other.
+
+For the polyline/polygon-against-polyline/polygon overloads, the
+implementation builds a `PolyGreatCircleArcBoundingTree` over each geometry's
+segments and recurses pairwise over bounding-tree nodes
+(`minimum_distance_between_bounding_tree_nodes_of_two_geometries`), pruning
+subtrees whose bounds are already farther apart than the best distance found
+so far (or the caller's threshold) instead of testing every segment pair
+directly.
 
 ## Declared types
 
@@ -66,9 +92,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeometryDistance tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Closest positions and indices are only written when the returned distance is
+below `minimum_distance_threshold` (if one was given) — code that reads those
+optional outputs unconditionally after a threshold-exceeded result will read
+stale or default-initialised values. Segment indices for polygons can refer
+to an interior ring, not just the exterior ring, so callers must resolve them
+through `PolygonOnSphere::get_segment()` rather than assuming a flat exterior
+index space. When two polylines/polygons intersect, an arbitrary one of the
+(possibly many) intersection points is returned as the "closest" point, not
+necessarily a unique or stable choice across calls.
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VisualLayerType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayerType::Type` is a plain alias for `GPlatesAppLogic::LayerTaskType::Type`. The header's own comment explains why the alias still exists: it used to be a distinct enumeration so that visual layers not backed by an app-logic layer could be represented, but every visual layer is now backed by one, so the type has been collapsed to a typedef of the app-logic type it wraps.
+
+The alias is kept, rather than replacing all uses with `GPlatesAppLogic::LayerTaskType::Type` directly, so that presentation-layer code (`VisualLayerRegistry`, `VisualLayers`, the Qt widgets that list layer types) can keep referring to "visual layer type" in its own vocabulary while still being the same value as the underlying layer task type.
 
 ## Declared types
 
@@ -32,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VisualLayerType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

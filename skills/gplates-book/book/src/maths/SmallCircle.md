@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/SmallCircle tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SmallCircle` represents a circle of latitude around an arbitrary axis on the unit sphere, stored as the axis plus the cosine of the circle's angular radius ("colatitude") rather than the angle itself. `create_cosine_colatitude()` is the cheap path since it stores the value directly; `create_colatitude()` takes the angle and calls `cos()` up front, and `colatitude()` lazily computes `acos()` on first use and caches it in the mutable `d_colat` — the header warns callers not to pass `cos(colat)` into `create_cosine_colatitude()` themselves, since recovering the angle later then costs an extra `acos`. Degenerate circles (colatitude 0 or pi, collapsing to a point) and colatitude of exactly pi (a great circle) are both valid.
+
+`tessellate()` subdivides a `SmallCircle` into a uniform sequence of points for rendering, each segment spanning an equal angle no greater than the caller's maximum; the closing point is left off, since it duplicates the first point and callers close the loop themselves.
 
 ## Declared types
 
@@ -46,9 +46,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/SmallCircle tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Class invariant: the cosine of the colatitude must lie in `[-1, 1]`; both `create_colatitude()` and `create_cosine_colatitude()` route through the private constructor, which calls `AssertInvariantHolds()` and throws `ViolatedClassInvariantException` if it does not hold.
+- `contains()` tests membership by exact equality of the dot product against `d_cos_colat`, with no epsilon tolerance — a point computed by any means other than an exact construction on the circle will generally not compare as contained.
 
 ## Used by
 

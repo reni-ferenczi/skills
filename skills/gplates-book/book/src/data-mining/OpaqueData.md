@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/OpaqueData tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OpaqueData` is the single value type the whole co-registration pipeline (`CoRegFilter`, `CoRegMapper`, `CoRegReducer`, `DataTable`) passes around instead of a family of typed values: a `boost::variant` over `bool`, `int`, `unsigned`, `char`, `float`, `double`, `QString` and a special `empty_data_type`. Using one variant type lets filters, mappers and reducers share interfaces regardless of what kind of attribute they are actually handling, at the cost of pushing type dispatch to visitors such as `ConvertOpaqueDataToDouble` and `ConvertOpaqueDataToString` (`OpaqueDataToDouble.h`/`OpaqueDataToQString.h`) elsewhere in the component.
+
+`empty_data_type` is a pointer-to-member-of-`dummy` type used purely as a sentinel: `EmptyData` is its single value (a null pointer-to-member), and `is_empty_visitor`/`is_empty_opaque()` let code test whether a given `OpaqueData` holds this sentinel rather than a real value — the encoding of "no data" throughout the pipeline (e.g. a reducer given an empty input range, or a property lookup that found nothing).
 
 ## Declared types
 
@@ -52,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/OpaqueData tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+"Opaque data" is a legacy name the header itself notes does not match the usual meaning of an opaque type; treat `OpaqueData` as a tagged union of the listed primitive types, not as an actually-opaque handle. Comparing an `OpaqueData` for emptiness must go through `is_empty_opaque()` — a default-constructed variant holds `empty_data_type`'s zero value, not a null or uninitialized state that a plain comparison would catch.
 
 ## Used by
 

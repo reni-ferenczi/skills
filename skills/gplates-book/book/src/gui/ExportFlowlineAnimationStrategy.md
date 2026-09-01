@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportFlowlineAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportFlowlineAnimationStrategy` is the `ExportAnimationStrategy` (Gamma et al. Strategy role, driven by `ExportAnimationContext`) that writes flowline geometries per animation frame, in GMT, shapefile, OGR-GMT or GeoJSON format according to `Configuration::file_format`. Like the sibling reconstructed-geometry and CitcomS strategies it snapshots, in its constructor, both the currently loaded feature collection files and the input files feeding any active `RECONSTRUCTION`-type layer, for inclusion in the exported output's metadata.
+
+The anonymous-namespace helpers `substitute_placeholder()` and `calculate_output_basename()` build each frame's output filename by substituting the loaded flowlines feature collection's filename into the export template's `%P` placeholder, so a single template can fan out into one file per source flowlines file.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportFlowlineAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The class's own Doxygen comment ("writing plate velocity meshes") is stale — the code exports flowlines, not velocity meshes.
 
 ## Used by
 

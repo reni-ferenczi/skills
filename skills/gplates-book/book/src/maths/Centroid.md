@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/Centroid tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GPlatesMaths::Centroid` namespace of free functions offering three
+different notions of "centroid" for spherical geometry, each suited to a
+different purpose: `calculate_points_centroid` averages the vertex positions
+of a `PointOnSphere`, `MultiPointOnSphere`, `PolylineOnSphere` or
+`PolygonOnSphere`; `calculate_outline_centroid` instead arc-length-weights the
+midpoints of the `GreatCircleArc` edges, which the header notes gives a
+tighter-fitting bounding small circle for polylines and polygons; and
+`calculate_interior_centroid` area-weights the polygon's interior (via
+`SphericalArea`) to give a true centre-of-mass, so a bottom-heavy polygon's
+centroid sits nearer its bottom rather than in the geometric middle of its
+outline. Interior rings can optionally be folded into either the outline or
+interior calculation, and their winding direction does not need to be the
+opposite of the exterior ring's for the interior-area weighting to come out
+correct.
+
+The point- and vertex-based routines are template functions parameterised on
+an iterator type so they work uniformly over any sequence of `PointOnSphere`
+or `UnitVector3D`, while the polygon overloads that need edges or interior
+area are ordinary functions defined in the `.cc` file. All of them funnel
+through the private `Implementation::get_normalised_centroid_or_placeholder_centroid`
+helper to handle the case where the weighted sum of positions cancels to the
+zero vector.
 
 ## Declared types
 
@@ -49,9 +68,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/Centroid tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every "centroid" function falls back to the first point of the sequence (or
+of the first edge, or of the exterior ring) whenever the weighted sum of
+positions comes out as the zero vector — most likely when the input points
+are spread roughly along a great circle. Callers relying on the centroid
+being a meaningful geometric centre should be aware this placeholder is
+silent, not an error. The `calculate_*_centroid` functions taking an
+iterator range assert (via `PreconditionViolationError`) that the range is
+non-empty; the ones taking a `PolygonOnSphere`/`PolylineOnSphere`/`MultiPointOnSphere`
+directly cannot be called on an empty one because those types themselves
+disallow it.
 
 ## Used by
 

@@ -8,9 +8,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/ConstGeometryOnSphereVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The abstract Visitor base (Gamma95, p.331) for read-only traversal of the four
+concrete geometry-on-sphere types: `MultiPointOnSphere`, `PointGeometryOnSphere`,
+`PolygonOnSphere` and `PolylineOnSphere`. Every one of the 45 subclasses this
+page lists is a piece of code that needs to act differently depending on
+which concrete geometry it is holding — exporters, distance calculations,
+canvas tools, region-of-interest tests — without those geometry classes
+themselves knowing about all their callers.
+
+Each `visit_*` method has an empty default body, so a derived visitor only
+overrides the geometry kinds it cares about. The methods are named after
+their target type rather than uniformly `visit`, specifically to dodge C++
+name hiding: overriding one `visit_*` in a derived class does not hide the
+others the way overriding one overload of a single `visit` name would.
 
 ## Declared types
 
@@ -39,9 +49,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/ConstGeometryOnSphereVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The destructor is pure virtual purely to force the class to be abstract —
+every other member function already has a body — and is still defined
+inline immediately below the class so derived destructors can call it.
+Copy-assignment is explicitly declared private and left undefined to
+suppress it.
 
 ## Used by
 

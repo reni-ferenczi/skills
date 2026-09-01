@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/ScalarField3DVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesPresentation::ScalarField3DVisualLayerParams` is the `VisualLayerParams` for a scalar-field-3D layer: it wraps a `GPlatesViewOperations::ScalarField3DRenderParameters` (render mode, iso-surface and cross-section colour modes, isovalue and depth-restriction settings, two `RemappedColourPaletteParameters` for the scalar and gradient colour ramps) and forwards most of the get/set API straight through to it via `set_scalar_field_3d_render_parameters()` and the individual accessors.
+
+Because several of those render parameters depend on statistics of the loaded scalar field (mean, standard deviation, depth range) rather than on anything the GUI can supply up front, `handle_layer_modified()` initialises the scalar and gradient colour palette ranges, the isovalue and the depth restriction lazily, the first time the underlying `GPlatesAppLogic::ScalarField3DLayerParams` reports that field data is ready. Each of the four `*_initialised_from_scalar_field` flags latches independently so that this happens exactly once per layer and does not clobber values the user has since changed by hand.
+
+The constructor also determines, via `determine_if_surface_polygons_mask_supported()`, whether the active OpenGL context can support the "surface polygons mask" rendering feature, and disables it up front if not.
 
 ## Declared types
 
@@ -69,9 +71,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/ScalarField3DVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `is_surface_polygons_mask_supported()` reflects a one-time OpenGL capability check made when the object was constructed (it queries the active `GPlatesOpenGL::GLContext`); it is not re-evaluated later, and `set_surface_polygons_mask()` is expected to respect it rather than force the feature on when unsupported.
+- The scalar/gradient palette range, isovalue and depth-restriction initialisation in `handle_layer_modified()` only fires once per flag: once a value has been derived from the scalar field's statistics, later calls leave it alone even if the field is reloaded, so a changed field does not silently re-map a palette the user has already adjusted.
 
 ## Used by
 

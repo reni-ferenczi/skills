@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLCubeMeshGenerator tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLCubeMeshGenerator` builds the vertex grid used to tessellate one face of the cube used by GPlates' cube-subdivision rendering scheme, projecting a regular grid of `GPlatesMaths::UnitVector3D` points onto the sphere via `GPlatesMaths::CubeCoordinateFrame`. `create_cube_face_mesh_vertices` produces a whole face at the requested vertex density, while `create_mesh_vertices` produces just a sub-rectangle of it (indexed the same way a `CubeQuadTreeLocation` addresses a tile), so callers such as `GLMultiResolutionCubeMesh` and `GLMapCubeMeshGenerator` can generate only the vertices needed for a given quad-tree tile.
+
+The constructor precomputes and caches the vertices along the cube's twelve edges before any face is meshed. This ensures that two adjacent cube faces, meshed independently, share identical vertex positions along their common edge, avoiding rendering seams that floating-point differences would otherwise introduce.
 
 ## Declared types
 
@@ -42,9 +42,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLCubeMeshGenerator tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `cube_face_dimension` must be a power of two; the constructor asserts this via `GPlatesGlobal::Assert` and throws `PreconditionViolationError` otherwise.
+- The shared cube-edge vertices are computed once in the constructor, so a single `GLCubeMeshGenerator` instance should be reused across faces/tiles rather than reconstructed per call, both for performance and to guarantee seam-free adjacent faces.
 
 ## Used by
 

@@ -9,9 +9,16 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlOrientableCurve tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlOrientableCurve` is the `GPlatesModel::PropertyValue` for GML's
+`gml:OrientableCurve`, which exists in the GML schema purely to attach a
+direction and a set of XML attributes to another curve. GPlates only ever
+wraps a `GmlLineString` as the `d_base_curve` (the type substitutable for
+`gml:_Curve` in the schema is not enforced at construction time — the header
+notes this is not verified), so in practice this class is a thin decorator:
+it forwards `print_to()` straight to the base curve and holds a
+`std::map<XmlAttributeName, XmlAttributeValue>` alongside it. `deep_clone()`
+recursively clones `d_base_curve` rather than sharing it, so a deep-cloned
+`GmlOrientableCurve` owns an independent copy of its geometry.
 
 ## Declared types
 
@@ -53,9 +60,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlOrientableCurve tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `directly_modifiable_fields_equal()` compares both the base curve (by value,
+  via `operator==`) and the XML attribute map; a `dynamic_cast` failure is
+  treated as "should never happen" and returns `false` rather than throwing.
+- `base_curve()` has both a `const` overload (returning
+  `non_null_ptr_to_const_type`) and a non-`const` overload (returning
+  `non_null_ptr_type`), so mutable access to the wrapped `GmlLineString` is
+  available without going through `set_base_curve()`.
 
 ## Used by
 

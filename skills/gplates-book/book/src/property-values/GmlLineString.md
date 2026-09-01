@@ -9,9 +9,13 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlLineString tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlLineString` is the `PropertyValue` for `gml:LineString`: it wraps a
+`GPlatesMaths::PolylineOnSphere` (held via `internal_polyline_type`, a
+`non_null_intrusive_ptr<const PolylineOnSphere>`) so an open, non-closed line-shaped
+geometry can be attached to a feature property. It is one of several
+geometry-property-value wrappers in this component (alongside `GmlPoint`,
+`GmlPolygon`, `GmlOrientableCurve` and similar), each pairing one `GPlatesMaths`
+geometry type with the GML element name it corresponds to.
 
 ## Declared types
 
@@ -52,9 +56,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlLineString tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`polyline()` deliberately returns only a pointer-to-const: the contained
+`PolylineOnSphere` must never be mutated in place, since `PolylineOnSphere` is shared
+(reference-counted) and possibly aliased elsewhere. To change the geometry, replace it
+wholesale via `set_polyline()`, which also calls `update_instance_id()`.
 
 ## Used by
 

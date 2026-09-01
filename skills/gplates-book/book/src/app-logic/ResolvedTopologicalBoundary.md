@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalBoundary tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTopologicalBoundary` is the `ResolvedTopologicalGeometry` specialisation for a resolved topological *polygon* — a plate or other closed region built by stitching together the reconstructed geometries of its boundary sections. Beyond the plate ID, time-of-formation and reconstruction-tree bookkeeping it inherits from `ResolvedTopologicalGeometry`, it adds the resolved `GPlatesMaths::PolygonOnSphere` itself (`resolved_topology_boundary_ptr_type`) and the ordered sequence of `ResolvedTopologicalGeometrySubSegment` objects — one per contributing boundary section, each already reversed if the section's geometry ran the wrong way round for this boundary — whose vertices, concatenated, form the polygon.
+
+`get_vertex_source_infos()` answers, per vertex of the resolved boundary, which source reconstructed feature geometry contributed it; because building that per-vertex mapping means walking every sub-segment, it is computed once by `calc_vertex_source_infos()` and cached in `d_vertex_source_infos` on first request rather than up front. The static `INCLUDE_SUB_SEGMENT_RUBBER_BAND_POINTS_IN_RESOLVED_BOUNDARY` constant is `false` because rubber-band points sit exactly halfway between adjacent sub-segments and so never move the boundary's shape — they matter only when a sub-segment is examined in isolation, to mark where it starts and ends.
 
 ## Declared types
 
@@ -55,9 +55,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalBoundary tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_vertex_source_infos()` lazily populates `d_vertex_source_infos` (marked `mutable`) on first call and reuses it thereafter; the cache is never invalidated because a `ResolvedTopologicalBoundary` instance's underlying geometry never changes after construction.
+- A sub-segment can itself be a resolved topological *line* (not just a `ReconstructedFeatureGeometry`), which `get_vertex_source_infos` accounts for via each sub-segment's own `get_reversed_sub_segment_point_source_infos`.
 
 ## Used by
 

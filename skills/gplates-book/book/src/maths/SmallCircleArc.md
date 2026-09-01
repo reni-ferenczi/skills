@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/SmallCircleArc tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SmallCircleArc` is the bounded counterpart to `SmallCircle`: instead of a colatitude, it is defined by a rotation axis, a start point, and an angular extent, with `end_point()` computed on demand by applying `Rotation::create(d_axis, d_angular_extent)` to the start point rather than being stored. The angular extent is constrained to `[0, 2*PI]` as an anti-clockwise rotation about the axis — `0` collapses the arc to a point, `2*PI` makes it a full small circle. As with `SmallCircle`, a degenerate arc (start point coincident with the axis or its antipode) and an arc whose colatitude is exactly pi (technically a great circle arc) are both valid, not error cases.
+
+The free `tessellate()` function subdivides an arc into a uniform sequence of points, each segment spanning an equal angle bounded by the caller's maximum, for callers such as renderers that need to draw a small circle arc as a sequence of straight segments.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/SmallCircleArc tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Class invariant: the cosine of the colatitude (the dot product of the axis and the start point) must lie in `[-1, 1]`; the private constructor calls `AssertInvariantHolds()` and throws `ViolatedClassInvariantException` if it does not. Unlike `SmallCircle`, `colatitude()` here recomputes `acos()` on every call rather than caching it.
 
 ## Used by
 

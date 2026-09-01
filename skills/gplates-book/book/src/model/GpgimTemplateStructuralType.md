@@ -8,9 +8,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/GpgimTemplateStructuralType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpgimTemplateStructuralType` extends `GpgimStructuralType` to describe a GPGIM
+structural type that is a template instantiation, such as `gpml:Array<gml:TimePeriod>`,
+rather than a plain type like `gml:TimePeriod`. An uninstantiated template (the bare
+`gpml:Array`) is still represented by a plain `GpgimStructuralType`; this subclass
+exists only for the completed instantiation, which needs a value type in addition to
+the structural type itself.
+
+The class stores that value type in `d_value_type` and overrides
+`get_instantiation_type()` to combine it with the inherited structural type into a
+single `instantiation_type`. The two `create()` factories cover the two ways an
+instantiation is built: from a structural type, value type and description directly,
+or by instantiating an existing `GpgimStructuralType` with a value type, copying its
+structural type and description across.
 
 ## Declared types
 
@@ -41,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/GpgimTemplateStructuralType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

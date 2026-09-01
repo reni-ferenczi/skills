@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/HellingerWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HellingerWriter` is the counterpart to `file-io/HellingerReader`: it
+serialises a `GPlatesQtWidgets::HellingerModel` back out to the same
+`.pick`/`.com` text formats used by the Hellinger plate-fitting tool.
+`write_pick_file` walks the model's picks and writes one line per pick as
+`<plate index> <segment> <lat> <lon> <uncertainty>`, using `get_plate_index`
+to fold each pick's enabled/disabled state into the plate-index value the
+legacy format expects (a disabled pick is written with its
+`DISABLED_PLATE_*_PICK_TYPE` index rather than a separate flag column).
+`write_com_file` writes the fit configuration held in the model's
+`HellingerComFileStructure` in the fixed line order the original FORTRAN
+Hellinger tool requires — pick filename, initial-guess lat/lon/rho, search
+radius, grid-search and kappa-estimation flags, and the associated `.dat`
+filenames.
+
+Both writers default the caller-supplied filename's extension: `write_pick_file`
+only does so when `add_missing_pick_extension` is set, while `write_com_file`
+always forces a `.com` extension. A comment on `write_com_file` records that
+the output layout is deliberately kept identical to the legacy format so
+existing user FORTRAN routines keep working, deferring any richer GPlates-native
+`.com` format to a possible future export path.
 
 ## Declared types
 
@@ -38,9 +55,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/HellingerWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Neither writer takes a `ReadErrorAccumulation`; a failure to open the output
+file is only reported via `qWarning()`, not surfaced to the caller as a
+return value or exception. `write_com_file` writes the pick filename found in
+`com_struct->d_pick_file` as-is (falling back to the `.com` file's base name
+only if that field is empty) even though the format expects a path relative
+to the `.com` file's own location — the code does not enforce that
+relationship, as the surrounding `TODO` comments note.
 
 ## Used by
 

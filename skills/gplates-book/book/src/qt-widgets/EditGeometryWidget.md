@@ -10,9 +10,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditGeometryWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EditGeometryWidget` is the `AbstractEditWidget`/`EditTableWidget` used to
+hand-edit a feature's geometry property as a plain table of lat/lon rows, one row
+per vertex, covering the four simple GML geometry types (`GmlPoint`, `GmlLineString`,
+`GmlMultiPoint`, `GmlPolygon`); it is one of the widgets `EditWidgetGroupBox`
+switches in based on the property's structural type via
+`configure_for_property_value_type()`, which maps the type to a `GPlatesMaths::GeometryType::Value`
+or throws `PropertyValueNotSupportedException` for anything else. Loading an
+existing property (`update_widget_from_line_string()` etc.) remembers it in
+`d_property_value_ptr` and repopulates `table_points` from its `GeometryOnSphere`
+via the file-local `populate_table_rows_from_*()` helpers; editing the table marks
+the widget dirty, and `update_property_value_from_widget()` writes the edited
+geometry back into that same property value in place (through a
+`GPlatesFeatureVisitors::GeometrySetter`) rather than replacing it, while
+`create_property_value_from_widget()` instead builds a brand new property value
+for the "add property" workflow.
+
+Every conversion from table to geometry goes through the shared pipeline
+`build_points_from_table_rows()` (parsing each row, recording any
+`InvalidTableRow` problems) followed by `create_geometry_on_sphere()`, which
+attempts to construct the actual `GeometryOnSphere` and reports back a
+`GeometryConstructionValidity`; `test_geometry_validity()` runs this on every
+edit purely to give the user live feedback (highlighting bad cells via
+`display_validity_problems()`) without touching the underlying property, and
+`set_geometry_for_property_value()`/`create_property_value_from_widget()` run it
+again when actually committing. Each table row also gets an `EditTableActionWidget`
+(insert above/below, delete) that `handle_current_cell_changed()` moves to
+whichever row currently has focus, since only one is kept alive at a time.
 
 ## Declared types
 
@@ -125,9 +149,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditGeometryWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_property_value_ptr` is `NULL` both before any property has been loaded and
+whenever the widget is being used to build a brand-new property (the "add
+property" path uses `create_property_value_from_widget()` instead, which does
+not need an existing property value); `update_property_value_from_widget()`
+throws `UninitialisedEditWidgetException` if called with a null pointer, and
+callers must check which workflow they are in before calling either method. It
+is a `boost::intrusive_ptr`, not a raw pointer, specifically to keep the property
+value alive while this widget is editing it even if the model would otherwise
+have let it go. The widget currently only supports single-geometry property
+values built from one contiguous run of table rows (assumed to start at row 0);
+several `// FIXME` comments in the source note that the geometry-type hint
+passed to `create_geometry_on_sphere()` and the wording of the resulting error
+messages are known to be imprecise.
 
 ## Used by
 

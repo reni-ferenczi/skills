@@ -10,9 +10,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditTotalReconstructionSequenceWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EditTotalReconstructionSequenceWidget` displays and edits the `GpmlIrregularSampling` of `GpmlFiniteRotation` poles that makes up a total reconstruction sequence's rotation history, one row per `GpmlTimeSample` in a `QTableWidget`. It implements `EditTableWidget` so each row's `EditPoleActionWidget` — an `EditTableActionWidget` subclass that adds an enable/disable-pole toggle to the usual insert/delete buttons — can route row-insertion, row-deletion and pole-enablement requests back to it by row index.
+
+Round-tripping between the table and the model goes through free functions in the anonymous namespace: `insert_table_row()` and its `fill_table_with_*()` helpers populate a row from a `GpmlTimeSample`, and `make_irregular_sampling_from_table()` walks the table back into a `GpmlIrregularSampling` property. `table_times_are_valid()` and the plate-id checks in `validate()` are the only real validation — per-field numeric ranges are instead enforced by the spin box limits that `set_spinbox_properties()` assigns per column — and `set_indeterminate_fields_for_row()`/`_for_table()` blank the latitude/longitude cells to "indet" whenever a row's rotation angle is zero, since a zero-angle pole has no meaningful axis.
+
+Editing a cell swaps in a `QDoubleSpinBox` for the active cell (tracked via `d_spinbox_row`/`d_spinbox_column`); `handle_editing_finished()` copies the spin box's value back into the underlying `QTableWidgetItem` when it loses focus, re-sorting the table and re-validating if the edited column was `TIME`.
 
 ## Declared types
 
@@ -113,9 +115,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditTotalReconstructionSequenceWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Any method that rewrites table cells programmatically (`update_table_widget_from_property()`, `initialise()`, and similarly in the anonymous-namespace helpers) must open a `TableUpdateGuard` around `d_suppress_update_notification_guard` first; `handle_item_changed()` checks that flag and returns early so that Qt's `itemChanged` signal, which still fires during a programmatic update, is not mistaken for a user edit. `TableUpdateGuard` asserts its guard flag is `false` on construction, so nesting two guards is a bug, not a supported pattern.
+
+`validate()` currently hard-codes plate id `999` as invalid ("not currently supported in creation/editing") until GPlates gains a mechanism for enabling/disabling whole sequences; a plate-id error message overwrites any pending time-validation message in `label_validation` and is itself overwritten once the plate ids are fixed and the table is re-validated. `sort_table_by_time()` and `get_irregular_sampling_property_value_from_table_widget()` both call `update_table_from_last_active_cell()` first so an in-progress spin box edit that has not yet emitted `editingFinished()` is not silently lost.
 
 ## Used by
 

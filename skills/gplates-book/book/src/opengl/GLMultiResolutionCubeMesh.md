@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionCubeMesh tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionCubeMesh` pre-generates the vertex meshes used to draw the tiles of a cube-map quad tree (the same subdivision scheme used by `GLMultiResolutionCubeRaster` and the reconstructed-raster pipeline). Rather than tessellating each tile's geometry on the fly, it builds a `mesh_cube_quad_tree_type` (a `GPlatesMaths::CubeQuadTree` of `MeshQuadTreeNode`) down to `MESH_CUBE_QUAD_TREE_MAXIMUM_DEPTH`, and callers walk it with `QuadTreeNode` handles obtained from `get_quad_tree_root_node()` and `get_child_node()`.
+
+The mesh depth is capped well below what a 16-bit vertex index could address (depth 5 rather than the theoretical maximum of 7) to keep the pre-built vertex arrays small. Below that depth a `QuadTreeNode` maps exactly onto a tile; once traversal goes deeper than the pre-generated tree, the same coarsest mesh is reused for every descendant tile and a clip texture (`get_clip_texture()`, `get_clip_texture_clip_space_transform()`) masks the mesh down to the requested tile's sub-area instead of generating new geometry.
+
+The header notes that mesh drawables were previously captured as `GLCompiledDrawState` objects, but that consumed too much memory (~150Mb at depth 6, since each `GLState` costs a few Kb and there can be ~32,000 of them); the current design stores the raw draw parameters in `MeshDrawable` and issues the draw call directly in `QuadTreeNode::render_mesh_drawable()`.
 
 ## Declared types
 
@@ -61,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionCubeMesh tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All mesh drawables for a cube face share a single vertex array (`d_meshes_vertex_array`, one per cube face), so `QuadTreeNode`s only ever hold offsets into it rather than owning geometry. A `QuadTreeNode` stores a raw pointer into the underlying `mesh_cube_quad_tree_type` node (or, past the pre-generated depth, a raw pointer to the coarsest `MeshDrawable`), so it is only valid as long as the owning `GLMultiResolutionCubeMesh` is alive.
 
 ## Used by
 

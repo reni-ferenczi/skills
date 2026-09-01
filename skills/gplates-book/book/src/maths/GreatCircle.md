@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GreatCircle tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GreatCircle` represents a whole great circle (not just an arc of one) as its
+axis: the `UnitVector3D` normal to the plane through the sphere's centre and
+the circle. It is a much lighter-weight type than `GreatCircleArc` — no
+endpoints, no arc-specific machinery — used where code only cares about the
+circle itself, such as `contains()` (a point lies on the circle iff it is
+perpendicular to the axis), building a great-circle grid line
+(`gui/SphericalGrid`), or comparing whether two independently-computed circles
+coincide (`are_equivalent`, via `collinear` on the two axes rather than
+comparing points).
+
+The free `tessellate()` function subdivides a whole great circle into
+uniformly-spaced points at most `max_segment_angular_extent` radians apart,
+starting from an arbitrary point on the circle (`generate_perpendicular` of
+the axis) and rotating around the axis; it appends only the distinct points,
+leaving the caller to close the loop explicitly since the last point coincides
+with the first.
 
 ## Declared types
 
@@ -43,9 +56,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GreatCircle tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The two-point constructor throws `IndeterminateResultException` if the points
+are coincident or antipodal (collinear position vectors give a zero-magnitude
+cross product, so no unique great circle exists through them). The
+`intersection()` member listed in the table is compiled out (`#if 0` in the
+header) and has no implementation — it does not actually exist in the built
+class despite appearing declared.
 
 ## Used by
 

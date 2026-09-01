@@ -9,9 +9,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/CoRegistrationLayerTask tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoRegistrationLayerTask` is the `LayerTask` that wires a co-registration layer into
+`ReconstructGraph`: it owns the layer's `CoRegistrationLayerParams` (the user's
+configuration table) and its `CoRegistrationLayerProxy` (the worker that actually
+performs the query), and forwards changes between the reconstruct-graph plumbing and
+the two. It takes no feature-collection input directly —
+`get_main_input_feature_collection_channel()` returns `LayerInputChannelName::UNUSED`
+and `can_process_feature_collection()` always returns false — because a co-registration
+layer only ever connects to *other layers'* output through
+`add_input_layer_proxy_connection()`: `CO_REGISTRATION_SEED_GEOMETRIES` accepts a
+`ReconstructLayerProxy`, and `CO_REGISTRATION_TARGET_GEOMETRIES` accepts either a
+`ReconstructLayerProxy` or a `RasterLayerProxy`, both forwarded to the corresponding
+`add_coregistration_*_layer_proxy()` calls on the underlying layer proxy.
 
 ## Declared types
 
@@ -52,9 +61,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/CoRegistrationLayerTask tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`update()` only pushes the current reconstruction time into the layer proxy; it does
+not compute co-registration results itself — clients such as the co-registration
+results dialog or the export pipeline must query `get_layer_proxy()` directly.
+`remove_input_layer_proxy_connection()` also prunes the configuration table: when a
+target layer is disconnected, any configuration row whose `target_layer` resolves to
+that same layer proxy (or to no output at all, e.g. because the layer was deactivated
+first) is dropped and the pruned table is pushed back through
+`CoRegistrationLayerParams::set_cfg_table()`, which is what triggers
+`handle_cfg_table_modified()` to refresh the layer proxy's configuration.
 
 ## Used by
 

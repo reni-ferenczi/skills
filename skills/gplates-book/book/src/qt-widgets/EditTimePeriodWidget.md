@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditTimePeriodWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EditTimePeriodWidget` is the `AbstractEditWidget` used to edit a `GmlTimePeriod` property — the begin/end time-of-appearance and time-of-disappearance pair found on most reconstructable features. It presents two spin boxes (in Ma) alongside "distant past"/"distant future" checkboxes for each end, and converts between that UI state and a `GeoTimeInstant` pair via the free function `create_geo_time_instant_from_widgets()`.
+
+`update_widget_from_time_period()` loads an existing `GmlTimePeriod` into the controls and remembers it in `d_time_period_ptr`, a `boost::intrusive_ptr` that keeps the property value alive so `update_property_value_from_widget()` can write the edited begin/end instants straight back into it later. Because having both distant-past and distant-future available for both ends is confusing, the constructor hides the "less likely" checkbox on each side (future-appearance, past-disappearance) while leaving the underlying model support intact, and wires the two spin boxes' `valueChanged` signals to `set_dirty()` so the surrounding form knows to commit.
 
 ## Declared types
 
@@ -57,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditTimePeriodWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_time_period_ptr` may be `NULL` — it is only set by `update_widget_from_time_period()`, and `update_property_value_from_widget()` throws `UninitialisedEditWidgetException` if it is called before that. `valid()` rejects a begin time that is later than the end time, resetting the disappearance spin box to `0` as a side effect of the validation check; `update_property_value_from_widget()` calls it and, if invalid, pops a `QMessageBox` warning and marks the widget clean without writing anything back. `get_time_period_begin()` and `get_time_period_end()` each test `is_distant_past()` twice instead of checking `is_distant_future()` on the second branch, so a distant-future value falls through to the `else` and is read as a real time value rather than being special-cased.
 
 ## Used by
 

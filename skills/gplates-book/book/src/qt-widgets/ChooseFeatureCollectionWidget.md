@@ -10,9 +10,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChooseFeatureCollectionWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ChooseFeatureCollectionWidget` is the reusable "pick a feature collection to
+add this to" control embedded in many creation dialogs
+(`CreateFeatureDialog`, `CreateVGPDialog`, `CreateTotalReconstructionSequenceDialog`,
+and others). It lists every loaded `FeatureCollectionHandle` via
+`populate_feature_collections_list()`, optionally filtered to a set of
+`GPlatesFileIO::FeatureCollectionFileFormat::classifications_type` (e.g.
+reconstruction-only) checked through the module's `ReconstructMethodRegistry`,
+and always appends a synthetic "&lt;Create a new feature collection&gt;" row.
+Each row is a `FeatureCollectionItem`, a private `QListWidgetItem` subclass
+that either wraps a real `FeatureCollectionFileState::file_reference` or (for
+the synthetic row) none at all; `get_file_reference()` on the widget resolves
+the user's pick, creating a brand-new feature collection on the fly if the
+synthetic row was chosen, and throws `NoFeatureCollectionSelectedException`
+if nothing is selected.
+
+`initialise()` re-populates the list from the current file state while trying
+to preserve the previous selection, comparing by the underlying
+`FeatureCollectionHandle::weak_ref` rather than by the file reference itself
+— a file reference can be invalidated by unloading, but the feature
+collection weak reference degrades safely to invalid instead of crashing.
 
 ## Declared types
 
@@ -65,9 +82,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChooseFeatureCollectionWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`FeatureCollectionItem::get_file_reference()` asserts if called on the
+synthetic "create new" item or before `set_file_reference()` — callers must
+check `is_create_new_collection_item()` first, as the header note says.
+`get_feature_collection_reference()` exists specifically to avoid that crash
+path when only the referenced feature collection (not the file) is needed,
+such as when re-matching the previous selection after a repopulate.
 
 ## Used by
 

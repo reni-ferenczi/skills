@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/TimescaleBand tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TimescaleBand` is a `GPlatesModel::StringContentTypeGenerator<TimescaleBandFactory>` instantiation for the interned names of geological timescale bands (its own Doxygen comment gives "Devonian" as an example). `TimescaleBandFactory` is never instantiated; it exists only to bind `StringContentTypeGenerator` to the dedicated `GPlatesUtils::StringSet` returned by `GPlatesModel::StringSetSingletons::timescale_band_instance()`, so every `TimescaleBand` string is interned separately from other string-typedef families such as `TextContent` or `ValueObjectType`.
+
+`GpmlAge` is by far the heaviest consumer, using `TimescaleBand` to name the timescale a geological age is expressed against.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/TimescaleBand tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

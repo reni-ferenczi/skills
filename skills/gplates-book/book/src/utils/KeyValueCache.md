@@ -8,9 +8,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/KeyValueCache tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`KeyValueCache<KeyType, ValueType>` is an LRU cache that owns its values:
+`get_value(key)` returns the cached `ValueType` for `key`, creating it on
+demand (via a supplied `create_value_object_function_type`, or `ValueType`'s
+default constructor) if it is not already present, and evicting the
+least-recently-used entry once the cache exceeds
+`d_maximum_num_value_objects_in_cache`. Internally a `std::list<ValueObjectInfo>`
+holds the value objects, a `std::map<key_type, ...>` maps keys to positions
+in that list, and a second list (`key_value_order_seq_type`) tracks
+recency by splicing an entry to its tail on every access — an O(log N) map
+lookup plus O(1) list operations per `get_value` call, with no lookup needed
+on eviction.
+
+The header spells out how this differs from `ObjectCache`: `ObjectCache` has
+no key and returns a volatile handle instead of a comparable one, does not
+recycle an object until all strong references to it are released, and
+requires the client to supply a replacement object itself, whereas
+`KeyValueCache` creates that replacement internally from the key. A new
+value is always created and inserted before the old least-recently-used
+value is evicted, specifically so that a value's construction can still see
+another value that is about to be evicted (the example given is a
+cache of size one whose old and new values share underlying data).
 
 ## Declared types
 
@@ -55,9 +73,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/KeyValueCache tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The reference returned by `get_value` can be invalidated by any later call to
+`get_value` on the same cache, since that call may evict the very object the
+earlier reference points to — the header recommends using a shared-pointer
+`ValueType` (`non_null_intrusive_ptr`, `shared_ptr`) or copying the result
+immediately rather than holding the reference across calls. Both constructors
+throw `GPlatesGlobal::PreconditionViolationError` if
+`maximum_num_values_in_cache` is zero. `KeyType` must be copy-constructible,
+copy-assignable and less-than comparable (it is used as a `std::map` key);
+`ValueType` must be copy-constructible and copy-assignable. `get_value`
+guards its multi-step insertion with `Loki::ScopeGuard` so a partially
+completed insert is rolled back if `create_value_object_function` throws.
 
 ## Used by
 

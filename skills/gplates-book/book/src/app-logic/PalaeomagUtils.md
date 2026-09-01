@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/PalaeomagUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PalaeomagUtils` holds `VirtualGeomagneticPolePropertyFinder`, a `GPlatesModel::ConstFeatureVisitor` that pulls the properties needed to build a `ReconstructedVirtualGeomagneticPole` out of a `gpml:VirtualGeomagneticPole` feature. `initialise_pre_feature_properties` checks the feature's type and aborts the visit for anything else, so `is_vgp_feature` tells the caller whether the feature was even a VGP before trusting the rest of the results. The remaining visitor methods pick out the site position (`gml:averageSampleSitePosition`), the pole position (`gml:polePosition`), the plate id, and the average age by matching `current_top_level_propname()` against the known GPML property names, unwrapping `GpmlConstantValue` wrappers along the way.
+
+The finder is a one-shot, stateless-per-visit accumulator: construct it, call `feature_handle.accept_visitor()` (or equivalent) once, then read the accumulated `boost::optional` fields.
 
 ## Declared types
 
@@ -48,9 +48,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/PalaeomagUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_plate_id`, `get_age`, `get_site_point` and `get_vgp_point` return whatever was found, even when `is_vgp_feature()` is false — callers must check `is_vgp_feature()` first, since a non-VGP feature simply short-circuits property collection rather than resetting these fields to a known "invalid" state.
+- Matching is by top-level property name only; the visitor does not otherwise validate that a `GmlPoint` or `XsDouble` occurs where expected.
 
 ## Used by
 

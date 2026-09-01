@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LogModel tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LogModel` is a `QAbstractListModel` that backs the application's log viewer: it holds a `QList<LogEntry>` of accumulated messages and exposes them through the standard `data()`/`flags()`/`rowCount()` triad, with `SeverityRole` and `TypeRole` letting a view (`gui/LogFilterModel`, `qt-widgets/LogDialog`) filter and colour entries by `LogEntry::Severity` and `LogEntry::Type` without parsing message text. It deliberately avoids QtGui dependencies so it can sit in app-logic rather than gui/qt-widgets.
+
+On construction it installs a `LogToModelHandler` with `GPlatesQtMsgHandler`, so it becomes the sink for Qt's own debug/warning/critical/fatal message stream in addition to messages appended directly via `append()`; the destructor removes that handler. Because message floods (e.g. from Qt) could otherwise cause a resize/repaint per message, `append()` does not add straight to `d_log`: it queues into `d_buffer` and arms a single-shot `QTimer`, so incoming messages are coalesced into batches (`flush_buffer()`) and further coalesced by `compress_buffer()`, which collapses runs of duplicate messages into a single "repeated N times" placeholder `LogEntry` of type `META`.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LogModel tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`append()` does not update the model immediately — an appended entry only becomes visible through `data()`/`rowCount()` after `flush_buffer()` runs (100 ms after the last append, or roughly every 100 ms during a sustained flood once the buffer passes 50 pending entries). Code that appends a message and then expects to read it straight back out of the model will not see it yet.
 
 ## Used by
 

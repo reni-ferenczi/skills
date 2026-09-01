@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/CoRegReducer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoRegReducer` is the abstract "reduce" stage of the co-registration pipeline, following filtering and mapping: `process()` collapses a `ReducerInDataset` — the `(OpaqueData, ReconstructedFeature)` tuples a `CoRegMapper` produced — down to a single `OpaqueData` result for a seed feature. `process()` is non-virtual and handles the empty-range case itself, returning `EmptyData`; subclasses only implement the protected `exec()` for the non-empty case. The many concrete reducers (`MaxReducer`, `MinReducer`, `MeanReducer`, `MedianReducer`, `PercentileReducer`, `VoteReducer`, `WeightedMeanReducer`, `LookupReducer`) each interpret the mapped values differently — numeric aggregation, majority vote, or nearest-value lookup — and are selected via a nested `Config` that lets the co-registration configuration table compare and identify reducer types with `is_same_type()`.
+
+The free function `extract_opaque_data()` is a shared helper for subclasses: it strips the `ReconstructedFeature` half of each tuple and copies just the `OpaqueData` values into a plain vector, which is what most reducers actually aggregate over.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/CoRegReducer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Subclasses must override `exec()`, not `process()`; `process()` already guarantees `first != last` before calling `exec()`, so an empty-range check inside `exec()` is redundant.
 
 ## Used by
 

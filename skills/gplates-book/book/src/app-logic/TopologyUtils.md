@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyUtils` is the free-function entry point for resolving topological features (lines, boundaries and networks) at a given reconstruction time, and for working out how their boundaries share sections with one another. It sits above the individual `ResolvedTopologicalLine`, `ResolvedTopologicalBoundary` and `ResolvedTopologicalNetwork` types: callers such as layer proxies call `resolve_topological_lines()`, `resolve_topological_boundaries()` and `resolve_topological_networks()` in that order, because boundaries and networks can reference already-resolved lines as sections, and networks can reference resolved lines and boundaries as their own sections. Each resolve function takes the relevant `ReconstructHandle::type`s of the section geometries it should look at, so a caller can restrict resolution to a specific, non-stale set of already-reconstructed inputs.
+
+The second half of the file, `find_resolved_topological_sections()` and its anonymous-namespace helpers, solves a different problem: adjacent plate polygons and deforming networks typically reuse the same topological section feature for parts of their boundary, so naively collecting every topology's sub-segments duplicates geometry where boundaries overlap. `find_resolved_topological_sections()` instead walks every resolved boundary and network once, groups their sub-segments by shared section (`map_resolved_topological_sections_to_resolved_topologies()`), and then re-derives one set of non-overlapping shared sub-segments per section by sorting the sub-segment start/end markers along the section geometry (`ResolvedSubSegmentMarker`, `SortResolvedSubSegmentMarkers`) and sweeping them to find which resolved topologies own each disjoint span. `map_resolved_topological_boundaries_networks_to_shared_sub_segments()` then inverts that result into a lookup keyed by the resolved topology instead of by section, for callers that need to know a topology's own boundary in terms of shared sub-segments.
 
 ## Declared types
 
@@ -99,9 +99,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The resolve functions require their inputs to already have been reconstructed/resolved in the right order: `resolve_topological_boundaries()` and `resolve_topological_networks()` assume any topological line sections they reference have already been resolved, and both accept an optional list of `ReconstructHandle::type` values precisely so a caller can exclude outdated `ReconstructedFeatureGeometry`/`ResolvedTopologicalLine` instances still alive from a previous resolve. Passing the wrong handles (or omitting them when stale geometry exists) silently changes which section geometry gets picked up rather than raising an error.
+
+`resolved_topological_boundaries_networks_to_shared_sub_segments_map_type` is keyed by `GPlatesModel::FeatureHandle::iterator` (the geometry property) rather than by the resolved topology itself, because the same feature property can be resolved into multiple `ReconstructionGeometry` instances across layers or resolve passes; callers must look up by property, not assume a 1:1 mapping to a specific resolved object.
 
 ## Used by
 

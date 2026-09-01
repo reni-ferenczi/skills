@@ -8,9 +8,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureId tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureId` is the persistent, string-based identifier that lets one feature
+reference another — for example a `GpmlFeatureReference` or
+`GpmlPropertyDelegate` pointing at the `FeatureHandle` it targets. It is not a
+class of its own but a typedef, `IdTypeGenerator<FeatureIdFactory, FeatureHandle>`:
+`IdTypeGenerator` supplies the actual ID machinery (unique-string storage,
+comparison, and an optional back-reference to the defining `FeatureHandle`), and
+`FeatureIdFactory` supplies the process-wide `GPlatesUtils::IdStringSet` — reached
+through `StringSetSingletons::feature_id_instance()` — that all `FeatureId`
+strings are interned into. `FeatureIdFactory` itself is uninstantiable (its
+constructor is private); it exists purely to give `IdTypeGenerator` a distinct
+singleton to key off, so feature IDs and other ID kinds (built the same way from
+different factories) do not collide in the same string set.
+
+Because IDs are meant to double as XML IDs, feature ID strings must conform to
+the XML `NCName` production, per the class comment's cited W3C references. The
+header itself only wires the typedef together; the ID comparison and
+back-reference behaviour live in `IdTypeGenerator`.
 
 ## Declared types
 
@@ -39,9 +53,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureId tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Uniqueness is "reasonably unique" only, per the class comment — `FeatureId`
+  values are not guaranteed globally unique, just interned so equal strings
+  compare equal cheaply.
+- A `FeatureId` string must be a valid XML `NCName`; constructing one from an
+  arbitrary string can violate that if the caller does not check it.
 
 ## Used by
 

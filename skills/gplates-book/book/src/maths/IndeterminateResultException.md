@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/IndeterminateResultException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown when a mathematical calculation would produce an indeterminate result (such as 0/0 or undefined operations on degenerate geometries). The exception carries a message describing the conditions that led to the indeterminate result and inherits from `MathematicalException`.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/IndeterminateResultException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

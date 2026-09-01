@@ -14,23 +14,23 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AdjustFittedPoleEstimate](../src/canvas-tools/AdjustFittedPoleEstimate.md) | 2 | 1284 | 18 | (pending) |
-| [BuildTopology](../src/canvas-tools/BuildTopology.md) | 2 | 401 | 38 | (pending) |
+| [AdjustFittedPoleEstimate](../src/canvas-tools/AdjustFittedPoleEstimate.md) | 2 | 1284 | 18 | Canvas tool for dragging the Hellinger tool's initial 1-2 and 1-3 pole estimates |
+| [BuildTopology](../src/canvas-tools/BuildTopology.md) | 2 | 401 | 38 | Canvas tool for picking features to add as sections of a topological line/boundary/network |
 | [CanvasTool](../src/canvas-tools/CanvasTool.md) | 1 | 281 | 534 | (pending) |
-| [CanvasToolAdapterForGlobe](../src/canvas-tools/CanvasToolAdapterForGlobe.md) | 2 | 622 | 59 | (pending) |
-| [CanvasToolAdapterForMap](../src/canvas-tools/CanvasToolAdapterForMap.md) | 2 | 662 | 23 | (pending) |
-| [ChangeLightDirectionGlobe](../src/canvas-tools/ChangeLightDirectionGlobe.md) | 2 | 460 | 11 | (pending) |
+| [CanvasToolAdapterForGlobe](../src/canvas-tools/CanvasToolAdapterForGlobe.md) | 2 | 622 | 59 | Adapts a widget-agnostic CanvasTool to the GlobeCanvasTool globe event interface |
+| [CanvasToolAdapterForMap](../src/canvas-tools/CanvasToolAdapterForMap.md) | 2 | 662 | 23 | Adapts a widget-agnostic CanvasTool to the MapCanvasTool map event interface |
+| [ChangeLightDirectionGlobe](../src/canvas-tools/ChangeLightDirectionGlobe.md) | 2 | 460 | 11 | Globe canvas tool for dragging the light-direction arrow |
 | [ChangeLightDirectionMap](../src/canvas-tools/ChangeLightDirectionMap.md) | 3 | 132 | 1 | Map canvas tool for changing light direction (currently unimplemented) |
-| [ClickGeometry](../src/canvas-tools/ClickGeometry.md) | 2 | 349 | 29 | (pending) |
+| [ClickGeometry](../src/canvas-tools/ClickGeometry.md) | 2 | 349 | 29 | Default canvas tool for focusing a feature by clicking its geometry |
 | [CreateSmallCircle](../src/canvas-tools/CreateSmallCircle.md) | 3 | 334 | 3 | Canvas tool for drawing small circles (geographic circles) on the globe |
-| [DeleteVertex](../src/canvas-tools/DeleteVertex.md) | 2 | 236 | 57 | (pending) |
+| [DeleteVertex](../src/canvas-tools/DeleteVertex.md) | 2 | 236 | 57 | Canvas tool wrapper for deleting a vertex from digitised or focused geometry |
 | [DigitiseGeometry](../src/canvas-tools/DigitiseGeometry.md) | 3 | 240 | 3 | Canvas tool for creating new geometries by clicking points interactively |
 | [EditTopology](../src/canvas-tools/EditTopology.md) | 3 | 380 | 1 | Canvas tool for selecting features to build plate boundary topologies |
-| [GeometryOperationState](../src/canvas-tools/GeometryOperationState.md) | 2 | 165 | 369 | (pending) |
+| [GeometryOperationState](../src/canvas-tools/GeometryOperationState.md) | 2 | 165 | 369 | Tracks the single active GeometryOperation and GeometryBuilder, signalling on change |
 | [InsertVertex](../src/canvas-tools/InsertVertex.md) | 3 | 258 | 2 | Canvas tool for inserting vertices into existing or temporary geometries |
 | [ManipulatePole](../src/canvas-tools/ManipulatePole.md) | 3 | 304 | 3 | Canvas tool for interactively adjusting plate rotation poles via dragging |
-| [MeasureDistance](../src/canvas-tools/MeasureDistance.md) | 2 | 825 | 14 | (pending) |
-| [MeasureDistanceState](../src/canvas-tools/MeasureDistanceState.md) | 2 | 724 | 32 | (pending) |
+| [MeasureDistance](../src/canvas-tools/MeasureDistance.md) | 2 | 825 | 14 | Globe/map canvas tool for Quick Measure and Feature Measure distance display |
+| [MeasureDistanceState](../src/canvas-tools/MeasureDistanceState.md) | 2 | 724 | 32 | Shared measurement data and geometry-builder tracking behind the measure distance tool |
 | [ModifyGeometryState](../src/canvas-tools/ModifyGeometryState.md) | 3 | 77 | 5 | Signal relay for snap-to-vertices configuration between UI and canvas tools |
 | [MovePoleGlobe](../src/canvas-tools/MovePoleGlobe.md) | 3 | 261 | 1 | Canvas tool for repositioning rotation poles on the globe view |
 | [MovePoleMap](../src/canvas-tools/MovePoleMap.md) | 3 | 324 | 5 | Map canvas tool for interactive pole manipulation |

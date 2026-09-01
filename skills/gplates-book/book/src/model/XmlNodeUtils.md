@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/XmlNodeUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`XmlNodeUtils` is a small toolkit of visitors and free functions built on top of the `XmlNodeVisitor`/`XmlNode` hierarchy (`XmlNode.h`), used by the GPML readers in `file-io` to pull structured values back out of a parsed XML element tree. `XmlElementNodeExtractionVisitor` narrows a generic `XmlNode` down to an `XmlElementNode`, optionally requiring it to have a specific `XmlElementName`; `NamedXmlElementNodeIterator` builds on that visitor to walk a forward-iterator range of sibling XML nodes and expose only the ones matching a given element name, which is how readers pick out repeated child elements (e.g. all `<gml:pos>` entries) without hand-rolling the filtering loop each time. `TextExtractionVisitor` concatenates the text of an element's text-node children and separately records whether it encountered any child *element* nodes, which the two `get_text`/`get_text_without_trimming` functions use to reject elements that mix text with sub-elements rather than silently returning partial text.
+
+`get_qualified_xml_name<QualifiedXmlNameType>` builds on `get_text` to parse an element's text content as an `"alias:name"` pair, resolving the alias to a namespace via `XmlElementNode::get_namespace_from_alias` and constructing a `QualifiedXmlNameType` (for example `PropertyName` or `StructuralType`) from the result — this is the standard way GPML text content that names a type or property gets turned back into one of the qualified-name types used elsewhere in the model.
 
 ## Declared types
 
@@ -76,9 +76,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/XmlNodeUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`NamedXmlElementNodeIterator` only stores the `XmlNodeForwardIter`s it was given plus a cached lookahead; it does not own the underlying node sequence, so the caller-supplied range must outlive the iterator. `has_next()` is `const` but mutates the cached lookahead iterator (`d_next_named_xml_element_iterator`) so the result can be reused by a following `next()` without repeating the search — calling `has_next()` more than once in a row does not advance further.
+
+`get_text`/`get_text_without_trimming` return `boost::none`, not an empty string, whenever the element has any child *element* nodes, so a caller cannot distinguish "empty text" from "mixed content" without checking the return value.
 
 ## Used by
 

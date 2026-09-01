@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ImportScalarField3DDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ImportScalarField3DDialog` is the `QWizard` that turns a stack of depth-layer rasters into a GPlates 3D scalar field feature. Its three wizard pages (`DEPTH_LAYERS_PAGE_ID`, `GEOREFERENCING_PAGE_ID`, `SCALAR_FIELD_COLLECTION_PAGE_ID`) are set up in the constructor and driven through `nextId()`, which skips the georeferencing page whenever `import_georeferencing_and_spatial_reference_system()` manages to pull georeferencing and a spatial reference system directly from the first depth layer raster. Before the wizard even starts, `is_scalar_field_import_supported()` creates a throwaway `GLRenderer` via `create_gl_renderer()` to confirm the OpenGL context can support the field-generation pipeline, aborting the dialog if not.
+
+`ScalarField3DDepthLayersSequence` is the small helper collection that holds the ordered list of depth-layer rasters (as `FileInfo` entries: path, dimensions, depth and whether the raster was cached to a temporary file). It exists mainly so the depth-layers page and the dialog can share sorting (`sort_by_depth()`, `sort_by_file_name()`) and cleanup (`clear_cache_files()`) logic without duplicating it.
+
+On completion, `import_scalar_field_3d()` calls `generate_scalar_field()` to build the `.gpsf` field file on the GPU (again through a `GLRenderer`), then wraps the result into a `GpmlScalarField3DFile` property value via `create_scalar_field_3d_file_property_value()` and adds it to the model as a new feature. `create_gpml_file_path()`, `create_gpsf_file_path()` and `create_file_basename_with_path()` derive the output paths from the source raster names.
 
 ## Declared types
 
@@ -84,9 +86,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ImportScalarField3DDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Cache files created for depth-layer rasters during import are deleted by `clear_cache_files()` only if they did not already exist before the import started, so a user's own raster files are never removed. `d_georeferencing` and `d_coordinate_transformation` are `mutable` because `import_georeferencing_and_spatial_reference_system()` is a `const` method that still needs to populate them from the raster.
 
 ## Used by
 

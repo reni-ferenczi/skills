@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AnimateDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Configuration dialog for geological time animations. Provides spinboxes for start time, end time, time increment, and current time, plus a time slider for scrubbing. Buttons allow setting animation bounds from the current view time, reversing the animation, and toggling playback. Checkboxes control whether animation loops and whether it finishes exactly on the end time; a spinbox sets frames per second. Communicates bidirectionally with `AnimationController` to read and write all animation parameters, sharing control with `AnimateControlWidget`.
 
 ## Declared types
 
@@ -60,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AnimateDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `AnimationController` pointer is not owned; the caller manages its lifetime. The dialog emits `current_time_changed(double)` when the user modifies time through the UI, broadcasting changes to other components.
 
 ## Used by
 

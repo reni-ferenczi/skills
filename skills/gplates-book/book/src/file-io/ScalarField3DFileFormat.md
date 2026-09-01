@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ScalarField3DFileFormat tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header defines the on-disk binary layout for GPlates' 3D scalar field files, rather than any reader or writer logic. A scalar field file is a header (magic number, file size, version, tile and depth-layer counts, per-depth-layer radii, and summary statistics for scalar and gradient magnitude) followed by tile metadata and per-sample data, all stored as little-endian single-precision floats via `QDataStream` at the fixed `Q_DATA_STREAM_VERSION` (Qt 4.4 streams, since GPlates targets that as its Qt baseline).
+
+`TileMetaData`, `FieldDataSample` and `MaskDataSample` describe the three record shapes written per tile: per-tile min/max scalar bounds and a tile ID, per-sample scalar value plus gradient vector, and a per-(x,y) validity mask. Each struct stores its `tile_ID` and `mask` fields as `float` rather than an integer type specifically so the data can be uploaded directly into a floating-point OpenGL texture without conversion; the associated `STREAM_SIZE` constants record the serialised byte size of each struct (which can differ from `sizeof` due to padding) for callers computing file offsets. `GPlatesUtils::Endian::swap` is specialised for all three structs so raw-endian file I/O code can byte-swap them field by field.
+
+`UnsupportedVersion` is the exception a reader throws when the version field in a file it opens does not match `VERSION_NUMBER`, distinguishing "this is a GPlates scalar field file, but a newer one than this build understands" from a corrupt or foreign file (the magic number has already been validated by that point).
 
 ## Declared types
 
@@ -73,9 +75,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ScalarField3DFileFormat tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`VERSION_NUMBER` must be bumped whenever the file layout changes in a breaking way (e.g. a new header field), since existing readers key their parsing logic off it. The whole format assumes `float` is 32-bit and `double` is 64-bit, and is otherwise OS/CPU independent.
 
 ## Used by
 

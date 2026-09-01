@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolygonFan tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PolygonFan` builds a triangular fan mesh whose apex sits at a polygon's centroid, with one triangle per boundary edge connecting the apex to that edge's two endpoints. It can also be built from a `PolylineOnSphere` (closing the gap between first and last vertex) or a `MultiPointOnSphere` (treating point order as a boundary), via the visitor `CreatePolygonFanFromGeometryOnSphere` that the `create(GeometryOnSphere...)` overload dispatches through.
+
+Unlike `PolygonMesh`, which triangulates only the true interior fill region, a fan mesh triangle can lie outside the polygon's interior when the polygon is concave, and triangles can overlap. That trade-off is deliberate: the fan is cheap to build (no triangulation library involved) and is meant to be rendered with the graphics hardware's stencil buffer, inverting each pixel's mask on every triangle drawn, so the overlaps and outside-region triangles cancel out correctly to leave the true fill region — the same visual result as `PolygonMesh` at a fraction of the construction cost.
 
 ## Declared types
 
@@ -58,9 +58,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolygonFan tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create(GeometryOnSphere...)` returns `boost::none` for a `PointOnSphere` (a single point cannot form a fan) and for a polyline or multipoint with fewer than three vertices; `create(PolygonOnSphere...)` never fails, since a `PolygonOnSphere` already guarantees at least three boundary vertices.
+- A polygon's interior rings each become their own separate fan ring sharing the same overall mesh, rather than being subtracted from the exterior ring's fan.
 
 ## Used by
 

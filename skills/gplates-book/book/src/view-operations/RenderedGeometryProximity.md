@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryProximity tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Free-function hit-testing over the rendered-geometry model: given a `ProximityCriteria` (typically built from a mouse click), the `test_proximity()` / `test_vertex_proximity()` overloads walk a `RenderedGeometryLayer`, a set of a `RenderedGeometryCollection`'s main layers, or one specific `MainLayerType`, delegating the actual per-geometry test to each `RenderedGeometry::test_proximity()`. This is the layer canvas tools use to turn a click into "which rendered geometries were hit", one level above the per-geometry proximity logic that lives in the individual `RenderedGeometryImpl` subclasses.
+
+Results accumulate as `RenderedGeometryProximityHit` entries — an index into the layer, a pointer back to that layer, and the `ProximityHitDetail` — collected into a `sorted_rendered_geometry_proximity_hits_type` that every overload sorts by closeness (closest first) before returning. The anonymous-namespace `RenderedGeometryLayerProximity` functor is the internal `operator()` used to visit one layer at a time and skips inactive layers; it is not part of the public interface.
+
+The overloads that take a `RenderedGeometryCollection` add an `only_if_main_layer_active` filter on top of the per-layer active check, so a hit test can be scoped to whichever main layers (or the single main layer) are currently relevant to the active canvas tool.
 
 ## Declared types
 
@@ -61,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryProximity tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A `RenderedGeometryProximityHit` stores a raw, non-owning pointer to its `RenderedGeometryLayer`; a caller that holds onto hits after the layer (or its owning `RenderedGeometryCollection`) is destroyed or mutated is working with a dangling reference. Every overload's boolean return value is exactly `!sorted_proximity_hits.empty()` after the call, so the two are interchangeable — check whichever is convenient.
 
 ## Used by
 

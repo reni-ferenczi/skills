@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalSharedSubSegment tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ResolvedTopologicalSharedSubSegment` is the inverse view of
+`ResolvedTopologicalGeometrySubSegment`: instead of belonging to one resolved
+topology, it belongs to a topological section and records every resolved
+topology (`ResolvedTopologicalBoundary` or `ResolvedTopologicalNetwork`) that
+reuses that section's sub-segment as part of its boundary. This matters
+because adjacent plate boundaries and deforming network edges are typically
+described by the same topological section feature, shared and possibly
+reversed by each side; the nested `ResolvedTopologyInfo` struct pairs each
+sharing topology with the reversal flag that applies to it specifically —
+typically two entries, one if a boundary has no neighbour, and more than two
+signalling overlapping topologies.
+
+Per the header comment, it is kept as a separate class from
+`ResolvedTopologicalGeometrySubSegment` rather than merged into it "partly in
+order to avoid memory islands (cyclic references of shared pointers)": a
+resolved topology owns its `ResolvedTopologicalGeometrySubSegment`s, but a
+`ResolvedTopologicalSharedSubSegment` is not owned by the topologies it
+references, so storing back-references to them here would create a reference
+cycle if the class were the same one the topology owns. Otherwise it
+duplicates the un-clipped/clipped geometry accessors, per-point source-info
+caching, and recursive sub-sub-segment lookup of its sibling class.
 
 ## Declared types
 
@@ -58,9 +76,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalSharedSubSegment tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Unlike `ResolvedTopologicalGeometrySubSegment`, there is no single "use
+reverse" flag on the object itself: reversal is per sharing topology, so
+callers must pass the `use_reverse` from the relevant `ResolvedTopologyInfo`
+into `get_reversed_shared_sub_segment_points()` /
+`get_reversed_shared_sub_segment_point_source_infos()` rather than relying on
+a fixed direction. `get_shared_sub_segment_point_source_infos()` throws
+`PreconditionViolationError` if the reconstruction geometry passed to
+`create()` is neither a `ReconstructedFeatureGeometry` nor a
+`ResolvedTopologicalLine`. `d_point_source_infos` and `d_sub_sub_segments`
+are `mutable` and computed lazily on first access.
 
 ## Used by
 

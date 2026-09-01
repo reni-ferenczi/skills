@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GnomonicProjection tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GnomonicProjection` maps points on the unit sphere onto a 2D plane tangent to
+the sphere at a chosen point, using the gnomonic (central) projection whose
+defining property is that great circle arcs on the sphere map to straight
+lines in the plane. That property is what callers actually want it for:
+planar geometry operations (tessellation, mesh building, orientation tests)
+that are only valid on straight edges can be done in the projected plane and
+mapped back with `unproject_to_point_on_sphere`/`unproject_to_lat_lon`,
+instead of working directly with `GreatCircleArc` curvature on the sphere. See
+`maths/PolygonMesh` and `maths/PolygonOrientation` for the two current
+consumers of this trick.
+
+The tangent plane's 2D `x`/`y` axes are either chosen arbitrarily and
+orthogonally to the tangent point's normal (`get_tangent_plane_frame`, which
+picks whichever of the global x or y axis is least parallel to the normal to
+avoid a degenerate cross product), or supplied explicitly by the caller as an
+already-orthonormal, right-handed frame. Because gnomonic projection sends
+points on the tangent plane's own great-circle "equator" to infinity,
+`maximum_projection_angle` caps how far from the tangent point a point may lie
+and still project; `project_from_point_on_sphere` returns `boost::none`
+instead of an unbounded coordinate once that angle is exceeded.
 
 ## Declared types
 
@@ -48,9 +65,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GnomonicProjection tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both constructors throw `GPlatesGlobal::PreconditionViolationError` if
+`maximum_projection_angle` is `>= PI/2` (90 degrees is the projection's
+asymptote, not a valid limit), and the explicit-axes constructor additionally
+requires `cross(tangent_plane_x_axis, tangent_plane_y_axis) ==
+Vector3D(tangent_plane_normal)`, i.e. a genuinely orthonormal, right-handed
+frame — passing axes that are merely orthogonal in the wrong-handed order
+fails this check.
 
 ## Used by
 

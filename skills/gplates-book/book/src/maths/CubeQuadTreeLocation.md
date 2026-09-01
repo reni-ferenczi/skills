@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/CubeQuadTreeLocation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Identifies one address in the cube-face quad-tree hierarchy used throughout
+the cube-map/spatial-partitioning code: which of the six `CubeCoordinateFrame`
+faces, at what quad-tree depth, and the (x, y) node offset within that depth.
+It is a plain value, not a reference into a live tree — `CubeQuadTreePartition`
+uses it to name a node when inserting without first walking down from a
+parent or supplying a spatial geometry. A default-constructed location, or one
+holding `boost::none` in `d_node_location`, denotes the root of the cube
+itself rather than any quad-tree node; `CubeQuadTreePartition` uses that
+special value to park objects that fall outside the loose bounds of every
+cube face.
+
+The free functions test whether two locations' nodes overlap spatially,
+covering the specific depth relationships spatial-partition queries need:
+same-depth nodes, a "loose" (spatially padded) parent-depth node against a
+regular child-depth node, and a loose node against a regular node at
+arbitrary depths. Nodes on different cube faces can still intersect, and
+these functions account for that by transforming coordinates onto a shared
+face before comparing.
 
 ## Declared types
 
@@ -47,9 +62,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/CubeQuadTreeLocation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Constructing a child node from a parent that is the root of the cube throws
+`PreconditionViolationError`, as does calling `do_same_depth_nodes_intersect`
+on locations that are not both quad-tree nodes at the same depth, or calling
+the parent/child intersection test on locations whose depths are not exactly
+one apart. `intersect_loose_cube_quad_tree_location_with_loose_cube_quad_tree_location`
+is implemented in the `.cc` file but its declaration in the header is wrapped
+in `#if 0`, so it is currently unreachable from outside this translation unit.
 
 ## Used by
 

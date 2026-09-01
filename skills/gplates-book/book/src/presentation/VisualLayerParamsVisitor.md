@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VisualLayerParamsVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayerParamsVisitorBase` is the visitor-pattern base for dispatching on the concrete subclass of `VisualLayerParams` without a `dynamic_cast` chain. It is parameterised on a `Const` bool so a single template produces both the const and non-const visitor interfaces; `ConstVisualLayerParamsVisitor` and `VisualLayerParamsVisitor` are simply the two instantiations, `VisualLayerParamsVisitorBase<true>` and `VisualLayerParamsVisitorBase<false>`. `GPlatesUtils::SetConst` is used to derive each `visit_*` method's parameter type from `Const`, so the same visitor declarations serve both cases.
+
+Every `visit_*` method has an empty default body, so a concrete visitor only needs to override the handlers for the layer types it actually cares about; unhandled types are silently skipped. `VisualLayerParams::accept_visitor` is the entry point that dispatches to the matching `visit_*` call for a given concrete params object.
 
 ## Declared types
 
@@ -59,9 +59,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VisualLayerParamsVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Adding a new visual layer params subclass means adding both a forward declaration and a `visit_*` overload here; nothing in the type system otherwise forces every `VisualLayerParams` derivation to be visitable.
 
 ## Used by
 

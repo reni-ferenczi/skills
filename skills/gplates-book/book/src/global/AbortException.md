@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/AbortException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AbortException` is a thin `Exception` subclass reserved for failures that mean the program's internal state is no longer trustworthy, as distinct from ordinary error conditions such as a bad input file or a missing external resource. Throwing it signals "this should never happen" rather than "the user did something wrong".
+
+The class adds nothing beyond an `exception_name()` override and a fixed `write_message()` body ("Abort failure"); the actual diagnostic content comes from the call-stack trace that `Exception`'s constructor captures via `GPLATES_EXCEPTION_SOURCE`.
 
 ## Declared types
 
@@ -37,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/AbortException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlDataBlockCoordinateList tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `<gml:tupleList>` in a `gml:DataBlock` stores coordinate tuples interleaved
+(`x1,y1 x2,y2 x3,y3 ...`); `GmlDataBlockCoordinateList` is the de-interleaved
+representation `GmlDataBlock` actually holds — one instance per position in the
+tuple, each pairing a `ValueObjectType` (which scalar this is, e.g. crustal thickness)
+with the flat sequence of values for just that position across every tuple
+(`x1 x2 x3 ...`). Re-interleaving back into `<gml:tupleList>` form happens only at
+GPML output time.
+
+The three `create_*` factories cover the three ways a caller ends up with the
+coordinate data: `create_empty` pre-reserves capacity for values appended one at a
+time, `create_copy` copies from an arbitrary iterator range, and `create_swap` steals
+the contents of an existing `coordinate_list_type` (`std::vector<double>`), leaving
+the caller's vector empty. `value_object_type()` has no setter, matching the pattern
+used elsewhere in `property-values` where a value's "kind" is fixed at construction.
 
 ## Declared types
 
@@ -59,9 +70,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlDataBlockCoordinateList tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Unlike most `property-values` types, this class is not itself a `PropertyValue` (it
+has no `accept_visitor`/`get_structural_type`) — it is a plain `ReferenceCount`ed
+helper that only ever appears inside a `GmlDataBlock`'s tuple list. No non-const
+iterators are exposed over the coordinates deliberately, so mutation goes through
+`coordinates_push_back()`/`coordinates_assign()` rather than through an iterator that
+could bypass revisioning if one were later added. `operator==` compares coordinates
+with `GPlatesMaths::Real` equality (tolerance-based), not raw `double` `==`.
 
 ## Used by
 

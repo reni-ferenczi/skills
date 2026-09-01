@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GmapReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmapReader::read_file` is the sole entry point: it parses a GMAP-format virtual
+geomagnetic pole (VGP) file into the feature collection of the given `File::Reference`.
+The format is line-oriented and fixed-field — a header line (any line not starting
+with a double quote) followed by exactly ten quoted numeric fields (inclination,
+declination, a95, site latitude/longitude, VGP latitude/longitude, dm, dp, plate id,
+age) — so almost all of the file's logic lives in anonymous-namespace helpers that
+read one field at a time with `check_format_and_return_value` and assemble a local
+`VirtualGeomagneticPole` struct before turning it into a feature.
+
+Each parsed `VirtualGeomagneticPole` is converted into a feature by `create_vgp_feature`,
+which appends `GmlPoint` site geometry, `GpmlPlateId`, and the various measured
+properties (inclination, declination, a95, dm, dp, age) as separate top-level
+properties via the `append_*_to_feature` helpers, following the same
+build-properties-then-`FeatureHandle::add` pattern used by the other line-format readers
+in this directory.
 
 ## Declared types
 
@@ -68,9 +80,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GmapReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A malformed record (a field that fails `check_format_and_return_value`, or a
+site/VGP latitude or longitude outside its valid range) throws
+`GmapFieldFormatError`; `read_file` catches this per-record and records it as a
+recoverable `GmapFeatureIgnored` error rather than aborting the whole file, so
+one bad record does not lose the rest. If the file yields no features at all,
+`read_file` records a `NoFeaturesFoundInFile` failure. Opening the file itself is
+not part of that recovery path — a failure there throws
+`ErrorOpeningFileForReadingException` and aborts the load.
 
 ## Used by
 

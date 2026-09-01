@@ -9,9 +9,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/MultiPointVectorField tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The `ReconstructionGeometry` that carries velocities. Where a
+`ReconstructedFeatureGeometry` is one reconstructed geometry, a
+`MultiPointVectorField` is a *sampled function*: a `MultiPointOnSphere` domain
+paired with a parallel range of `CodomainElement`s, one per domain point, each
+holding a `GPlatesMaths::Vector3D`, a `Reason` tag, an optional plate ID and a
+maybe-null back-pointer to the `ReconstructionGeometry` that supplied the motion.
+It is produced by `PlateVelocityUtils::solve_velocities_on_surfaces` (one field
+per input velocity-domain geometry) and by the deformation path in
+`TopologyReconstruct`, held by `VelocityFieldCalculatorLayerProxy`, drawn by
+`ReconstructionGeometryRenderer`, and written out by the
+`MultiPointVectorFieldExport` family in `file-io`.
+
+The `Reason` enum is the part worth understanding. A single field may span several
+independently-moving plates, so the velocity at each point is attributed
+individually: the point may have been found in a reconstructed static polygon
+(`InStaticPolygon`), in a resolved topological boundary (`InPlateBoundary`), in a
+deforming region or a rigid block of a resolved topological network
+(`InNetworkDeformingRegion`, `InNetworkRigidBlock`), in nothing at all
+(`NotInAnyBoundaryOrNetwork`, which stores a zero vector rather than a null
+element), or the domain point itself was reconstructed rather than tested against
+surfaces (`ReconstructedDomainPoint`). Consumers use this both for colouring and
+to decide what a vector means; `PlateVelocityUtils` also reads it back when
+deciding whether smoothing applies near a boundary.
+
+Construction is two-phase and deliberately so. `create_empty` pre-sizes the range
+to `multi_point_ptr->number_of_points()` and fills it with `boost::none`; the
+producer then walks the domain and the range in lockstep, assigning through the
+non-const `begin()`/`end()` iterators. That is why the mutable iterator pair
+exists on an otherwise read-only reconstruction geometry, and why an element may
+legitimately still be null after the field has been published.
 
 ## Declared types
 
@@ -62,9 +89,39 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/MultiPointVectorField tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The load-bearing invariant is positional: the range has exactly as many elements
+as the domain multi-point, and the i-th range element is the value at the i-th
+domain point. Nothing enforces it after construction — the range is sized once in
+the constructor and there is no `push_back` — so any code that iterates the domain
+and the range together must advance both, and code that reorders or filters must
+carry the index with it.
+
+An element being `boost::none` means "no value assigned", which is not the same as
+a zero vector; `NotInAnyBoundaryOrNetwork` is a real, assigned, zero-magnitude
+sample. Readers must handle both.
+
+The class is a `WeakObserver<FeatureHandle>`, so it does not keep its feature
+alive: `is_valid()` and `feature_handle_ptr()` go null when the feature is
+deleted, and `get_feature_ref()` then returns an invalid weak-ref rather than
+throwing. `d_property_iterator` is an iterator into that feature's property list
+and shares the same fate. The domain `MultiPointOnSphere` is the one thing held by
+a counted pointer and always outlives the field.
+
+`property()` is not guaranteed to point at a multi-point property. When called
+from `solve_velocities_on_surfaces` the domain is produced by
+`GeometryUtils::convert_geometry_to_multi_point` on the *reconstructed* geometry
+of a `ReconstructedFeatureGeometry`, so the referenced property can hold a
+polyline or polygon — the source flags this explicitly as "slightly dodgy". Do not
+assume `property()` can be dereferenced back into `multi_point()`.
+
+Also note the domain is the reconstructed position of the velocity domain, not the
+present-day position. Assigning plate id zero to domain features is the documented
+way to keep them fixed, and even that still moves under a non-zero anchored plate
+id.
+
+Constructors are protected so instances cannot be stack-allocated;
+`get_non_null_pointer()` relies on that, since it hands out an intrusive reference
+to `this`.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ErrorOpeningFileForReadingException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ErrorOpeningFileForReadingException` is the standard `GPlatesGlobal::Exception` thrown across `file-io` whenever a file cannot be opened for reading (permissions, missing file, locked file, and similar OS-level failures). It carries only the offending filename, retrievable via `filename()`, and its `write_message`/`exception_name` overrides give it a uniform message in the exception hierarchy's reporting. Its very wide fan-in — every format-specific reader in the module, plus consumers such as `Gpgim`, `ProjectSession` and `CommandLineParser` — reflects that it is the one exception type callers are expected to catch when a read operation might fail because the file itself is unreadable, as distinct from parse or format errors reported through `ReadErrorAccumulation`.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ErrorOpeningFileForReadingException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

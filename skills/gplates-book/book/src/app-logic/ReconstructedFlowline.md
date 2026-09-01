@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructedFlowline tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructedFlowline` is the `ReconstructedFeatureGeometry` specialisation for flowlines: it carries a left and a right `PolylineOnSphere` traced out on either side of a moving seed point, plus the `left_plate_id`/`right_plate_id` pair that produced each side. The base class's own reconstructed geometry is deliberately populated with *all* seed points, not just the one this instance was built for, because geometry-editing tools such as move-vertex operate on that shared geometry and need every point present.
+
+Instances are built only through the private constructor via `create()`, keeping flowlines heap-allocated behind `non_null_ptr_type` like other reconstruction geometries. `left_plate_id` and `right_plate_id` exist purely to drive colouring in the renderer and play no role in the reconstruction maths itself.
 
 ## Declared types
 
@@ -56,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructedFlowline tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReconstructedFeatureGeometryExport tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructedFeatureGeometryExport` is the entry point for writing a batch of
+`GPlatesAppLogic::ReconstructedFeatureGeometry` objects out to a file in one
+of the supported export formats (`Format::GMT`, `SHAPEFILE`, `OGRGMT`,
+`GEOJSON`, resolved from the target filename's extension by
+`get_export_file_format`). `export_reconstructed_feature_geometries` is the
+single public function callers use; internally it groups the input geometries
+by feature and by originating input file using the shared
+`FeatureGeometryGroup`/`FeatureCollectionFeatureGroup` helpers from
+`ReconstructionGeometryExportImpl`, then dispatches to the format-specific
+writers (`GMTFormatReconstructedFeatureGeometryExport`,
+`OgrFormatReconstructedFeatureGeometryExport`) to actually serialise them.
+
+The function's boolean flags control independent aspects of the output
+layout: a single combined file, one file per input file (optionally each in
+its own directory named after that input file), and dateline
+wrapping/clipping — the first two are not mutually exclusive, so both a
+combined file and the per-input-file set can be produced from one call.
+`view-operations/VisibleReconstructionGeometryExport`, the Python API and
+`cli/CliReconstructCommand` are its three call sites, covering the GUI export
+dialogs, pyGPlates, and the headless CLI respectively.
 
 ## Declared types
 
@@ -53,9 +70,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReconstructedFeatureGeometryExport tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`export_reconstructed_feature_geometries` throws
+`ErrorOpeningFileForWritingException` if the target file cannot be opened and
+`FileFormatNotSupportedException` if `export_format` is not one of the
+recognised formats (including `UNKNOWN`) — callers must be prepared to catch
+both rather than getting a `bool` success result. `wrap_to_dateline` is
+currently ignored by the GMT `.xy` writer.
 
 ## Used by
 

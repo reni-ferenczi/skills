@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/DeformationStrainRate tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DeformationStrainRate` is a small value type holding the instantaneous rate of
+deformation at one point on a `TopologyNetworkResolver`-resolved deforming network, in
+the local (theta, phi) tangent-plane basis. It stores the raw velocity spatial gradient
+tensor `L` (`VelocitySpatialGradient`) and derives the symmetric rate-of-deformation
+tensor `D = (L + transpose(L)) / 2` (`RateOfDeformation`) on demand, following the
+continuum-mechanics treatment in Malvern's *Introduction to the Mechanics of a
+Continuous Medium*. From `D` it exposes three scalar invariants consumers actually
+plot or export: `get_strain_rate_dilatation()` (`trace(D)`, the instantaneous
+fractional rate of volume change), `get_strain_rate_second_invariant()`
+(`sqrt(trace(D^2))`, a magnitude of deformation), and `get_strain_rate_style()` (the
+Kreemer et al. 2014 style ratio distinguishing extensional/compressional/strike-slip
+regimes from the tensor's principal values).
+
+It is a pure math type with no dependency on the reconstruction machinery: instances
+are produced by strain-rate calculations in `TopologyNetworkResolver`/`ResolvedTriangulationDelaunay2`
+and integrated over time into accumulated `DeformationStrain` by `ScalarCoverageEvolution`
+and `TopologyReconstruct`, then consumed by the deformation exporters
+(`GMTFormatDeformationExport`, `GpmlFormatDeformationExport`) and by
+`presentation/ReconstructionGeometryRenderer` for colouring.
 
 ## Declared types
 
@@ -43,9 +59,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/DeformationStrainRate tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_strain_rate_style()` divides by the larger-magnitude principal component of `D`
+and returns NaN when the strain rate is exactly zero (0/0), since both principal
+components are then zero; callers must guard against this for non-deforming regions.
+The result is not clamped to [-1, 1] as in Kreemer et al. 2014 — callers that need the
+clamped range must do it themselves. Both `L` and `D` are in units of 1/second.
 
 ## Used by
 

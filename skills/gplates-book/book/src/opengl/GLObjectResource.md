@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLObjectResource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLObjectResource` is an RAII wrapper, templated on a raw OpenGL handle type and an allocator policy, that ties a single OpenGL object handle (a texture name, buffer name, etc.) to the resource manager (`GLObjectResourceManager`) that allocated it. `create` asks the manager to allocate a handle; the destructor asks the same manager, reached through a `boost::weak_ptr`, to queue that handle for deallocation.
+
+Deallocation is deferred to a queue rather than performed immediately because releasing an OpenGL object requires a current OpenGL context, and a `GLObjectResource`'s destructor can run at a point where the right context is not current. The weak pointer to the manager also lets this class distinguish "manager is still alive, please recycle this handle" from "the whole OpenGL context (and every resource in it) has already been destroyed, so there is nothing to release" — the latter is a silent no-op in the destructor.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLObjectResource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The destructor deliberately does nothing if the resource manager has already been destroyed (weak pointer expired): that only happens when the owning OpenGL context itself was torn down, which already frees every resource in it, so re-releasing the handle would be meaningless or unsafe.
 
 ## Used by
 

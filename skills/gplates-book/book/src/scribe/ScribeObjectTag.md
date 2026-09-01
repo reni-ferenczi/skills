@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeObjectTag tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ObjectTag` is the path-like key used to look up a transcribed value within a `Transcription`: every call to `Scribe::transcribe()` takes one, either implicitly (a plain `std::string` or `const char *` converts to a single-section tag) or built up explicitly by chaining calls. Each tag is an immutable, copy-on-write sequence of `Section`s, and every mutator (`operator()`, `operator[]`, `sequence_item()`, `map_item_key()`, `map_item_value()`, `array_item()`, `sequence_size()`, `map_size()`, `array_size()`) returns a *new* `ObjectTag` with one more section appended rather than modifying the receiver, so a base tag such as `ObjectTag("objects")` can be built once and reused as the common prefix for several sub-tags.
+
+The sequence and mapping protocols (`item`/`size` and `item_key`/`item_value`/`size`) exist so that array or map indexing expressed as an object tag section matches the section names that `std::vector`- or `std::map`-style containers use internally when they transcribe themselves — this is what lets client code index directly into a transcribed container's archive representation without going through the container's own transcribe function. `array_item()` and `array_size()` are the escape hatches that let a caller pick different tag names for its own custom container-like structure instead of relying on either built-in protocol.
 
 ## Declared types
 
@@ -74,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeObjectTag tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A default-constructed `ObjectTag` is empty and must not be passed to `transcribe()` — `get_sections()` throws `Exceptions::ScribeUserError` on an empty tag; it exists only as a base for building an array or size tag with no name prefix (e.g. `ObjectTag()[n]`). Once a tag has been turned into a `sequence_size()`/`map_size()`/`array_size()` tag (its last section is `ARRAY_SIZE_SECTION`), it is terminal: appending any further section — via `operator()`, an index, or another array — throws `Exceptions::ScribeUserError`. Tag and array-item names must be non-empty; passing one is likewise rejected with `ScribeUserError`.
 
 ## Used by
 

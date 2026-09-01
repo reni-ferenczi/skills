@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TRSUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Helpers for working with Total Reconstruction Sequence (TRS) features — the `gpml:TotalReconstructionSequence` features that store rotation-file poles as model features rather than as raw `.rot` text. `TRSFinder` is a `FeatureVisitor` restricted (via `initialise_pre_property_values` and `d_property_names_to_allow`) to just the four properties a TRS can have — `gpml:fixedReferenceFrame`, `gpml:movingReferenceFrame`, `gpml:mprsAttributes`, `gpml:totalReconstructionPole` — and it records the fixed and moving plate IDs, the `GpmlIrregularSampling` holding the pole time samples, and the `FeatureHandle::iterator` for each so a caller (typically a rotation-editing dialog) can locate and rewrite those specific properties in place. `can_process_trs` reports whether all three pieces were actually found, since a malformed or non-TRS feature will leave some of them unset.
+
+`build_trs_summary_string_from_trs_feature` and `one_of_trs_plate_ids_is_999` are independent of `TRSFinder` — they run `GPlatesFeatureVisitors::TotalReconstructionSequencePlateIdFinder`/`TotalReconstructionSequenceTimePeriodFinder` themselves to produce, respectively, a one-line "moving rel fixed [end : begin]" description for list widgets and a check for whether either plate ID is 999.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TRSUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`TRSFinder` must be `reset()` before reuse on a different feature — the plate IDs, iterators and irregular sampling are only ever set from within `visit_*`, never cleared automatically between visits. `visit_gpml_plate_id` assumes it has already read a property name (dereferences `current_top_level_propname()` without checking), so `TRSFinder` relies on being driven through the normal feature-visitor traversal rather than being handed a plate ID value directly.
 
 ## Used by
 

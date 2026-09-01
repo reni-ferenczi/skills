@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLPixelBufferObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLPixelBufferObject` is the real, `GL_ARB_pixel_buffer_object`-backed implementation of the `GLPixelBuffer` interface, as opposed to `GLPixelBufferImpl`, which simulates the same interface with client-side memory arrays when that extension is unavailable. It wraps a `GLBufferObject` and binds it to the `GL_PIXEL_UNPACK_BUFFER` or `GL_PIXEL_PACK_BUFFER` target (`gl_bind_unpack`/`gl_bind_pack`) so that texture uploads (`gl_tex_image_*`, `gl_tex_sub_image_*`), `glDrawPixels`-equivalent uploads and `glReadPixels`-equivalent downloads transfer through server-side (GPU-resident) buffer memory rather than through client pointers, letting pixel transfer and rendering overlap asynchronously.
+
+It multiply inherits `GLObject` (for the pooled-resource typedefs shared by all GL object wrappers) alongside `GLPixelBuffer`; like other objects meant to live in a `GPlatesUtils::ObjectCache`, it exposes `boost::shared_ptr`/`weak_ptr` rather than the intrusive pointer used elsewhere in `opengl`.
 
 ## Declared types
 
@@ -56,9 +56,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLPixelBufferObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Requires the `GL_ARB_pixel_buffer_object` extension; code choosing between this class and `GLPixelBufferImpl` must check for that support first, since this class does not fall back on its own.
+- The same underlying buffer can legally be bound to both the pack and unpack targets simultaneously, per the `gl_bind_unpack`/`gl_bind_pack` documentation.
+- `create_as_unique_ptr` exists to guarantee single ownership before optional conversion to a `shared_ptr` via `create`.
 
 ## Used by
 

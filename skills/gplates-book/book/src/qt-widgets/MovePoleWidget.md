@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/MovePoleWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The task panel widget for the "move pole" canvas tool: it lets the user specify a pivot point (`d_pole`, an optional `GPlatesMaths::PointOnSphere`) that geometry is rotated about, either by typing lat/lon directly, by resetting to the north pole, or by locking it to the focused feature's current stage pole. Because the actual rotation is driven by [`view-operations/MovePoleOperation`](../view-operations/MovePoleOperation.md), this class only owns the pole value and its UI; every change funnels through `set_pole_internal`, which updates the checkbox/spinboxes without re-triggering their own change slots and then emits `pole_changed` exactly once per change.
+
+"Stage pole" mode (`keep_stage_pole_constrained_checkbox`) computes the pole from the focused feature's plate circuit rather than from user input: `get_stage_pole_plate_pair` reads the moving/fixed plate IDs off the relevant `ReconstructionTree::Edge`, `get_stage_pole_location` calls `GPlatesAppLogic::RotationUtils::get_stage_pole` between the reconstruction time and time+1, and rotates the resulting axis into the moving plate's reference frame (the comment block in `get_stage_pole_location` derives why that extra rotation by the fixed plate's absolute rotation is needed). While this mode is active, `can_change_pole` returns false and `pole_location_groupbox`/`vgp_constraints_groupbox` are disabled, since the pole is being driven by the reconstruction rather than by the user; the widget re-derives it on every `set_focus()` and `handle_reconstruction()` signal from `ViewState`.
 
 ## Declared types
 
@@ -61,9 +61,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/MovePoleWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_pole` asserts `can_change_pole()` via `PreconditionViolationError` — callers must check `can_change_pole()` (false while the stage-pole constraint is active) before calling it. `react_latitude_spinbox_changed`, `react_longitude_spinbox_changed` and `react_north_pole_pushbutton_clicked` all assert `d_pole` is set (`AssertionFailureException`), since the UI only lets those controls fire while the pole is enabled. When updating the pole from `set_pole_internal`, the enable-checkbox and spinbox signals are temporarily disconnected so that programmatic updates emit `pole_changed` exactly once instead of once per widget touched.
 
 ## Used by
 

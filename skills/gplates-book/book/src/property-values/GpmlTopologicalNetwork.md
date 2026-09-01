@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTopologicalNetwork tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlTopologicalNetwork` is the `PropertyValue` that stores the raw GPML for a deforming network feature (`gpml:TopologicalNetwork`): a closed boundary made of `GpmlTopologicalSection` references, plus an optional set of interior geometries supplied as `GpmlPropertyDelegate` references to other features. It holds this data exactly as parsed — resolving the delegates into an actual triangulated network is the job of downstream code such as `TopologyNetworkResolver`.
+
+The two-iterator `create()` overloads accept the boundary sections and, optionally, the interior geometries as separate ranges, letting callers build the value from any container without an intermediate copy. The protected constructors and private `operator=` follow the usual property-value pattern of forcing construction through `create()`/`clone()` so instances always live behind a `non_null_ptr_type`.
 
 ## Declared types
 
@@ -63,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTopologicalNetwork tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`deep_clone()` clones the boundary sections via `deep_clone_as_topo_section()` and the interior geometries via their own `deep_clone()`, rather than sharing the pointers `clone()` leaves behind; `directly_modifiable_fields_equal()` exists because the boundary/interior vectors hold non-const `non_null_intrusive_ptr`s that clients can mutate in place, so equality must recurse into the pointed-to values instead of comparing pointers.
 
 ## Used by
 

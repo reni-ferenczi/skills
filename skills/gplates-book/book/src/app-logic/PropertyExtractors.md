@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/PropertyExtractors tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PropertyExtractors` is a small family of functors that pull one attribute — plate id, age, or feature type — out of either a `GPlatesAppLogic::ReconstructionGeometry` or a `GPlatesModel::FeatureHandle`, each returning `boost::optional<return_type>` so "the geometry has no such property" is representable without exceptions. They exist so colouring and draw-style code (`GenericColourScheme`, `ColourSchemeContainer`, `DrawStyleManager`) can be parameterised over *what* to extract without caring how: `PlateIdPropertyExtractor` defers to `ReconstructionGeometryUtils::get_plate_id`/`GPlatesUtils::get_recon_plate_id_as_int`, `AgePropertyExtractor` computes age as time-of-formation minus the current reconstruction time (via `ApplicationState`, mapping the distant past/future to positive/negative infinity), and `FeatureTypePropertyExtractor` reads the feature type directly or via the geometry's owning feature.
+
+`PropertyExtractorAdapter<Adaptee, ReturnType>` wraps one of these extractors to `static_cast` its result to a different `ReturnType`, letting code that expects a specific extractor return type reuse an extractor built for another.
 
 ## Declared types
 
@@ -71,9 +71,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/PropertyExtractors tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `AgePropertyExtractor` returns `GPlatesMaths::Real::positive_infinity()`/`negative_infinity()` for features with a distant-past/distant-future time of formation, rather than `boost::none`; only a missing time of formation produces `boost::none`.
+- `AgePropertyExtractor` stores a reference to the `ApplicationState` it was constructed with, so its age is always relative to whatever `get_current_reconstruction_time()` returns at call time, not at construction time.
 
 ## Used by
 

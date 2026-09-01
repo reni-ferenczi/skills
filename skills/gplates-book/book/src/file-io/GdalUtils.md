@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GdalUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GdalUtils` centralises the raw GDAL/OGR calls used by `GDALRasterReader`, `GDALRasterWriter`, `OgrReader` and `OgrWriter`, so those classes don't each reimplement driver registration, opening and closing. It also isolates the GDAL 1 vs. GDAL 2 API split for vector (OGR) data: GDAL 2 folded `OGRDataSource`/`OGRSFDriver`/`OGRSFDriverRegistrar` into the plain GDAL `GDALDataset`/`GDALDriver`/`GDALDriverManager` types, so the `vector_data_*_type` typedefs resolve to one family or the other depending on `GDAL_VERSION_MAJOR`, letting callers write GDAL-version-agnostic code against `GdalUtils::vector_data_source_type` and friends.
+
+`open_raster()` additionally guards against a known issue on some older Linux systems where `GDALOpen()` can segfault on a malformed GMT GRD file: it installs a `SIGSEGV` handler around the call and uses `sigsetjmp`/`siglongjmp` to recover and report a normal read error instead of crashing the process, restoring the previous signal handler afterwards either way.
 
 ## Declared types
 
@@ -57,9 +57,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GdalUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `register_all_drivers()` is idempotent (`GDALAllRegister` is only actually invoked the first time it is called) and is already called internally by `open_raster()`/`open_vector()`, so callers rarely need to call it directly.
+- The `SIGSEGV` trap in `open_raster()` is a best-effort workaround for a specific known GDAL bug on some Linux systems; it is not a general-purpose crash handler and does not protect other GDAL calls in this file.
+- `vector_data_source_type`, `vector_data_driver_type` and `vector_data_driver_manager_type` change meaning depending on `GDAL_VERSION_MAJOR`; do not assume they are always `GDALDataset`/`GDALDriver`/`GDALDriverManager` when reading code built against GDAL 1.
 
 ## Used by
 

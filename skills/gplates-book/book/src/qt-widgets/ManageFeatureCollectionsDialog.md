@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ManageFeatureCollectionsDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ManageFeatureCollectionsDialog` is the "Manage Feature Collections" window: a table with one row per loaded file, each row backed by a `ManageFeatureCollectionsActionWidget` in the `ColumnNames::ACTIONS` column that supplies that row's Save/Save As/Save a Copy/Reload/Unload/Edit Configuration buttons. The dialog itself owns none of the file I/O — `save_file()`, `save_file_as()`, `reload_file()` and `unload_file()` are called by an action widget's button handlers and delegate to `GPlatesAppLogic::FeatureCollectionFileIO` and `GPlatesGui::FileIOFeedback` (`d_gui_file_io_feedback_ptr`) for the actual load/save work and any user-facing progress or error dialogs. The table stays in sync with the model by connecting to `GPlatesAppLogic::FeatureCollectionFileState`'s `file_state_files_added`/`file_state_file_about_to_be_removed`/`file_state_file_info_changed` signals (`connect_to_file_state_signals()`), adding, removing or refreshing rows via `add_row()`/`remove_row()`/`update_row()` in response.
+
+`register_edit_configuration()` lets a file-format plugin (see `ManageFeatureCollectionsEditConfigurations`) install a `ManageFeatureCollections::EditConfiguration` for its format in `d_edit_configurations`; this both enables the row's "Edit Configuration" button for files of that format and supplies the handler `edit_configuration()` invokes. Rows are colour-coded by `set_row_background_colour()` to flag state at a glance: the default background for a clean file, `bg_colour_unsaved` for a feature collection with unsaved changes, and `bg_colour_new_feature_collection` for one that exists only in memory (no file on disk yet) — `highlight_unsaved_changes()` refreshes all rows this way without disturbing the table's scroll position. The dialog also accepts drag-and-drop of files (`dragEnterEvent()`/`dropEvent()`), handing any dropped feature-collection filenames to `d_gui_file_io_feedback_ptr->open_files()`.
 
 ## Declared types
 
@@ -95,9 +95,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ManageFeatureCollectionsDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_gui_file_io_feedback_ptr` is a `QPointer`, not a strong reference — `FileIOFeedback` is owned by `ViewportWindow`/Qt, and code using this member must tolerate it becoming null if that object is destroyed first. All private signal/slot handlers for `FeatureCollectionFileState` signals are declared using fully namespace-qualified argument types (a comment in the header calls this out explicitly): Qt's string-based signal/slot matching requires signal and slot signatures to match exactly, so an unqualified type here would silently fail to connect at runtime. File unloads are deliberately routed through `d_reconstruct_graph` as a single grouped operation rather than one removal at a time, since unloading a file can cascade into layer removals in the reconstruct graph.
 
 ## Used by
 

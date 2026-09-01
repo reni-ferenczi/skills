@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/ReconstructVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructVisualLayerParams` holds the visual settings for a reconstruct
+layer, covering three largely independent concerns: VGP (virtual geomagnetic
+pole) visibility and time-window filtering, fill styling (polygon/polyline
+fill, opacity and intensity, combined into a modulate colour the same way as
+`RasterVisualLayerParams::get_modulate_colour()`), and topological
+reconstruction display options (topology-reconstructed feature geometries,
+strain accumulation and its display scale). `show_vgp()` is the one method
+with real logic: given the current reconstruction time and a VGP's age, it
+decides visibility according to `d_vgp_visibility_setting` —
+`ALWAYS_VISIBLE`, a fixed `TIME_WINDOW` between `d_vgp_earliest_time` and
+`d_vgp_latest_time`, or `DELTA_T_AROUND_AGE`, a window of `±d_vgp_delta_t`
+centred on the VGP's own age.
+
+The free `transcribe()` overload for `VGPVisibilitySetting` exists because the
+enum is serialised by `Scribe` when saving sessions and projects; its comment
+warns that any new enumerator must be added there too.
 
 ## Declared types
 
@@ -82,9 +95,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/ReconstructVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Any new `VGPVisibilitySetting` enumerator must also be handled in the
+`transcribe()` free function, per the comment on the enum, or saved
+sessions/projects using it will not round-trip correctly. `d_fill_opacity`
+and `d_fill_intensity` are documented as `[0,1]` but, as in
+`RasterVisualLayerParams`, setters do not clamp them. `d_vgp_delta_t` is
+stored as `GPlatesMaths::real_t` (a value with epsilon-tolerant comparisons)
+even though the public getter/setter use `double`.
 
 ## Used by
 

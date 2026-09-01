@@ -8,9 +8,15 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/FileFormatNotSupportedException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A small `GPlatesGlobal::Exception` subclass carrying a single free-text
+message, thrown wherever code needs to reject a file format that is
+recognised but not (yet, or ever) usable for the requested operation. Its
+widest user is `file-io/FeatureCollectionFileFormatRegistry`, which throws it
+whenever a `Format` is unregistered or does not support the requested
+read/write direction, but it is also reused by unrelated readers such as
+`ScalarField3DFileFormatReader`, `MipmappedRasterFormatReader` and
+`SourceRasterFileCacheFormatReader` for their own format-version checks,
+rather than each defining its own exception type.
 
 ## Declared types
 
@@ -38,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/FileFormatNotSupportedException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

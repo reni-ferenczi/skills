@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedRadialArrow tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RenderedRadialArrow` is a `RenderedGeometryImpl` for an arrow that stands normal to the globe's surface at a point, used to depict things like poles and light direction that have no natural on-globe extent. Because such an arrow points out of the screen in the 2D map views, it is only actually drawn as an arrow in the 3D globe view; in map view only its base symbol is shown.
+
+The arrow's length, arrowhead size and body width are stored as *projected* sizes — proportions of the fully-zoomed-out globe radius — so that the arrow keeps a constant apparent size on screen as the view zooms, rather than being defined in world-space units. The base symbol is one of a small set of circularly symmetric shapes (`SymbolType`) chosen to match the circular cross-section of the arrow's cylindrical body in globe view; in map view the symbol is drawn at its own, separately specified, scene-space size.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedRadialArrow tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`test_proximity` always returns null: the arrow's on-screen geometry depends on viewport zoom and is not known until render time, so proximity/hit-testing against it is not supported (marked as a `FIXME` in the header).
 
 ## Used by
 

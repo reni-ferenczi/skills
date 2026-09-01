@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyIntersections tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologicalIntersections` wraps one section of a topological boundary or network and computes where it gets cut by its two neighbouring sections when the boundary is resolved. A section starts out holding its full geometry (a polygon section is reduced to its exterior ring as a polyline first, via `get_intersectable_section_polyline()`); intersecting it with the previous neighbour splits it into a head and tail half, and intersecting the surviving half with the next neighbour splits it again, leaving the middle piece as the segment actually used by the resolved geometry. This two-step, always-pairwise scheme is why the type only knows how to intersect with "the previous section" and "the next section" rather than solving the whole boundary's intersections at once — callers such as `TopologyGeometryResolver` and `TopologyNetworkResolver` walk the ordered list of sections and call it on each one in turn.
+
+The `reverse_hint` supplied at construction only matters when a section does not intersect both of its neighbours; once a section is bounded on both sides, its orientation is instead derived from the intersection geometry itself, and the hint is ignored. `intersect_with_previous_section_allowing_two_intersections()` and the `backward_compatible_*` private helpers exist to reproduce results from an older, segment-based implementation for boundaries where an intersection with a neighbour is genuinely ambiguous (more than one crossing point).
 
 ## Declared types
 
@@ -71,9 +71,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyIntersections tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A section's intersection results only become meaningful once both `intersect_with_previous_section()` and the corresponding call on its neighbour have been made — the class assumes it is used by walking every section in a circular boundary or network list, not in isolation. Neighbours are held by `weak_ptr_type` (`d_prev_section`, `d_next_section`), not by ownership, since each `TopologicalIntersections` is itself held externally by `shared_ptr_type` and neighbours reference each other symmetrically during resolving.
 
 ## Used by
 

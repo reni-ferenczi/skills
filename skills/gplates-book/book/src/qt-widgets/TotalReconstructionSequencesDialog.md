@@ -10,9 +10,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TotalReconstructionSequencesDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TotalReconstructionSequencesDialog` is the "Total Reconstruction Sequences"
+dialog, a `QTreeWidget`-based editor over the loaded `.rot` rotation files: it
+lists File → `TotalReconstructionSequence` → `TotalReconstructionPole` as a
+three-level tree and lets a user filter by plate ID, edit, create or delete
+sequences, and enable/disable individual poles. Edits made through
+`CreateTotalReconstructionSequenceDialog` and `EditTotalReconstructionSequenceDialog`
+are written back through `GPlatesFileIO::PlatesRotationFileProxy`, which keeps
+each rotation file's original text-level formatting and comment metadata so
+that unrelated parts of the file are not rewritten when one pole changes.
+
+`TotalReconstructionSequencesSearchIndex` mirrors the tree's structure outside
+the `QTreeWidget` so that plate-ID filtering (`apply_filter()`/`reset_filter()`)
+can walk File/Sequence/Pole objects and hide or show the corresponding
+`QTreeWidgetItem`s without querying Qt's model each time; `PlateIdFilteringPredicate`
+is the Interpreter-style predicate the two anonymous subclasses implement, one
+that accepts every plate ID and one that accepts a single plate ID typed into
+the filter box. Because the search index holds raw `QTreeWidgetItem*` pointers
+into a tree that `update()` clears and rebuilds on every file load/unload, the
+dialog keeps the two in lockstep manually rather than relying on Qt's
+model/view machinery.
 
 ## Declared types
 
@@ -169,9 +186,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TotalReconstructionSequencesDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`TotalReconstructionSequencesSearchIndex`'s `File`/`TotalReconstructionSequence`/
+`TotalReconstructionPole` entries hold raw pointers to `QTreeWidgetItem`s owned
+by the tree widget; any code that clears or rebuilds `treewidget_seqs` (chiefly
+`update()`) must rebuild the search index in the same pass or those pointers
+dangle. `d_current_item` and `d_current_trs_was_expanded` exist purely to
+restore the tree's selection and expansion state across an `update()` rebuild,
+since the rebuild replaces every item. `connect_to_file_state_signals()` is
+declared but marked `FIXME: Define this function` in its header comment, so
+verify it is actually implemented before relying on it.
 
 ## Used by
 

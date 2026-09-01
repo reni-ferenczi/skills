@@ -8,9 +8,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyColour tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PyColour.cc` exposes `GPlatesGui::Colour`, `GPlatesApi::Palette`,
+`GPlatesGui::Palette::Key` and `GPlatesGui::DrawStyle` to Python via
+`export_colour()` and `export_style()`, called during module setup alongside
+the other `export_*` functions in `src/api/`.
+
+The named-colour free functions (`red()`, `blue()`, `white()`, and so on) exist
+only as a workaround: `GPlatesGui::Colour`'s own named-colour accessors are
+static methods returning `const Colour &`, which Boost.Python cannot export
+directly as class members because of how it handles reference return values.
+Each wrapper here calls the corresponding `Colour::get_*()` and returns by
+value instead, and `export_colour()` binds the wrapper to a Python static
+property of the same name (`Colour.red`, `Colour.blue`, ...) rather than a
+method, so the workaround is invisible from the Python side.
 
 ## Declared types
 
@@ -39,9 +49,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyColour tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A handful of colours the C++ side supports (maroon, fuchsia, lime, olive, teal,
+aqua) are commented out here as `TODO` and are not yet exposed to Python.
 
 ## Used by
 

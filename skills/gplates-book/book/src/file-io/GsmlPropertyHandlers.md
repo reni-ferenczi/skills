@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GsmlPropertyHandlers tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GsmlPropertyHandlers` is the callback target for the `PropertyInfo` table in
+`file-io/GsmlPropertyDef`: each `handle_*` method is invoked with the
+`QBuffer` of XML matched by that property's query, parses it, and appends the
+resulting property value to the `GPlatesModel::FeatureHandle` the handler was
+constructed with. `handle_geometry_property` is the most involved case: it
+re-runs three XPath queries (`gml:Point`, `gml:LineString`, `gml:Polygon`)
+through `process_geometries`, which rewrites the matched fragment's XML
+nesting to match what GPML's `GpmlPropertyStructuralTypeReaderUtils` expects
+(for example replacing `gml:outerBoundaryIs`/`innerBoundaryIs` with
+`gml:exterior`/`gml:interior`, and wrapping a `Polygon` in `gpml:ConstantValue`)
+before handing it to the structural-type reader.
+
+The free functions at the top of the `.cc` handle the coordinate-system side
+of that conversion: `get_srs_name` and `is_epsg_4326` inspect the `srsName`
+attribute, `find_srs_dimension` checks for a 2D or 3D `posList`, and
+`convert_to_epsg_4326` is meant to reproject non-4326 coordinates before
+`normalize_geometry_coord` swaps GML's longitude-first `posList` ordering to
+GPML's latitude-first convention. `create_xml_node` builds the
+`GPlatesModel::XmlElementNode` tree that the structural-type readers consume,
+from either a `QBuffer` or a `QByteArray`.
 
 ## Declared types
 
@@ -57,9 +74,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GsmlPropertyHandlers tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The actual reprojection step inside `convert_to_epsg_4326` — building an
+`OGRSpatialReference` and running it through
+`GPlatesPropertyValues::CoordinateTransformation` — is compiled out behind
+`#if 0`. In the current build, non-EPSG:4326 input coordinates are passed
+through unconverted except for the longitude/latitude axis swap done by
+`normalize_geometry_coord`; only data already in EPSG:4326 is handled
+correctly end to end. `d_read_errors` is a raw, non-owning pointer obtained
+from `ArbitraryXmlReader::instance()` in the constructor, so a
+`GsmlPropertyHandlers` must not outlive the reader that owns the accumulator.
 
 ## Used by
 

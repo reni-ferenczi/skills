@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedColouredEdgeSurfaceMesh tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A wireframe mesh — an explicit list of edges over a shared vertex array — rendered on the globe with colour attached per vertex or per edge rather than as one solid fill. Each `Edge` is a pair of indices into the mesh's own `vertex_seq_type`, so the mesh owns copies of its vertices, edges and colours once constructed from the iterator ranges passed in; nothing is shared back with whatever built them.
+
+Colours are stored as `GPlatesGui::ColourProxy` rather than a resolved `Colour`, deferring the actual colour lookup to paint time, when a colour scheme is available. `get_use_vertex_colours()` says whether `d_mesh_colours` should be indexed per vertex or per edge when painting.
+
+Like the other `RenderedGeometryImpl` subclasses in this unit, it participates in the visitor and proximity-testing protocols (`accept_visitor`, `test_proximity`, `test_vertex_proximity`) rather than exposing any drawing logic itself; painting and hit-testing both happen outside the class.
 
 ## Declared types
 
@@ -48,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedColouredEdgeSurfaceMesh tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`test_proximity()` returns the first edge whose polyline registers a proximity hit, not the closest edge in the mesh — the source notes this as a known shortcut, so proximity results near overlapping edges can pick an arbitrary one of them rather than the nearest.
 
 ## Used by
 

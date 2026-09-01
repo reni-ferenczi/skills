@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructMethodRegistry` decouples feature reconstruction from any single `ReconstructMethodInterface` implementation: each `ReconstructMethod::Type` is registered as a pair of `boost::function` callbacks — one to test whether a feature qualifies (`can_reconstruct_feature_function_type`), one to construct the method (`create_reconstruct_method_function_type`) — stored in `d_reconstruct_method_info_map`. By default the constructor calls `register_default_reconstruct_method_types`, which wires up the built-in methods (`BY_PLATE_ID`, `HALF_STAGE_ROTATION`, `VIRTUAL_GEOMAGNETIC_POLE`, `FLOWLINE`, `MOTION_PATH`, `SMALL_CIRCLE`) bound to their respective classes' static `can_reconstruct_feature`/`create` functions.
+
+`get_reconstruct_method_type` and `create_reconstruct_method` pick the matching method for a feature by scanning `ReconstructMethod::Type` values from the highest enumerator down, so any specialised method registered with a higher enum value is preferred over `BY_PLATE_ID` when both can handle the same feature — `BY_PLATE_ID` is deliberately the catch-all, tried last. The `_or_default` variants exist because callers usually want a reconstruct method unconditionally; they fall back to `BY_PLATE_ID` rather than propagating `boost::none`.
 
 ## Declared types
 
@@ -52,9 +52,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `can_reconstruct_feature(ReconstructMethod::Type, ...)`, `create_reconstruct_method_or_default` and the type-taking overload of `create_reconstruct_method` throw `PreconditionViolationError` if the given `reconstruct_method_type` (or, for the default case, `BY_PLATE_ID`) was never registered.
+- The type-taking `create_reconstruct_method` does not verify that the given type actually matches the feature; the caller is expected to have already established that with `get_reconstruct_method_type`.
 
 ## Used by
 

@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/FeatureCollectionFileFormatClassify tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit answers "what kind of content does this feature (or feature
+collection) contain" independently of file format: a `classifications_type`
+bitset over `ClassificationType` (raster, scalar coverage, 3D scalar field,
+topological, reconstruction, plus one bit per `GPlatesAppLogic::ReconstructMethod::Type`)
+lets callers such as `FeatureCollectionFileFormatRegistry` and
+`ChooseFeatureCollectionWidget` decide which readers/writers or UI options
+apply to a given collection without hard-coding per-feature-type checks.
+
+`classify()` builds this bitset for a feature or a whole collection by
+combining the reconstruction-method classification from a
+`GPlatesAppLogic::ReconstructMethodRegistry` with feature-property probes
+(`is_raster_feature`, `ScalarCoverageFeatureProperties::is_scalar_coverage_feature`,
+`is_scalar_field_3d_feature`, and topology/reconstruction feature tests); a
+feature can carry more than one classification bit at once (e.g. a
+reconstructable, topological feature). `intersect()` and the
+`classification_predicate_type` machinery let callers test or filter on
+combinations of classifications, and the two `find_classified_features()`
+overloads scan a feature collection for features matching either a single
+`ClassificationType` or an arbitrary predicate over `classifications_type`.
 
 ## Declared types
 
@@ -65,9 +81,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/FeatureCollectionFileFormatClassify tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`ClassificationType` deliberately overlaps `GPlatesAppLogic::ReconstructMethod::Type`:
+its first enumerator, `RASTER`, is explicitly initialised to
+`ReconstructMethod::NUM_TYPES` so that the *implicit* leading values of
+`ClassificationType` are taken to be exactly the members of
+`ReconstructMethod::Type`. This means `classifications_type` (a
+`std::bitset<NUM_CLASSIFICATION_TYPES>`) doubles as a bitset over reconstruct
+method types too — a detail invisible from the declared enumerators alone,
+and one that would break silently if `ReconstructMethod::Type` grew a member
+without `RASTER`'s initialiser being kept in sync.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerTaskType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerTaskType::Type` is the closed enumeration of the nine kinds of layer that exist in the reconstruct graph (reconstruction, reconstruct, raster, scalar field 3D, the two topology resolvers, velocity field calculator, co-registration, reconstruct scalar coverage). It is the tag that `LayerTaskRegistry` and `LayerTask::get_layer_type()` use to identify a layer's kind to the GUI — for example to pick the right visual layer widget — without exposing or switching on the concrete `LayerTask` subclass.
+
+`transcribe()` serializes a `Type` value by name (via `GPlatesScribe::transcribe_enum_protocol`) rather than by its numeric value, so sessions and projects saved by one version stay readable even if the enumerators are reordered.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerTaskType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`NUM_TYPES` must stay the last enumerator, and any new value added before it must also get an entry in `transcribe()`'s `enum_values` table (keyed by a fixed string id) — the header comment flags this explicitly, and forgetting it breaks loading of existing sessions/projects for the new type. The string ids themselves must never be changed once shipped, since they are the on-disk/session format, even if an enumerator's C++ name changes later.
 
 ## Used by
 

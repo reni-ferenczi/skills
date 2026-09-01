@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/GenerateVelocityDomainCitcoms tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenerateVelocityDomainCitcoms` builds the velocity-sampling mesh matching the mantle-convection code CitcomS's spherical grid, so GPlates can export velocities on the same mesh a CitcomS run expects. CitcomS tiles the sphere into 12 fixed "cap" diamonds; the anonymous `Mesh` class hard-codes each diamond's four corner points (in `theta`/`fi` spherical coordinates, offset by the constant `OFFSET`) and subdivides each diamond's edges into `node_x` evenly spaced points per side via `even_divide_arc()`, then fills in the interior with great-circle arc intersections to produce one `GPlatesMaths::MultiPointOnSphere` per diamond.
+
+`generate_velocity_domain()` returns a single diamond's mesh by index (0-11), and `generate_velocity_domains()` returns all 12 as a vector — the public surface `GenerateVelocityDomainCitcomsDialog` and the unit tests actually use.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/GenerateVelocityDomainCitcoms tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The 12 diamond corner coordinates are hard-coded literals matched to CitcomS's own cap layout; changing them would desynchronise GPlates's exported mesh from what CitcomS expects, so they should be treated as fixed constants, not tunable parameters.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliFeatureCollectionFileIO tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureCollectionFileIO` is the headless-build counterpart to `GPlatesAppLogic::FeatureCollectionFileIO`: it loads and saves feature collections directly through a `GPlatesFileIO::FeatureCollectionFileFormat::Registry`, without needing a `FeatureCollectionFileState` or any of the layer/reconstruction machinery that GUI file loading goes through. Every CLI command that touches files — `CliReconstructCommand`, `CliAssignPlateIdsCommand`, `CliConvertFileFormatCommand` and the rotation commands — is built on top of it, which is why it has the widest fan-in of any `cli` unit.
+
+`load_files()` reads filenames out of a parsed `boost::program_options::variables_map` under a given option name, throwing `RequiredOptionNotPresent` if the option was never supplied, and reads each file into a `File::Reference` registered with the constructor-supplied `ModelInterface` so the resulting feature collections are model-managed. `report_load_file_errors()` turns a `GPlatesFileIO::ReadErrorAccumulation` into `qWarning()` output, grouped first by severity (failures to begin, terminating, recoverable, warnings), then by file, then by error type — mirroring the grouping the GUI's read-errors dialog otherwise shows. The `get_save_file_format`/`get_save_file_info` overloads translate the small set of `SAVE_FILE_TYPE_*` command-line strings (`"gpml"`, `"compressed-gpml"`, `"plates4-line"`, `"plates4-rotation"`, `"shapefile"`, `"gmt"`, `"vgp"`) into a `FeatureCollectionFileFormat::Format` and construct an output filename by swapping in the format's primary extension, optionally with a prefix/suffix inserted before it — the mechanism the "convert file format" and rotation-output commands use to derive one output filename per input.
 
 ## Declared types
 
@@ -70,9 +70,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliFeatureCollectionFileIO tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Feature collections returned by `load_files()` stay alive only as long as the returned `feature_collection_file_seq_type` (the `File::Reference` objects) is kept alive — dropping it drops the feature collections too. `d_command_line_variables` is stored as a raw pointer to the caller's `variables_map`, so that object must outlive the `FeatureCollectionFileIO` instance. `get_save_file_format()` throws `InvalidOptionValue` for any string outside the fixed `SAVE_FILE_TYPE_*` set; `remove_filename_extension()` special-cases a trailing `.gz` so a `.gpml.gz` input strips both parts before a new extension is appended.
 
 ## Used by
 

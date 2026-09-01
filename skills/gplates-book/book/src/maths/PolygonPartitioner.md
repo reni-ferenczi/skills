@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolygonPartitioner tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PolygonPartitioner` clips points, multipoints, polylines and polygons against a fixed partitioning `PolygonOnSphere`, classifying the input as fully `GEOMETRY_INSIDE`, fully `GEOMETRY_OUTSIDE`, or `GEOMETRY_INTERSECTING` and, in the intersecting case, returning the pieces split at the polygon boundary. It builds on `PolylineIntersections::partition`, which does the actual boundary-crossing computation by treating the partitioning polygon's rings as one geometry and the input as a second: `partition_geometry`/`partition_polyline`/`partition_polygon` hand both geometries to that function and then walk the resulting `PolylineIntersections::Graph` to decide, ring segment by ring segment, which side of the polygon each piece ended up on — using `PolygonOrientation` and a single sampled interior/exterior test (`is_non_intersecting_polyline_or_polygon_fully_inside_partitioning_polygon`) to resolve orientation ambiguity.
+
+The private `GeometryPartitioner` visitor adapts the shared `partition_geometry` logic to whichever concrete `GeometryOnSphere` subtype was passed to `create`, and `InsidePartitionedPolylineMerger` re-stitches a run of adjacent inside-classified polyline fragments back into single polylines rather than leaving them needlessly split at every point where the algorithm happened to sample the boundary. `partition_point` is a direct point-in-polygon test with a caller-selectable speed/memory trade-off (`PolygonOnSphere::PointInPolygonSpeedAndMemory`), and `partition_multipoint` applies that per point, reporting `GEOMETRY_INTERSECTING` whenever points end up split or any point lies exactly on the boundary.
+
+This unit is used where a topology needs to be cut against a plate boundary or region of interest — for example cookie-cutting reconstructed geometries into per-plate polygons — rather than for the point-in-polygon primitive itself, which lives in `PointInPolygon`.
 
 ## Declared types
 
@@ -82,9 +84,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolygonPartitioner tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All `partition_*` query methods are `const` and the partitioning polygon is fixed at construction, so a single `PolygonPartitioner` can be reused (and shared across threads) for many queries against the same polygon without any synchronisation, as long as the polygon it was created from stays alive.
 
 ## Used by
 

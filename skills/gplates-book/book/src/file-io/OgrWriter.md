@@ -9,9 +9,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OgrWriter` is the low-level counterpart to `OgrReader`: it turns spherical
+geometries (`PointOnSphere`, `MultiPointOnSphere`, `PolylineOnSphere`,
+`PolygonOnSphere`) and `GpmlKeyValueDictionary` attributes into OGR features
+written through a driver looked up from the target file's extension
+(`get_driver_name_from_file_extension`, backed by `create_file_to_driver_map`).
+Callers such as `OgrGeometryExporter` and `OgrFeatureCollectionWriter` call one
+`write_*_feature` method per feature; `OgrWriter` lazily creates the OGR data
+source and layer for each geometry type the first time it is needed
+(`d_ogr_point_layer`, `d_ogr_multi_point_layer`, `d_ogr_polyline_layer`,
+`d_ogr_polygon_layer` are all `boost::optional` for this reason) and sets the
+layer's attribute field names from the first `GpmlKeyValueDictionary` it sees.
+
+Because formats such as Shapefile can only hold one geometry type per file, the
+`multiple_layers` constructor flag switches the writer into a mode that creates a
+subfolder named after the output file and writes one file per geometry type inside
+it (`<basename>/<basename>_point.<ext>`, `..._polyline.<ext>`, etc.); the plain
+mode instead writes a single file and deletes or clears any pre-existing layers
+in it before writing. `wrap_to_dateline` routes polylines and polygons through
+`DateLineWrapper` before conversion to lat/lon, which matters for viewers such as
+ArcGIS that render dateline-crossing geometry incorrectly otherwise. The
+`original_srs`/`behaviour` pair controls whether output coordinates are
+transformed back from WGS84 to the coordinate system the data was originally read
+in, via `d_coordinate_transformation`.
 
 ## Declared types
 
@@ -133,9 +153,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor requires the destination directory to already exist — it throws
+  `ErrorOpeningFileForWritingException` if not — but will create the per-geometry-type
+  subfolder itself when `multiple_layers` is true.
+- The destructor closes all four possible data sources
+  (`d_ogr_data_source_ptr`, and the point/line/polygon ones) unconditionally via
+  `destroy_ogr_data_source`; the `d_ogr_*_layer` pointers are non-owning, since the
+  layer's lifetime belongs to its data source.
+- Re-running an export to the same non-multi-layer file removes any OGR layers
+  already in it first (or deletes the file outright for formats that cannot
+  delete individual layers), so a prior export at that path is fully replaced,
+  not appended to.
 
 ## Used by
 

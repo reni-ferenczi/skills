@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VelocityFieldCalculatorVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesPresentation::VelocityFieldCalculatorVisualLayerParams` is the `VisualLayerParams` for a velocity-field-calculator layer. It holds only the display settings for the rendered velocity arrows — body scale, arrowhead scale and screen-space spacing between arrows — leaving the velocity computation itself to the corresponding app-logic layer and its `LayerParams`. `create()` additionally takes a `GPlatesViewOperations::RenderedGeometryParameters`, whose global reconstruction-layer arrow defaults (spacing, and the unit-vector/arrowhead-to-globe-radius ratios) seed this layer's initial arrow settings.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VelocityFieldCalculatorVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

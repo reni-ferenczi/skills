@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLIntersect tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLIntersect` is a free-function namespace of intersection routines used for two purposes: view-frustum culling, and screen-space-to-world-space pixel/texel projection for level-of-detail selection. `intersect_ray_sphere` supports the latter; `intersect_sphere_frustum` and `intersect_OBB_frustum` support the former, testing a `Sphere` or `OrientedBoundingBox` against an array of `Plane`s that bound a (possibly open, but convex) frustum region.
+
+Both frustum tests share a hierarchical-culling optimisation: `frustum_plane_mask` marks which planes are still active, and on a possible intersection the function returns a narrower mask that drops any plane the whole bounding volume was found entirely inside. Callers pass that narrowed mask down when testing children of a bounding-volume hierarchy, so a node need only be tested against the parent's still-relevant planes rather than the whole frustum every time.
 
 ## Declared types
 
@@ -32,9 +32,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLIntersect tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The frustum planes must define a convex region (their positive half-spaces intersected); a concave arrangement gives undefined results.
+- `frustum_plane_mask` supports at most 31 planes; passing 32 or more throws `PreconditionViolationError`. A zero mask means "no planes active" and both functions return true unconditionally in that case.
+- Plane normals must point toward the inside of the frustum, matching the convention used by `GLFrustum`.
 
 ## Used by
 

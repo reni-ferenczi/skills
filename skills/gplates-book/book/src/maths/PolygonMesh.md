@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolygonMesh tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PolygonMesh` triangulates the true interior fill region of a polygon (or of a polyline/multipoint coerced into one), unlike `PolygonFan` which produces a cheaper fan that can overlap itself or extend outside the interior on a concave polygon. `initialise` projects the polygon onto a tangent plane with a `GnomonicProjection` centred on the boundary centroid — chosen specifically because great circle arcs project to straight lines under a gnomonic projection, so tessellating the 2D triangulation's edges keeps the extra vertices on the original great circle arcs — then hands the projected exterior and interior rings to CGAL's `Constrained_Delaunay_triangulation_2` (`polygon_mesh_constrained_triangulation_type`) with `CGAL::Exact_predicates_tag`, which is what allows self-intersecting polygons to be triangulated at all, since it lets triangulation constraints cross each other.
+
+The anonymous-namespace `PolygonMeshRefinement` then takes over from CGAL: it builds its own half-edge triangle mesh from the faces CGAL classified as inside the polygon (`initialise_face`) and repeatedly splits the longest edge, via a priority queue ordered by `EdgeLengthCompare`, until every edge is shorter than `mesh_refinement_threshold_radians` (floored at `MINIMUM_EDGE_LENGTH_THRESHOLD_RADIANS`, about 10 metres). This refinement is deliberately not delegated to CGAL's own mesh refiners — CGAL's exact-arithmetic kernels needed for that are much more expensive, so the file uses `CGAL::Exact_predicates_inexact_constructions_kernel` for the triangulation itself and refines separately with plain doubles. `PolygonMeshConstrainedDelaunayVertex_2`/`Face_2` extend CGAL's vertex/face base classes with the extra bookkeeping (`point3d`, `mesh_refinement_info`) that ties CGAL's 2D triangulation back to the mesh being built.
+
+The public interface mirrors `PolygonFan`: the `create` overloads (from a `PolygonOnSphere`, `PolylineOnSphere`, `MultiPointOnSphere` or generic `GeometryOnSphere` via `CreatePolygonMeshFromGeometryOnSphere`) each return `boost::optional`, since meshing can fail — too few vertices, or CGAL/projection failure — and the resulting `Triangle`/`Vertex` arrays are consumed the same way as `PolygonFan`'s.
 
 ## Declared types
 
@@ -170,9 +172,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolygonMesh tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `mesh_refinement_threshold_radians` is clamped to at least `MINIMUM_EDGE_LENGTH_THRESHOLD_RADIANS` (~10 metres on Earth's radius) and at most `PI`, so a caller cannot request unbounded refinement or a degenerate zero threshold.
+- Meshing fails (returning `boost::none`) if any polygon vertex is too far from the boundary centroid to project under the gnomonic projection, in addition to the documented "too few vertices" failure — a very large or oddly shaped polygon can therefore fail to mesh even with enough vertices.
+- Building the mesh is comparatively expensive (CGAL triangulation plus iterative edge splitting), which is why `PolygonFan` exists as a cheaper alternative when only an approximate, stencil-rendered fill is needed.
 
 ## Used by
 

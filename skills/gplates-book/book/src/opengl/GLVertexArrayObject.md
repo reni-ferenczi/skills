@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexArrayObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexArrayObject` is the `GLVertexArray` implementation used when
+`GL_ARB_vertex_array_object` is supported, wrapping a genuine native vertex
+array object rather than replaying state as `GLVertexArrayImpl` does. Because
+native vertex array objects cannot be shared across OpenGL contexts, it keeps
+a `ContextObjectState` (a `resource_type` handle plus its `GLState`) per
+`GLContext` it has been bound in, created lazily by
+`get_object_state_for_current_context`, and allocated/deallocated through the
+`Allocator`/`resource_manager_type` machinery shared with the other `GL*`
+resource wrappers.
+
+To avoid duplicating the bookkeeping of which buffers and pointers are bound,
+it delegates the actual state description to an internal `GLVertexArrayImpl`
+(`d_object_state`): every `set_*`/`gl_bind`/`gl_draw_range_elements` call is
+forwarded there, and when a new context's native vertex array object needs to
+be (re-)populated, that recorded state is what gets applied to it.
+`get_vertex_array_resource` exposes the resolved handle and state to
+`GLRenderer` so it can bind the object and know which client-side buffer
+bindings and enable flags come along with it, since vertex array objects are
+container objects that carry that state as a side effect of being bound.
 
 ## Declared types
 
@@ -65,9 +81,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexArrayObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Requires `GL_ARB_vertex_array_object`; use `GLVertexArrayImpl` (or the
+`GLVertexArray` factory that chooses between them) when the extension is
+absent. Although a single `GLVertexArrayObject` is safe to use across
+multiple OpenGL contexts, each context gets its own native resource the first
+time it is bound there, populated from `d_object_state`; a vertex element
+buffer must still be set before drawing, as in `GLVertexArrayImpl`.
 
 ## Used by
 

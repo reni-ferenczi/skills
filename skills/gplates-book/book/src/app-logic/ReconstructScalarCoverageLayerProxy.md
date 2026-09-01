@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructScalarCoverageLayerProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructScalarCoverageLayerProxy` is the `LayerProxy` behind a reconstruct-scalar-coverage layer: it pairs the reconstructed domain geometries produced by an upstream `ReconstructLayerProxy` with the scalar values (e.g. crustal thickness, topography) attached to the same features, and evolves those scalar values over time to track deformation. The domain positions come from the connected `ReconstructLayerProxy` set (`d_current_reconstructed_domain_layer_proxies`, added/removed via `add_reconstructed_domain_layer_proxy`); the scalar evolution itself, when the scalar type supports it, uses the strain computed during topological reconstruction of that domain. Scalar types that do not support evolution are simply carried forward unchanged.
+
+The class builds a `ScalarCoverageTimeSpan` per domain/range feature-property pair (via `cache_scalar_coverage_time_spans`, which dispatches to `cache_topology_reconstructed_scalar_coverage_time_spans` or `cache_non_topology_reconstructed_scalar_coverage_time_spans` depending on whether the domain geometry was topologically reconstructed), then samples that time span at a given reconstruction time to produce `ReconstructedScalarCoverage` objects. Because that sampling is relatively expensive, results are cached in a `KeyValueCache` keyed by `(reconstruction_time, scalar_type)` up to `MAX_NUM_RECONSTRUCTIONS_IN_CACHE` entries (deliberately small — the class-level comment warns raising it directly increases memory use). The many `get_reconstructed_scalar_coverages` overloads are convenience wrappers that default any omitted scalar type, `ReconstructScalarCoverageParams`, or reconstruction time to the proxy's current value (`d_current_scalar_type`, `d_current_reconstruct_scalar_coverage_params`, `d_current_reconstruction_time`).
 
 ## Declared types
 
@@ -89,9 +89,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructScalarCoverageLayerProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every accessor (`get_reconstructed_scalar_coverage_time_spans`, `get_scalar_coverages`, `get_scalar_types`, `get_subject_token`) first calls `check_input_layer_proxies`, which follows the pull-model convention shared by other `LayerProxy` subclasses: if an upstream `ReconstructLayerProxy`'s subject token has advanced, this proxy calls `reset_cache()` and invalidates its own `d_subject_token` before returning anything, so results are always recomputed lazily rather than pushed by the source layer. `set_current_reconstruct_scalar_coverage_params` clears `d_cached_reconstructions` and other caches (per the comment on `ReconstructionInfo`) because a coverage-parameter change can alter every cached reconstruction, not just the current time/scalar-type combination.
 
 ## Used by
 

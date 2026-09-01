@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Mipmapper tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Mipmapper` builds the mipmap pyramid stored alongside cached rasters (see
+`file-io/RasterFileCache`, `file-io/MipmappedRasterFormatWriter`): given a
+`RawRasterType`, repeated `generate_next()` calls halve its dimensions (with
+one-pixel extension when a dimension is odd) until both are at or below a
+threshold, so the renderer can pick an appropriately-sized level instead of
+minifying a full-resolution raster every frame. `MipmapperInternals::BasicMipmapper`
+is a CRTP-style base supplying the shared public interface
+(`generate_next()`, `get_current_mipmap()`, `get_current_coverage()`,
+`get_level_infos()`); the primary `Mipmapper` template is declared but never
+defined, so only its `boost::enable_if_c` partial specialisations — selected on
+`RawRasterType::element_type` and whether the raster has a no-data value — are
+ever instantiated. There are three: `rgba8_t` colour rasters, floating-point
+rasters with a no-data value, and integral rasters with a no-data value (which
+converts to `FloatRawRaster` via `RawRasterUtils::convert_integer_raster_to_float_raster`
+and defers to the floating-point specialisation).
+
+The `rgba8_t` specialisation mipmaps in linear colour space rather than on the
+raw gamma-corrected bytes: `initialise_linear_rgba_channels()` decodes each
+8-bit channel into a separate linear-intensity `FloatRawRaster` (approximating
+gamma 2.2 with a cheap square/square-root instead of `pow`, per a comment
+calling this a hot path), each `do_generate_next()` averages those, and
+`create_gamma_corrected_rgba_raster()` re-encodes back to 8-bit only for the
+mipmap that clients actually consume; there is no separate coverage raster
+for this specialisation because coverage is carried in the alpha channel. The
+floating-point specialisation instead averages pixels weighted by a coverage
+raster and a per-pixel "fraction in source raster" value, skipping any input
+pixel that is entirely no-data so NaNs never enter the weighted sum, and falls
+back to the raster's `no_data_value()` when all four contributing pixels are
+no-data. Each specialisation also has a four-way "combine" constructor
+(`MipmapperInternals::combine_rasters`) used to stitch up to four sibling
+mipmappers' current rasters into one, for building a level that spans a tile
+boundary.
 
 ## Declared types
 
@@ -102,9 +131,18 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Mipmapper tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_current_mipmap()` asserts (`GPlatesGlobal::Assert`) that `generate_next()`
+  has been called at least once; calling it before the first `generate_next()`
+  is a programming error, not a recoverable condition.
+- The combine constructors assert that every mipmapper passed in has already
+  had `do_generate_next()` called — mixing a freshly-constructed mipmapper into
+  a combine call is undefined via assertion failure, not a caught error.
+- `combine_rasters()` requires its inputs to already tile a rectangle exactly
+  (matching widths/heights on shared edges, `r11` present iff both `r01` and
+  `r10` are); mismatches trigger a `PreconditionViolationError`.
+- The gamma approximation (`x*x` / `sqrt(x)` in place of `pow(x, 2.2)` /
+  `pow(x, 1/2.2)`) is an intentional, documented trade of exactness for
+  mipmapping throughput — the exact `pow`-based code is left in under `#if 0`.
 
 ## Used by
 

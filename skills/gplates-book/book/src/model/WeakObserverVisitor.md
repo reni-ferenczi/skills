@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/WeakObserverVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`WeakObserverVisitor<H>` is the abstract Visitor of the pattern that `WeakObserverPublisher<H>` drives: every `WeakObserver<H>` accepts a visitor of this type via `accept_weak_observer_visitor()`, and each `visit_*` method has an empty default body so a derived visitor only overrides the events it cares about. The primary template declares just `visit_weak_reference(WeakReference<H> &)`, since a generic weak observer of some handle type `H` is, in practice, always a `WeakReference<H>`.
+
+The explicit specialization `WeakObserverVisitor<FeatureHandle>` is the one actually used throughout the reconstruction pipeline: because weak observers of a `FeatureHandle` are not just plain `WeakReference<FeatureHandle>` instances but also every kind of `ReconstructionGeometry` (`ReconstructedFeatureGeometry`, `ResolvedTopologicalBoundary`, `ReconstructedVirtualGeomagneticPole`, and so on), this specialization adds one `visit_*` method per such type. This lets code that needs to find or act on the reconstruction geometries derived from a particular feature (`ReconstructionGeometryFinder`, `ReconstructedFeatureGeometryFinder`) do so through typed dispatch instead of `dynamic_cast`.
 
 ## Declared types
 
@@ -62,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/WeakObserverVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `visit_*` methods are named after their target type rather than uniformly called `visit`, precisely to avoid C++ name-hiding: overriding any one `visit_foo` in a derived class does not hide the others, so a subclass can override just the events it needs. Copy-assignment is declared private and never defined, so visitors are non-assignable by design.
 
 ## Used by
 

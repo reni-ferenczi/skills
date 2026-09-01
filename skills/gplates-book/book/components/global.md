@@ -16,14 +16,14 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AbortException](../src/global/AbortException.md) | 2 | 104 | 47 | (pending) |
+| [AbortException](../src/global/AbortException.md) | 2 | 104 | 47 | Exception subclass for aborts signalling corrupted internal program state |
 | [AssertionFailureException](../src/global/AssertionFailureException.md) | 1 | 105 | 2599 | (pending) |
-| [CompilerWarnings](../src/global/CompilerWarnings.md) | 2 | 136 | 56 | (pending) |
+| [CompilerWarnings](../src/global/CompilerWarnings.md) | 2 | 136 | 56 | Compiler-neutral macros to push/pop/enable/disable specific gcc and MSVC warnings |
 | [ControlFlowException](../src/global/ControlFlowException.md) | 3 | 75 | 0 | Exception thrown when unreachable code is executed |
-| [ExternalResourceFailureException](../src/global/ExternalResourceFailureException.md) | 2 | 58 | 27 | (pending) |
+| [ExternalResourceFailureException](../src/global/ExternalResourceFailureException.md) | 2 | 58 | 27 | Base exception for failures of external resources such as files or drivers |
 | [GPlatesAssert](../src/global/GPlatesAssert.md) | 1 | 267 | 3310 | (pending) |
 | [GPlatesException](../src/global/GPlatesException.md) | 1 | 325 | 777 | (pending) |
-| [GdalVersion](../src/global/GdalVersion.md) | 2 | 60 | 22 | (pending) |
+| [GdalVersion](../src/global/GdalVersion.md) | 2 | 60 | 22 | Re-declares GDAL's version-compute macros so version checks compile on old GDAL |
 | [IllegalParametersException](../src/global/IllegalParametersException.md) | 3 | 75 | 2 | Exception thrown for illegal or unreasonable method parameters |
 | [InternalInconsistencyException](../src/global/InternalInconsistencyException.md) | 3 | 127 | 1 | Exception thrown when unexpected internal inconsistencies are detected |
 | [InternalObjectInconsistencyException](../src/global/InternalObjectInconsistencyException.md) | 3 | 52 | 6 | Base class for exceptions reporting object-level internal inconsistencies |
@@ -31,7 +31,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [InvalidFeatureCollectionException](../src/global/InvalidFeatureCollectionException.md) | 3 | 73 | 3 | Exception thrown when an invalid FeatureCollectionHandle is encountered |
 | [InvalidParametersException](../src/global/InvalidParametersException.md) | 3 | 73 | 1 | Exception thrown for parameters that are individually valid but invalid in combination |
 | [License](../src/global/License.md) | 3 | 49 | 2 | Functions providing GPlates copyright information in plain text and HTML |
-| [LogException](../src/global/LogException.md) | 2 | 117 | 102 | (pending) |
+| [LogException](../src/global/LogException.md) | 2 | 117 | 102 | Catch-all exception carrying a free-form message when no dedicated type exists |
 | [NotYetImplementedException](../src/global/NotYetImplementedException.md) | 3 | 62 | 3 | Exception for code that has not yet been implemented |
 | [NullParameterException](../src/global/NullParameterException.md) | 3 | 74 | 1 | Exception for NULL pointer parameters when non-null expected |
 | [PointerTraits](../src/global/PointerTraits.md) | 1 | 89 | 477 | (pending) |
@@ -40,8 +40,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [UnexpectedEmptyFeatureCollectionException](../src/global/UnexpectedEmptyFeatureCollectionException.md) | 3 | 73 | 1 | Exception when receiving an unexpectedly empty FeatureCollectionHandle |
 | [UninitialisedIteratorException](../src/global/UninitialisedIteratorException.md) | 3 | 74 | 4 | Exception when dereferencing an uninitialized iterator |
 | [UnsupportedFunctionException](../src/global/UnsupportedFunctionException.md) | 3 | 74 | 0 | Exception for deliberately unsupported functions |
-| [Version](../src/global/Version.md) | 2 | 135 | 27 | (pending) |
-| [python](../src/global/python.md) | 2 | 172 | 15 | (pending) |
+| [Version](../src/global/Version.md) | 2 | 135 | 27 | Reports GPlates and pyGPlates version numbers and pre-release suffixes |
+| [python](../src/global/python.md) | 2 | 172 | 15 | Mandatory wrapper around including Python.h and boost/python.hpp safely |
 | [unicode](../src/global/unicode.md) | 3 | 32 | 0 | Convenience header providing access to Unicode string utilities |
 
 ### `src/global/deprecated`

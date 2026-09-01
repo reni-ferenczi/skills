@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLFilledPolygonsGlobeView tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLFilledPolygonsGlobeView` fills polygons and polylines on the globe by rasterising them into a cube-quad-tree of tile textures rather than tessellating them into triangle meshes. The header explains why: mesh tessellation is too expensive to redo every frame for dynamic topological polygons, so filled regions are instead drawn per-tile with a stencil-based fill (accumulated boundary triangles fanned from each polygon's centroid, per `add_polygon_ring_mesh_to_current_filled_drawable`) and the resulting tile textures are composited onto the `GLMultiResolutionCubeMesh` that this view is built against.
+
+Callers accumulate geometry into a `FilledDrawables` instance — a spatial partition over `GPlatesMaths::CubeQuadTreePartition` keyed by cube-quad-tree location — via `add_filled_polygon` or the `begin_filled_triangle_mesh`/`add_filled_triangle_to_mesh`/`end_filled_triangle_mesh` triple for meshes built from individual triangles, then pass the whole batch to `render`. Internally, `render` computes a level of detail from the projected viewport, walks the cube quad tree intersecting that partition with the mesh's own quad tree, renders each intersecting tile's drawables into an acquired `GLTexture`, and finally composites the tiles to the scene with one of four shader-program variants selected by whether clipping and/or `GLLight` surface lighting are in effect.
 
 ## Declared types
 
@@ -81,9 +81,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLFilledPolygonsGlobeView tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `render` requires a stencil buffer on the current FBO; if the context's `QGLFormat` has none, it logs one warning and returns without drawing anything, so filled polygons silently disappear rather than failing on hardware without stencil support (rare in practice).
+- `FilledDrawables::begin_filled_drawable`/`end_filled_drawable` must bracket each drawable exactly once; `add_polygon_ring_mesh_to_current_filled_drawable` asserts that a drawable is open before writing into it.
+- `FilledDrawables::clear()` is meant to be reused across render calls instead of constructing a new instance, to avoid repeated vector reallocation.
+- Shader program objects (`d_render_tile_to_scene*_program_object`) are `boost::none` when shader programs aren't supported, in which case the fixed-function pipeline is used instead; lighting is silently dropped if the light is specified but shaders can't support it (e.g. shader instruction limits).
 
 ## Used by
 

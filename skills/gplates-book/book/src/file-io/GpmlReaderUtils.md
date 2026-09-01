@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlReaderUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlReaderUtils::ReaderParams` bundles the four pieces of state a GPML parsing
+function threads through recursive calls: the `QXmlStreamReader`, the `DataSource`
+identifying which file is being read, the `ReadErrorAccumulation` to report into,
+and a `contains_unsaved_changes` flag readers set when they had to reinterpret or
+repair something in the file. Passing this one struct instead of four separate
+parameters keeps the many `create_*`/`visit_*` reader signatures across
+`GpmlPropertyReader`, `GpmlUpgradeReaderUtils` and related units manageable.
+
+The `append_warning`/`append_recoverable_error_if`/`append_terminating_error_if`/
+`append_failure_to_begin_if` family are thin, uniform wrappers around building a
+`ReadErrorOccurrence` (using either an explicit `XmlNode`'s line number or the
+stream reader's current position) and pushing it onto the matching bucket in
+`params.errors` — warnings, recoverable errors, terminating errors, or
+failures-to-begin respectively. Each `_if` variant only records the error when
+`condition` is true and always returns `condition`, so call sites can use it
+directly as the branch condition for "was this actually a problem".
 
 ## Declared types
 
@@ -48,9 +61,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlReaderUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`append_failure_to_begin_if` records into the same `d_recoverable_errors` bucket as
+`append_recoverable_error_if` despite its distinct name and intended meaning
+("failed to begin reading this feature/property") — there is no separate
+failures-to-begin collection at this level, so do not assume the two are reported
+differently downstream.
 
 ## Used by
 

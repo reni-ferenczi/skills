@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlInterpolationFunction tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlInterpolationFunction` is the abstract base for the interpolation-function property values used by `GpmlIrregularSampling` to describe how to interpolate between consecutive time samples (e.g. `GpmlFiniteRotationSlerp` for spherical linear interpolation of rotations). It is a `PropertyValue` in its own right — carrying a `StructuralType` like any other property value — but leaves `clone` and `accept_visitor` pure virtual, so it can never be instantiated directly; only its concrete subclasses can be created and attached to a sampling.
+
+The companion macro `DEFINE_FUNCTION_DEEP_CLONE_AS_INTERP_FUNC` exists because `deep_clone_as_interp_func` must return `deep_clone()` from the *derived* class's non-virtual `clone`/`deep_clone`, so the same trivial body has to be re-emitted in every subclass rather than written once in the base; invoking the macro in a subclass's body supplies that override.
 
 ## Declared types
 
@@ -47,9 +47,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlInterpolationFunction tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `value_type()` has no setter: the structural type is fixed at construction and must never change.
+- Both constructors are `public` rather than `protected` (unlike most sibling property-value classes) but remain unusable directly, since the class is abstract; they exist only to be invoked from derived-class initialiser lists.
 
 ## Used by
 

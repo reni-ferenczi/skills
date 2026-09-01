@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/QtStreamable tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`QtStreamable<Derived>` is a CRTP mixin (the Barton-Nackman trick) that derives Qt debug-stream support from an existing `std::ostream` `operator<<`. A class that already defines `operator<<(std::ostream &, const Derived &)` gets `operator<<` for `QDebug` and `QTextStream` for free simply by inheriting `QtStreamable<Derived>`, instead of writing a second, near-duplicate streaming operator for Qt's stream types. Both friend operators work by formatting into a temporary `std::ostringstream`, converting the result to a `QString`, and writing that into the Qt stream — so the Qt-facing text always matches whatever the class's `std::ostream` operator already produces. With 176 classes across the maths, model, gui and file-io modules inheriting from it, this is the standard way value types in GPlates get `qDebug() <<` support.
 
 ## Declared types
 
@@ -32,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/QtStreamable tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Inheriting `QtStreamable<Derived>` without also defining `operator<<(std::ostream &, const Derived &)` for `Derived` will fail to compile at the point of use (the friend operators call that operator internally), not at the class declaration.
 
 ## Used by
 

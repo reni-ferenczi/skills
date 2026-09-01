@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/FileInfo tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesFileIO::FileInfo` is a thin wrapper around `QFileInfo` used throughout GPlates to identify a loaded or about-to-be-saved file. Its default constructor exists so that a brand-new, unsaved `FeatureCollection` can still be represented in the list of active files (so it can be displayed and later saved through the "manage feature collections" dialog) before it has a name on disk.
+
+Caching is explicitly disabled on the wrapped `QFileInfo` (`setCaching(false)`) because a `FileInfo` can outlive changes made to the underlying file on disk — for example a file that did not exist at construction time but is created afterwards. Without disabling caching, `file_exists()` could keep reporting a stale answer.
+
+`get_file_name_without_extension()` special-cases double-barrelled `.gz` extensions (`.tar.gz`, `.gpml.gz`) by stripping both suffixes rather than just the last one. The free function `is_writable()` decides writability by actually opening the file for append and cleaning up any file it had to create to test this, rather than inspecting permission bits, because permission-bit checks are unreliable on some Windows configurations (see the disabled branch left in the source as a record of that finding).
 
 ## Declared types
 
@@ -43,9 +45,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/FileInfo tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `FileInfo` disables `QFileInfo` caching by design; do not re-enable it to "improve performance" without re-checking every place that mutates the underlying file after a `FileInfo` was constructed.
+- `is_writable(const QString&)` has a side effect: it creates the target file if it does not already exist, then removes it again after the check. A concurrent writer racing this check could see a transient file appear and disappear.
 
 ## Used by
 

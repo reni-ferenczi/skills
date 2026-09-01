@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/DataTable tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DataTable` is the result container `DataSelector::select()` fills: it is a `std::vector<DataRowSharedPtr>` (one `DataRow` per seed feature) plus a `TableHeader` of column names, the `reconstruction_time` the data was computed at, and `data_index` — the column offset at which the co-registration output columns begin, after any seed-identifying columns `fill_seed_info()` writes. Each `DataRow` is itself a plain vector of `OpaqueData` cells, addressable by `operator[]`/`get_cell()`; `get_cell()` degrades to a logged warning rather than throwing when the column index is out of range.
+
+The table knows how to render itself as text: `to_qstring_table()` converts every cell through `ConvertOpaqueDataToString`, `export_as_CSV()` builds on that to write the table (with header) via `GPlatesGui::CsvExport`, and `operator<<` gives a `{ ... }`-per-cell debug dump to an `std::ostream`. These are the paths `CoRegistrationResultTableDialog` and the co-registration CSV export use to show or save co-registration results.
 
 ## Declared types
 
@@ -66,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/DataTable tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Inheriting publicly from `std::vector<DataRowSharedPtr>` means callers can use standard vector operations directly on a `DataTable`, but also that it has no virtual destructor — never delete a `DataTable` through a `std::vector` base pointer. Rows are shared via `boost::shared_ptr`, so copying a `DataTable` aliases its rows rather than deep-copying them.
 
 ## Used by
 

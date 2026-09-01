@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeTextArchiveWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TextArchiveWriter` is the `ArchiveWriter` counterpart of `TextArchiveReader`: it serialises a `Transcription` to an `std::ostream` in the same human-readable text format the reader parses. Construction imbues the stream with the classic "C" locale (so output is independent of the application's global locale) and writes the archive header — the fixed signature string, the text-archive format version, and the current Scribe version — using the same character-by-character and versioned scheme the reader expects.
+
+`write_transcription()` writes the object tag names and the pool of unique strings, then walks the transcription's object ids, skipping `Transcription::UNUSED` slots and writing out each maximal contiguous run of used ids as one group (`write_object_group()`) tagged with its starting id and length, followed by a terminating zero-length group so the reader knows when to stop. Each object's type code precedes its value; a composite object's children are written recursively through the protected `write(const Transcription::CompositeObject &)` overload. The `write()` overloads for `float` and `double` bump the stream precision to `std::numeric_limits<T>::digits10 + 2` before writing a finite value, and write the shared infinity/NaN sentinel tokens instead for non-finite values, so a round trip through `TextArchiveReader` reproduces the original bit pattern.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeTextArchiveWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_output_stream_*_saver` members restore the stream's original flags, precision and locale when the writer is destroyed, since the constructor and the `float`/`double` writers change all three. This class and `TextArchiveReader` must be kept in lock-step: the object type codes, the group-length encoding, the infinity/NaN tokens and the string encoding are shared conventions (`ArchiveCommon`), so a change to how one writes must be matched in how the other reads or archives silently fail to round-trip.
 
 ## Used by
 

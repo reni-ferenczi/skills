@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/GPlatesQtMsgHandler tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesQtMsgHandler` is the `GPlatesUtils::Singleton` that installs a single Qt message handler (via `qInstallMessageHandler`) at construction and chains to the previously installed handler (`s_prev_msg_handler`) when destroyed, so `qDebug()`/`qWarning()`/`qFatal()` output can be routed to multiple destinations at once. Rather than logging itself, it fans each message out to an open-ended list of `MessageHandler` implementations registered with `add_handler()`/`remove_handler()` — `GPlatesFileIO::LogToFileHandler` and `GPlatesAppLogic::LogToModelHandler` are the ones actually plugged in, feeding the log file and the `LogModel` shown in the log dialog respectively. Installation is skippable at runtime via the `GPLATES_OVERRIDE_QT_MESSAGE_HANDLER` environment variable, which `should_install_message_handler()` checks.
+
+Because Qt's own logging macros only capture output that goes through Qt, the class separately captures raw `stdout`/`stderr` (for messages written directly by GPlates or by dependency libraries) using one `StdOutErrCapture` object per stream, each driven on its own `QThread`. `StdOutErrCapture::start_capturing()` redirects the C stream's file descriptor through a pipe and switches it to line buffering, then `capture_messages()` reads lines off the pipe and emits them back to the main object via `output_messages()`; `handle_stdout_messages()`/`handle_stderr_messages()` then forward them into the same `handle_qt_message()` path used for genuine Qt messages, so all logged output ends up in one place regardless of source.
 
 ## Declared types
 
@@ -77,9 +77,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/GPlatesQtMsgHandler tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The class can be instantiated as a stack-scoped singleton (see `GPLATES_SINGLETON_PUBLIC_CONSTRUCTOR_DECL`), so its lifetime — and therefore how long the custom message handler stays installed — is tied to whatever scope creates the instance, not necessarily process lifetime.
+- `qt_message_handler()` and `handle_qt_message()` run wherever Qt happens to deliver the message from, while the `stdout`/`stderr` capture path crosses threads (`d_stdout_capture_thread`, `d_stderr_capture_thread` each run a `StdOutErrCapture`) and joins back onto the main object only via queued signals (`output_messages`, `error_reading`), not direct calls.
+- `StdOutErrCapture::start_capturing()` fails gracefully (returns `false`) rather than throwing if the stream has no valid file descriptor, which happens for a Windows GUI application with no console attached to stdout/stderr.
 
 ## Used by
 

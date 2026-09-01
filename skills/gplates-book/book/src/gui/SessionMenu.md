@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/SessionMenu tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::SessionMenu` builds and maintains the "recent sessions" submenu shown by `ViewportWindow`, translating the session list kept by `presentation/SessionManagement` into `QAction`s the user can click. `init()` must be called only after the owning `QMenu` has been created by `setupUi()`; it then populates a fixed pool of 24 placeholder actions (plus one disabled "no sessions" placeholder) rather than adding and removing actions per session, which keeps the signal/slot bookkeeping simple. `regenerate_menu()` is a slot connected to `SessionManagement::session_list_updated()`; each time the list changes it relabels, shows or hides the fixed actions to match, and sets each visible action's tooltip and status tip from `create_tooltip_from_session()`/`create_statustip_from_session()`, which join the session's loaded file paths.
+
+Clicking any action fires the shared `QActionGroup`'s `triggered()` signal, which `handle_action_triggered()` turns into a session slot index (stored in the action's `QVariant` data) and forwards to `open_previous_session()`. That method simply delegates to `GPlatesGui::FileIOFeedback::open_previous_session()`, which is where the actual file loading and exception handling happen.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/SessionMenu tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The menu action pool is fixed at 24 slots; a recent-sessions list longer than that would have no menu entries for the overflow. `d_menu_ptr` is a `QPointer`, so it safely becomes null if the menu is destroyed, but `init()` must still be called exactly once, after `setupUi()`, before any of the pooled actions exist.
 
 ## Used by
 

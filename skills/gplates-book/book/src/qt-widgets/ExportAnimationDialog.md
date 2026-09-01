@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportAnimationDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportAnimationDialog` is the dialog users configure animation and single-frame exports from. It maintains two independent `QTableWidget`s of queued exports — `tableWidget_range` for animation-sequence exports and `tableWidget_single` for one-off snapshots — switched between via `stackedWidget` and tracked by `d_is_single_frame`; each row's export type, format and configuration are stashed as custom `QTableWidgetItem` subclasses (from `ConfigureExportParametersDialog`) and read back out by the free functions `get_export_id()` and `get_export_configuration()`. Adding or editing a row is a two-step handoff: `react_add_export_clicked()`/`react_edit_export_clicked()` pop up the modal `ConfigureExportParametersDialog` or `EditExportParametersDialog`, which then calls back into `insert_item()` or `edit_item()` once the user finishes choosing a type, format and configuration.
+
+The dialog itself does no exporting; it hands the queued export strategies to `d_export_animation_context_ptr`, a `GPlatesGui::ExportAnimationContext` that plays the Context role of the Strategy pattern and does the actual work, sharing time-range state with the wider application through `d_animation_controller_ptr` (an `AnimationController` also driven by `AnimateDialog` and `AnimateControlWidget`). `set_export_parameters()` computes the `AnimationSequence::SequenceInfo` to export — either the single snapshot time repeated once, or the controller's configured range — and must run before `add_export_animation_strategy()` is called for each queued row, since each strategy initialises its `ExportTemplateFilenameSequence` from that range.
 
 ## Declared types
 
@@ -80,9 +80,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportAnimationDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_configure_parameters_dialog_ptr` and `d_edit_parameters_dialog_ptr` are raw pointers but are Qt-parented to this dialog, so their lifetime is managed by Qt rather than by explicit deletion here. `setVisible()` is overridden because the buttonbox "Close" button only hides the dialog rather than closing it; hiding it while `d_export_animation_context_ptr->is_running()` is treated as an implicit cancel and triggers `react_abort_button_clicked()` before the base-class hide, so closing the dialog mid-export always aborts the export rather than leaving it running headless. `react_export_button_clicked()` refuses to proceed if the active table has zero rows or the target directory fails `update_target_directory()`, and it always restores the export/abort button state afterwards even though nothing currently catches an exception thrown mid-export.
 
 ## Used by
 

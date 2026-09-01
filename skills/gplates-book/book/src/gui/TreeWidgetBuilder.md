@@ -9,9 +9,30 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TreeWidgetBuilder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TreeWidgetBuilder` lets code assemble a `QTreeWidget` hierarchy — items,
+children, per-item fields, and deferred callbacks — before any of it is
+attached to a real `QTreeWidgetItem`/`QTreeWidget`. Callers build the tree
+using opaque `item_handle_type` values (`create_item()`, `add_child()`,
+`insert_child()`, `push_current_item()`/`pop_current_item()` for a
+depth-first "current item" cursor) rather than touching `QTreeWidgetItem`
+pointers directly, then call `update_qtree_widget_with_added_or_inserted_items()`
+once to transfer the whole pending hierarchy onto the widget in one pass.
+
+The class was originally written on the assumption that batching child
+insertion was faster than adding items one at a time; that turned out not to
+matter, but the class stayed useful for a different reason: some
+`QTreeWidgetItem` calls, notably `setExpanded()`, silently do nothing until
+the item is actually linked into a `QTreeWidget`. `add_function()` /
+`add_function_to_current_item()` let a caller queue such a call
+(`qtree_widget_item_function_type`, typically built with `boost::bind`) to run
+only once the item has been transferred and is safe to call it on.
+
+The free functions declared alongside the class (`add_top_level_item`,
+`add_child_to_current_item`, `add_children`, `destroy_children`, etc.) are
+convenience wrappers over the member functions for the common cases of
+building simple name/value rows, and are what most call sites — the
+feature-property and geometry table populators — actually use instead of the
+class's own methods.
 
 ## Declared types
 
@@ -95,9 +116,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TreeWidgetBuilder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `item_handle_type` values are recycled: `ItemHandleManager` hands out
+  deallocated handles again on a later `create_item()`, so holding onto a
+  handle after `destroy_item()` or `reset()` and using it later can silently
+  address a different, unrelated item rather than fail.
+- `get_root_handle()` is a bookkeeping value, not a real `QTreeWidgetItem` —
+  top-level items attach directly to the `QTreeWidget`. Calling
+  `add_function()` or `get_qtree_widget_item()` with it throws.
+- Items and their functions are only actually attached to the `QTreeWidget`
+  passed to the constructor when `update_qtree_widget_with_added_or_inserted_items()`
+  is called; building the handle-based hierarchy has no visible effect on the
+  widget until then.
 
 ## Used by
 

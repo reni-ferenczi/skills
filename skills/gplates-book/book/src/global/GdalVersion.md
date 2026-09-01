@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/GdalVersion tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GdalVersion.h` pulls in `<gdal_version.h>` and re-defines GDAL's `GDAL_COMPUTE_VERSION` macro under the `GPLATES_` prefix (as `GPLATES_GDAL_COMPUTE_VERSION` and `GPLATES_GDAL_VERSION_NUM`) so that version-gated `#if` checks against `GDAL_VERSION_NUM` compile even against GDAL releases older than 1.10, where `GDAL_COMPUTE_VERSION` does not exist yet. Without this, an `#if defined(GDAL_COMPUTE_VERSION) && GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)` guard would fail to parse on older GDAL because the preprocessor still expands the unguarded macro call inside the `&&` operand.
+
+Code that needs to branch on the installed GDAL version (readers/writers for raster and vector formats, spatial reference handling) includes this header and compares against `GPLATES_GDAL_VERSION_NUM` instead of GDAL's own macro.
 
 ## Declared types
 
@@ -30,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/GdalVersion tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

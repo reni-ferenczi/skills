@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerInputChannelType tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerInputChannelType` declares, for one named input channel of a layer, what kind of data may be plugged into it: either an input feature collection (a file) or the output of another layer, and whether the channel accepts one item or many (`ChannelDataArity`). When a channel accepts layer output, it is further restricted to one or more `LayerTaskType::Type` values, each optionally paired with an `AutoConnect` mode that says whether `ReconstructGraph` should wire it up automatically to a matching layer in the same file or anywhere in the project.
+
+This is metadata, not behaviour: each concrete `LayerTask` subclass builds a set of these to declare its own input channels (for example the reconstruct layer's separate "rotation tree" and "reconstructable features" channels), and `ReconstructGraph`/`Layer` consult it to validate and auto-wire connections rather than hard-coding per-layer connection rules.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerInputChannelType tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`can_connect_to_input_feature_collections()` is equivalent to `get_input_layer_types()` returning `boost::none`: a channel is either file-fed or layer-fed, never both, and that distinction is encoded purely by whether `d_input_layer_types` is set, not by a separate flag. The two-argument (file-only) and multi-argument (layer-output) constructors are the only ways to obtain each case respectively; the single-`LayerTaskType`/`InputLayerType` constructors are pure convenience wrappers that build the one-element vector.
 
 ## Used by
 

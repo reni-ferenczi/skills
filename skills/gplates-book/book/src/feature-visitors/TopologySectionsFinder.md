@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/TopologySectionsFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologySectionsFinder` walks a topological feature's `GpmlTopologicalLine`, `GpmlTopologicalPolygon` and `GpmlTopologicalNetwork` property values and turns their sections into two `GPlatesGui::TopologySectionsContainer::container_type` lists — boundary and interior — of `TableRow` entries. Each row records a section only by its `FeatureId` and target `PropertyName` (read straight off the section's `GpmlPropertyDelegate`, deliberately not resolved by visiting the delegate itself), not by resolved geometry. This feeds `gui::TopologyTools` and `qt-widgets::TopologyToolsWidget`, which use the rows to populate the topology-editing sections table without needing to re-walk the feature themselves.
+
+While visiting a `GpmlTopologicalNetwork`, an internal sequence number switches between 0 (boundary) and 1 (interior) so `visit_gpml_topological_line_section` and `visit_gpml_topological_point` know which container to append to.
 
 ## Declared types
 
@@ -56,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/TopologySectionsFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`visit_gpml_piecewise_aggregation()` processes every time window without checking it against a reconstruction time — this only gives correct results because GPlates currently never builds a topology with more than one time window; the code comments flag this as fragile if that ever changes. `GpmlTopologicalNetwork` interior geometries are pushed into the same section containers as real boundary/interior sections even though, per the code comments, an interior geometry is not actually a topological section — a known layering shortcut kept because the topology-editing tools still access interiors through the sections table. `report()` only writes to `qDebug()` and plays no role in building the result.
 
 ## Used by
 

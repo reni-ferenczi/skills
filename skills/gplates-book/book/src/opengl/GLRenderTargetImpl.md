@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLRenderTargetImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Holds the actual OpenGL resources and framebuffer logic shared by
+`GLRenderTarget` (fixed-size) and `GLScreenRenderTarget` (screen-size), which
+each own one by value and forward `begin_render`/`end_render`/`get_texture`
+to it. `set_render_target_dimensions` (re)allocates the texture's and any
+depth/stencil `GLRenderBufferObject`'s storage; it must be called at least
+once before the first `begin_render`, and cannot be called while rendering is
+in progress.
+
+The core problem it solves is that native framebuffer objects cannot be
+shared across OpenGL contexts, while the texture and renderbuffer resources
+they wrap around can. `GLRenderTargetImpl` resolves this by keeping one
+`ContextObjectState` — its own `GLFrameBufferObject` plus an
+attached-or-not flag — per `GLContext` it has been used from, recreating a
+framebuffer object for each newly encountered context but reusing the same
+underlying texture and renderbuffers everywhere. This lets a single instance,
+and hence a single `GLRenderTarget`, be shared freely across contexts without
+its owner needing to special-case the framebuffer object itself.
 
 ## Declared types
 
@@ -54,9 +68,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLRenderTargetImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`end_render` restores whatever framebuffer object (or the main framebuffer)
+was bound at the matching `begin_render`, recorded in `d_current_render_info`,
+so callers do not need to save and restore bindings themselves. `get_texture`
+throws if called between `begin_render` and `end_render`, since the texture
+cannot be read while it is still a render target. `ContextObjectState`
+deliberately stores its `GLContext` as a raw pointer rather than a shared
+pointer to avoid a reference cycle. Requiring a stencil buffer additionally
+requires `GL_EXT_packed_depth_stencil`, since most consumer hardware only
+supports a stencil attachment packed together with depth.
 
 ## Used by
 

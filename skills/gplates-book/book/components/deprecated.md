@@ -16,19 +16,19 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AnimationTimer](../src/deprecated/controls/AnimationTimer.md) | 3 | 360 | 15 | (pending) |
-| [Dialogs](../src/deprecated/controls/Dialogs.md) | 3 | 109 | 0 | (pending) |
-| [File](../src/deprecated/controls/File.md) | 3 | 768 | 11 | (pending) |
-| [GuiCalls](../src/deprecated/controls/GuiCalls.md) | 3 | 174 | 27 | (pending) |
-| [Lifetime](../src/deprecated/controls/Lifetime.md) | 3 | 168 | 36 | (pending) |
-| [Reconstruct](../src/deprecated/controls/Reconstruct.md) | 3 | 506 | 10 | (pending) |
-| [View](../src/deprecated/controls/View.md) | 3 | 82 | 0 | (pending) |
+| [AnimationTimer](../src/deprecated/controls/AnimationTimer.md) | 3 | 360 | 15 | Singleton wxTimer subclass that manages frame-by-frame playback of geological-time animations with configurable forward/backward stepping |
+| [Dialogs](../src/deprecated/controls/Dialogs.md) | 3 | 109 | 0 | Minimal wrapper namespace providing modal dialogs for error and informational messages over wxWidgets |
+| [File](../src/deprecated/controls/File.md) | 3 | 768 | 11 | Deprecated file I/O control functions for opening, loading, importing and saving GPlates data files |
+| [GuiCalls](../src/deprecated/controls/GuiCalls.md) | 3 | 174 | 27 | Static callback interface allowing deprecated control classes to invoke methods on GUI components without direct dependencies |
+| [Lifetime](../src/deprecated/controls/Lifetime.md) | 3 | 168 | 36 | Singleton that controls graceful program termination via main window deletion and exit |
+| [Reconstruct](../src/deprecated/controls/Reconstruct.md) | 3 | 506 | 10 | Deprecated API for reconstructing geological feature positions at different times using plate rotations and animated playback |
+| [View](../src/deprecated/controls/View.md) | 3 | 82 | 0 | Stub namespace with DocumentMetadata() function returning title and metadata for the loaded data set |
 
 ### `src/deprecated/patterns`
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [PublisherTemplate](../src/deprecated/patterns/PublisherTemplate.md) | 3 | 685 | 27 | (pending) |
+| [PublisherTemplate](../src/deprecated/patterns/PublisherTemplate.md) | 3 | 685 | 27 | Template-based implementation of the Observer pattern providing type-safe publisher-subscriber event notification with automatic cleanup |
 | [PublisherTemplate_test](../src/deprecated/patterns/PublisherTemplate_test.md) | 3 | 360 | 0 | Test and demonstration file for PublisherTemplate, exercising subscription, notification, and lifetime scenarios |
 
 ### `src/deprecated/presenter`

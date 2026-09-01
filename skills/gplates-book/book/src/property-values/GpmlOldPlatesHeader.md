@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlOldPlatesHeader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlOldPlatesHeader` is a `GPlatesModel::PropertyValue` that carries the fixed-format header fields of a PLATES4 line-format record (region, reference and string numbers, geographic description, plate id, ages of appearance/disappearance, data type code, conjugate plate id, colour code and point count) so that legacy PLATES data can be read into the GPML model and written back out without losing those fields. Every setter calls `update_instance_id()`, following the mutable-property-value convention used throughout `property-values`.
+
+`old_feature_id()` reformats the stored fields back into the fixed-width, underscore-separated feature id string used by GPlates 0.8 (for example `gplates_00_00_0000_..._999.0_-999.0_RI_0000_000_`), reproducing the exact field widths and padding characters (zero-padded numeric fields, space-padded age fields) that the old format relied on. `print_to()` simply delegates to it, so streaming this property value shows the reconstructed legacy id rather than its individual fields.
 
 ## Declared types
 
@@ -83,9 +83,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlOldPlatesHeader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The field widths and fill characters in `old_feature_id()` (zero-fill for most numeric fields, space-fill for the two age fields) exactly reproduce the old PLATES4/GPlates 0.8 id layout; changing them would break round-tripping of feature ids for data exported in that legacy style.
 
 ## Used by
 

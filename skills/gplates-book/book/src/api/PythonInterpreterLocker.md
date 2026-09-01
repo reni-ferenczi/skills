@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PythonInterpreterLocker tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApi::PythonInterpreterLocker` is an RAII wrapper around Python's
+`PyGILState_Ensure`/`PyGILState_Release`, the pair of calls a thread that
+Python itself did not create must make before touching any Python C API and
+after it is done. GPlates runs Python from GUI-created threads (see
+`PythonExecutionThread`, `HellingerThread`), so any code path that calls into
+the interpreter from one of those threads wraps the call in a
+`PythonInterpreterLocker` rather than calling the GIL functions directly; its
+wide fan-in reflects how many places in the codebase need to cross back into
+the interpreter this way.
+
+Passing `false` to the constructor skips the automatic `ensure()`, letting a
+caller call `ensure()` and `release()` explicitly at chosen points while still
+getting the destructor's automatic cleanup if `release()` was never reached
+(for example, on an exception).
 
 ## Declared types
 
@@ -40,9 +51,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PythonInterpreterLocker tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`ensure()` must not be called twice on the same instance without an
+intervening `release()`; a thread may nest multiple *separate*
+`PythonInterpreterLocker` instances, since each `PyGILState_Ensure` call just
+needs a matching `PyGILState_Release`. The destructor only releases the GIL if
+this instance currently holds it (`d_has_gil`), so constructing with
+`ensure_ = false` and never calling `ensure()` is safe and a no-op.
 
 ## Used by
 

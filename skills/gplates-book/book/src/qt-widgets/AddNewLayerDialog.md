@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AddNewLayerDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Modal dialog for adding a new visual layer to the reconstruction. The dialog queries `VisualLayerRegistry` for available layer types, populates a combobox with layer names and icons, and displays the description for the currently selected type. On accept, calls `VisualLayerRegistry::create_visual_layer()` with the selected type to instantiate the layer in the layer stack.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AddNewLayerDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

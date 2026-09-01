@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/LayerOptionsWidget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerOptionsWidget` is the abstract base for the per-layer-type options panels shown inside `VisualLayerWidget` when a layer is selected in the layers list — one concrete subclass per visual layer type (raster, reconstruct, topology resolvers, velocity field calculator, co-registration, scalar field, and so on). It defines the two-method contract every subclass must implement: `set_data()`, which is called whenever the panel should refresh itself to reflect a given `GPlatesPresentation::VisualLayer` (held only as a `boost::weak_ptr`, since the layer can be destroyed independently of the options widget), and `get_title()`, which supplies the panel's display name. Beyond that it adds nothing over `QWidget`, leaving layout and behaviour entirely to each subclass.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/LayerOptionsWidget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_data()` is called with a `boost::weak_ptr`, not a strong reference; a subclass must `lock()` it and handle the case where the visual layer has already been destroyed rather than assuming it stays alive for the widget's lifetime.
 
 ## Used by
 

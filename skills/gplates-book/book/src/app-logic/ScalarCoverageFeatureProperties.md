@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ScalarCoverageFeatureProperties tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Identifies and extracts "scalar coverage" data from an ordinary `FeatureHandle`: a geometry domain property paired with a `GmlDataBlock` range property carrying one or more scalar values per domain point (for example imported crustal-thickness values on a `MeshNode` feature). GPlates does not have a dedicated feature type for this — it is a convention recognised by matching property names — so this unit centralises the heuristic in one place rather than letting every layer or exporter reimplement it.
+
+The domain/range pairing is table-driven: `initialise_coverage_domain_to_range_name_mapping()` seeds a lazily-built map from domain property name to range property name, with `gpml:domainSet`/`gpml:rangeSet` as the default pair (`get_default_domain_range_property_names`), and `get_range_property_name_from_domain` looks up the range name for a given domain name. `is_scalar_coverage_feature` and `contains_scalar_coverage_feature` use this mapping to test features and feature collections without fully extracting their data. The actual extraction is done by the internal `ExtractScalarCoverageFeatureProperties` feature visitor (templated on `FeatureHandleType` so it works on both `const` and non-`const` handles), which walks the feature's properties at a given reconstruction time, resolves any time-dependent (`GpmlPiecewiseAggregation`/`GpmlConstantValue`) wrapping, and pairs up each matching domain geometry with its range `GmlDataBlock` into a `Coverage`; `get_coverages` is the public entry point that runs this visitor and returns the results.
 
 ## Declared types
 
@@ -75,9 +75,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ScalarCoverageFeatureProperties tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_coverages` returns `false` when no coverages were extracted rather than throwing, so callers must check the return value before trusting the (possibly empty) output vector. Extraction is heuristic, not schema-validated: a feature is treated as a scalar coverage purely because it has a domain property name that the internal mapping recognises paired with a data-block property, so features that happen to reuse `gpml:domainSet`/`gpml:rangeSet` for unrelated purposes would also match.
 
 ## Used by
 

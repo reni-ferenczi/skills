@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/RotationUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Free-function helpers for deriving rotations that are not simple lookups in a `ReconstructionTree` — half-stage (mid-ocean-ridge spreading) rotations, stage poles between two reconstruction times, and short-path adjustment of a total rotation. Plain reconstruction-geometry math belongs in `ReconstructUtils` instead; this header is reserved for rotation-specific calculations.
+
+`get_half_stage_rotation` computes the rotation of a spreading ridge between a `left_plate_id` and `right_plate_id`, given a `spreading_asymmetry` in `[-1,1]` and a `spreading_start_time`. Because the interval from spreading start to the reconstruction time can be long, the calculation is chopped into sub-intervals of `DEFAULT_TIME_INTERVAL_HALF_STAGE_ROTATION` (10 My) each, using a `ReconstructionTreeCreator` to build the intermediate `ReconstructionTree`s it needs. The overload taking a `ReconstructionFeatureProperties` dispatches to one of three historical formulas (a single-interval symmetric-spreading version, a multi-interval version with asymmetry, and a version that adds the spreading start time) depending on which properties are present on the feature, preserving compatibility with rotations authored under older GPlates versions.
+
+`get_stage_pole` derives the stage rotation of one plate relative to another between two already-resolved `ReconstructionTree` instants. `calculate_short_path_final_rotation` exists because interpolated total rotations always take the short path by construction, but the *stage* rotation implied by two total rotations can still work out to the long way around the globe; it flips `final_rotation` to the equivalent short-path rotation so that a subsequently derived stage pole is well-behaved.
 
 ## Declared types
 
@@ -34,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/RotationUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_half_stage_rotation` throws `PreconditionViolationError` if `half_stage_rotation_interval` is not greater than zero. The three-version dispatch in the `ReconstructionFeatureProperties` overload means results for the same feature can change depending on which optional properties (spreading asymmetry, spreading start time) were recorded when the feature was authored — do not assume a single formula applies across all data.
 
 ## Used by
 

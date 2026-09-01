@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/TranscribeSession tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesPresentation::TranscribeSession` is the namespace implementing the whole-application `save()`/`load()` used by `InternalSession` and `ProjectSession` to write and read a GPlates session through the `GPlatesScribe::Scribe` framework: loaded feature-collection files, the layer graph and per-layer connections, each layer's app-logic `LayerParams` and presentation `VisualLayerParams`, draw styles, geometry visibility, the animation configuration and the rest of view state. Because `LayerParams` and `VisualLayerParams` are abstract base classes with several concrete subclasses, the file dispatches through the visitor pattern: `SaveLayerParamsVisitor`/`LoadLayerParamsVisitor` handle the app-logic side (raster, reconstruct, co-registration, scalar-field, topological-network, velocity layers, ...) and `SaveVisualLayerParamsVisitor`/`LoadVisualLayerParamsVisitor` the presentation side, each visitor writing or reading the fields specific to one concrete params type under a shared object tag.
+
+`SuppressAutoLayerCreationRAII` is used while feature-collection files are being loaded during a session restore, so that `ApplicationState`'s normal "auto-create a layer for every loaded file" behaviour does not run — the layers to create, and their connections, are already fully described by the session data being replayed. `DrawStyleCfgItemValue` and `draw_style_cfg_item_map_type` represent a saved draw style's named configuration items (string, file-path or colour-palette-typed) independently of any live `GPlatesGui::StyleAdapter`, so that on load the code can look for a currently-installed draw style with a matching configuration shape rather than requiring an exact name match.
 
 ## Declared types
 
@@ -197,9 +197,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/TranscribeSession tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `save()` writes the current session twice: once under tag `"session_state"` (the full, current format) and once, via `save_session_gplates_1_5()`, under the deprecated tag `"session_state_version4"` — a compatible subset that omits any layer types or channel names GPlates 1.5 does not recognise. This is a forward-compatibility fix for a GPlates 1.5 bug where an unrecognised layer type or channel name made it reject the whole session instead of ignoring the unknown parts; every later `save()` still writes both tags so that sessions it produces remain loadable by GPlates 1.5. `load()` prefers `"session_state"` when present and falls back to `"session_state_version4"`; if neither tag is found it throws `UnsupportedVersion`, meaning the archive was written by a version of GPlates too old or too new to share a recognisable format.
+- On load, if a layer's saved draw style is not installed under the same name (a session made on a different machine, or a style renamed since), the code searches installed styles for one whose configuration items match by name and type (`is_draw_style_compatible_with_template()`) and clones it under a disambiguated name (`get_new_draw_style_name()`) rather than silently falling back to a completely different default style.
+- Missing feature-collection files and missing CPT/palette files referenced by a session are not treated as hard load failures: they are accumulated into a `GPlatesFileIO::ReadErrorAccumulation` and reported through the read-errors dialog after `load()` returns, so a session with some files moved or deleted still restores everything it can.
 
 ## Used by
 

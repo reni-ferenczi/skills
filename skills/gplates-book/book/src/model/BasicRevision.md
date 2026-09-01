@@ -8,9 +8,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/BasicRevision tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`BasicRevision<HandleType>` factors out the child-collection bookkeeping shared by
+every revision class in the model — `FeatureRevision`, `FeatureCollectionRevision`
+and `FeatureStoreRootRevision` are all instantiations of this template over their
+respective handle types, using `HandleTraits<HandleType>` to pick up the matching
+`revision_type` and `child_type`. Inheritance is used rather than delegation here
+specifically to keep the Revision classes' interfaces simple, even though the
+header notes that delegation would normally be preferred.
+
+Children are stored as `boost::intrusive_ptr` in a `std::vector`
+(`collection_type`), indexed by position. A removed child leaves its slot as a
+null pointer rather than shrinking the vector, so `container_size()` (the number
+of slots) and `size()` (the number of live children) diverge once anything has
+been removed — indices handed out earlier stay valid across removals. The
+protected copy constructor taking a `child_predicate_type` supports revisioning
+schemes that clone only a subset of children, via the internal
+`BasicRevisionInternals::ChildPredicateAdapter` which bridges a predicate over
+`non_null_intrusive_ptr` to the raw `intrusive_ptr` elements actually stored.
 
 ## Declared types
 
@@ -67,9 +81,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/BasicRevision tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- All three constructors are protected and `operator=` is private and undefined:
+  `BasicRevision` is meant to be instantiated only through a derived Revision
+  class, never as a standalone object or copied via assignment.
+- `remove()` and `set()` on an empty slot both adjust `d_num_children`, so callers
+  do not need to track live-vs-empty counts themselves; `has_element_at()` is the
+  correct way to distinguish a real child from a removed one at a given index.
+- Indices from `add()` remain valid for the lifetime of the revision even after
+  other children are removed, since removal nulls the slot instead of erasing it.
 
 ## Used by
 

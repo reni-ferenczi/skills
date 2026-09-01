@@ -8,9 +8,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/RevisionId tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RevisionId` wraps a `GPlatesUtils::UnicodeString` as a persistent, reasonably-unique
+identifier for one revision of a feature, letting other features reference a
+specific revision by ID rather than by pointer or by "current state". Unlike
+`FeatureId` (built on `IdTypeGenerator`), it is a plain value type with no
+interning or back-reference machinery — equality is a straight string comparison
+via `is_equal_to()`, exposed as free `operator==`/`operator!=`.
+
+The default constructor generates a fresh ID via `GPlatesUtils::generate_unique_id()`;
+the string constructor is for reconstructing a `RevisionId` from a value already
+present in a file being parsed, and it does not validate its input. Revision ID
+strings are meant to conform to the XML NCName production, so that they remain
+usable as XML IDs, but as the constructor comment notes, that conformance is not
+enforced by this class.
 
 ## Declared types
 
@@ -39,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/RevisionId tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

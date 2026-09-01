@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/HellingerReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HellingerReader` parses the plain-text file formats used by the Hellinger
+plate-fitting tool: `.pick` files (the picked point observations, read by
+`read_pick_file`), `.com` files (the fit configuration, read by
+`read_com_file`), plus the auxiliary error-ellipse and temporary fit-result
+files. All four entry points are static methods that fill in a caller-owned
+`GPlatesQtWidgets::HellingerModel` and, for the two main formats, a
+`ReadErrorAccumulation` — matching the read-error reporting convention used
+by the other GPlates file readers.
+
+Most of the parsing logic lives in the anonymous namespace at the top of the
+`.cc` as small, independently testable predicates (`latitude_ok`,
+`longitude_ok`, `angle_ok`, `boolean_line_ok`, `initial_guess_ok`) and
+line-oriented parsers (`parse_pick_line`, `parse_two_plate_com_line`,
+`parse_two_plate_com_lines`, `parse_three_plate_com_lines`). `read_pick_file`
+does not know up front whether a `.pick` file is two-way or three-way: it
+calls `try_to_extract_nsegments_from_first_line` to look for a leading
+segment count (present only in three-way files), rewinds the stream if none
+is found, and otherwise infers the format from which plate indices actually
+appear in the data. `.com` files use the equivalent
+`determine_fit_type`/`determine_com_file_type_from_third_line` pair, which
+distinguishes the two formats from the shape of the third line alone and
+rewinds the stream before returning.
 
 ## Declared types
 
@@ -63,9 +82,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/HellingerReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`read_pick_file` treats an unparseable line as a recoverable error
+(recorded in `read_errors` and skipped) rather than aborting the whole read;
+it only fails outright if the file cannot be opened or if zero lines parsed
+successfully. When the file's declared segment count disagrees with the
+model's, or a two-way file unexpectedly starts with a segment count, the
+mismatch is only logged with `qWarning()` and parsing continues using the
+model's own value — neither case is surfaced through `read_errors`.
 
 ## Used by
 

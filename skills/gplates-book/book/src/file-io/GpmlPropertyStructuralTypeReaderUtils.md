@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlPropertyStructuralTypeReaderUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This namespace holds one `create_*` function per GPML/GML structural type that can
+appear as a top-level feature property value — `create_gml_point`,
+`create_gpml_plate_id`, `create_gpml_finite_rotation`, `create_gpml_topological_network`
+and so on — each parsing a single `XmlElementNode` into the corresponding
+`property-values` type. It is the structural-parsing counterpart to
+`GpmlPropertyReader`, which calls into these functions once it has matched an XML
+element's name and wrapping against a `GpgimProperty`. The header is explicit that
+this file covers only types that can be feature properties; structural types that
+appear nested inside other structural types (not directly as properties) are read
+by the separate `GpmlStructuralTypeReaderUtils` instead.
+
+Every function takes a `GpgimVersion gpml_version` identifying the GPGIM revision the
+file being read was written against, so that a structural type whose layout changed
+between GPGIM revisions can still be parsed correctly from an older file into the
+current in-memory representation. The composite types
+(`create_gpml_array`, `create_gpml_constant_value`, `create_gpml_irregular_sampling`,
+`create_gpml_key_value_dictionary`, `create_gpml_piecewise_aggregation`) additionally
+take a `GpmlPropertyStructuralTypeReader` so they can recurse into their nested
+property values rather than parsing them directly.
 
 ## Declared types
 
@@ -70,9 +86,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlPropertyStructuralTypeReaderUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A `create_*` function throws `GpmlReaderException` when the XML element cannot be
+interpreted as its target structural type at all (missing required child elements,
+for instance); softer problems go through `ReadErrorAccumulation` instead. Adding a
+new structural type here also requires a matching entry in
+`GpmlPropertyStructuralTypeReader`, per the header's comment.
 
 ## Used by
 

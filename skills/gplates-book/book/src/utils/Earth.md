@@ -9,9 +9,13 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Earth tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::Earth` is a header-only bag of WGS-84 reference radii, kept as
+one small class purely as a namespace for three `static const double`
+constants. Callers that need a spherical Earth radius for a distance,
+velocity or area calculation pull `MEAN_RADIUS_KMS` (or the equatorial/polar
+values for ellipsoidal corrections) instead of hard-coding the number
+themselves, which keeps the same reference value in sync across the
+reconstruction, data-mining and measurement code that consumes it.
 
 ## Declared types
 
@@ -40,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Earth tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

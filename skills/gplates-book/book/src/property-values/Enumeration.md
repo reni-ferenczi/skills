@@ -9,9 +9,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/Enumeration tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Enumeration` is the `GPlatesModel::PropertyValue` used for GPML enumerated properties:
+a named enumeration type (`EnumerationType`) paired with one selected member value
+(`EnumerationContent`), e.g. a subduction zone's polarity or a plate boundary's type.
+The GPGIM defines which type/content pairs are legal; this class just stores whichever
+pair a file or the GUI has already chosen and reports its own structural type as
+`StructuralType(d_type)`, so the same C++ class serves every distinct GPML enumeration
+type rather than one subclass per type.
+
+`type()` has no setter — an enumeration's type is fixed at construction and only its
+`value()` (via `set_value()`) can change, which keeps a property from silently drifting
+into an enumeration it was never validated against.
 
 ## Declared types
 
@@ -51,9 +59,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/Enumeration tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`deep_clone()` is a plain `clone()` rather than a recursive deep copy: neither
+`EnumerationType` nor `EnumerationContent` references other mutable objects by pointer,
+so a shallow copy is already a deep one. `clone()`'s copy constructor deliberately
+shares the original's instance id (see the "share instance id" comment), while
+`set_value()` calls `update_instance_id()` so revisioning can detect the change.
 
 ## Used by
 

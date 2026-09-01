@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=system-fixes/loki/ScopeGuard tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header is a vendored piece of the Loki library implementing the "scope guard" idiom: an RAII object that runs a stored cleanup action on destruction unless explicitly told not to, giving exception-safe rollback of partially completed work without hand-written `try`/`catch` scaffolding. `Loki::ScopeGuardImplBase` holds the dismissed flag and drives cleanup through `SafeExecute`, a protected static template that calls the derived guard's `Execute()` and swallows any exception thrown while doing so, so a guard destructor never throws out of stack unwinding already in progress. `ScopeGuardImpl0` through `ScopeGuardImpl3` specialize this base to call a free function or callable bound to zero to three extra arguments, and `ObjScopeGuardImpl0` through `ObjScopeGuardImpl2` do the same for a member function invoked on a referenced object.
+
+Guards are never constructed directly: the `MakeGuard`/`MakeObjGuard` overload sets pick the right template for the argument count and callable shape, and the result is meant to be bound to the `Loki::ScopeGuard` typedef (a `const` reference to `ScopeGuardImplBase`), not stored by value. `LOKI_ON_BLOCK_EXIT` and `LOKI_ON_BLOCK_EXIT_OBJ` wrap that pattern into a one-line macro that declares an anonymous, uniquely-named guard variable for the common "run this at the end of the current block" case.
 
 ## Declared types
 
@@ -153,9 +153,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=system-fixes/loki/ScopeGuard tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- A guard must be bound to `Loki::ScopeGuard` (a reference) rather than copied or stored by value: `ScopeGuardImplBase`'s copy constructor dismisses the source, transferring cleanup responsibility to the copy, so copying a guard elsewhere silently disarms the original.
+- `SafeExecute` swallows every exception thrown by `Execute()`; a failure during rollback is discarded rather than reported, so cleanup actions that can fail should not rely on the guard to surface that failure.
+- `dismissed_` is `mutable` and `Dismiss()` is `const`, so a guard held through a `const Loki::ScopeGuard` reference can still be dismissed.
 
 ## Used by
 

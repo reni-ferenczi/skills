@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/AssignPlateIds tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AssignPlateIds` cookie-cuts features against a set of partitioning polygons (static
+polygons or resolved topological boundaries/networks) and writes the result back onto
+those features as reconstruction plate ids and related properties. It supports two
+strategies, selected by `AssignPlateIdMethodType`:
+`ASSIGN_FEATURE_TO_MOST_OVERLAPPING_PLATE`, which gives each feature a single plate id
+based on which polygon its geometry overlaps most, and `PARTITION_FEATURE`, which
+splits a feature's geometry across every plate it overlaps, cloning the feature (with
+all non-geometry properties copied) once per resulting plate. Internally it delegates
+the actual property assignment to a `GeometryCookieCutter` for the intersection work
+and a set of `PartitionFeatureTask` subclasses (one per feature-specific assignment
+strategy, e.g. `GenericPartitionFeatureTask`, `VgpPartitionFeatureTask`) chosen per
+feature.
+
+The two `create()` factories differ only in where the partitioning polygons come from:
+a fixed set of `FeatureCollectionHandle` feature collections (reconstructed internally
+using a `ReconstructionTreeCreator`), or the live output of existing `LayerProxy`
+instances (`ReconstructLayerProxy` for static polygons, or
+`TopologyGeometryResolverLayerProxy`/`TopologyNetworkResolverLayerProxy` for dynamic
+ones) so that assignment tracks whatever those layers currently resolve to. Topological
+networks are treated as an approximation of rigid plates because closed plate polygons
+alone leave holes where deforming networks exist.
 
 ## Declared types
 
@@ -57,9 +75,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/AssignPlateIds tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The layer-proxy constructor throws `GPlatesGlobal::PreconditionViolationError` if
+`partitioning_layer_proxies` is empty; always check `has_partitioning_polygons()`
+before assigning, since every `assign_reconstruction_plate_id*` method is a no-op when
+it returns false rather than erroring. If `verify_information_model` is true (the
+default), a feature property is only written when doing so would not violate the
+GPGIM. `respect_feature_time_period` (default true) skips partitioning a feature
+outside its defined time period, but this does not apply to all feature types (e.g.
+virtual geomagnetic poles).
 
 ## Used by
 

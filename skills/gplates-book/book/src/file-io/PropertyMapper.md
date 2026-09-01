@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PropertyMapper tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PropertyMapper` is the abstract interface `OgrReader` calls when a shapefile
+needs its attribute fields matched to GPlates model properties and no saved
+mapping (the `.gplates.xml` sidecar) is available; the one non-abstract
+implementation, `qt-widgets/ShapefilePropertyMapper`, does this by popping up a
+dialog and letting the user choose. Keeping the interface in `file-io` and the Qt
+implementation in `qt-widgets` lets `OgrReader`/`OgrUtils` call `map_properties`
+without depending on the GUI.
+
+`ShapefileAttributes::ModelProperties` and its two parallel string tables
+(`model_properties`, `default_attribute_field_names`) enumerate the fixed set of
+standard feature properties (plate ID, feature type, begin/end time, name,
+description, feature ID, conjugate/left/right plate, reconstruction method,
+spreading asymmetry, geometry import time) that shapefile attribute fields can be
+mapped onto, together with the conventional attribute field name GPlates expects
+for each one by default (e.g. `PLATEID1` for `ReconstructionPlateId`).
 
 ## Declared types
 
@@ -65,9 +77,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PropertyMapper tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `model_properties` and `default_attribute_field_names` are positional arrays
+  indexed by `ShapefileAttributes::ModelProperties`; adding, removing or
+  reordering an enumerator without updating both arrays in lockstep desynchronizes
+  the mapping.
+- `map_properties` returns `false` to signal that mapping was cancelled (e.g. the
+  user dismissed the dialog); callers such as `OgrReader::read_file` treat that as
+  aborting the whole file load.
 
 ## Used by
 

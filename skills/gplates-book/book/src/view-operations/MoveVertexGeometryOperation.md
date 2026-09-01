@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/MoveVertexGeometryOperation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MoveVertexGeometryOperation` is the `GeometryOperation` behind the "Move Vertex" canvas tool: it drags a single selected vertex of the geometry under construction in `GeometryBuilder`, pushing merged `GeometryBuilderMovePointUndoCommand`s as the drag proceeds and keeping its points/lines/highlight `RenderedGeometryLayer`s in sync.
+
+Beyond plain dragging it implements vertex snapping. When `GPlatesCanvasTools::ModifyGeometryState` emits `snap_vertices_setup_changed`, `handle_snap_vertices_setup_changed` records whether nearby-vertex checking is on, the angular threshold, and an optional plate-id filter. While a vertex is selected and highlighted, `update_secondary_geometries` searches reconstruction geometries near that vertex — using the two nested visitors `ReconstructionGeometryFinder` (recovers a `GPlatesAppLogic::ReconstructionGeometry` from a hit `RenderedGeometry`) and `RenderedGeometryLayerFiller` (turns a `GeometryOnSphere` into `RenderedGeometry` objects) — and, when `d_should_use_plate_id_filter` is set, keeps only vertices belonging to `d_filter_plate_id`. Matches are staged on `GeometryBuilder` as "secondary geometries" so the user can see and snap the dragged vertex to a nearby feature's vertex instead of an arbitrary point.
 
 ## Declared types
 
@@ -81,9 +81,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/MoveVertexGeometryOperation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Secondary-geometry snap candidates are cleared and recomputed from scratch on every mouse move that has nearby-vertex checking enabled (`d_geometry_builder.clear_secondary_geometries()` followed by a fresh search) rather than cached between events, which can matter for responsiveness with large, densely-loaded feature collections.
 
 ## Used by
 

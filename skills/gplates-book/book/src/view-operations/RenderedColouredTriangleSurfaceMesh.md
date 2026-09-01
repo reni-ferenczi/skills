@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedColouredTriangleSurfaceMesh tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The filled counterpart to `RenderedColouredEdgeSurfaceMesh`: a triangle mesh over a shared vertex array, coloured per vertex or per triangle, with an extra `fill_modulate_colour` that every triangle's own colour is modulated by at paint time (defaulting to white, i.e. no change). As with the edge mesh, colours are stored as `GPlatesGui::ColourProxy` rather than a resolved `Colour` because colour resolution is deferred until painting.
+
+The constructor asserts, via `GPlatesGlobal::Assert<PreconditionViolationError>`, that the colour sequence's length matches the vertex count (per-vertex colouring) or the triangle count (per-triangle colouring) — callers must size the two sequences consistently or construction fails immediately.
+
+`test_proximity()` checks each triangle's outline before its filled interior: an outline hit is returned first so that a click near an edge is not scored as a perfect (zero-distance) hit the way a fill hit is, letting it sort correctly against other line geometries under the same point.
 
 ## Declared types
 
@@ -47,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedColouredTriangleSurfaceMesh tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Like the edge mesh, `test_proximity()` returns the first triangle whose outline or fill registers a hit rather than the closest one — a documented shortcut, not a bug to fix elsewhere. The vertex/triangle colour-count assertion is checked only at construction, so it cannot catch mismatches introduced by later mutation (there is none — the sequences are copied in and never exposed as mutable).
 
 ## Used by
 

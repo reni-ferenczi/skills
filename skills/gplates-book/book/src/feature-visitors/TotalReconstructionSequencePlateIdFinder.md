@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/TotalReconstructionSequencePlateIdFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TotalReconstructionSequencePlateIdFinder` walks a single total reconstruction sequence (TRS) feature and picks out its `gpml:fixedReferenceFrame` and `gpml:movingReferenceFrame` plate IDs. The constructor restricts `initialise_pre_property_values` to just those two property names, so the visitor skips straight past `gpml:totalReconstructionPole` and any other properties on the feature; `visit_gpml_constant_value` then unwraps the constant-value wrapper and `visit_gpml_plate_id` records the plate ID under whichever of the two names `current_top_level_propname()` reports.
+
+Callers construct one instance, `accept_visitor` it over a TRS feature, then read back `fixed_ref_frame_plate_id()` and `moving_ref_frame_plate_id()`; `reset()` lets the same instance be reused across many features instead of reconstructing it each time. It is the plate-ID counterpart to `TotalReconstructionSequenceTimePeriodFinder`, which extracts the begin/end times from the same kind of feature.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/TotalReconstructionSequencePlateIdFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`visit_gpml_plate_id` assumes a property name has already been read and dereferences `current_top_level_propname()` unconditionally; it relies on `initialise_pre_property_values` having filtered the visit to `fixedReferenceFrame` or `movingReferenceFrame` beforehand. The constructor's own `FIXME` notes that it ignores the current reconstruction time, so it cannot correctly resolve time-dependent property values.
 
 ## Used by
 

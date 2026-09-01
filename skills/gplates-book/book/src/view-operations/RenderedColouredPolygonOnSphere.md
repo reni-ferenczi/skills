@@ -40,9 +40,7 @@ A rendered representation of a `PolygonOnSphere` geometry where each exterior-ri
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedColouredPolygonOnSphere tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only the exterior ring points are coloured; interior ring (hole) points are ignored. Proximity testing applies only to the outline, never to the polygon's interior, because these geometries are drawn as stroked paths rather than filled regions.
 
 ## Used by
 

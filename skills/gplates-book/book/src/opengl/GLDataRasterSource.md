@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLDataRasterSource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLDataRasterSource` is the `GLMultiResolutionRasterSource` used when raster values are needed for numerical analysis rather than display — it loads floating-point (or integer) raster data through a `ProxiedRasterResolver` and packs it, unmodified, into a floating-point texture: the raw value in the red channel, the raster's per-pixel coverage (how much of that pixel is not the sentinel/no-data value) in green. This contrasts with `GLVisualRasterSource`, which applies a colour palette to turn the same kind of data into an RGBA8 colour for rendering; `GLDataRasterSource` does no such conversion, so consumers such as `GLRasterCoRegistration` see the source raster's actual numbers.
+
+It requires the `GL_ARB_texture_float` extension (checked via `is_supported`) and prefers the two-channel `GL_RG32F` format over `GL_RGBA32F_ARB` when `GL_ARB_texture_rg` is also available, halving texture memory since only the red and green channels are ever used. `change_raster` lets a time-dependent raster series that shares georeferencing and dimensions swap its underlying data without rebuilding the whole `GLMultiResolutionRaster` pyramid; a dimension change instead requires constructing a new source.
 
 ## Declared types
 
@@ -56,9 +56,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLDataRasterSource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create` returns `boost::none` if the raster is not a proxied numeric raster, is uninitialised, or `is_supported` fails — always check the `boost::optional` result.
+- `change_raster` returns `false`, without changing anything, if the new raster's dimensions differ from the current one; the caller must build a new `GLDataRasterSource` in that case. It cannot be used to change georeferencing alone — that requires a new `GLMultiResolutionRaster`.
+- A tile-load failure is logged only once per source (`d_logged_tile_load_failure_warning`) and the tile is filled with zero data/coverage instead, so a persistently failing raster will not repeatedly spam the log.
 
 ## Used by
 

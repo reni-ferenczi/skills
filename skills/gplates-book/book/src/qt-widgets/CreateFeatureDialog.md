@@ -10,9 +10,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CreateFeatureDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CreateFeatureDialog` is the wizard the user drives when digitising a new feature:
+a `QStackedWidget` walked through five `StackedWidgetPage`s (choose feature type,
+common properties, all properties, optional conjugate properties, feature
+collection) under `handle_page_change()`, which delegates to `handle_leave_page()`
+and `handle_enter_page()` for each transition. Rather than `exec()`ing it directly,
+callers must go through `set_geometry_and_display()` so the dialog always has the
+digitised geometry (one of the `Gml*`/`GpmlTopological*` structural types listed in
+its header) before it opens; the property to hold that geometry, and every other
+GPGIM-allowed property for the chosen `GPlatesModel::FeatureType`, are picked with
+help from `ChoosePropertyWidget`, `ChooseFeatureTypeWidget`, `ChooseFeatureCollectionWidget`
+and the per-type edit widgets (`EditPlateIdWidget`, `EditTimePeriodWidget`,
+`EditStringWidget`), while the free functions at file scope
+(`should_offer_reconstruction_plate_id_prop()`, `should_offer_conjugate_plate_id_prop()`,
+`should_link_with_conjugate_prop()`, etc.) consult the GPGIM to decide which of
+those controls apply to the current feature type and geometry type.
+
+The dialog optionally builds a second, "conjugate" feature alongside the primary one
+(for features like isochrons that come in pairs): `generate_conjugate_properties_from_all_properties()`
+derives the conjugate's property list from the primary feature's, swapping plate IDs
+and similar fields, and `handle_create()` — reached from the button box's
+`accepted()` signal — constructs both features via `create_feature()`, links them
+with a `gpml:conjugate` `FeatureReference` when `should_link_with_conjugate_prop()`
+says to, and adds them to the feature collection chosen on the last page inside a
+`GPlatesModel::NotificationGuard` so the model fires a single change notification.
+`create_feature()` builds the feature's geometry property and then reverse-reconstructs
+it (via `reverse_reconstruct_geometry_property()`) using the reconstruction tree from
+`ApplicationState`, so a geometry digitised at the current reconstruction time is
+stored in present-day coordinates.
 
 ## Declared types
 
@@ -129,9 +154,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CreateFeatureDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_feature_properties` and `d_conjugate_properties` deliberately persist across
+dialog invocations: if the user repeatedly digitises the same feature type, the
+properties from the previous invocation are kept so they don't have to re-enter
+them, and are only pruned by `clear_properties_not_allowed_for_current_feature_type()`
+when the feature type actually changes (compared via `d_previously_selected_feature_type`).
+`d_conjugate_properties` is unconditionally cleared whenever the feature type page
+is left, then lazily regenerated from `d_feature_properties` the first time the
+conjugate properties page is entered for that feature — going back and forth
+between the "all properties" and "conjugate properties" pages does not regenerate
+it again. Every `switch` on `StackedWidgetPage` in `handle_leave_page()` and
+`handle_enter_page()` ends in `GPlatesGlobal::Abort()` on an unhandled page, so
+adding a new page requires updating both. `handle_create()` wraps feature creation
+and insertion in a `GPlatesModel::NotificationGuard` and only releases it, then
+emits `feature_created()`, after both the primary and any conjugate feature have
+been added, so model observers never see one without the other. `create_feature()`
+can throw `InvalidPropertyValueException`, which `handle_create()` catches and
+reports through a message box rather than letting it propagate.
 
 ## Used by
 

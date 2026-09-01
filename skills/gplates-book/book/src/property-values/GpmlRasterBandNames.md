@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlRasterBandNames tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlRasterBandNames` implements the `gpml:RasterBandNames` property value: an ordered list of `XsString` names, one per band, that a multi-band raster feature carries so consumers can identify which raster layer or channel a band corresponds to (for example when a raster co-registration or export step needs to pick a named band rather than an index). `app-logic/RasterLayerProxy` and `app-logic/ExtractRasterFeatureProperties` read this list to resolve raster layers by band name.
+
+Like the other simple property values in this component, it stores its data by value and defers all mutation bookkeeping to `update_instance_id()`, called from `set_band_names()`.
 
 ## Declared types
 
@@ -53,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlRasterBandNames tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

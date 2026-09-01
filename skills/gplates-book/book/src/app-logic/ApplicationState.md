@@ -9,9 +9,42 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ApplicationState tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The root of the application-logic half of GPlates. `GPlatesPresentation::Application`
+holds one by value, declared *before* `ViewState` and `ViewportWindow` so that the
+whole logic layer exists before anything that displays it; from there a reference
+is threaded down to almost every dialog, tool and exporter — which is why the
+fan-in list runs to 135 units. Its job is threefold: own the singleton-ish
+services by composition (`ModelInterface`, `FeatureCollectionFileState`,
+`FeatureCollectionFileIO`, the file-format registry, `ReconstructMethodRegistry`,
+`LayerTaskRegistry`, `ReconstructGraph`, `UserPreferences`, `LogModel`,
+`AgeModelCollection`), hold the two pieces of reconstruction state that belong to
+no layer, and mediate the signals between all of them.
+
+Those two pieces of state are the reconstruction time and the anchored plate ID.
+Everything else about what gets computed lives in `ReconstructGraph` — the layers,
+their connections, their parameters. `reconstruct()` is the single funnel: it
+passes the time and anchor into `ReconstructGraph::update_layer_tasks`, stores the
+resulting `Reconstruction` in `d_reconstruction`, and emits `reconstructed`. Note
+what `update_layer_tasks` actually returns: a `Reconstruction` is a bag of
+`LayerProxy` pointers for the currently active layers plus the default rotation
+proxy, not computed geometry. The heavy work happens later and lazily, when a
+renderer or exporter pulls on one of those proxies. So `reconstruct()` is the
+point at which "the world is now at time T anchored to plate P" becomes true, not
+the point at which the geometries are built.
+
+`mediate_signal_slot_connections()` is the deliberate centre of the wiring, and
+its own comment calls it a mediator. Two families of connection meet here. From
+`FeatureCollectionFileState` come file added / about-to-be-removed / changed, which
+this class forwards to `ReconstructGraph::add_files` and `remove_file` rather than
+letting the graph connect directly — the comment is explicit that this is to
+control ordering, so that slots reacting to layer creation see the files already
+in the graph. From `ReconstructGraph` come five change signals, all landing on the
+same `reconstruct()` slot. On top of that, a `FeatureStoreIsModified` weak-reference
+callback on the model root turns *any* edit to *any* feature into a reconstruct.
+The consequence is that a reconstruction is extremely easy to trigger by accident,
+and most of the machinery in this class — the nesting count, `ScopedReconstructGuard`,
+the boolean guards — exists to stop a burst of edits from becoming a burst of
+reconstructions.
 
 ## Declared types
 
@@ -92,9 +125,71 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ApplicationState tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Signal order is the reverse of what you would guess.**
+`set_reconstruction_time` assigns the new time, calls `reconstruct()` — which emits
+`reconstructed` — and only *then* emits `reconstruction_time_changed`. Same shape
+in `set_anchored_plate_id`. A slot on `reconstructed` therefore already sees the
+new time, and a slot on `reconstruction_time_changed` fires after the reconstruction
+is complete. Also, both setters compare via `GPlatesMaths::Real`, so a time that
+differs only within `Real`'s epsilon is a no-op: no reconstruction, no signal.
+
+**Batch your edits with `ScopedReconstructGuard`.** With the feature-store callback
+live, every model modification calls `reconstruct()`. While the guard's nesting
+count is above zero, `reconstruct()` records `d_reconstruct_on_scope_exit` and
+returns immediately — it deliberately blocks the `reconstructed` signal too,
+because visual layers respond to it by pulling on layer proxies. When the
+outermost guard unwinds, one reconstruction runs if *any* guard in the nest asked
+for it. Prefer calling `call_reconstruct_on_scope_exit()` near the end of the
+scope rather than passing `true` to the constructor, so a thrown exception does
+not trigger a reconstruction during stack unwind.
+
+**`reconstruct()` is not re-entrant and does not try to be.**
+`d_currently_reconstructing` is set for the duration, and `feature_store_modified()`
+checks it and skips — that only breaks the model-callback cycle. Anything that is
+itself part of the reconstruction implementation must not call `reconstruct()`;
+the header names `ReconstructGraph` as the obvious example. `reconstruct()` also
+installs a `GPlatesModel::NotificationGuard` for the whole update. The comment
+explains why: a non-const feature visitor can clone and re-set properties it only
+read, and the resulting model event can make the reconstruction-tree layer drop
+its cache while that cache is still in use. This is documented as a workaround
+pending the model rewrite, so do not remove it casually.
+`d_currently_creating_reconstruction` is set by a guard inside that same scope but
+is never read anywhere in the tree — it is dead as of 2.5.0.
+
+**Member declaration order is load-bearing, and the destructor compensates.**
+The header carries two ordering constraints (`d_feature_collection_file_format_registry`
+before `d_feature_collection_file_io`, `d_layer_task_registry` before
+`d_reconstruct_graph`) because the later constructors dereference the earlier
+members. Destruction runs in reverse, so `ReconstructGraph` dies before
+`FeatureCollectionFileState`; the destructor's `QObject::disconnect` exists so
+that a dying file state emitting `file_state_file_about_to_be_removed` cannot
+delegate into the already-destroyed graph, and so that `file_state_changed`
+cannot touch the already-destroyed `d_current_topological_sections`.
+
+**`get_current_topological_sections()` returns a reference into a cache that is
+reset on any feature-store modification** — both `handle_file_state_changed` and
+`feature_store_modified` clear it. Copy it, or use it within the immediate scope.
+The recompute walks every loaded file rather than asking the topology layers,
+which would be cheaper; the comment explains that the layers may not be up to
+date yet at the moment a caller asks, so the slower whole-file scan is the
+deliberate choice.
+
+**Do not copy `d_callback_feature_store` out of the class.** Copies of a
+`WeakReference` carry copies of the attached callback, so a leaked copy means
+`feature_store_modified()` fires more than once per modification. That is the
+reason the weak-ref is private and no accessor exposes it.
+
+**Session restore turns the automatic behaviour off.**
+`suppress_auto_layer_creation(true)` makes `handle_file_state_files_added` skip
+auto-creating layers, because `GPlatesPresentation::SessionManagement` restores
+the saved layer topology itself. `set_update_default_reconstruction_tree_layer`
+is the matching switch for whether loading a rotation file re-points the default
+reconstruction tree. Both are sticky flags with no scope guard — restore them
+yourself.
+
+**Single-threaded.** This is a `QObject` with direct connections, constructed on
+the GUI thread and driven by GUI-thread signals; none of the guards or flags are
+synchronised.
 
 ## Used by
 

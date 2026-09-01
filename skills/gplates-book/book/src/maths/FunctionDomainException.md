@@ -8,9 +8,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/FunctionDomainException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FunctionDomainException` is the maths module's counterpart to the C library's
+`EDOM` error: it is thrown when an argument passed to a mathematical function
+falls outside the domain that function is defined for. It derives from
+`MathematicalException`, so it plugs into the same `GPlatesGlobal::Exception`
+hierarchy and call-stack-trace reporting as the other maths exceptions rather
+than defining its own error-reporting scheme.
+
+The class carries nothing beyond a plain string message, supplied by the
+caller at the point the invalid argument is detected; `exception_name()` and
+`write_message()` are the two hooks `MathematicalException` requires an
+implementation to fill in so the base class can format a uniform diagnostic.
 
 ## Declared types
 
@@ -38,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/FunctionDomainException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

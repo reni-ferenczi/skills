@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionRasterMapView tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionRasterMapView` renders a `GLMultiResolutionCubeRasterInterface` (any cube-map-tiled raster, reconstructed or not) drawn onto the 2D map projection defined by a `GLMultiResolutionMapCubeMesh`. It is the counterpart, for the flat map view, of drawing a cube raster straight onto the sphere in the globe view: instead of textured cube tiles being placed directly in 3D, `render()` walks the raster's cube quad tree and the mesh's cube quad tree together (`render_quad_tree()`) and renders each raster tile onto its corresponding map-projected mesh tile (`render_tile_to_scene()`), selecting resolution from `get_viewport_pixel_size_in_map_projection()` rather than from a 3D frustum.
+
+`create()` re-orients the given cube raster's world transform to the map projection's central meridian longitude so cube-map texel space lines up with the mesh, meaning the caller's cube raster is mutated as a side effect of construction. Rendering prefers a `GLProgramObject` shader pair (`d_render_tile_to_scene_program_object`/`..._with_clipping`) built by `create_shader_programs()` from the `multi_resolution_raster_map_view` shader sources; where shader programs are unsupported the code falls back to the fixed-function pipeline, but then loses the clipping variant, so at high zoom tile-boundary artefacts can appear.
 
 ## Declared types
 
@@ -62,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionRasterMapView tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Creating a view mutates the passed-in `multi_resolution_cube_raster`'s world transform to align it with the map projection's central meridian, so the same cube raster instance should not simultaneously be relied on to render un-transformed (e.g. for the globe view) elsewhere. `render()` returns `false` without rendering anything when the source raster does not intersect the view frustum at all (for example, a non-global raster scrolled out of view), which is a valid, non-error outcome. When shader programs are unavailable, the fixed-function fallback omits tile clipping, so visual artefacts at tile boundaries are expected at high zoom on such hardware rather than indicating a bug.
 
 ## Used by
 

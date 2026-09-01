@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VisualLayerRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayerRegistry` is a lookup table, keyed by `VisualLayerType::Type`, of everything the UI needs to know about a kind of layer without depending on that layer type's concrete classes: its display group, human-readable name and description, colour and icon, whether it ever produces rendered geometries, and three factory functions — one to create the corresponding app-logic layer (`create_visual_layer_function_type`), one to build its options-editing widget (`create_options_widget_function_type`), and one to construct its `VisualLayerParams` (`create_visual_layer_params_function_type`). Qt widgets such as `AddNewLayerDialog` and `VisualLayerWidget` go through this registry rather than switching on layer type themselves.
+
+`register_default_visual_layers` populates a registry with GPlates' built-in layer types at startup. In the `.cc` file, the anonymous-namespace `CreateAppLogicLayer` functor is the typical `create_visual_layer_function_type`: constructed with a `GPlatesAppLogic::ReconstructGraph`, a `GPlatesAppLogic::LayerTaskRegistry` and a `LayerTaskType::Type`, calling it looks up the matching `LayerTaskRegistry::LayerTaskType`, creates a `LayerTask` from it and adds it to the reconstruct graph — which then causes `VisualLayers` to create the matching visual layer automatically. `do_nothing` and `no_widget` are stand-in factories for layer types that need no creation action or no options widget, respectively.
+
+Because visual layers are stored in the reverse order to how they are drawn on screen, `register_visual_layer_type` appends each type to the end of its `VisualLayerGroup`'s ordering, and later registrations within a group end up on top. The order and index-lookup accessors (`get_visual_layer_types_in_order`, `get_visual_layer_type_order_map`) are cached in `d_cached_combined_visual_layer_type_order` / `d_cached_visual_layer_type_order_map` and rebuilt lazily by `invalidate_order_cache` whenever a type is registered or unregistered.
 
 ## Declared types
 
@@ -74,9 +76,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VisualLayerRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All of `get_group`, `get_name`, `get_description`, `get_colour`, `get_icon`, `create_options_widget` and `create_visual_layer_params` silently fall back to a default value (`NUM_GROUPS`, empty string, black, a null icon, `NULL`, or the base `VisualLayerParams`) if the requested `VisualLayerType::Type` was never registered, rather than asserting or throwing — callers cannot tell "unregistered" apart from "registered with that exact value" from the return value alone.
 
 ## Used by
 

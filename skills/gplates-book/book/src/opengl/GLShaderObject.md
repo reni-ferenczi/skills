@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLShaderObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLShaderObject` wraps a single OpenGL shader object — vertex, fragment or geometry (`GL_VERTEX_SHADER_ARB`, `GL_FRAGMENT_SHADER_ARB` or `GL_GEOMETRY_SHADER_EXT`) — mirroring `glShaderSource`/`glCompileShader` through `gl_shader_source()` and `gl_compile_shader()`. Source is supplied as a `GLShaderSource`, an ordered set of code segments that may come from files or inline strings; `GLShaderObject` keeps its own record of those segments (`SourceCodeSegment`, `FileCodeSegment`) purely so that a compile failure's line numbers, reported by OpenGL against the single concatenated source string, can be mapped back to the originating file and line for the warning it logs.
+
+Multiple compiled `GLShaderObject`s are linked together into a `GLProgramObject`; `GLShaderProgramUtils` is the main caller that builds shader sources and creates these objects on a unit's behalf. Like other `opengl` resource wrapper classes, it stores its OpenGL name behind a `GLObjectResource`/`GLObjectResourceManager` pair so the underlying shader is deleted through the resource manager rather than directly.
 
 ## Declared types
 
@@ -56,9 +56,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLShaderObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create()`/`create_as_unique_ptr()` require `is_supported()` to have already returned `true` for the requested `shader_type`; passing an unsupported type is a precondition violation, not a graceful failure.
+- `gl_compile_shader()` logs the compiler diagnostic as a warning only when compilation fails; nothing is logged on success.
+- Held via `boost::shared_ptr` rather than `non_null_intrusive_ptr` specifically so instances can be managed by a `GPlatesUtils::ObjectCache`.
 
 ## Used by
 

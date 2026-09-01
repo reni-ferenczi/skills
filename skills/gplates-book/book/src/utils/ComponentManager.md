@@ -8,9 +8,19 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/ComponentManager tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::ComponentManager` is a process-wide singleton (`instance()`, a
+Meyers singleton) that tracks which optional feature areas of GPlates —
+`DATA_MINING`, `PYTHON`, `SYMBOLOGY`, `HELLINGER_THREE_PLATE` — are currently
+enabled, backed by a fixed-size `std::bitset`. It gives widely scattered code
+(the API bindings, dialogs, presentation layer) a single yes/no gate to check
+before offering or running a feature, instead of threading a build flag or
+preference value through every call site.
+
+The nested `Component` class is the only way to name one of the enum values
+from outside the manager: it exposes named factory functions
+(`Component::python()`, `Component::symbology()`, …) that convert implicitly
+to the bitset index, so callers never see or depend on the raw
+`ComponentTypes` enum, which stays private.
 
 ## Declared types
 
@@ -42,9 +52,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/ComponentManager tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `Component::python()` is enabled by default in the constructor; every other
+  component starts disabled and must be turned on explicitly with `enable()`.
+- The class is non-copyable (copy constructor and `operator=` are private and
+  unimplemented) and reachable only through `instance()` — there is no way to
+  construct a second, independent `ComponentManager`.
+- `std::bitset` access is not synchronised; concurrent `enable()`/`disable()`/
+  `is_enabled()` calls from different threads are not safe against each
+  other.
 
 ## Used by
 

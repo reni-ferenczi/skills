@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/FeatureCollectionFileFormatConfigurations tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is where the concrete `file-io/FeatureCollectionFileFormatConfiguration`
+subclasses live: `GMTConfiguration` for the write-only `WRITE_ONLY_XY_GMT`
+format, and `OGRConfiguration` shared by the OGR-backed formats
+(`OGRGMT`, `SHAPEFILE`, `GEOJSON`, `GEOPACKAGE`). Both are plain option
+bags — a GMT header style on one side, a dateline-wrapping flag and an SRS
+write-behaviour on the other — that `FeatureCollectionFileFormatRegistry`,
+`OgrWriter`/`OgrReader` and the corresponding Qt configuration dialogs read
+and write through the `dynamic_cast_configuration()`/`copy_cast_configuration()`
+helpers from the base header.
+
+`OGRConfiguration` also owns the original spatial reference system captured
+when a file was read (`get_original_file_srs()`/`set_original_file_srs()`),
+so a later write of the same feature collection can reproduce or override
+the source SRS via `OgrSrsWriteBehaviour`.
 
 ## Declared types
 
@@ -63,9 +74,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/FeatureCollectionFileFormatConfigurations tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`OGRConfiguration::get_model_to_attribute_map()` is `static` and takes a
+`FeatureCollectionHandle` rather than reading a member: despite living on
+`OGRConfiguration`, the model-to-attribute map is *not* stored in the
+configuration object. It is stored as a tag (keyed by
+`FEATURE_COLLECTION_TAG`) directly on the feature collection, specifically so
+the mapping survives the feature collection being detached from its
+originating `File` and so it can be persisted separately (in a shapefile
+mapping file) from the rest of the configuration, which is per-session and
+not written to disk.
 
 ## Used by
 

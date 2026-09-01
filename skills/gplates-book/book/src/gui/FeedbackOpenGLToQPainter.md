@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FeedbackOpenGLToQPainter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeedbackOpenGLToQPainter` bridges OpenGL rendering into a `QPainter`, which is how GPlates draws to vector output devices (SVG, PDF, printers) that only understand Qt's own paint model. It has two independent modes, each guarded by a `begin_*`/`end_*` pair (and an RAII `VectorGeometryScope`/`ImageScope` wrapper for each): vector-geometry feedback uses the classic fixed-function OpenGL feedback buffer (`glFeedbackBuffer`/`glRenderMode(GL_FEEDBACK)`) to capture projected points, lines and polygons as a stream of `GL_POINT_TOKEN`/`GL_LINE_TOKEN`/`GL_POLYGON_TOKEN` records, which `draw_feedback_primitives_to_qpainter` then replays as `QPainter` drawing calls; image feedback instead renders arbitrary (including shader-based) content into an off-screen `QImage` sized to the painter's device, optionally split into tiles via `begin_render_image_tile`/`end_render_image_tile` when the target image is larger than the available framebuffer, and hands the finished `QImage` to the `QPainter`.
+
+The feedback-buffer path only works with the fixed-function pipeline, so anything drawn with vertex shaders must go through the `QImage` path instead — a limitation the header flags as a `TODO` pending an OpenGL 2/3 feedback-extension implementation.
 
 ## Declared types
 
@@ -65,9 +65,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FeedbackOpenGLToQPainter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `end_render_vector_geometry` throws `PreconditionViolationError` if `renderer` has no `QPainter` attached, and `OpenGLException` if the feedback buffer sized by `begin_render_vector_geometry`'s point/line/triangle counts turns out too small for what was actually drawn — callers must size the buffer generously up front, there is no automatic growth.
+- Image-tile rendering reuses whatever framebuffer is currently bound (main framebuffer or an FBO) and corrupts its contents; a caller that needs the framebuffer's colour contents preserved across tiling must save and restore it itself.
+- `begin_render_image_tile`/`end_render_image_tile` and `begin_render_tile`/`end_render_tile` on `ImageScope` must only be called inside an active `begin_render_image`/`end_render_image` (or `ImageScope`) pair; `end_render_image_tile` returns `false` while more tiles remain to be rendered.
 
 ## Used by
 

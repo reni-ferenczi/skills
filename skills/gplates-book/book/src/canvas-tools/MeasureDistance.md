@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/MeasureDistance tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MeasureDistance` is the globe/map canvas tool for the "Quick Measure" and "Feature Measure" workflows: left-clicking drops points for an ad-hoc two-point distance, while hovering over an existing digitised or focused-feature polyline/polygon segment reports that segment's length. The tool itself holds no measurement state — it only renders. All point data, distance calculations and activation state live in `MeasureDistanceState`, which is shared between the globe and map views so both draw the same measurement; `MeasureDistance::d_measure_distance_state_ptr` is that shared object, and signals from it (`feature_in_geometry_builder_changed`, `quick_measure_cleared`) drive repaints.
+
+Painting is split across three `RenderedGeometryCollection` child layers (geometry, highlight, label) so the mouse-over highlight and text label can be cleared independently of the persistent Quick/Feature Measure lines. `paint()` always draws Feature Measure lines before Quick Measure, because `handle_move_without_drag` relies on that fixed order: it runs a proximity test against the combined geometry layer and distinguishes a Quick Measure hit from a Feature Measure hit purely by comparing the hit's rendered-geometry index against `d_line_to_point_mapping.size()` (the number of Feature Measure segments drawn). `d_line_to_point_mapping` is rebuilt on every `paint_feature_measure()` call and maps a rendered line segment back to the point index it started from, which is needed because segments between too-close points are skipped rather than merged.
 
 ## Declared types
 
@@ -87,9 +87,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/MeasureDistance tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `handle_move_without_drag`'s split between a Quick Measure hit and a Feature Measure hit depends on `paint()` always drawing `paint_feature_measure()` before `paint_quick_measure()`; reordering those calls would silently misattribute proximity hits.
+- The Feature Measure highlight only applies to `POLYLINE`/`POLYGON` geometries with more than one point; multipoint geometries are deliberately excluded (there is no meaningful "segment" to measure).
+- `handle_deactivation()` deactivates all three rendered layers, not just the highlight/label ones, because once deactivated the tool no longer receives reconstruction-time updates to keep them current.
 
 ## Used by
 

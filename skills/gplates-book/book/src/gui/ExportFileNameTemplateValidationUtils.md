@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportFileNameTemplateValidationUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportFileNameTemplateValidationUtils` is a small function namespace that checks export filename templates before an animation export runs, so `ExportAnimationRegistry`'s `validate_filename_template()` and the export option widgets can reject a bad template (illegal characters, missing `%P` where a per-export-type placeholder is required, or no time-varying placeholder when one is needed) with an explanatory message instead of failing partway through a batch export. `is_valid_template_filename_sequence()` does the actual sequence check by constructing an `ExportTemplateFilename`; `does_template_filename_have_invalid_characters()` and `does_template_filename_have_percent_P()` check narrower conditions, and `is_valid_template_filename_sequence_with_percent_P()` / `..._without_percent_P()` combine all three checks for the two common cases — export strategies that need one file per `ReconstructionGeometry` type (`%P`) and those that do not.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportFileNameTemplateValidationUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The invalid-character set (`INVALID_CHARACTERS` in the `.cc`) is `/\|*?"><:` — the characters illegal in Windows filenames — so validation is stricter than a POSIX filesystem strictly requires.
 
 ## Used by
 

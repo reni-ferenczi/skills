@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/DataMiningUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DataMiningUtils` is a free-function toolbox the rest of `data-mining` shares rather than a class: attribute extraction (`get_property_value_by_name`, `get_shape_file_value_by_name`, `convert_qvariant_to_Opaque_data`), geometry distance (`shortest_distance`), numeric conversion (`convert_to_double_vector`, `minimum`), and small file-handling helpers (`load_file`, `load_files`, `load_cfg`, `load_one_line_cfg`) used mainly by `unit-test/CoregTest` fixtures. `get_property_value_by_name` walks a `GPlatesModel::FeatureHandle`'s properties looking for one matching `prop_name`, delegates value extraction to a `GetValueFromPropertyVisitor`, and returns its first result as `OpaqueData`; it special-cases the literal name `"gpml feature type"` to return the feature's type name directly rather than a property value. `get_shape_file_value_by_name` does the analogous lookup inside the `shapefileAttributes` property using a `GPlatesFeatureVisitors::ShapefileAttributeFinder`, warning (but not failing) if more than one attribute matches the requested name.
+
+`shortest_distance` has two overloads built on `GPlatesMaths::minimum_distance`: one finds the closest of a set of seed geometries to a single target geometry, the other finds the closest pair between two sets by calling the first overload repeatedly; both treat polygon interiors as solid, so a point inside a polygon reports zero distance. These are the geometric primitives behind region-of-interest based co-registration.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/DataMiningUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`shortest_distance` throws `GPlatesGlobal::LogException` if either input vector of geometries is empty — callers must guarantee non-empty seed/target sets. `load_cfg` parses a simple line-based `.cfg` format (a line starting with `section_name`, followed by non-comment, non-blank lines until the next blank line) using `std::ifstream` rather than Qt's file classes, as the source comment flags as a known FIXME.
 
 ## Used by
 

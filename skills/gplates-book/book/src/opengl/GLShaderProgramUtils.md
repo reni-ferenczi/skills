@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLShaderProgramUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLShaderProgramUtils` is a free-function namespace that spares every other rendering unit from repeating the compile-shader/link-program boilerplate around `GLShaderObject` and `GLProgramObject`. The `compile_*_shader` functions wrap a single stage (vertex, fragment or geometry) in `boost::optional`, returning `boost::none` uniformly whether the stage is unsupported on the runtime system or its source failed to compile; the `link_*_program` functions link already-compiled shaders into a program, and the `compile_and_link_*_program` functions combine both steps for the common one-shot case. This is the layer nearly every `GL*` rendering class in this module goes through to build its shader programs, rather than calling `GLShaderObject`/`GLProgramObject` directly.
+
+Linking a geometry shader additionally needs a `GeometryShaderProgramParameters` — the maximum vertices the shader emits (`GL_GEOMETRY_VERTICES_OUT`) plus its input/output primitive types — because some platforms (Mac OS X) require these set on the program *before* linking, not just declared in the GLSL source.
 
 ## Declared types
 
@@ -48,9 +48,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLShaderProgramUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `boost::none` from any function here is ambiguous by design between "unsupported hardware" and "compile/link failure" — callers that need to distinguish the two must call the relevant `GLShaderObject`/`GLShaderSource::is_supported()` check themselves first.
+- `geometry_shader_program_parameters` must match the geometry shader's declared input array size in its GLSL source; a mismatch is a linking constraint, not something these functions validate.
 
 ## Used by
 

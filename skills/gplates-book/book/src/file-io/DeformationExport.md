@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/DeformationExport tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DeformationExport` writes the per-point deformation data carried by `TopologyReconstructedFeatureGeometry` objects — the output of topological network reconstruction — to either GPML (`export_deformation_to_gpml_format`) or GMT (`export_deformation_to_gmt_format`) format. Both functions share the same set of optional scalar fields: principal strain or stretch (angle/azimuth plus major/minor axis, controlled by `PrincipalStrainOptions`), dilatation strain, dilatation strain rate, second-invariant strain rate, and strain-rate style, each independently switchable so callers only pay for the scalars they need. `PrincipalStrainOptions` also converts a raw `DeformationStrain::StrainPrincipal` into the angle-or-azimuth convention the caller asked for via `get_principal_angle_or_azimuth_in_degrees`.
+
+Both exporters share the same output-grouping options — a single combined file (`export_single_output_file`), one file per input feature collection (`export_per_input_file`, optionally into per-file directories) — and either combination can be requested at once, in which case both a combined file and the per-file breakdown are written. `export_deformation_to_gmt_format` additionally controls whether domain points are written longitude-then-latitude (GMT's default) or latitude-then-longitude.
 
 ## Declared types
 
@@ -52,9 +52,8 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/DeformationExport tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Both entry points throw `ErrorOpeningFileForWritingException` if the target file cannot be opened.
+- `PrincipalStrainOptions::OutputType` is `STRAIN` (extension positive, compression negative) or `STRETCH` (`1.0 + strain`, plottable directly as an ellipse) — the two are not interchangeable without conversion, and the exported property name (`PrincipalStrain*` vs `PrincipalStretch*`) changes to match.
 
 ## Used by
 

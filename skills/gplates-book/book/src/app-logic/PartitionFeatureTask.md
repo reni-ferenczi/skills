@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/PartitionFeatureTask tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PartitionFeatureTask` is the strategy interface behind cookie-cutter plate-id assignment: given a feature and the `GeometryCookieCutter` that has already partitioned its geometry against a set of polygons, a task decides (`can_partition_feature`) whether it applies to that feature, and if so assigns the partitioning polygon's properties (`partition_feature`) to the feature and to any clones created to hold the other partitioned pieces of its geometry.
+
+`get_partition_feature_tasks` builds the fixed, ordered pipeline of tasks that `AssignPlateIds` runs a feature through: a `VgpPartitionFeatureTask` for virtual-geomagnetic-pole features first, then a `GenericPartitionFeatureTask` last as the catch-all, since it can process any feature type. Tasks are tried front-to-back and the caller stops at the first one whose `can_partition_feature` returns true, so ordering from most specific to least specific is load-bearing.
 
 ## Declared types
 
@@ -48,9 +48,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/PartitionFeatureTask tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The `GenericPartitionFeatureTask` entry must stay last in `get_partition_feature_tasks`'s returned sequence, since it accepts any feature type and would otherwise shadow the more specific `VgpPartitionFeatureTask`.
+- `respect_feature_time_period` defaults to true but some derived tasks (noted on `partition_feature`: `VgpPartitionFeatureTask`) ignore it.
+- `partition_feature` can both modify `feature_ref` in place and create clones of it to hold other pieces of the partitioned geometry; callers should not assume `feature_ref` alone captures the full result.
 
 ## Used by
 

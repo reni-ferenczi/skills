@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/ProxiedRasterResolver tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ProxiedRasterResolver` turns a proxied `RawRaster` — one that only records a file path and dimensions until data is actually needed — into real pixel data read from disk, either at native resolution (source raster) or from a mipmap pyramid at a given level. `ProxiedRasterResolver::create()` uses the anonymous `CreateProxiedRasterResolverVisitorImpl` (via `TemplatedRawRasterVisitor`) to dispatch on the raster's concrete element type and build the matching `ProxiedRasterResolverImpl<ProxiedRawRasterType>`; it returns `boost::none` if the given raster has no proxied data to resolve.
+
+`ProxiedRasterResolverInternals::BaseProxiedRasterResolver<ProxiedRawRasterType>` implements the shared machinery: reading level 0 straight from the source file via `RasterBandReaderHandle`, converting it to the mipmap's element type when they differ (integer sources are mipmapped as float), reading levels ≥ 1 from a lazily-created, cached `MipmappedRasterFormatReader`, and colouring regions with a `RasterColourPalette` through `ColourRawRaster`. This "main" mipmap file is shared by RGBA and floating-point rasters and by integer rasters paired with a floating-point palette.
+
+`ProxiedRasterResolverImpl` is partial-specialised on whether the raster's element type is integral. The non-integral specialisation is a thin pass-through to the base. The integral specialisation adds a second, colour-palette-specific mipmap file (via `get_coloured_mipmap_reader()`), because an integer raster combined with an *integer* colour palette needs colours baked into the mipmap itself rather than applied after reading — the base class alone cannot do this correctly, as its own doc comments note. The per-element-type typedefs at the bottom (`Int8ProxiedRasterResolver`, `Rgba8ProxiedRasterResolver`, etc.) are the concrete resolver types client code casts to once it knows a raster's data type via `RawRasterUtils`.
 
 ## Declared types
 
@@ -166,9 +168,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/ProxiedRasterResolver tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both `d_error_getting_mipmap_reader` and its coloured-mipmap counterpart latch permanently on the first failure to open or generate a mipmap file, so a resolver never retries an in-process failed mipmap build — the comments explain this is deliberate, since repeated partial builds would slow GPlates down, and callers must surface the failure to the user themselves. The coloured mipmap reader is also invalidated and rebuilt whenever the colour palette's id changes, so switching palettes on the same resolver instance is expected and does not require creating a new resolver.
 
 ## Used by
 

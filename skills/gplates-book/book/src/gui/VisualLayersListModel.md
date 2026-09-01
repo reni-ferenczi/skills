@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/VisualLayersListModel tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VisualLayersListModel` is a thin `QAbstractListModel` adapter over
+`VisualLayersProxy`, letting `VisualLayersListView` display and reorder the
+application's visual layers as an ordinary Qt item view. Each row's `data()`
+is just the underlying layer's index (`child_layer_index_at()`); the actual
+per-layer widget content is supplied elsewhere by `VisualLayersDelegate` and
+`VisualLayerWidget`.
+
+The model deliberately supports only one kind of edit — drag-and-drop
+reordering. `dropMimeData()` decodes a row index from a custom
+`VISUAL_LAYERS_MIME_TYPE` payload and calls `VisualLayersProxy::move_layer()`;
+adding or removing layers has to go through `ReconstructGraph` instead; this
+model only mirrors those changes back into the view via the
+`handle_visual_layer_added`/`removed`/`modified`/`about_to_be_*` slots
+connected to `VisualLayersProxy`'s signals. Using a private MIME type rather
+than a generic one is intentional: it stops a layer being dragged out into an
+unrelated application or view.
 
 ## Declared types
 
@@ -52,9 +65,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/VisualLayersListModel tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Layers cannot be inserted or removed through this model's own API (`data()`
+  is read-only apart from drag-and-drop) — always go through
+  `ReconstructGraph`/`VisualLayersProxy` and let the `layer_added`/`layer_removed`
+  signals update the view.
+- `d_visual_layers` is stored as a reference, so the `VisualLayersProxy` it
+  wraps must outlive the model.
 
 ## Used by
 

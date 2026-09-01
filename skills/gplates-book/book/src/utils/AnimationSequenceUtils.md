@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/AnimationSequenceUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The `GPlatesUtils::AnimationSequence` namespace is the single place that turns a
+desired start time, end time and time increment into a concrete frame-by-frame
+animation schedule. It exists so that the two independent consumers of that
+schedule — `AnimationController`, which drives on-screen playback, and
+`ExportTemplateFilenameSequence`, which generates export filenames — always
+agree on how many frames there are and what reconstruction time each one falls
+on, rather than each re-deriving that arithmetic and risking drift between the
+displayed animation and the exported files.
+
+`calculate_sequence()` does the actual work, producing a `SequenceInfo` that
+records both the caller's desired range and the range actually achieved. The
+bulk of its logic handles the case where `(end_time - start_time)` is not an
+exact multiple of the time increment: depending on `should_finish_exactly_on_end_time`,
+it either drops the leftover span or adds a final "remainder frame" shorter
+than the rest, and it uses `GPlatesMaths::are_geo_times_approximately_equal()`
+to decide whether an apparent remainder is real or just floating-point noise
+from the division. `calculate_time_for_frame()` then maps a frame index back
+to a reconstruction time using the precomputed `SequenceInfo`, treating the
+last frame as a special case so it lands exactly on `actual_end_time` even
+when earlier frames were spaced by `raw_time_increment`.
 
 ## Declared types
 
@@ -61,9 +78,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/AnimationSequenceUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `calculate_sequence()` throws `TimeIncrementZero` if `abs_time_increment` is
+  (approximately) zero; callers must catch it rather than assume a valid
+  `SequenceInfo` is always returned.
+- A zero-length remainder is treated as "no remainder frame" even when
+  `should_finish_exactly_on_end_time` is true: the near-zero check against
+  `are_geo_times_approximately_equal()` exists specifically to absorb
+  floating-point error in the range/increment division, not to model a real
+  edge case.
+- `raw_time_increment` (the field) carries a sign derived from whether
+  `start_time < end_time`, independent of the `abs_time_increment` argument's
+  sign; use it, not the input parameter, when stepping through frames.
 
 ## Used by
 

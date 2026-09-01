@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolylineIntersections tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit turns the raw intersection points that `GeometryIntersect::intersect()` finds between two geometries into a traversable structure. The four `partition()` overloads accept polyline/polygon pairs in any combination, run `GeometryIntersect` internally, then walk its output to build a `Graph` of `PartitionedPolyline` and `Intersection` nodes, each linked to its neighbours along both original geometries via raw `prev`/`next` pointers.
+
+Polygons are handled by treating them as polylines whose endpoints happen to coincide, rather than with dedicated polygon-intersection logic; the header itself flags this as provisional pending "proper polygon intersections... on top of `GeometryIntersect`". Self-intersections within a single input geometry are deliberately excluded from the graph unless they coincide with a genuine intersection between the two inputs, since ordering self-intersections consistently across both geometries turned out not to be worth the complexity (see the long worked example in the `partition()` Doxygen comment).
 
 ## Declared types
 
@@ -86,9 +86,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolylineIntersections tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `PartitionedPolyline` and `Intersection` have private constructors and are only created through their `create()` factories, matching their `GPlatesUtils::ReferenceCount` base; a `Graph`'s `partitioned_polylines1`/`partitioned_polylines2` and `*_ordered_intersections` sequences hold the owning `non_null_intrusive_ptr`s.
+- The `prev`/`next` pointers on both node types are plain (non-owning) raw pointers into those same sequences; a `NULL` pointer means either "this is the first/last node along the geometry" or a T-junction, not a dangling reference.
+- Passing the same polyline as both arguments to `partition()` is explicitly supported and treated as full overlap at every segment, not an error.
 
 ## Used by
 

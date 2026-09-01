@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/GeometryFinder tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryFinder` walks a feature's properties and collects every `GmlPoint`, `GmlLineString`, `GmlMultiPoint` and `GmlPolygon` it encounters, both into one combined `geometry_container_type` and into per-type containers so callers can ask for "all the polylines" without filtering the combined list themselves. `GmlOrientableCurve` and `GpmlConstantValue` wrappers are transparently unwrapped by re-visiting the geometry or value they carry.
+
+Passing a `GPlatesModel::PropertyName` to the constructor (or `add_property_name_to_allow()`) restricts the search to top-level properties with that name, via `initialise_pre_property_values()`; with no names supplied, every property is visited. `GeometryTypeFinder` and the free functions below build on this same visiting pattern for classification and lookup rather than collection.
 
 ## Declared types
 
@@ -80,9 +80,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/GeometryFinder tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`first_geometry_found()` throws `GPlatesGlobal::RetrievalFromEmptyContainerException` if nothing was found — call `has_found_geometries()` first. A `GmlPolygon`'s interior/exterior ring distinction is lost: the whole polygon becomes one `PolygonOnSphere`.
 
 ## Used by
 

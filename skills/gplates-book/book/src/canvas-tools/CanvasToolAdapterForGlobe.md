@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/CanvasToolAdapterForGlobe tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CanvasToolAdapterForGlobe` bridges the two canvas-tool interfaces GPlates has: `GPlatesGui::GlobeCanvasTool`, which `GPlatesQtWidgets::GlobeCanvas` drives with globe-specific event signatures, and `GPlatesCanvasTools::CanvasTool`, the widget-agnostic interface (shared with the map view) that the actual tools such as `ClickGeometry` or `DeleteVertex` implement. Each `handle_*` override here just converts the globe's arguments — separating the raw and view-oriented `PointOnSphere`, and converting a click position into a proximity-inclusion threshold via `GlobeCanvas::current_proximity_inclusion_threshold()` — and forwards to the wrapped `d_canvas_tool_ptr`. This lets a single `CanvasTool` implementation serve both the globe and the map without knowing about either widget; `CanvasToolAdapterForMap` is the equivalent adapter on the map side.
+
+Every override first checks `globe_canvas().isVisible()` before forwarding, so events reaching a hidden globe (for example while the map view is the one on screen) are dropped rather than delivered twice.
 
 ## Declared types
 
@@ -52,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/CanvasToolAdapterForGlobe tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `isVisible()` guard in `handle_deactivation()` is explicitly there to avoid deactivating the wrapped `CanvasTool` twice when both a globe and a map adapter wrap the same tool instance.
 
 ## Used by
 

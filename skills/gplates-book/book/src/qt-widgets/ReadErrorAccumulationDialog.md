@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ReadErrorAccumulationDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Presents the accumulated `GPlatesFileIO::ReadErrorAccumulation` — every failure/error/warning collected while parsing the files GPlates currently has loaded — as two parallel `QTreeWidget`s, one grouped by error type ("By Error") and one grouped by file/line ("By Line"). `d_read_errors` is populated by reference from outside (the constructor comment on the header notes it is handed to parsers), and `update()` rebuilds both trees from its four buckets (`d_failures_to_begin`, `d_terminating_errors`, `d_recoverable_errors`, `d_warnings`) via `populate_top_level_tree_by_type`/`_by_line`, which in turn call the various `create_occurrence_*_item` helpers to build the summary/file/line/description/result rows for each occurrence.
+
+The dialog keeps its four top-level tree items (one per error category, in each of the two trees) as long-lived pointers rather than looking them up by index, because `populate_top_level_tree_by_type`/`_by_line` need to add children under them and toggle their visibility depending on whether that category has any errors. `d_information_dialog` (an `InformationDialog` holding `s_information_dialog_text`) explains, in plain language, the difference between the four error categories to a user unfamiliar with the terminology.
 
 ## Declared types
 
@@ -68,9 +68,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ReadErrorAccumulationDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`update()` disables `setUpdatesEnabled(false)` around the whole tree-rebuild and re-enables it at the end, because Qt's per-item repaint becomes a measurable slowdown once the accumulation holds more than about a thousand entries. `clear()` discards and recreates all eight top-level tree items (four per tree), so any external code holding onto a `QTreeWidgetItem *` from before a `clear()` is left with a dangling pointer. The "Clea&r All" button on the button box maps to `QDialogButtonBox::Reset` and calls `clear_errors()`, which clears both `d_read_errors` and the tree display together — clearing one without the other would leave them out of sync.
 
 ## Used by
 

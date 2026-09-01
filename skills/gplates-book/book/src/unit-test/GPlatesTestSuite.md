@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/GPlatesTestSuite tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesTestSuite` is the common base for every `boost::unit_test::test_suite` in this directory, giving the hand-written suite hierarchy a uniform two-phase construction: `init()` calls the virtual `construct_maps()` (overridden by each concrete suite to populate `d_test_cases_map` and `d_test_suites_map` via the `ADD_TESTCASE`/`ADD_TESTSUITE` macros), then `add_test_suites()` and `add_test_cases()` walk those maps and register each entry with Boost.Test's `add()`, but only if `TestSuiteFilter::instance().pass(name, d_level)` allows it. This is what lets a single command-line filter decide, suite by suite and case by case, which parts of the (very large) tree actually run.
+
+`d_level` records the suite's depth from the root and is threaded through `ADD_TESTSUITE` as `d_level + 1` when a suite instantiates its children, so the filter can apply depth-based rules as well as name-based ones. The private default constructor blocks a `GPlatesTestSuite` from being built without a name, since `boost::unit_test::test_suite` requires one.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/GPlatesTestSuite tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`ADD_TESTSUITE` heap-allocates the child suite with `new` inside `construct_maps()`, before `add_test_suites()` ever consults `TestSuiteFilter`. So a suite rejected by the filter is still fully constructed — including running its own `construct_maps()`, which recursively builds and allocates further child suites — it is simply never passed to Boost.Test's `add()` and never executed.
 
 ## Used by
 

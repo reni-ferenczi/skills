@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/LogException tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LogException` is the catch-all `Exception` subclass for call sites that need to raise an error carrying a free-form message but don't warrant defining a dedicated exception type. It accepts the message as a `const char *`, `std::string` or `QString`; all three constructors normalize the message into the private `d_message` field as a `QString`, which `write_message()` later reports through `Exception::write_string_message()`.
+
+It is by far the most widely thrown exception type in the codebase (file readers, rotation/coregistration commands, raster and shapefile export, the Python execution thread), because it lets code report a specific, situational error without growing the exception-class hierarchy.
 
 ## Declared types
 
@@ -40,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/LogException tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`write_message()` reports the stored message via `d_message.toStdString()`, so only standard ASCII is guaranteed to survive; non-ASCII text passed to any of the constructors can come out corrupted when the exception is logged.
 
 ## Used by
 

@@ -8,9 +8,16 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GlobeOrientation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesGui::GlobeOrientation` is a pure abstract interface for how the globe
+is currently rotated and how the user re-orients it. The interaction model it
+codifies is a "handle": `set_new_handle_at_pos()` pins a handle to a point on
+the sphere (conveniently, wherever the mouse button goes down), and
+subsequent calls to `move_handle_to_pos()` re-derive the globe's orientation
+from where that handle has been dragged to. `orient_point()` and
+`reverse_orient_point()` apply the accumulated rotation and its inverse to an
+arbitrary point, letting callers convert between the globe's fixed model
+frame and its currently displayed orientation. `SimpleGlobeOrientation` is
+the sole implementation.
 
 ## Declared types
 
@@ -40,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GlobeOrientation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

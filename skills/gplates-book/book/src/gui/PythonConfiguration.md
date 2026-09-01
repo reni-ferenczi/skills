@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/PythonConfiguration tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PythonConfiguration` backs the named, typed configuration values that
+drawing-style Python scripts expose to the GUI (see `gui/DrawStyleManager`,
+`gui/DrawStyleAdapters`): a `Configuration` is a name-to-`ConfigurationItem*`
+map with value semantics — copying or assigning it deep-clones every owned
+item via `ConfigurationItem::clone()`, and `set()`/the destructor delete the
+previous owner's item, so `Configuration` fully owns everything it holds.
+`ConfigurationItem` itself is just a `QVariant` value with a virtual `clone()`;
+`PythonCfgItem` extends it with a `boost::python::object` mirror
+(`d_py_obj`) so the same configured value can be read from a Python drawing
+script and edited from a Qt widget in the GUI.
+
+The three concrete kinds mirror the argument types drawing scripts expose:
+`PythonCfgColor` parses its `QVariant` as a colour name/hex string into a
+`Colour` object; `PythonCfgPalette` treats its string value either as a
+readable `.cpt` file path (parsed into a `CptPalette`) or, if not a file, as
+the name of a built-in palette looked up via `built_in_palette()` (see
+`gui/Palette`); `PythonCfgString` stores an arbitrary trimmed string. Each
+`set_value()` rebuilds `d_py_obj` to keep the Python-visible value in sync
+with the C++ one.
 
 ## Declared types
 
@@ -99,9 +115,22 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/PythonConfiguration tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `Configuration` owns its `ConfigurationItem*` values: `set()` deletes the
+  previous item for a name before installing the new one, and the destructor
+  deletes every item. Passing a raw pointer into `set()` transfers ownership
+  to the `Configuration`.
+- Every place that replaces or destroys `d_py_obj` — `PythonCfgItem`'s
+  destructor, and `set_value()` on `PythonCfgColor`/`PythonCfgPalette`/
+  `PythonCfgString` — first takes a `GPlatesApi::PythonInterpreterLocker`,
+  because destroying a `boost::python::object` requires holding the Python
+  GIL; skipping this when adding a new `PythonCfgItem` subclass would corrupt
+  the interpreter state.
+- `PythonCfgPalette::set_value()` distinguishes a CPT file from a built-in
+  palette purely by `QFileInfo::isFile()`/`isReadable()`; if a `.cpt` file
+  fails to parse, it catches `GPlatesGlobal::LogException`, logs it, and
+  leaves `d_palette` null while `d_py_obj` still wraps a `GPlatesApi::Palette`
+  around that null pointer (which `GPlatesApi::Palette::get_color()` handles
+  by returning black).
 
 ## Used by
 

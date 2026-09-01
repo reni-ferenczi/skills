@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeXmlArchiveReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`XmlArchiveReader` is the `ArchiveReader` implementation that reconstructs a `Transcription` from XML, the counterpart to `XmlArchiveWriter`. It drives a caller-supplied `QXmlStreamReader` rather than owning its own file or device, so the same reader can sit inside a larger XML document (a project file, a session) that embeds a scribe archive as one element among others.
+
+Construction reads and validates the archive's root element: the archive signature, the XML archive format version and the `Scribe` version that wrote it, rejecting anything from a future, unsupported version via `Exceptions::UnsupportedVersion`. `read_transcription()` then walks the element structure back into a `Transcription::CompositeObject` tree using the protected `read_composite()`/`read_signed()`/`read_unsigned()`/`read_float()`/`read_double()`/`read_string()` primitives, with `read_start_element()`/`read_end_element()` handling the XML tag matching underneath. Numbers are parsed with a fixed `C_LOCALE` ("C" locale) rather than the system locale, so an archive written on one machine's locale reads back correctly on another.
 
 ## Declared types
 
@@ -55,9 +55,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeXmlArchiveReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The `QXmlStreamReader` passed to `create()` must already be positioned at the start of the XML element holding the archived stream; the reader does not seek to it itself.
+- `close()` requires the reader to be at the end of the root archive element, so it must only be called after every `Transcription` written to the archive has been read — closing early throws.
+- A mismatched or unrecognised archive signature, or an archive/format version newer than this build supports, throws `Exceptions::InvalidArchiveSignature`/`Exceptions::UnsupportedVersion` from the constructor itself, before any transcription is read.
 
 ## Used by
 

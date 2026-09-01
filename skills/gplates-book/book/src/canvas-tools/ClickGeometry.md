@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/ClickGeometry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ClickGeometry` is the default "pick a feature" canvas tool: clicking near a rendered geometry finds the reconstruction geometries under the cursor, populates the clicked-features table, and focuses one of them via `GPlatesGui::FeatureFocus`, letting the rest of the GUI (property inspector, highlighting) react to what the user selected. `handle_left_click()` does the finding and table population through `GPlatesGui::get_clicked_geometries()` and `add_clicked_geometries_to_feature_table()`, filtered by `d_filter_reconstruction_geometry_predicate` (defaulted to `default_filter_reconstruction_geometry_predicate`); `handle_shift_left_click()` layers one behaviour on top — after the same click handling, if a feature ends up focused it opens the `GPlatesQtWidgets::FeaturePropertiesDialog` via `choose_query_widget_and_open()`, so shift-click is "click and immediately inspect."
+
+Only the tool's own rendered layer is shown while it is active, toggled via `RenderedGeometryCollection::get_main_rendered_layer()` in `handle_activation()`/`handle_deactivation()`, since the focused-feature highlight is only meaningful while this tool (or one built on it) is selected.
 
 ## Declared types
 
@@ -52,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/ClickGeometry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

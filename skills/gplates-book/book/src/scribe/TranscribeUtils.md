@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit collects the utilities `Scribe` clients need for two recurring, non-generic problems: transcribing file paths portably, and bridging pointer-representation changes across archive versions. `FilePath` is the wrapper actually written to archives: it splits a path on `/` and transcribes each path segment as a separate string, which lets the underlying transcription format share common directory prefixes across many saved paths and keeps archives smaller. Its companion `TranscribeContext<TranscribeUtils::FilePath>` specialisation is how a caller (`presentation::ProjectSession` and related session code, per the "Used by" table) opts into two loading-time behaviours: rewriting each loaded path to be relative to wherever the project file was actually opened from — via `convert_file_path_relative_to_project()`, which walks the saved and loaded project directories to find their common ancestor and re-roots the path underneath the new project location — and remapping known-missing files to files the user has since relocated. `convert_file_path()` and `is_resource_file_path_or_empty_path()` handle the lower-level cross-platform concern: adding or stripping a Windows drive letter or UNC share name so a path saved on one operating system still resolves sensibly when the project is reopened on another, while leaving Qt resource paths (`:/...`) and empty paths untouched. `save_file_path`/`load_file_path` and their sequence-oriented overloads are the convenience entry points most callers actually use instead of touching `FilePath` directly.
+
+The pointer-bridging half of the header — `load_smart_pointer_from_raw_pointer()` and `load_raw_pointer_and_object_from_smart_pointer()` — exists purely for archive backward compatibility: because `Scribe` transcribes raw pointers and smart pointers with the same wire representation, these functions let current code load an old archive that recorded a member using the other pointer style than the one the class now uses, converting between an owned/tracked pointer and a raw pointer plus its pointed-to object as needed.
 
 ## Declared types
 
@@ -72,9 +72,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `FilePath::transcribe()` deliberately keeps its wire format as a raw indexed sequence of strings, not the `TranscribeSequenceProtocol` sequence tag, purely to stay bit-compatible with archives written before that protocol was standardised; do not "clean it up" to use the shared sequence helpers without breaking old project files.
+- `get_file_paths()` on `TranscribeContext<FilePath>` deduplicates and sorts, so its order has no relationship to the order paths were transcribed.
+- `convert_file_path_relative_to_project()` falls back to returning the (platform-converted) originally-saved path unchanged whenever no relative path can be formed — e.g. the saved file and saved project were on different drives, or on different drives/share names when reopened — so callers must not assume the result is actually relative to the new project location.
+- `load_raw_pointer_and_object_from_smart_pointer()` requires the loaded archive's dynamic type to exactly match `ObjectType`; a different derived type causes the load to fail rather than slice or convert.
 
 ## Used by
 

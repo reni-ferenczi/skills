@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/XmlOutputInterface tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`XmlOutputInterface` is a low-level, hand-rolled XML writer: callers ask for opening/closing/empty elements and lines of typed content (`write_line_of_single_integer_content`, `write_line_of_decimal_duple_content`, and so on), and the class takes care of indentation and newlines. It is created via the static factories `create_for_stdout` or `create_for_stream` rather than a public constructor, mirroring the pattern of returning a value-typed handle instead of exposing ownership of the target `std::ostream` directly (the destructor flushes the stream but deliberately does not close it, since the interface does not own it).
+
+`ElementPairStackFrame` is the RAII helper for element nesting: its constructor writes the opening element and its destructor writes the matching closing element, so a scope-local `ElementPairStackFrame` guarantees balanced tags even when an exception unwinds the stack (the destructor swallows any exception from the closing write, since destructors must not throw). `write_opening_element_with_attributes` and `write_line_of_multi_decimal_content` are templated on a forward-iterator type so callers can pass any container of name/value pairs or decimals without the interface depending on a specific container type.
+
+This is a legacy, pre-Qt-XML-writer piece of the file-io layer: its only current caller is the deprecated `GpmlOnePointFiveOutputVisitor`, which used it to hand-write the old GPML 1.5 XML output before GPlates moved to a proper streaming XML writer for current formats.
 
 ## Declared types
 
@@ -63,9 +65,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/XmlOutputInterface tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`create_for_stream` has a bug in the shipped source: its body constructs `XmlOutputInterface(std::cout, indentation_unit)` instead of using the passed-in `output_stream`, so calling it silently writes to standard output regardless of the stream argument.
+
+Once any write sets the status to `XML_WRITE_ERROR` (checked via `std::ostream::operator!`), every subsequent `write_indentation`, `write_unicode_string`, `write_attribute_name` and `write_attribute_value` call becomes a silent no-op — there is no way to clear the error and resume writing on that instance. `write_unicode_string`, `write_attribute_name` and `write_attribute_value` also do not escape or filter their input at all (each has a `FIXME` noting this): reserved XML characters such as `<` and `&` are written through unescaped, so callers are responsible for not passing dangerous element names, attribute names/values, or content through this interface.
 
 ## Used by
 

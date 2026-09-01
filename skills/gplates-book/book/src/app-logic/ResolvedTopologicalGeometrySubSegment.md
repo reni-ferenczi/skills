@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTopologicalGeometrySubSegment tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `ResolvedTopologicalGeometrySubSegment` records one contiguous run of a
+topological section's vertices that ends up contributing to a resolved
+topological polygon, polyline, or network boundary. A topological
+feature is built from a chain of sections, each of which is clipped by
+intersection with its neighbours; this class is what remains of a section
+after that clipping — the un-clipped section geometry, the clipped
+`ResolvedSubSegmentRangeInSection`, and the `d_use_reverse` flag that says
+whether the clipped range's vertices run backwards relative to the final
+topology's winding direction.
+
+The section a sub-segment came from can itself be a reconstructed feature
+geometry or a `ResolvedTopologicalLine`. In the latter case the sub-segment
+recursively has its own "sub-sub-segments" — the portions of the line's own
+sub-segments that fall within this clipped range — computed lazily by
+`ResolvedTopologicalSubSegmentImpl` and cached in `d_sub_sub_segments` on
+first request, along with the per-point `ResolvedVertexSourceInfo` values
+returned by `get_sub_segment_point_source_infos()`.
 
 ## Declared types
 
@@ -60,9 +74,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTopologicalGeometrySubSegment tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_sub_segment_points()` returns the un-reversed vertices of the
+contributing section geometry; whether those vertices actually run forwards
+or backwards in the final resolved topology depends on `get_use_reverse()` —
+use `get_reversed_sub_segment_points()` (or the point-source-info equivalent)
+to get vertices already in final-topology order. `get_sub_segment_point_source_infos()`
+throws `PreconditionViolationError` if the reconstruction geometry passed to
+`create()` is neither a `ReconstructedFeatureGeometry` nor a
+`ResolvedTopologicalLine`. `d_point_source_infos` and `d_sub_sub_segments`
+are `mutable` and computed only on first access, so a `const`
+`ResolvedTopologicalGeometrySubSegment` can still populate them internally.
 
 ## Used by
 

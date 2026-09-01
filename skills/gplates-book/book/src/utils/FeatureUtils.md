@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/FeatureUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureUtils` is a grab bag of free functions for pulling a handful of
+commonly needed values out of a `GPlatesModel::FeatureHandle` without the
+caller having to write its own `ConstFeatureVisitor`. `get_recon_plate_id_as_int`,
+`get_age`, `get_start_end_time` and `get_begin_time` all work the same way
+internally: they walk the feature's top-level properties looking for a
+`gpml:plateId`/`gml:TimePeriod` property, dispatching each one through the
+file-private `PropertyFinder` visitor (declared in the `.cc`, not the header)
+that records whichever of a plate ID, start time or end time it happens to
+visit. `convert_property_name` and `get_shapefile_attribute` go the other
+way, turning the `"gpml:name"`-style strings that come from shapefile
+attribute mappings and similar text sources into a `GPlatesModel::PropertyName`
+or a bare attribute name via a regular expression.
+
+`get_age` and `get_begin_time` translate `GeoTimeInstant`'s distant-past and
+distant-future sentinels into `GPlatesMaths::Real::positive_infinity()` and
+`negative_infinity()` respectively, so callers get ordinary `Real` arithmetic
+instead of having to special-case those sentinels themselves.
 
 ## Declared types
 
@@ -51,9 +65,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/FeatureUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only `get_recon_plate_id_as_int` null-checks its `feature_ptr` argument;
+`get_age`, `get_start_end_time` and `get_begin_time` dereference it directly
+and will crash on a null feature handle.
 
 ## Used by
 

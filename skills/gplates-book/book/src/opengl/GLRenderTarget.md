@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLRenderTarget tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A fixed-size off-screen render target: a texture plus an optional
+depth/stencil buffer, rendered into between `begin_render` and `end_render`
+(or, more conveniently, over the lifetime of a `RenderScope`). It delegates
+its actual OpenGL framebuffer-object work to `GLRenderTargetImpl`, which it
+owns by value.
+
+The design point is context portability: a native OpenGL framebuffer object
+cannot be shared between rendering contexts, but `GLRenderTarget` can be used
+freely across contexts because `GLRenderTargetImpl` creates a framebuffer
+object per context internally, while its texture and renderbuffer resources
+(which are natively shareable) stay shared. `end_render` restores whichever
+framebuffer object (or the main framebuffer) was bound before `begin_render`,
+so nesting or interleaving render targets does not require callers to track
+prior bindings themselves. As with the other `GL*Object` wrappers,
+`boost::shared_ptr` rather than `non_null_intrusive_ptr` is used deliberately,
+so instances can be held in a `GPlatesUtils::ObjectCache`.
 
 ## Declared types
 
@@ -45,9 +58,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLRenderTarget tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_texture` throws if called while rendering is in progress (between
+`begin_render` and `end_render`), since the texture cannot be safely sampled
+until rendering to it has finished. `is_supported` must be checked before
+`create`: besides `GL_EXT_framebuffer_object`, a stencil buffer additionally
+requires `GL_EXT_packed_depth_stencil` (most consumer hardware only supports a
+stencil attachment packed together with depth), and non-power-of-two
+dimensions require non-power-of-two texture support.
 
 ## Used by
 

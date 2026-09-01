@@ -10,9 +10,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/DrawStyleDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`DrawStyleDialog` is the "Draw Style" dialog: it lets the user pick, edit and
+preview the `GPlatesGui::StyleAdapter` (a Python-configurable colouring/drawing
+style) applied to a single visual layer, or to "All" layers via `LayerGroupComboBox`
+— a `VisualLayersComboBox` restricted (through its `predicate_type` `pred()`) to
+reconstruct and topology-resolver layers, with an extra synthetic "All" entry
+prepended by `insert_all()`. Available styles are organised into categories in
+`categories_table` (populated from `GPlatesGui::DrawStyleManager::all_catagories()`)
+and listed per-category in `style_list`; selecting one calls `set_style()`, which
+either stores the adapter directly in the locked layer's visual params or, for
+"All", records it in `d_style_of_all` and pushes it out to every layer via
+`apply_style_to_all_layers()`. Editable style configurations (`GPlatesGui::Configuration`,
+built from Python-exposed `PythonCfgItem`s) are rendered into ad hoc widgets by
+`create_cfg_widget()`, one specialised subclass per config item type
+(`PythonArgColorWidget`, `PythonArgPaletteWidget`, or the generic
+`PythonArgDefaultWidget`), and edits there flow back through `handle_configuration_changed()`.
+
+Each style entry gets a live preview icon rendered from the actual globe/map
+canvas: the dialog listens to the main `GlobeAndMapWidget`'s `repainted()` signal
+in `handle_main_repaint()` and calls `show_preview_icons()` whenever the mouse is
+released and the dialog is visible, guarding against the resulting
+select-style-to-preview -> repaint -> select-style-to-preview feedback loop with
+`d_ignore_next_main_repaint`. The nested `PreviewGuard` RAII class disables the
+combo box and categories table for the duration of an icon-generation pass (which
+temporarily switches the active style for each candidate) and restores the
+previously selected style and re-enables the widgets on destruction. `reset()`
+(re-)initialises the dialog for a given layer — or "All" if the weak pointer is
+invalid — each time it is popped up, and its `style_` parameter is a documented
+workaround (see the `FIXME` on it) letting an external observer push a style
+change into the dialog's own state without the dialog otherwise tracking layer
+visual-params changes made elsewhere.
 
 ## Declared types
 
@@ -93,9 +120,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/DrawStyleDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`DrawStyleDialog` does not merely observe a layer's draw style — `set_style()` and
+`reset()` write into it directly, so as the `FIXME` on `reset()`'s `style_`
+parameter documents, another code path that changes a layer's style bypasses this
+dialog's own GUI state unless it goes through that parameter to keep the two in
+sync. The destructor calls `GPlatesGui::DrawStyleManager::save_user_defined_styles()`
+only if `DrawStyleManager::is_alive()`, since the manager is a Meyer's-style
+singleton that may already have been destroyed at static-destruction time.
+`handle_main_repaint()` must ignore the repaint triggered by its own style change
+(via `d_ignore_next_main_repaint`) or preview-icon generation would trigger
+another repaint indefinitely.
 
 ## Used by
 

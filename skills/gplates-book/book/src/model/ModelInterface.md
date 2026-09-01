@@ -9,9 +9,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/ModelInterface tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ModelInterface` is the public face of the p-impl pair with `Model`: it holds a
+`boost::shared_ptr<Model>` and forwards member access through `operator->()`
+(and the equivalent `access_model()`) so that everything outside the model tier
+depends only on this header, never on `Model.h`. That keeps `Model`'s own
+includes out of the rest of the codebase's compile graph and lets `Model`'s
+internals change without forcing a rebuild of its many callers.
+
+The default constructor creates a brand-new `Model`; copy-construction instead
+shares the existing one, cheaply, by copying the `shared_ptr` and bumping its
+reference count. Because of that sharing, every `ModelInterface` copied from a
+given original refers to the same underlying `Model` and its feature store —
+copying a `ModelInterface` does not clone the model's data.
 
 ## Declared types
 
@@ -40,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/ModelInterface tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

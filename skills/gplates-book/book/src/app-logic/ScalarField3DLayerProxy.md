@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ScalarField3DLayerProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The `LayerProxy` for the 3D scalar field layer: it wraps a single scalar-field-carrying feature, resolves it into a `ResolvedScalarField3D` for `GLVisualLayers` to volume-render, and gathers the auxiliary geometry that shapes how that volume is displayed. Two independent kinds of auxiliary input can be plugged in, each from up to three geometry sources (`ReconstructLayerProxy` for reconstructed static features, `TopologyGeometryResolverLayerProxy` for resolved topological boundaries, `TopologyNetworkResolverLayerProxy` for resolved networks): "cross sections" are geometries sliced through the volume, and the "surface polygons mask" limits the region over which the field is rendered. Each kind has its own `add_*`/`remove_*` pair of methods per source type, all tracked via `LayerProxyUtils::InputLayerProxySequence`.
+
+Like other layer proxies, results are computed lazily and cached against a reconstruction time: `ResolvedScalarFieldFeatureProperties`, `CrossSections` and `SurfacePolygonsMask` each cache their own `cached_reconstruction_time` alongside their data, and `resolve_scalar_field_feature` re-extracts the field's properties (currently just its filename) only when the requested time does not match what is cached. `check_input_layer_proxies` compares each connected input proxy's own subject token against a locally-stored copy every time cross sections or the mask are requested, invalidating and re-fetching only the caches whose inputs actually changed.
+
+Three `SubjectToken`s let dependents poll for change at different granularities: `get_subject_token` for any change to this layer at all, `get_scalar_field_subject_token` for changes to the resolved field specifically (useful once fields become time-dependent), and `get_scalar_field_feature_subject_token` for changes to just the input feature reference.
 
 ## Declared types
 
@@ -94,9 +96,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ScalarField3DLayerProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_resolved_scalar_field_3d`, `get_cross_sections` and `get_surface_polygons_mask` all return `boost::none`/`false` rather than throwing when nothing is connected or resolution fails (no scalar field feature, missing required properties, or no geometries from the connected input layers) — callers must treat an empty result as a normal, expected outcome, not an error. `resolve_scalar_field_feature` currently only extracts the scalar field filename, so time-dependence of the resolved field is limited to whatever the reader keyed on that filename supports; the per-time caching machinery is already in place for when more time-varying properties are added.
 
 ## Used by
 

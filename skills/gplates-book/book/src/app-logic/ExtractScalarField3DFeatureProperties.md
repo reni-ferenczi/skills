@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ExtractScalarField3DFeatureProperties tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExtractScalarField3DFeatureProperties` is the scalar-field counterpart of `ExtractRasterFeatureProperties`: a `GPlatesModel::ConstFeatureVisitor` that pulls the one property a scalar field layer needs — the `GmlFile` filename under `gpml:filename` — out of a scalar field feature. Because that property can be wrapped in a `GpmlPiecewiseAggregation`, the visitor is constructed with a reconstruction time and only descends into the `GpmlTimeWindow` whose `valid_time` contains it, so `get_scalar_field_filename()` returns the filename for that one instant.
+
+The anonymous `CanResolveScalarField3DFeature` visitor answers the simpler question "is this a scalar field feature at all", backing `is_scalar_field_3d_feature()` and `contains_scalar_field_3d_feature()`; `FeatureCollectionFileFormatClassify` uses it to classify feature collections without needing a reconstruction time.
 
 ## Declared types
 
@@ -63,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ExtractScalarField3DFeatureProperties tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`CanResolveScalarField3DFeature` visits every time window regardless of `valid_time`, unlike `ExtractScalarField3DFeatureProperties`, which resolves against a specific reconstruction time — the two classes answer different questions ("is this ever a scalar field feature" versus "what is its filename now") even though they walk the same property structure.
 
 ## Used by
 

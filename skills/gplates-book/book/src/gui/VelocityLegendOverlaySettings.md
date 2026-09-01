@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/VelocityLegendOverlaySettings tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VelocityLegendOverlaySettings` is a plain value object holding everything
+`GPlatesGui::VelocityLegendOverlay` needs to draw the on-globe velocity-scale
+legend: text font and colour, arrow colour, optional background colour and
+opacity, screen anchor corner (`Anchor`) with a pixel offset, and the arrow's
+angle and length. `ConfigureVelocityLegendOverlayDialog` edits an instance of
+this class directly; `VelocityLegendOverlay` reads it back when painting.
+
+The `ArrowLengthType` enum captures the one real design choice the settings
+encode: whether the legend keeps the velocity scale (`DYNAMIC_ARROW_LENGTH`,
+arrow length changes with zoom to preserve a fixed cm/yr scale) or the arrow's
+on-screen length (`MAXIMUM_ARROW_LENGTH`, the scale snaps to round multiples
+of 2/5/10/20 cm/yr as the view zooms to keep the arrow a roughly constant
+size) fixed as the user zooms. `d_selected_velocity_layer` records which
+`VisualLayer` the legend currently reflects, since a document can have more
+than one velocity layer and the overlay only shows one at a time.
 
 ## Declared types
 
@@ -103,9 +115,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/VelocityLegendOverlaySettings tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `get_selected_velocity_layer()` is a `boost::weak_ptr`; the default
+  constructor leaves it empty and does not attempt to auto-select an existing
+  velocity layer, so callers must check it before use and expect it to be
+  expired if the referenced `VisualLayer` was since removed.
+- The default scale-text font is not a fixed size: `get_default_font()`
+  scales the application's default `QFont` point size by 1.5, so it tracks
+  whatever font the rest of the application is using.
+- The legend is disabled (`DEFAULT_IS_ENABLED == false`) and the background
+  fill enabled by default (`DEFAULT_BACKGROUND_ENABLED == true`); the two
+  flags are independent, so a caller can show the arrow/text without the
+  background box or vice versa.
 
 ## Used by
 

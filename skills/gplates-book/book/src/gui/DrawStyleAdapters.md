@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/DrawStyleAdapters tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`StyleAdapter` is the abstract base of the "draw style" system: given a `GPlatesModel::FeatureHandle::weak_ref`, `get_style()` returns a `DrawStyle` (currently just a `Colour`) to render that feature with, and each `StyleAdapter` carries a name, a `StyleCategory`, and a `Configuration` of user-adjustable settings. Two concrete adapters implement this. `ColourStyleAdapter` wraps a `boost::shared_ptr<const ColourScheme>` and exists, per its own comment, purely for backward compatibility with the older colouring-scheme mechanism it supersedes. `PythonStyleAdapter` is the general case: it wraps a Python object (`d_py_obj`) implementing a `get_style(feature, draw_style)`/`get_config()`/`set_config()` protocol, letting user-supplied Python draw-style scripts plug into the same interface as built-in C++ styles. `init_configuration()` parses the Python object's `get_config()` dict (keys of the form `"name/subkey"`) into `Configuration`/`ConfigurationItem` objects via `create_cfg_item()`, dispatching on a `"type"` entry (`Color`, `Palette`, else plain string) to the matching `PythonCfgItem` subclass from `PythonConfiguration.h`; `update_cfg()` pushes edited C++-side configuration back into the Python object before each `get_style()` call, but only when `d_cfg_dirty` is set.
+
+`register_alternative_draw_styles()` lets a Python style optionally declare a `get_config_variants()` dict of named preset configurations; for each one it deep-clones the adapter (spawning a fresh Python object via `copy.deepcopy`), applies the variant's settings, and registers the clone with `DrawStyleManager` as a separate style in the same category — this is how a single Python script can appear in the styles list as several ready-made presets.
 
 ## Declared types
 
@@ -80,9 +80,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/DrawStyleAdapters tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every call into `d_py_obj` acquires a `GPlatesApi::PythonInterpreterLocker` (the GIL) first, including in the destructor, which deliberately locks before dropping GPlates' reference to the wrapped Python object so its destruction happens under the GIL. Python exceptions from the wrapped object are always caught as `boost::python::error_already_set` and logged with `qWarning()` rather than propagated — a broken user draw-style script degrades to a default-constructed `DrawStyle` instead of crashing or aborting the render. `d_cfg_dirty` is `mutable` so that `get_style() const` can lazily call `update_cfg()` the first time it is needed after a configuration edit, and `StyleAdapter::operator==` compares only `d_id`, which `DrawStyleManager` (a `friend`) is responsible for assigning uniquely — two independently constructed adapters are never equal until registered.
 
 ## Used by
 

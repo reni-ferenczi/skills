@@ -9,9 +9,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/InternalSession tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InternalSession` is the `Session` subclass used for sessions saved to and
+restored from the user preferences store (as opposed to a project file saved
+to disk). Its job is to hide three generations of on-disk representation
+behind one interface: `GPLATES_1_4_OR_BEFORE_FORMAT` (pre-`Scribe`, delegated
+to `DeprecatedSessionRestore`), `GPLATES_1_5_FORMAT` (a single `Scribe` text
+archive holding both metadata and data transcriptions) and `CURRENT_FORMAT` (a
+`Scribe` binary archive, with metadata and data stored under separate keys so
+the session list can be populated without deserialising the full data). Each
+format is distinguished purely by which keys are present in the
+`UserPreferences::KeyValueMap`, tested newest-first in `get_session_format()`
+since the current format also carries the 1.5-format key for backward
+compatibility.
+
+`create_restore_session()` reads only the metadata transcription — the
+save time and the loaded/all file paths, via
+`GPlatesScribe::TranscribeUtils::load_file_paths` — so the session list in the
+GUI can be built cheaply; the actual state (layers, features, view settings)
+is transcribed by `TranscribeSession` and only decoded when
+`restore_session()` is later called. `save_session()` similarly delegates the
+real transcription work to `TranscribeSession::save()`, additionally
+recording every file path touched via a `TranscribeUtils::FilePath`
+transcribe context so `get_file_paths()` can later report which files still
+exist.
 
 ## Declared types
 
@@ -54,9 +74,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/InternalSession tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`has_valid_session_keys()` must return true before `create_restore_session()`
+is called; the latter asserts (throwing `TranscribeSession::UnsupportedVersion`)
+if the format is unrecognised, and again if required metadata fields fail to
+load or the metadata transcription is left incomplete. `get_file_paths()`
+reports paths from `d_all_file_paths`, which for `GPLATES_1_5_FORMAT` sessions
+falls back to the loaded-files list because that older format never recorded
+the full set of touched files. `set_remapped_file_paths()` only stores the
+remapping for later use by `restore_session()`; it does not itself touch any
+files. `restore_session()` on a `GPLATES_1_4_OR_BEFORE_FORMAT` session bypasses
+`Scribe` entirely and goes through `DeprecatedSessionRestore` instead.
 
 ## Used by
 

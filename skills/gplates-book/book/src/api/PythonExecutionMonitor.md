@@ -9,9 +9,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PythonExecutionMonitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApi::PythonExecutionMonitor` lets the GUI thread hand a job to
+`PythonExecutionThread`, keep processing Qt events, and be woken up when that
+job finishes, instead of blocking synchronously. The caller constructs a
+monitor, passes it down with the job, then calls `exec()`, which runs a local
+`QEventLoop` until one of the `signal_exec_*`/`signal_eval_finished` methods
+stops it; `get_finish_reason()`, `get_evaluation_result()` and related getters
+then report how the job ended.
+
+Because the event loop must be started and stopped on the thread that created
+it, every `signal_*` and `set_system_exit_exception_raised` call — which may be
+invoked from the Python execution thread — marshals its work back onto the
+main thread via `GPlatesApi::PythonUtils::run_in_main_thread` before touching
+any monitor state, rather than mutating state directly from whichever thread
+calls them. The constructor enforces that a monitor is created on the main GUI
+thread by throwing `PythonExecutionMonitorNotInMainGUIThread` otherwise.
 
 ## Declared types
 
@@ -67,9 +79,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PythonExecutionMonitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_keyboard_interrupt_exception_raised()` and `set_other_exception_raised()`
+are the exception, not the rule: unlike the other `signal_*`/`set_*` methods
+they write `d_finish_reason` directly, without going through
+`run_in_main_thread`, so calling them off the main thread is not safe the way
+the rest of the class is documented to be. `stop_monitor()` also polls in a
+loop (up to roughly a second) for `d_event_loop` to actually be running before
+calling `quit()`, and gives up with a warning if it never starts — `exec()`
+must therefore be called promptly after the job is dispatched, with no chance
+for Qt to process other events in between, exactly as the header for `exec()`
+warns.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportNetRotationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportNetRotationAnimationStrategy` is the `ExportAnimationStrategy` (Gamma et al. Strategy role, driven by `ExportAnimationContext`) that computes and writes the net rotation of the surface (relative to the mantle/anchor plate) as a CSV file per animation frame, plus a single cumulative `total-net-rotations.csv` written once in `wrap_up()` after the whole batch completes. `do_export_iteration()` always dispatches to `export_iteration()`, which samples velocities on a hard-coded 1-degree lat-lon grid, weighting each sample by `ResolvedTopologicalGeometry`/`ResolvedTopologicalNetwork` coverage and its cell's surface area (`area_conversion_to_km2` converts 1-degree-square grid cells to real km²) to produce the net rotation pole and angular velocity for that frame; each computed pole is also appended to `d_total_poles` for the end-of-run summary. A parallel implementation, `export_iteration_using_existing_velocity_mesh()`, computes the same quantity from an existing velocity-mesh layer's `MultiPointVectorField` output instead of a fresh grid, but is not currently called — `do_export_iteration()` has it commented out in favour of the grid-based path.
+
+`get_older_and_younger_times()` translates the configured `VelocityMethodWidget::VelocityMethod` and delta-time into the pair of reconstruction times the velocity calculation actually needs, and the `write_*_to_csv_data()` free functions assemble the CSV rows (reconstruction/anchor-plate metadata, header, and the net-rotation values themselves) that both `export_iteration()` and `wrap_up()` write out via `CsvExport`.
 
 ## Declared types
 
@@ -95,9 +95,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportNetRotationAnimationStrategy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A frame is silently skipped (returning success) rather than exported if the younger of the two velocity-calculation times falls before present day. `d_total_poles` and `d_referenced_files_set` accumulate across every `do_export_iteration()` call in the batch and are only consumed once, in `wrap_up()`; they are meaningless if read before the batch finishes. `export_iteration_using_existing_velocity_mesh()` and its supporting free functions (`get_velocity_field_calculator_layer_proxies()`, `get_vector_field_seq()`, `populate_vector_field_seq()`) are currently dead code — reachable only by uncommenting the call in `do_export_iteration()`.
 
 ## Used by
 

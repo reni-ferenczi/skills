@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/TerraFormatVelocityVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed velocity vector fields to Terra text format, a data format used in geodynamic modelling. The namespace wraps `MultiPointVectorField` objects—which pair domain points on a sphere with velocity vectors—and writes them to a file with Terra parameters (grid dimensions `mt`, `nt`, `nd`, processor number, and reconstruction age). The export formats each domain point and its corresponding velocity as three double-precision components, writing them in a layout compatible with Terra's input expectations.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/TerraFormatVelocityVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Velocity vectors are output with 16 decimal digits of precision and field width 19 characters. If a `MultiPointVectorField` has invalid or null codomain elements at a domain point, the exporter outputs a zero velocity for that point. The output file is opened in text mode for cross-platform line-ending handling. The helper functions `print_terra_velocity_line()` and `print_terra_velocity_vector_field()` are in an anonymous namespace and format the velocity data before streaming it to the output file; they are not meant for external use.
 
 ## Used by
 

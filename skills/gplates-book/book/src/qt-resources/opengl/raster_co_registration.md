@@ -13,9 +13,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=shaders/raster_co_registration tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This shader set implements the multi-pass GPU pipeline `GLRasterCoRegistration` uses to compute per-seed-geometry statistics (mean, standard deviation, minimum, maximum) of a raster over each seed's region of interest. The three shader pairs correspond to the three passes of that pipeline: `render_region_of_interest_geometries_*` rasterises a seed geometry (point, line or fill) into a mask, writing full coverage into every pixel that falls inside the region of interest defined around it — a point's or line's ROI is a small-circle or great-circle-arc band tested with `discard`, using a small-angle (`tan`/`sin`) or large-angle (`acos`) formulation chosen per `#define` to keep the trigonometry numerically stable across the whole angle range. `mask_region_of_interest_*` then extracts the target raster's data and coverage inside that mask, undoing the bilinear-filtering bias described in the fragment shader's comments so MIN/MAX and MEAN agree on single-pixel regions, and folds coverage into either `(C*D, C*D*D, C)` moments (for mean/standard deviation, selected by `FILTER_MOMENTS`) or `(D, C)` extrema (for min/max, `FILTER_MIN_MAX`). `reduction_of_region_of_interest_*` repeatedly downsamples that intermediate texture 2x2-to-1x1 (`REDUCTION_SUM`, `REDUCTION_MIN`, `REDUCTION_MAX`) until each seed's whole region of interest has been folded into a single texel, which `GLRasterCoRegistration` then reads back on the CPU.
+
+All three vertex shaders carry the same two-stage clip-space remapping — raster-frustum-to-seed-frustum, then seed-frustum-to-render-target-frustum — expressed as `(translate_x, translate_y, scale)` triples rather than full matrices, since a post-projection scale/translate is all a cube-map-tile quadrant split needs. `ENABLE_SEED_FRUSTUM_CLIPPING` adds an extra fragment-side clip against the seed frustum's side planes for cases where the GPU's own NDC clipping is not tight enough.
 
 ## Declared types
 
@@ -31,9 +31,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=shaders/raster_co_registration tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Each shader is compiled with a different combination of `#define`s (`FILTER_MOMENTS`/`FILTER_MIN_MAX`, `REDUCTION_SUM`/`REDUCTION_MIN`/`REDUCTION_MAX`, `POINT_REGION_OF_INTEREST`/`LINE_REGION_OF_INTEREST`/`FILL_REGION_OF_INTEREST`, `SMALL_ROI_ANGLE`/`LARGE_ROI_ANGLE`, `ENABLE_SEED_FRUSTUM_CLIPPING`) selected by `GLRasterCoRegistration` at link time, so a given `.glsl` file describes several distinct compiled programs rather than one. The min/max reduction and mask shaders discard fragments with zero coverage rather than writing zero data, relying on the framebuffer having been cleared to zero beforehand so uncovered pixels stay correctly at zero coverage.
 
 ## Used by
 

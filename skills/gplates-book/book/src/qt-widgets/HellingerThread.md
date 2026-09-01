@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerThread tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HellingerThread` runs the Hellinger pole-fitting and uncertainty calculations on a background `QThread` so the actual number-crunching, which is delegated to Python, does not block the GUI. `run()` dispatches on `d_thread_type` (`TWO_WAY_POLE_THREAD_TYPE`, `THREE_WAY_POLE_THREAD_TYPE`, `TWO_WAY_UNCERTAINTY_THREAD_TYPE`, `THREE_WAY_UNCERTAINTY_THREAD_TYPE`) to one of `calculate_two_way_fit()`, `calculate_three_way_fit()`, `calculate_two_way_uncertainties()` or `calculate_three_way_uncertainties()`. Each of these takes a `GPlatesApi::PythonInterpreterLocker`, `exec_file`s the bundled `hellinger.py` (`d_python_file`) into the embedded interpreter, and calls a named function in it (e.g. `calculate_pole_2_way`) with the current picks and fit parameters read from `HellingerModel`, passing file paths rather than in-memory data — picks and results are handed to and from the Python side entirely via temporary files under `d_path_for_temporary_files` (`temp_pick_filename()`, `temp_result_filename()`, `temp_par_filename()`).
+
+`HellingerDialog` owns one `HellingerThread`, configures it with `initialise()` and `set_python_script_type()`, starts it, and picks up the result once the thread's `finished` signal fires.
 
 ## Declared types
 
@@ -75,9 +75,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerThread tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_hellinger_dialog_ptr` and `d_hellinger_model_ptr` are non-owning pointers into objects owned by `HellingerDialog`; because `run()` executes on a separate thread, both must remain valid and effectively read-only from the GUI thread's perspective for the duration of the run. `BOOST_PYTHON_MAX_ARITY` is defined to 16 in the `.cc` (before any Boost.Python header is included) because `calculate_pole_2_way` and its three-way counterpart are called with more arguments than Boost.Python's default arity limit allows.
 
 ## Used by
 

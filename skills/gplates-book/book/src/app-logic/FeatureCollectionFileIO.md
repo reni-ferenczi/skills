@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/FeatureCollectionFileIO tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureCollectionFileIO` is the single entry point the rest of the application uses to load, save, reload and unload feature collection files, delegating the bookkeeping of which files are currently open to `FeatureCollectionFileState` and the actual format-specific reading and writing to `GPlatesFileIO::FeatureCollectionFileFormat::Registry`. It is a `QObject` so it can report read problems asynchronously through the `handle_read_errors` signal rather than forcing every caller to inspect a `GPlatesFileIO::ReadErrorAccumulation` directly.
+
+`load_files()` exists alongside `load_file()` because loading a group of files together lets `FeatureCollectionFileState` send one notification instead of many; this matters for feature collections that reference each other, such as topological boundary features, which must find their referenced features already loaded in the model before they resolve. `create_file()` and `save_file()` cover the write side: `create_file()` registers a feature collection that did not originate from a file (optionally writing it to disk first), while `save_file()` writes an already-registered file's collection without touching `FeatureCollectionFileState`.
 
 ## Declared types
 
@@ -52,9 +52,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/FeatureCollectionFileIO tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `load_files()`, `load_file()`, `reload_file()` and `save_file()` each wrap their model changes in a `GPlatesModel::NotificationGuard` so the model emits a single change event instead of one per feature; `unload_file()` deliberately does not, because the model currently loses a removed feature collection's pending "publisher deactivated" callbacks if the notification is deferred past removal — a known model limitation noted in the source, not a bug in this class.
+- `reload_file()` removes every feature from the existing `FeatureCollectionHandle` and re-populates it in place, rather than replacing the handle, so that outstanding `weak_ref`s and model callbacks into that feature collection stay valid across a reload.
+- `save_file()` throws `GPlatesGlobal::InvalidFeatureCollectionException` if the file's feature collection is invalid; pass `clear_unsaved_changes = false` when saving a copy so the original file is still flagged as having unsaved changes.
 
 ## Used by
 

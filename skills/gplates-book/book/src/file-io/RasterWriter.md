@@ -9,9 +9,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RasterWriter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterWriter` is the write-side counterpart of `RasterReader`: a
+format-independent facade over `RgbaRasterWriter` and `GdalRasterWriter`,
+selected in the constructor from the output filename's extension via
+`get_format()`, and held behind the `RasterWriterImpl` interface in `d_impl`
+so callers never see GDAL or image-library types. `create()` fixes the
+raster's dimensions, band count and `RasterType::Type` up front; if the
+extension is unsupported, or the format does not support the requested band
+type, `d_impl` is left null and a warning is logged, mirroring `RasterReader`'s
+null-impl-on-failure pattern.
+
+Writing is a three-step protocol: `create()` opens the writer, repeated
+`write_region_data()` calls fill in `RawRaster` regions band by band (regions
+may be written in pieces, and a no-data value carried by the first region with
+one becomes the no-data value for the whole band — later regions must agree
+with it), and a single `write_file()` call at the end commits everything,
+along with any georeferencing and spatial reference system set via
+`set_georeferencing()`/`set_spatial_reference_system()`, to disk. RGBA format
+handlers accept only one colour band; GDAL handlers accept one colour band
+(stored internally as four R/G/B/A bands) or several non-colour bands, but
+never a mix of band types within one raster.
 
 ## Declared types
 
@@ -72,9 +89,12 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RasterWriter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`write_file()` must be called exactly once, at the end; skipping it means no
+file is ever written, and calling `can_write()` afterwards is expected to
+fail. Any raster region never touched by `write_region_data()` is left with
+undefined pixel values rather than a default fill. Regions with a no-data
+value must all agree on that value once one has been set on a band — a
+mismatch is a caller bug the writer does not reconcile for you.
 
 ## Used by
 

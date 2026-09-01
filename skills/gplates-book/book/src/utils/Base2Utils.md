@@ -9,9 +9,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Base2Utils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::Base2` is a small collection of bit-twiddling helpers for
+power-of-two arithmetic on 32-bit unsigned integers, adapted from Sean Eron
+Anderson's public bit-hacks reference. `next_power_of_two()` uses the classic
+fill-the-bits-then-increment trick; `previous_power_of_two()` and the
+`log2_*` variants are built on top of it, using a five-entry bitmask/bitshift
+table to binary-search the position of the highest set bit rather than
+looping bit by bit.
+
+Its main consumers are the `opengl` texture and raster-tiling code (mipmap
+level counts, cube-map and multi-resolution raster tile sizes) and raster
+readers in `file-io`, all of which need to round dimensions up or down to
+power-of-two texture sizes.
 
 ## Declared types
 
@@ -37,9 +46,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Base2Utils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- None of these functions work for a `value` of `0`; callers must exclude zero
+  before calling.
+- `log2_power_of_two()` asserts (`PreconditionViolationError`) that `value` is
+  already a power of two — passing a non-power-of-two aborts rather than
+  returning a nonsense result.
+- `previous_power_of_two()` and `next_power_of_two()` return `value` unchanged
+  when it is already a power of two.
 
 ## Used by
 

@@ -9,9 +9,20 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLRenderBufferObject tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A thin RAII wrapper around an OpenGL renderbuffer object (`glRenderbufferStorage`),
+meant to be attached as a render target of a `GLFrameBufferObject` when the
+result never needs to be sampled as a texture — typically a depth or stencil
+buffer backing an off-screen render. `gl_render_buffer_storage` (re)allocates
+the buffer's storage with the given internal format and dimensions, throwing
+`PreconditionViolationError` if either dimension exceeds
+`GLCapabilities::framebuffer::gl_max_renderbuffer_size`.
+
+Like the other `GL*Object` wrappers, resource allocation and deallocation are
+handled by the `Allocator` policy class through `GLObjectResource`/
+`GLObjectResourceManager`, and the object is only ever obtained through `create`
+or `create_as_unique_ptr` — the constructor is private. `boost::shared_ptr` is
+used instead of the codebase's usual `non_null_intrusive_ptr` specifically so
+instances can be held in a `GPlatesUtils::ObjectCache`.
 
 ## Declared types
 
@@ -51,9 +62,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLRenderBufferObject tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Requires the `GL_EXT_framebuffer_object` extension. `get_dimensions` and
+`get_internal_format` both return `boost::none` until `gl_render_buffer_storage`
+has been called at least once — a freshly created object has no storage yet.
 
 ## Used by
 

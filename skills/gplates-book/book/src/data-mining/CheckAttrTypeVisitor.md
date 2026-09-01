@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/CheckAttrTypeVisitor tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CheckAttrTypeVisitor` is a `GPlatesModel::ConstFeatureVisitor` whose only job is to classify a property value as `Number_Attribute`, `String_Attribute`, or `Unknown_Type`. Every `visit_*` override is a no-op except the handful that matter for co-registration attributes: `visit_gpml_plate_id` and `visit_xs_boolean` set `String_Attribute`, `visit_xs_double` and `visit_xs_integer` set `Number_Attribute`, and `visit_xs_string` sets `String_Attribute`. `visit_gpml_constant_value` unwraps the constant and re-dispatches the visitor onto the wrapped value, so a plain value hidden behind a `GpmlConstantValue` classifies the same as a bare one.
+
+`visit_gpml_key_value_dictionary` is the other special case: it walks the dictionary's elements, visits each element's value to classify it, and records the result in `d_map` keyed by the element's name (exposed via `shape_map()`). This lets the co-registration UI ask, for a single dictionary-valued property, what type each of its named sub-attributes is — which is why `CoRegistrationLayerConfigurationDialog` is the sole caller: it uses this visitor to populate the attribute-type choices offered when configuring a co-registration filter or reducer.
 
 ## Declared types
 
@@ -78,9 +78,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/CheckAttrTypeVisitor tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_type` starts as `Unknown_Type` and is only ever overwritten, never reset, so visiting more than one property value with the same visitor instance mixes their results — construct a fresh visitor per property. `visit_gpml_plate_id` classifies plate IDs as `String_Attribute` rather than `Number_Attribute`, even though the underlying value is numeric; callers relying on `type()` to pick a numeric reducer need to account for this.
 
 ## Used by
 

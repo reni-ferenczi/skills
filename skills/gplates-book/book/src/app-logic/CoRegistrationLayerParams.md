@@ -9,9 +9,15 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/CoRegistrationLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoRegistrationLayerParams` is the `LayerParams` subclass for a co-registration
+layer: it holds the single piece of user-configurable state a co-registration layer
+needs, a `GPlatesDataMining::CoRegConfigurationTable` describing which seed/target
+features and reducers make up the co-registration query. It follows the same shape as
+every other `LayerParams` subclass — private constructor reached only via `create()`,
+and `accept_visitor()` double-dispatching to `visit_co_registration_layer_params()` on
+`ConstLayerParamsVisitor`/`LayerParamsVisitor` so generic layer-params code (e.g.
+`qt-widgets/CoRegistrationLayerConfigurationDialog`, `presentation/TranscribeSession`)
+can recognise and edit or serialise it.
 
 ## Declared types
 
@@ -43,9 +49,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/CoRegistrationLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_cfg_table()` compares the new table against the current one and is a no-op if
+they are equal, so `modified_cfg_table` and the inherited `modified` signal only fire
+on an actual change.
 
 ## Used by
 

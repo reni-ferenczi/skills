@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/GeometrySetter tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometrySetter` is `GeometryFinder`'s inverse: it holds one `GeometryOnSphere` and, when visited onto an existing `PropertyValue` or `TopLevelProperty`, writes that geometry into whichever concrete geometry property-value it lands on (`GmlPoint`, `GmlLineString`, `GmlMultiPoint`, `GmlPolygon`), dynamic-casting the stored geometry to the type each `visit_*` override expects. It is used wherever edited or newly-drawn geometry needs to be pushed back into the model without call sites needing property-type-specific code — `CreateFeatureDialog`, `PartitionFeatureUtils`, `SplitFeatureUndoCommand` and the geometry-editing operations in `view-operations` all go through it.
+
+It inherits `FeatureVisitor` privately and exposes only the two `set_geometry()` overloads; per the header comment, setting geometry directly on a `FeatureHandle` is deliberately not supported because it would be ambiguous which of the feature's geometry properties should change — the caller must pick the property first.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/GeometrySetter tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+If the stored `GeometryOnSphere`'s runtime type doesn't match the visited property value's expected geometry type, the `dynamic_cast` fails and the `visit_*` override does nothing — no exception, no error, the property value is left unchanged.
 
 ## Used by
 

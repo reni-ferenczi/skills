@@ -8,9 +8,14 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/EnumerationContent tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EnumerationContent` is the interned string type used to hold the selected value of an
+`Enumeration` property (e.g. `"Convergent"`), produced by instantiating
+`GPlatesModel::StringContentTypeGenerator<EnumerationContentFactory>`. The factory's
+only job is to hand that template its private `GPlatesUtils::StringSet`
+(`GPlatesModel::StringSetSingletons::enumeration_content_instance()`), so all
+enumeration content strings across every loaded feature share one deduplicated pool:
+equal content becomes equal iterators, making comparisons and membership tests cheap
+regardless of how many features repeat the same enumeration value.
 
 ## Declared types
 
@@ -39,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/EnumerationContent tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

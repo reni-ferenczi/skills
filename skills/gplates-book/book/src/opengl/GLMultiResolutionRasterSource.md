@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionRasterSource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionRasterSource` is the pluggable-source interface behind `GLMultiResolutionRaster`: the raster itself handles tiling, level-of-detail selection and caching generically, while a `GLMultiResolutionRasterSource` implementation (`GLAgeGridMaskSource`, `GLDataRasterSource`, `GLNormalMapSource`, `GLScalarFieldDepthLayersSource`, `GLVisualRasterSource`, and others) supplies the actual texel data for a requested tile via `load_tile()`. This separation is what lets the same multi-resolution tiling and rendering machinery serve plain colour rasters, data (floating-point) rasters, age-grid masks, normal maps and scalar-field depth layers without duplicating the tiling logic in each.
+
+`load_tile()`'s contract constrains callers and implementations symmetrically: `texel_x_offset`/`texel_y_offset` are always multiples of `get_tile_texel_dimension()`, so a source never has to handle a load crossing a tile boundary, and `texel_width`/`texel_height` are at most the tile dimension, only falling short at the raster's bottom-right edge. `invalidate()` lets a derived source announce that all previously loaded tiles are stale — its documented triggers are a new raster, a new colour scheme, or a reconstruction-time change that alters age-grid mask data — and clients watch this through the inherited `get_subject_token()`.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionRasterSource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`get_target_texture_internal_format()` textures are expected to use nearest-neighbour filtering in all cases: this best matches a raster's georeferencing, and older hardware supporting floating-point textures cannot bilinearly filter them anyway (any smoothing must be emulated in a shader by the client). Mipmap auto-generation is deliberately not used — a header comment explains it caused problems when the source is a GPU-rendered target (such as an age-grid mask) rather than a CPU-loaded texture, interacting badly with framebuffer-object mipmap support, and it is unnecessary anyway since resolution is already selected via the proxied raster's own mipmapped tiles, with anisotropic filtering handling aliasing near the horizon.
 
 ## Used by
 

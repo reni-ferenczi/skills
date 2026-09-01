@@ -8,9 +8,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/MipmappedRasterFormatReader tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MipmappedRasterFormatReader<RawRasterType>` reads back the on-disk mipmap
+cache files GPlates generates for large rasters, so `RasterReader` and
+`ProxiedRasterResolver` can fetch a region of a given mipmap level without
+decoding the whole level. `RawRasterType` is the type of the *mipmapped*
+rasters stored in the file, not the source raster's type — mipmap files are
+generated per raster-value type, matched by `RasterFileCacheFormat::get_type_as_enum`.
+Construction validates the file eagerly: magic number, recorded total file
+size against the actual file size (to catch a mipmap file left behind by a
+previous run that crashed mid-write), and a version number, before
+dispatching to a version-specific inner reader — currently only
+`VersionOneReader`.
+
+The public class is a thin, non-template-parameter-dependent facade: it opens
+the file, parses the shared header, and forwards `read_level`,
+`read_coverage` and `get_raster_statistics` to a `ReaderImpl` chosen at
+construction time. `VersionOneReader` is that `ReaderImpl` for the current
+(version 1) on-disk format: it reads the per-level `LevelInfo` table (width,
+height, file offset, block count) up front and creates one
+`RasterFileCacheFormatReader<RawRasterType>` per mipmap level, each of which
+does the actual seeking and block decoding for its level on demand. The
+commented-out `VersionThreeReader` branch documents the intended path for
+introducing a structurally different format in a later version while keeping
+`VersionOneReader` for versions that only change block encoding.
 
 ## Declared types
 
@@ -61,9 +81,16 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/MipmappedRasterFormatReader tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`level` here is relative to the mipmap file's own numbering, not the source
+raster: level 0 is the first size *smaller* than the source raster, because
+the source raster itself is never stored in the mipmap file. Once `close()`
+is called (or `d_is_closed` is otherwise set), every read method returns
+`boost::none` instead of touching the closed `QFile`; the destructor closes
+the file automatically if the caller never called `close()` explicitly. The
+constructor throws `ErrorOpeningFileForReadingException`,
+`FileFormatNotSupportedException` or `RasterFileCacheFormat::UnsupportedVersion`
+on a bad or unreadable file, so construction is not exception-safe to skip —
+callers must be prepared to catch these on every load.
 
 ## Used by
 

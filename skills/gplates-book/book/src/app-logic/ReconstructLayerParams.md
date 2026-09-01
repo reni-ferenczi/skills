@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructLayerParams` is the `LayerParams` a reconstruct layer exposes to its options widget: it wraps a `ReconstructParams` value (the actual reconstruction settings, such as whether to use topology reconstruction) plus one UI-facing flag, `d_prompt_to_change_topology_reconstruction_parameters`, that controls whether switching to topology reconstruction should first prompt the user to review its parameters. Both setters are change-guarded, only writing the new value and emitting a signal (`modified_reconstruct_params`/the inherited `modified`) when the value actually differs from the current one.
+
+The prompt flag exists specifically to avoid a double wait: since initialising topology reconstruction can be slow, giving the user a chance to fix its parameters before that initialisation runs (rather than after) avoids paying the initialisation cost twice — once on enabling it, once again after the user changes a parameter and it re-initialises.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_prompt_to_change_topology_reconstruction_parameters` defaults to `true` on construction, so a freshly created reconstruct layer prompts the first time topology reconstruction is enabled.
 
 ## Used by
 

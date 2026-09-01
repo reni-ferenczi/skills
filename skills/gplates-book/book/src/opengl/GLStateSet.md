@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLStateSet tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLStateSet` is the abstract base for every piece of OpenGL *global* state the `opengl` module tracks — its 44 subclasses (see [`GLStateSets`](GLStateSets.md)) each represent one orthogonal slice of global state (e.g. whether `GL_BLEND` is enabled, which texture unit is active), and together they compose the complete tracked OpenGL state managed by `GLState`. It exists so that state changes can be diffed and minimised rather than reapplied wholesale on every draw call: `apply_state()` compares against the previously-applied state set of the same derived type and only issues OpenGL calls if something actually changed (or unconditionally, when detecting the difference isn't worth the cost — a redundant call is harmless). `apply_from_default_state()` and `apply_to_default_state()` handle the two directions of transitioning to and from OpenGL's built-in default for that piece of state, which matters when entering or leaving a scope that assumes a known baseline.
+
+Deliberately out of scope here is state that lives on bindable OpenGL objects themselves (textures, buffers, etc) — that is set directly on the object, with only the *binding* of such an object to the context treated as global state and thus represented by a `GLStateSet`.
 
 ## Declared types
 
@@ -37,9 +37,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLStateSet tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- All three `apply_*` methods are `const`: a `GLStateSet` instance never mutates itself when applying, so re-applying it later reproduces the same OpenGL state.
+- `apply_state()`'s `last_applied_state_set` is guaranteed by the caller to be the same derived type as `this`, so implementations downcast it without a runtime type check.
+- `apply_from_default_state()`/`apply_to_default_state()` each assume OpenGL is already in a specific state before the call (default, or this instance's state, respectively) — the caller, not `GLStateSet`, is responsible for that precondition holding.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeVoidCastRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VoidCastRegistry` lets `Scribe` cast between base and derived class pointers when it only has a `void *` and a pair of `std::type_info` references — the situation it is in whenever it transcribes a polymorphic object through a base-class interface. Code registers each inheritance edge once, at static-initialisation time, via the templated `register_derived_base_class_inheritance()`; the registry stores the edges as a graph of `ClassNode`s linked by `ClassLink`s keyed on `std::type_info`, so later casts are a graph search rather than a compile-time `static_cast`.
+
+`up_cast()` and `down_cast()` each find the path between the derived and base `ClassNode`s with `find_derived_to_base_path()`, then walk it applying each link's virtual `upcast()`/`downcast()`. The per-link cast itself is generated at registration time by the templated `DerivedBaseClassLink<DerivedType, BaseType>`, which picks a `dynamic_cast` (checked, throws `std::bad_cast` on failure) or a `static_cast` depending on whether `DerivedType`/`BaseType` is polymorphic, so the registry works even for non-polymorphic types that only `Scribe` treats as related. `boost::shared_ptr<void>` overloads exist alongside the raw-pointer ones because `Scribe` special-cases `shared_ptr`.
 
 ## Declared types
 
@@ -55,9 +55,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeVoidCastRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- A derived type with more than one distinct path to the same base (repeated non-virtual inheritance, or a diamond) makes `find_derived_to_base_path()` throw `Exceptions::AmbiguousCast` instead of picking one path arbitrarily; virtual-inheritance diamonds throw for the same reason even though they have only one base sub-object, because the registry does not model virtual bases.
+- `up_cast()`/`down_cast()` return `boost::none` rather than throwing when no registered path exists between the two types — callers must check the `boost::optional` before dereferencing.
+- Casting between identical `derived_type`/`base_type` short-circuits to the original address without a graph lookup.
 
 ## Used by
 

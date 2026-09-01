@@ -9,9 +9,27 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/ReconstructScalarCoverageVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructScalarCoverageVisualLayerParams` holds the visual settings for a
+reconstruct-scalar-coverage layer, but unlike the single-raster
+`RasterVisualLayerParams`, a scalar coverage can expose several scalar types
+at once (for example temperature and depth), so it keeps one
+`RemappedColourPaletteParameters` per `ValueObjectType` in
+`d_colour_palette_parameters_map`. Scalar type queries
+(`get_current_scalar_type()`, `get_scalar_types()`) delegate straight through
+to the app-logic `GPlatesAppLogic::ReconstructScalarCoverageLayerParams`,
+obtained via a `dynamic_cast` on `get_layer_params()`; the "current" colour
+palette accessors are thin wrappers that look up the palette for whatever
+scalar type is currently selected.
+
+Palette creation is deliberately lazy: `get_colour_palette_parameters()`
+creates and caches a palette for a scalar type only the first time it is
+asked for, since computing the statistics needed to auto-map a palette's
+range can require reconstructing the coverage's full history. `handle_layer_modified()`
+does not pre-create palettes for newly discovered scalar types — it only
+prunes entries whose scalar type no longer exists, on the assumption that a
+change in the underlying data does not by itself invalidate an already-chosen
+colour palette; only an explicit `set_colour_palette_parameters()` call does
+that.
 
 ## Declared types
 
@@ -51,9 +69,14 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/ReconstructScalarCoverageVisualLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_colour_palette_parameters_map` is `mutable` precisely because
+`get_colour_palette_parameters()` (a `const` accessor) creates and inserts a
+palette on first access rather than requiring the caller to pre-populate it.
+`get_current_scalar_type()`, `get_scalar_types()` and
+`create_colour_palette_parameters()` all assert (via `GPlatesGlobal::Assert<AssertionFailureException>`)
+that the underlying `LayerParams` really is a `ReconstructScalarCoverageLayerParams`
+— calling this class on the wrong kind of layer is a programming error, not a
+recoverable condition.
 
 ## Used by
 

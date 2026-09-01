@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/AzimuthalEqualAreaProjection tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Implements the Lambert azimuthal equal-area map projection, centred on an
+arbitrary `LatLonPoint` (or `PointOnSphere`) rather than a pole. It converts
+between spherical (lon, lat) or Cartesian (x, y, z) coordinates and a flat
+(x, y) plane tangent at the centre of projection, in both directions.
+
+The forward projection (`project_from_lat_lon`, `project_from_point_on_sphere`)
+follows the standard closed-form formulas for the spherical Lambert azimuthal
+equal-area projection, using the trigonometric identities for the centre
+latitude cached in the constructor. The inverse (`unproject_to_lat_lon`,
+`unproject_to_point_on_sphere`) special-cases the point exactly at the centre
+of projection to avoid a division by zero, and special-cases a centre at
+either pole to avoid the same problem in the longitude recovery. `projection_scale`
+scales the projected plane coordinates on the way out and is undone on the way
+back in, so a caller can work in whatever plane units it needs (for example
+pixels) without affecting the unprojected result. Each direction is also
+exposed as a template overload that constructs an arbitrary 2D point type from
+the projected `QPointF`, letting callers avoid a Qt dependency in their own
+point types.
 
 ## Declared types
 
@@ -46,9 +61,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/AzimuthalEqualAreaProjection tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The object is immutable once constructed: the centre of projection, its cached
+sine/cosine, and the projection scale are all `const` fields set in the
+constructor.
 
 ## Used by
 

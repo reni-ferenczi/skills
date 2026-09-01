@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeometryCrossing tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Filters a `GeometryIntersect::Graph` to identify only the intersections that represent true geometric crossings. When two geometries intersect through segment-segment contact, that is a crossing; when they touch or overlap at vertices without crossing, it is not. This module distinguishes those cases by analyzing the nature and topology of vertex intersections, removing non-crossing overlaps and touches from the intersection graph.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeometryCrossing tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

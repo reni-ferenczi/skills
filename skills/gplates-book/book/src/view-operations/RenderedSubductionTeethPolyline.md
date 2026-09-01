@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedSubductionTeethPolyline tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RenderedSubductionTeethPolyline` is a `RenderedGeometryImpl` that wraps a `GPlatesMaths::PolylineOnSphere` together with the styling needed to draw it as a subduction zone: a triangular-tooth decoration along one side of the line, conventionally used to mark which plate is subducting. `SubductionPolarity` records which side of the polyline (`LEFT` or `RIGHT`) the teeth point towards, and the remaining fields are painter hints — line width, tooth width and the tooth spacing/height expressed as ratios of tooth width — rather than geometry, leaving the actual tessellation of the teeth to the painter.
+
+Proximity and vertex-proximity testing simply delegate to the underlying `PolylineOnSphere`, so this class behaves like an ordinary polyline for hit-testing purposes even though it renders with extra decoration.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedSubductionTeethPolyline tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

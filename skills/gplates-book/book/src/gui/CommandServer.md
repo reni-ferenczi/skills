@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/CommandServer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CommandServer` is a `QTcpServer` that exposes a small XML-based remote-control protocol for driving a running GPlates instance, mainly to let external tools query or nudge the application without going through the GUI. Each incoming connection is read asynchronously in `readClient`, buffering bytes into `d_command` until a closing `</Request>` tag appears (or a one-second `d_timer` fires, in which case whatever has arrived so far is treated as complete). `create_command` then parses the `<Request><Name>...</Name>...</Request>` envelope with `QXmlStreamReader`, looks the `Name` up in `d_command_map`, and dispatches to the matching `create_*_command` factory method to build the concrete `Command`.
+
+Each request type is a small `Command` subclass — `GetSeedsCommand`, `GetTimeSettingCommand`, `GetBeginTimeCommand`, `GetAssociationsCommand`, `GetAssociationDataCommand`, `GetBirthAttributeCommand`, `SetReconstructionTimeCommand` — whose `execute` reads whatever it needs from `ApplicationState`/`ViewState`/`ViewportWindow` and writes an XML `<Response>` back over the same `QTcpSocket`. `get_coregistration_layer_proxy` is the shared helper several of the "Get*" commands use to resolve a named layer to its `CoRegistrationLayerProxy`. `pause`/`resume` let the server be temporarily disabled (`incomingConnection` then drops new connections outright) without tearing down the listening socket, and the constructor reads its port and bind address (localhost-only or any interface) from `UserPreferences` when no explicit port is given.
 
 ## Declared types
 
@@ -144,9 +144,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/CommandServer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `escape_reserved_xml_characters` mis-escapes `<` and `>`: it emits `&#x60;` (backtick, hex 0x60) and `&#x62;` (letter `b`, hex 0x62) instead of the character references for `<`/`>` (decimal 60/62, i.e. `&#60;`/`&#62;`, or hex `&#x3C;`/`&#x3E;`). Any response text containing `<` or `>` is corrupted rather than escaped.
+- The protocol has no authentication; anyone who can reach the listening socket (which binds to any interface, not just localhost, unless `net/server/local` is set) can issue commands against the running application.
+- `pause`/`resume` only stop `incomingConnection` from accepting *new* sockets — a connection already established keeps being served by `readClient` while the server is "paused".
+- `readClient` waits for `</Request>` before dispatching, but falls back to treating the buffer as complete once the one-second `d_timer` fires, so a slow or partial write from the client can be parsed as if it were the whole request.
+- `CommandServer` is non-copyable (its copy constructor and `operator=` are private and unimplemented).
 
 ## Used by
 

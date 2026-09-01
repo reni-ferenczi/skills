@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/EventBlackout tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EventBlackout` installs itself as an application-wide `QObject::eventFilter` (via `start()`/`stop()` on `qApp`) to suppress user interaction while Python code is executing, since the GPlates model is single-threaded and cannot safely tolerate the user modifying it concurrently through the GUI. `eventFilter()` discards every event except: the fixed `PERMITTED_EVENTS` allowlist (layout, paint, resize, timer, and similar events needed to keep widgets visually responsive, plus anything at or above `QEvent::User`), events destined for a widget explicitly exempted via `add_blackout_exemption()` (checked through `is_ancestor()`, so exempting a widget also exempts its children), and the Ctrl+C key combination, which is let through unconditionally so the user can still interrupt a running Python script.
+
+The header's own comment on `is_permitted_while_monitoring()` doubles as the extension point: if a widget stops refreshing correctly during Python execution, the fix is to add the missing `QEvent::Type` to `PERMITTED_EVENTS`, taking care not to permit anything that would let the user click or type through to model-mutating code.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/EventBlackout tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`start()`/`stop()` install and remove the filter on the global `qApp` instance, so a blackout is application-wide, not scoped to one window; forgetting to pair a `start()` with a `stop()` freezes all user interaction in the whole application, not just the widget that triggered it. Exemptions are tracked by raw `QWidget*` in a `std::set` with no ownership or destruction tracking — a widget destroyed while still listed in `d_exempt_widgets` leaves a dangling pointer that `is_ancestor()` will still compare against (though never dereference beyond the identity check) until explicitly removed via `remove_blackout_exemption()`.
 
 ## Used by
 

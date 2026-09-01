@@ -9,9 +9,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapBackground tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MapBackground` draws the coloured backdrop behind the map view: a filled mesh
+covering the whole projected globe, drawn before any reconstructed geometry or
+rasters. It builds the mesh by projecting a regular latitude/longitude grid
+through the current `MapProjection` and streaming the result into a
+`GPlatesOpenGL::GLVertexArray` as an indexed triangle mesh, then compiles that
+into a `GPlatesOpenGL::GLCompiledDrawState` for repeated replay. The grid is
+denser along longitude than latitude because lines of longitude can curve under
+some map projections while lines of latitude stay straight, and each row/column
+is nudged fractionally inward from the poles and date line to avoid projection
+failures at the exact boundary.
+
+One constructor takes a fixed `Colour`; the other tracks
+`GPlatesPresentation::ViewState`'s background colour, which can change while the
+`MapBackground` is alive. `paint()` re-derives the draw state whenever the
+projection's settings or the tracked background colour have changed since the
+last paint, otherwise it replays the cached compiled draw state.
 
 ## Declared types
 
@@ -70,9 +83,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapBackground tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `paint()` renders in two different ways depending on the target: straight to the
+  context framebuffer when possible, or into a tiled `QImage` fed back through a
+  `QPainter` (via `FeedbackOpenGLToQPainter`) when rendering to a non-GL paint
+  device such as SVG export. The image path is deliberately used so the
+  background becomes a single raster tile in vector output rather than
+  thousands of individual triangles.
+- `d_map_projection` is stored as a reference, so the referenced `MapProjection`
+  must outlive the `MapBackground`.
+- A `ProjectionException` thrown while projecting a grid vertex is caught and
+  logged with `qWarning()`, not propagated; the mesh is left with whatever
+  vertices were streamed before the failure.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ConfigGuiUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit wires Qt preference widgets directly to a `GPlatesUtils::ConfigInterface` (a `ConfigBundle` or `UserPreferences` instance) without every preferences dialog having to hand-write the plumbing. `link_widget_to_preference` is overloaded for `QLineEdit`, `QCheckBox`, `QSpinBox` and `QDoubleSpinBox`: each overload creates a `ConfigWidgetAdapter` parented to the widget, connects the config's `key_value_updated` signal through the adapter back into the widget's setter, connects the widget's change signal (or, for `QLineEdit`, its `editingFinished()`) back into `d_config.set_value()`, and optionally wires a reset button to `d_config.clear_value()`. `link_button_group_to_preference` does the analogous job for a `QButtonGroup` of radio buttons via `ConfigButtonGroupAdapter`, translating between the stored `QVariant` and a button index using a caller-supplied `button_enum_to_description_map_type` lookup table and the `MapValueEquals` predicate. `link_config_interface_to_table` builds a whole `GPlatesQtWidgets::ConfigTableView` backed by a `ConfigModel`, for dialogs that expose an entire config bundle as an editable table rather than one key per widget.
+
+The adapters exist only to bridge Qt's typed signal/slot mechanism to `ConfigInterface`'s single `QVariant`-based key/value protocol: `ConfigWidgetAdapter` re-emits one `value_changed` signal per supported type so each widget can connect to the overload matching its own setter's signature.
 
 ## Declared types
 
@@ -83,9 +83,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ConfigGuiUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Every adapter is constructed with `new` and parented to the widget (or button group) it serves — `QObject(widget)` in the `ConfigWidgetAdapter` constructor — so it lives and dies with that widget and the caller never deletes it. `d_widget_ptr` and `d_button_group_ptr` are `QPointer`s specifically so the reset/editing-finished handlers can detect a widget that has already been destroyed rather than dereferencing a dangling pointer. `d_config` is stored as a reference, so the `GPlatesUtils::ConfigInterface` passed to any `link_*` function must outlive the adapter it creates. Each `link_widget_to_preference` overload ends with a manual call to `handle_key_value_updated()` to prime the widget with the current stored value, since construction alone does not trigger the config's change signal.
 
 ## Used by
 

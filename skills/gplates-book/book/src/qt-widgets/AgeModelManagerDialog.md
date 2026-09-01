@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AgeModelManagerDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Manager dialog for age models used in geological timescale reconstructions. Displays a table of chronostratigraphic intervals (chrons) with ages from one or more loaded age models, allowing users to select which model is active. An Import button loads new age models from `.dat` files via `AgeModelReader`, and changing the active model resets the table and highlights the selected column in yellow. The dialog retrieves the age model collection from `ViewState` and remembers the last-used path via `UserPreferences`.
 
 ## Declared types
 
@@ -57,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AgeModelManagerDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

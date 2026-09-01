@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionStaticPolygonReconstructedRaster tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLMultiResolutionStaticPolygonReconstructedRaster` renders a present-day raster at a past reconstruction time by mapping it onto a set of present-day static polygons and reconstructing those polygons (via `GLReconstructedStaticPolygonMeshes`). Rather than warping the raster's texels directly, it traverses the source raster's cube quad tree once per plate-rotation transform group and, for each visible tile, draws the polygon meshes that fall in that tile using the plate's rotation, sampling the un-rotated source raster through a UV transform. Two `create` overloads exist: one reconstructs using the supplied polygon meshes, the other instead renders through a `GLMultiResolutionCubeMesh` without reconstruction — useful only when an age grid and/or normal map still needs applying, since plain unreconstructed rendering is otherwise cheaper via `GLMultiResolutionRaster`.
+
+An optional age grid (`GLDataRasterSource` or `GLAgeGridMaskSource`, depending on `supports_age_mask_generation`) lets the raster mask out crust younger than the current reconstruction time, separately for tile regions covered by active versus inactive (subducted/consumed) polygons. An optional normal map plus `GLLight` direction adds perturbed surface lighting, skipped automatically for floating-point (data, not colour) source rasters. Because the number of raster/age-grid/normal-map/lighting/view-type combinations is large, the class precompiles the whole matrix of shader program variants up front (`create_shader_programs`) and picks the right one per tile in `get_shader_program_for_tile`, rather than branching in a single uber-shader at run time.
 
 ## Declared types
 
@@ -129,9 +129,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionStaticPolygonReconstructedRaster tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `render` throws if given a `level_of_detail` outside the valid range; callers must clamp it first with `clamp_level_of_detail`, whose result can be negative when the age grid is higher resolution than the source raster.
+- `is_supported`, `supports_floating_point_source_raster`, `supports_age_mask_generation` and `supports_normal_map` each cache their capability test in a function-local static on first call, so the first call per process determines the answer for the life of the `GLRenderer`'s context.
+- `TEMPORARY_HACK_NO_DIRECTIONAL_LIGHT_FOR_NORMAL_MAPS` is a standing workaround (predating a planned light canvas tool) that suppresses directional lighting when a normal map is used; it is unconditionally defined, not a runtime toggle.
+- The per-quad-tree-node caches (`RenderQuadTreeNode`'s traversal tree, `ClientCacheQuadTreeNode`'s client-facing tree) are both scoped to a single `render` call and rebuilt every frame; the client-cache tree must be kept alive by the caller until the next render to avoid the underlying tile textures being recycled early.
 
 ## Used by
 

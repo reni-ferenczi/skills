@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/UndoRedo tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`UndoRedo` is a `GPlatesUtils::Singleton` that owns the application's single `QUndoGroup` and its `QUndoStack`s, giving every geometry-editing operation in `view-operations` (and the canvas tools built on it) a shared place to push undo commands. Callers normally use the default stack, but `create_undo_stack`/`set_active_undo_stack` let a caller switch which stack subsequent pushes go to when more than one independent undo history is needed.
+
+Its main value beyond plain `QUndoStack` is command merging across unrelated command classes. Qt's own `QUndoCommand::mergeWith` only merges commands of the same concrete type; `make_mergable_undo_command` wraps an arbitrary command in a `UndoRedoInternal::MergeUndoCommand` decorator tagged with a `CommandId`, and two decorated commands merge with each other if (and only if) they carry equal ids and are pushed back-to-back. `CommandId` is itself a small pimpl wrapper (`CommandIdImpl`) over an integer allocated by `UndoRedoInternal::CommandIdFactory`: a "non-null" id is unique for as long as any copy of the `CommandId` survives, while `NullCommandIdImpl` (a `GPlatesUtils::Singleton`) represents the default id of -1 that deliberately never merges. `begin_unique_command_id_scope`/`end_unique_command_id_scope` (and the RAII `UniqueCommandIdScopeGuard`) let a block of code generate one shared id for everything it pushes, so a burst of otherwise-unrelated edits collapses into a single undo step.
+
+`GroupUndoCommand` extends `QUndoCommand`'s existing child-command grouping by wrapping `redo`/`undo` in `RenderedGeometryCollection` update guards, ensuring a grouped multi-step edit triggers only one rendered-geometry update signal instead of one per child command.
 
 ## Declared types
 
@@ -110,9 +112,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/UndoRedo tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A default-constructed `CommandId` (id -1) intentionally never merges with anything, which is what lets code push a command without opting into merging. `NonNullCommandIdImpl`'s destructor swallows any exception from `deallocate_id` rather than letting it propagate, since destructors must not throw. Unique-command-id scopes nest via `d_unique_command_id_scope_stack`; ending a scope only releases the id once no `CommandId` copies from that scope remain alive.
 
 ## Used by
 

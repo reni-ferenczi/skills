@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerTaskRegistry tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerTaskRegistry` decouples `ReconstructGraph` from the concrete `LayerTask` subclasses: each registration supplies a `create_layer_task_function_type` factory closure and a `should_auto_create_layer_task_for_loaded_file_function_type` predicate, keyed by a `LayerTaskType::Type` enum value, rather than exposing the subclasses themselves. `register_default_layer_task_types()` (defined alongside the class) is the one place that registers the built-in tasks — `ReconstructLayerTask`, `ReconstructionLayerTask`, `RasterLayerTask`, `TopologyGeometryResolverLayerTask`, `TopologyNetworkResolverLayerTask`, `ScalarField3DLayerTask`, `ReconstructScalarCoverageLayerTask`, `VelocityFieldCalculatorLayerTask` and `CoRegistrationLayerTask` — against a given `ApplicationState`, and its doc comment notes that any new `LayerTask` derivation must be added there too.
+
+The nested `LayerTaskType` handle returned by `register_layer_task_type()` is a `boost::weak_ptr` wrapper around the registry's internal `LayerTaskTypeInfo`: it stays usable to create tasks and query the layer type only while the registration is still live, and `is_valid()` reports whether it has since been unregistered.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerTaskRegistry tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`LayerTaskType::create_layer_task()` throws `PreconditionViolationError` if called on a handle whose registration has been unregistered (`is_valid()` false) — callers holding onto a `LayerTaskType` across a possible unregistration should check `is_valid()` first rather than relying on the exception for control flow.
 
 ## Used by
 

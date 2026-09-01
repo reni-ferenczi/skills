@@ -9,9 +9,18 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PythonInterpreterUnlocker tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApi::PythonInterpreterUnlocker` is the inverse RAII guard to
+`PythonInterpreterLocker`: it wraps `PyEval_SaveThread`/`PyEval_RestoreThread`
+to *release* the GIL rather than acquire it. It exists for C++ code that has
+been called from Python but is about to do work that does not touch the
+interpreter — releasing the GIL there lets other Python threads run
+concurrently instead of blocking on this one, improving throughput in code
+such as `DeferredApiCallImpl`.
+
+As with `PythonInterpreterLocker`, passing `false` to the constructor defers
+the actual `save_thread()` call to the caller, while the destructor still
+restores the GIL automatically if it was released and never explicitly
+restored.
 
 ## Declared types
 
@@ -39,9 +48,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PythonInterpreterUnlocker tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`save_thread()` requires the calling thread to currently hold the GIL.
+`restore_thread()` requires the opposite — the calling thread must *not* hold
+the GIL — since reacquiring a lock the thread already holds would deadlock.
+Calling `restore_thread()` without a prior `save_thread()`, or calling either
+out of order, breaks these preconditions; the destructor only calls
+`restore_thread()` automatically if `save_thread()` was called and
+`restore_thread()` was not.
 
 ## Used by
 

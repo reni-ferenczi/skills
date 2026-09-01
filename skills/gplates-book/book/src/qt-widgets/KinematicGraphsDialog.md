@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/KinematicGraphsDialog tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`KinematicGraphsDialog` is the "Kinematics Tool": for a chosen plate id, anchor plate and point (lat/lon), it walks a time range (`d_begin_time`..`d_end_time` in `d_step_time` increments) and, at each step, reconstructs the point with `GPlatesAppLogic::ReconstructionTree`/`RotationUtils` and computes velocities with `PlateVelocityUtils`, using the finite-difference scheme and delta-time chosen by the embedded `KinematicGraphsConfigurationWidget`/`Configuration`. Each step's results are stored as a `table_entries` row in `d_results`, driving both a `QStandardItemModel` table and a Qwt (`QwtPlot`/`QwtPlotCurve`) plot of whichever `KinematicGraphType` (latitude, longitude, velocity magnitude/azimuth/colatitude/longitude-component, angular velocity) the user has selected with the graph-type radio buttons. `handle_use_feature()` and `handle_use_animation()` let the user seed the lat/lon/plate-id or the time range from the currently focused feature or from the animation controller, instead of typing them in by hand.
+
+`d_picker` (a `KinematicGraphPicker`, a `QwtPicker` subclass) reports plot coordinates as the mouse moves over the graph. `handle_auto_y_clicked()`, `handle_compress_y_clicked()` and `handle_stretch_y_clicked()` adjust `d_vertical_scale_power` per graph type to rescale the y-axis by powers of `VERTICAL_SCALE_MULTIPLIER`, since velocity and rotation-rate values can span several orders of magnitude across graph types. `handle_export_table()`/`handle_export_graph()` write the current results out through `GPlatesGui::CsvExport`, using the filter table built by `build_save_file_dialog_filters()` to offer the different CSV export option combinations in the save dialog.
 
 ## Declared types
 
@@ -135,9 +135,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/KinematicGraphsDialog tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_plot`, `d_point_series_data` and `d_model` are constructed with `this` as their Qt parent and are not deleted explicitly. `KinematicGraphType` and `KinematicTableColumns` each keep `NUM_*` mid-enum followed by a `ROTATION_RATE_*` value, a deliberate "temp re-ordering to disable rotation rate" that leaves the last enumerator excluded from `NUM_GRAPH_TYPES`/`NUM_COLUMNS`-sized arrays and loops. `check_and_highlight_bad_velocity_values()` flags rows against the yellow/red thresholds from `d_configuration`, which are read once from preferences at construction (`read_values_from_preferences()`) and are otherwise independent of `KinematicGraphsConfigurationWidget`'s own preference-backed copies.
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedColouredPolylineOnSphere tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered representation of a `PolylineOnSphere` geometry where each point carries its own colour. The class holds the underlying polyline geometry, a vector of `ColourProxy` values (one per point), and a width hint for rendering. It implements the visitor pattern and provides proximity testing on both the geometry and its individual vertices.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedColouredPolylineOnSphere tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The number of colours must match the number of polyline points. Proximity testing applies only to the line geometry itself, not to any filled region (since polylines are rendered as stroked paths).
 
 ## Used by
 

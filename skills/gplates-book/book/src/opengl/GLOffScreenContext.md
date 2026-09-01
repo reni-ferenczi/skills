@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLOffScreenContext tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLOffScreenContext` exists so rendering code can target a genuine off-screen framebuffer instead of the *main* framebuffer of a `QGLWidget`, which cannot be safely modified outside its own paint event even though its OpenGL context can be used elsewhere. It tries, in order of preference, an off-screen `QGLPixelBuffer` ('pbuffer') context — sharing textures with a given `QGLWidgetContext` when one is supplied — or a `GL_EXT_framebuffer_object`-backed `GLScreenRenderTarget`, falling back only as a last resort to rendering into the QGLWidget's main framebuffer with save/restore (`GLSaveRestoreFrameBuffer`) around it to avoid corrupting prior contents. `create` has two overloads: one builds a standalone pbuffer context from a `QGLFormat`, the other attempts to reuse an existing `QGLWidget`'s context and its resources.
+
+Rendering is bracketed by `begin_off_screen_render`/`end_off_screen_render`, which hand out and retire a `GLRenderer` scoped to this context and framebuffer; `RenderScope` wraps that pair as an RAII guard. `is_valid` reports whether any of the strategies above succeeded (always true when a `QGLWidgetContext` was given, since the main-framebuffer fallback always works), and `is_off_screen` distinguishes a genuine off-screen target from the main-framebuffer emulation.
 
 ## Declared types
 
@@ -56,9 +56,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLOffScreenContext tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `begin_off_screen_render` assumes the full OpenGL state is already at its default when called, and both it and `end_off_screen_render` throw if `is_valid()` is false — callers must check validity before using the context.
+- The requested frame buffer dimensions are honoured only for genuine off-screen rendering; when it falls back to the QGLWidget's main framebuffer, the actual dimensions are the widget's own and must be read back via `GLRenderer::get_current_frame_buffer_dimensions()`.
+- The `GLRenderer` returned by `begin_off_screen_render` (or `RenderScope::get_renderer`) becomes invalid once `end_off_screen_render` is called and must not be used afterward.
 
 ## Used by
 

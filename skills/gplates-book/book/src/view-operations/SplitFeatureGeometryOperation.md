@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/SplitFeatureGeometryOperation tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SplitFeatureGeometryOperation` is the `GeometryOperation` behind the "split feature" canvas tool (`canvas-tools/SplitFeature`): clicking on a line segment of the digitised geometry held by a `GeometryBuilder` inserts a new vertex there and cuts the geometry into two features at that point. It reads geometry state from its `GeometryBuilder` and pushes the resulting edits back onto it via `UndoRedo`-integrated commands, so a split is a single undoable step.
+
+While active it owns three `RenderedGeometryLayer`s created through `RenderedGeometryCollection` — one for line segments, one for vertex points, and one for the single highlighted point under the mouse — and keeps them in sync with the `GeometryBuilder` by connecting to its `stopped_updating_geometry` signal. `mouse_move` drives the highlight: it proximity-tests against the rendered line-segment and point layers to decide whether to highlight an existing vertex, project the cursor onto a line segment, or show nothing. `d_line_to_point_mapping` tracks which point index begins each rendered line segment, needed because segments between points that are too close together are not rendered.
+
+`activate`/`deactivate` also register this operation with `GeometryOperationState` so the rest of the canvas-tool machinery knows a geometry operation is in progress, and `deactivate` fully tears down the rendered layers (rather than just hiding them) since the tool cannot keep them updated once it stops receiving reconstruction-time changes.
 
 ## Declared types
 
@@ -72,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/SplitFeatureGeometryOperation tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`project_point_onto_line_segment` requires the caller to have already confirmed the point passes a proximity test against the line segment but fails proximity to both of its endpoints; calling it on a point that does not satisfy that precondition is not supported. The `d_canvas_tool_workflows` reference exists purely so undo/redo can restore this tool as the active canvas tool when a split is undone or redone.
 
 ## Used by
 

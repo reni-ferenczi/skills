@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/ScalarCoverageStatistics tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ScalarCoverageStatistics` is a plain aggregate of the four summary values (`minimum`, `maximum`, `mean`, `standard_deviation`) computed over the per-point scalar values of one or more scalar coverages — geometries (points, lines, polygons) that carry a scalar value at each point, such as crustal thickness or age at reconstructed points. Unlike the analogous `RasterStatistics`, all four fields are required, non-optional `double`s, reflecting that these statistics are always computed on demand from an in-memory scalar coverage rather than read (possibly incompletely) from a raster file format.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/ScalarCoverageStatistics tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,23 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureStoreRootHandle tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureStoreRootHandle` is the root of the model's three-tiered revisioned
+hierarchy: one feature store root contains all currently-loaded
+`FeatureCollectionHandle`s, and every loaded feature lives inside one of those
+collections. Like the other Handle/Revision pairs in `model`, the concept is
+split in two: `FeatureStoreRootHandle` is the persistent, stable-address handle
+(owned by a `FeatureStore`, following `Model`), while its content lives in a
+succession of `FeatureStoreRootRevision` instances created on every
+modification — the handle endures across edits, the revision it points at does
+not.
+
+Following the same pattern as `FeatureCollectionHandle` and `FeatureHandle`,
+construction is restricted to `create()`, which builds the handle together with
+an initial `FeatureStoreRootRevision`; the constructor is private and `Model` is
+the sole friend permitted to construct it directly. The class contributes no
+new behaviour beyond wiring its base classes together — `BasicHandle` for
+revision management and `ReferenceCount` for intrusive-pointer lifetime — so
+there is exactly one of these per feature store.
 
 ## Declared types
 
@@ -39,9 +53,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureStoreRootHandle tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- Construction is restricted to `create()`; the default and copy constructors
+  are private and the copy constructor and `operator=` are declared but never
+  defined, so copying a `FeatureStoreRootHandle` is a link error, not just
+  disallowed by convention.
+- `Model` is a friend specifically so it can construct the single
+  `FeatureStoreRootHandle` a feature store needs — other code should go through
+  `create()` or the `Model`/`FeatureStore` API rather than instantiating this
+  directly.
+- The header pulls in `RevisionAwareIterator.h` at the bottom, after the class
+  definition, purely for client convenience (so code including this header
+  gets iterators for free) rather than because this header itself needs it;
+  it is placed there instead of with the other includes to avoid a cyclic
+  dependency.
 
 ## Used by
 

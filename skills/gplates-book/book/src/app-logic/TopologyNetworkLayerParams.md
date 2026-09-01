@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyNetworkLayerParams tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyNetworkLayerParams` is the `LayerParams` subclass a topological-network layer exposes to the GUI and to session serialisation: it holds one `TopologyNetworkParams` value object (the triangulation and deformation settings) and does nothing else. `set_topology_network_params()` compares against the current value before storing and emitting `modified_topology_network_params`/`emit_modified()`, so setting the same parameters twice is a no-op — this is what lets `qt-widgets::TopologyNetworkResolverLayerOptionsWidget` push edits from its UI controls without triggering a resolve on every keystroke that didn't actually change anything.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyNetworkLayerParams tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

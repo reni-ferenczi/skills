@@ -9,9 +9,24 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/CoRegistrationLayerProxy tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CoRegistrationLayerProxy` is the `LayerProxy` for a co-registration layer: it takes
+one or more seed layers (reconstructed geometries, via `ReconstructLayerProxy`) and
+one or more target layers (reconstructed geometries or rasters, via
+`ReconstructLayerProxy`/`RasterLayerProxy`), applies the
+`GPlatesDataMining::CoRegConfigurationTable` set by
+`set_current_coregistration_configuration_table()`, and produces a `CoRegistrationData`
+table by delegating the actual query to `GPlatesDataMining::DataSelector`. Seed and
+target proxies are tracked in `LayerProxyUtils::InputLayerProxySequence` collections
+rather than owned directly, matching the way other layer proxies wire up multi-input
+connections in the reconstruct graph.
+
+Raster co-registration needs GPU work, so `get_coregistration_data()` takes a
+`GPlatesOpenGL::GLRenderer` and lazily creates a single `GLRasterCoRegistration`
+instance (via `get_raster_co_registration()`) shared across all rasters, only when the
+OpenGL extensions it needs are actually available. `get_birth_attribute_data()` is a
+separate entry point used to look up a seed feature's attributes at its own time of
+appearance rather than at the layer's current reconstruction time, by re-reconstructing
+just that one feature.
 
 ## Declared types
 
@@ -67,9 +82,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/CoRegistrationLayerProxy tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`d_cached_coregistration_data` is invalidated by `reset_cache()` whenever the
+requested reconstruction time changes or `check_input_layer_proxies()` detects that
+any seed/target input proxy has changed; a changed reconstruction time alone does not
+invalidate `d_subject_token`, since a client asking for a different time does not mean
+other clients' cached data at their own time is stale. `get_birth_attribute_data()`
+assumes every seed layer shares the same rotation tree (it uses the reconstruction
+tree creator of the first seed layer proxy only) and returns `boost::none` — logging a
+warning rather than guessing — whenever the feature has no begin time, no seed layer is
+connected, or the feature does not reconstruct to exactly one geometry.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLNormalMapSource tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLNormalMapSource` is a `GLMultiResolutionRasterSource` that turns a floating-point scalar raster — a height field, or any other scalar field the user wants treated as one, such as gravity — into a tangent-space normal map for surface lighting. It is one of the tile sources a `GLMultiResolutionRaster` can be built from, alongside sources that hand back colour or age-mask tiles; `load_tile` fetches the source height data through a `GPlatesPropertyValues::ProxiedRasterResolver`, converts it, and returns the finished 8-bit RGBA normal texture (`GL_RGBA8`, x/y in the red/green channels, positive z in blue).
+
+Normal generation can run on the GPU (`gpu_convert_height_field_to_normal_map`, using a small compiled shader program and a temporary floating-point height texture) or fall back to the CPU (`cpu_convert_height_field_to_normal_map`) when the runtime lacks floating-point non-power-of-two textures, `GL_EXT_framebuffer_object`, or fails to compile the generation shader; the constructor tests capabilities up front and downgrades `d_generate_normal_map_on_gpu` to false if shader creation fails. The height field is vertically exaggerated before differencing, combining a constant empirical factor, a factor derived from the raster's own min/max statistics, a factor derived from the raster's on-sphere resolution, and a caller-supplied `height_field_scale_factor`, all folded together in `get_height_field_scale`. `change_raster` lets a time-dependent raster with the same dimensions and georeferencing swap its underlying data without rebuilding the whole multi-resolution structure.
 
 ## Declared types
 
@@ -74,9 +74,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLNormalMapSource tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `create` returns `boost::none` (not an exception) if the raster is not a proxy raster, is uninitialised, holds colour RGBA pixels instead of numeric data, or `is_supported` fails — callers must check the optional rather than assume a normal map is always available.
+- `change_raster` requires the new raster to have the same dimensions as the original; a resolution change instead requires building a whole new `GLNormalMapSource` (and, per the header, a georeferencing change instead requires a new `GLMultiResolutionRaster`).
+- `is_supported` only requires vertex/fragment shader support for *this* class, since it can generate normals on the CPU; the header notes that shaders are nonetheless effectively required because normal maps are consumed by lighting code elsewhere that does need them.
+- A tile-load failure logs a warning only once per source (`d_logged_tile_load_failure_warning`) before falling back to a flat default normal `(0,0,1)` via `load_default_normal_map`.
 
 ## Used by
 

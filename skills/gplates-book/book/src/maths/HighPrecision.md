@@ -8,9 +8,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/HighPrecision tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HighPrecision<T>` is a thin stream-insertion wrapper that temporarily raises
+a stream's numeric precision to 18 significant digits for one value, then
+restores it. Wrapping a value at the call site (`os << HighPrecision(val)`)
+avoids the more error-prone pattern of manually saving and restoring
+`std::ostream::precision()` around every high-precision print, which matters
+for maths types such as `Real`, `UnitVector3D`, `UnitQuaternion3D` and
+`FiniteRotation` where the default stream precision would silently truncate
+values that need to round-trip exactly (e.g. when serialising geometry or
+rotations to text). It provides matching `operator<<` overloads for
+`std::ostream`, `QDebug` and `QTextStream` so the same wrapper works across
+GPlates' mixed standard-library/Qt logging and I/O paths.
 
 ## Declared types
 
@@ -39,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/HighPrecision tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

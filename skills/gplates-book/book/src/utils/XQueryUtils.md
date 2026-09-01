@@ -9,9 +9,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/XQueryUtils tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Thin wrappers around Qt's `QXmlQuery`/`QXmlSerializer` XQuery engine, giving
+callers a way to run an XQuery/XPath expression against an in-memory XML
+document and get plain `QByteArray` or `QVariant` results back instead of
+Qt's node/item API. `evaluate_query()` and `evaluate_features()` both prefix
+the caller's query with `GPlatesFileIO::GsmlConst::all_namespaces()` so
+callers can write bare, unprefixed GeoSciML/GML element names, evaluate to a
+single serialized `QByteArray`, and then split that byte array back into
+individual elements by textually matching the closing/opening tag pair for
+the queried element name (`evaluate_query()`) or `gml:featureMember`
+(`evaluate_features()`) — there is no structural splitting, so it depends on
+the serializer not reformatting those tags. `evaluate_attribute()` instead
+walks a `QXmlResultItems` to pull out atomic attribute values. This unit
+exists specifically to support the GeoSciML file readers (`GsmlNodeProcessor`,
+`GsmlFeatureHandlers`, `GsmlPropertyHandlers`) and `model/Metadata`, which query
+XML metadata blocks rather than parsing them with a DOM or SAX-style reader.
+
+`next_start_element()` is unrelated to XQuery: it is a small polyfill for
+`QXmlStreamReader::readNextStartElement()`, kept here for callers stuck with
+an older Qt.
 
 ## Declared types
 
@@ -42,9 +58,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/XQueryUtils tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`evaluate_query()`'s tag-name splitting is derived from the last path segment
+of the query string (text after the final `/`), so it only works for queries
+shaped like simple element-selecting paths; a query that does not end in a
+plain element name will not split correctly. The `evaluate()` overloads
+declared with `IsEmptyFun` and the alternate result-walking path in
+`evaluate_features()` are compiled out (`#if 0`) and are dead code, not part
+of the active API despite appearing in the header.
 
 ## Used by
 

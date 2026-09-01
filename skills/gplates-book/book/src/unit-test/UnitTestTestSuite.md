@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/UnitTestTestSuite tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Hierarchical test suite for the unit-test framework itself. Contains tests for `GPlatesUnitTest::TestSuiteFilter`, the singleton that manages selective test execution based on hierarchical name patterns. This suite exists to verify the test infrastructure works correctly and to demonstrate how to compose nested test suites using the `GPlatesTestSuite` base class pattern.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/UnitTestTestSuite tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

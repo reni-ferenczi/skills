@@ -8,9 +8,25 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/FeatureCollectionFileFormatConfiguration tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Configuration` is the empty polymorphic base every file-format-specific
+read/write option struct derives from (three subclasses today, held via
+`FeatureCollectionFileFormatConfigurations`). File formats that need no
+options use the base directly; formats that do — GMT, shapefile, OGR-backed
+formats — define their own `Configuration` subclass and register it with
+`FeatureCollectionFileFormatRegistry`, so callers that only know about
+`file-io/File` and the registry can still carry per-format settings without
+the base module knowing every format's option set.
+
+Because callers generally hold a `Configuration::shared_ptr_type` /
+`shared_ptr_to_const_type` and need the concrete subclass back,
+`dynamic_cast_configuration()` wraps `boost::dynamic_pointer_cast` (using
+`GPlatesUtils::CopyConst` so the const-ness of the derived pointer tracks the
+const-ness of the base pointer) and returns `boost::none` on a type
+mismatch instead of a null pointer or a bad cast. `copy_cast_configuration()`
+goes one step further: it does the same cast but then copy-constructs a
+fresh, independent `ConfigurationDerivedType`, for callers such as export
+dialogs that need to edit a copy of a format's configuration without
+mutating the shared one still attached to a `File`.
 
 ## Declared types
 
@@ -40,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/FeatureCollectionFileFormatConfiguration tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

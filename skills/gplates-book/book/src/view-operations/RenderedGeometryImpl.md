@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryImpl tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The abstract base every concrete rendered-geometry type (`RenderedPointOnSphere`, `RenderedPolylineOnSphere`, the coloured meshes, the symbol and arrow types, and 20-odd others) implements. `RenderedGeometry` is the pimpl handle that holds one of these behind a `non_null_ptr_type`; this class is the interface that makes that indirection possible, and reference counting via `GPlatesUtils::ReferenceCount` is what lets the handle be copied cheaply.
+
+`test_vertex_proximity()` has a default implementation returning no hit, since — per the header comment — vertex proximity is only meaningful for implementations that wrap a `GeometryOnSphere` with actual vertices; subclasses that do (points, polylines, polygons, meshes) override it, and the rest simply inherit the no-op.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryImpl tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

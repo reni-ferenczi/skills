@@ -9,9 +9,31 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/LayerOutputRenderer tier=2]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerOutputRenderer` is the bridge between the app-logic layer proxies and
+the rendering pipeline: it implements `GPlatesAppLogic::LayerProxyVisitor` so
+it can be dispatched to whichever concrete `LayerProxy` a layer exposes
+(`raster_layer_proxy_type`, `reconstruct_layer_proxy_type`,
+`scalar_field_3d_layer_proxy_type`, the topology and velocity proxies, and so
+on), pulls that proxy's type-specific output for the current reconstruction
+time (a `ResolvedRaster`, a spatial partition of
+`ReconstructedFeatureGeometry`, a `ResolvedScalarField3D`, ...), and hands each
+result to a shared `ReconstructionGeometryRenderer` to turn into
+`RenderedGeometry` objects in a `RenderedGeometryLayer`. It exists so that the
+knowledge of each layer proxy's specific interface stays here, while
+`ReconstructionGeometryRenderer` only has to know how to render
+`ReconstructionGeometry` types. Some layer kinds — co-registration and the
+bare reconstruction-tree layer — have nothing to visualise, so their `visit()`
+overrides are empty.
+
+The anonymous-namespace helpers exist solely to support the
+`reconstruct_layer_proxy_type` case: `render_in_transform_sorted_order()`
+sorts the reconstructed feature geometries by their `ReconstructMethodFiniteRotation`
+(effectively by plate id) before rendering, using
+`ReconstructedFeatureGeometrySpatialPartitionInfo` and
+`ReconstructedFeatureGeometryRenderOrder` as intermediate bookkeeping. This
+gives a stable, deterministic render order — rather than spatial-partition
+traversal order — so that overlapping polygons draw consistently from one
+frame to the next.
 
 ## Declared types
 
@@ -71,9 +93,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/LayerOutputRenderer tier=2]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `ReconstructionGeometryRenderer &` and `RenderedGeometryLayer &` are held
+by reference, not owned; the caller must keep both alive for the lifetime of
+the visitor. Each `visit()` override brackets its work in
+`ReconstructionGeometryRenderer::begin_render()` / `end_render()`, so a new
+`LayerOutputRenderer` (or a re-run of `visit()`) is needed per rendering pass
+rather than accumulating state across calls. `ReconstructedFeatureGeometryRenderOrder::rfg_transform`
+deliberately wraps a `boost::optional` around a *reference* rather than a
+pointer specifically so the `SortTransform` comparator sorts by the
+transform's value, not by address.
 
 ## Used by
 
