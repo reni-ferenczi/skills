@@ -28,9 +28,13 @@ import re
 import sys
 from pathlib import Path
 
-from .common import DATA_DIR, SkillError
+from .common import SKILL_DIR, SkillError
 
-PYLIBS = DATA_DIR / "pylibs"
+# Dependencies live in the uv-managed .venv inside the skill folder
+# (see pyproject.toml). Fall back to whatever is importable already.
+VENV = SKILL_DIR / ".venv"
+_SITE = [VENV / "Lib" / "site-packages",
+         *sorted(VENV.glob("lib/python3.*/site-packages"))]
 
 _PARSER = None
 _LANGUAGE = None
@@ -41,8 +45,9 @@ def ensure_parser():
     global _PARSER, _LANGUAGE
     if _PARSER is not None:
         return _PARSER
-    if str(PYLIBS) not in sys.path:
-        sys.path.insert(0, str(PYLIBS))
+    for site in _SITE:
+        if site.is_dir() and str(site) not in sys.path:
+            sys.path.insert(0, str(site))
     # PYLIBS may have been created/populated after an earlier failed import, and
     # Python caches a finder per directory - drop it or the fresh install is invisible.
     importlib.invalidate_caches()
@@ -51,10 +56,10 @@ def ensure_parser():
         from tree_sitter import Language, Parser
     except ImportError as exc:
         raise SkillError(
-            "tree-sitter is not installed. Run:\n"
-            "  python -m pip install --target %s tree_sitter tree_sitter_cpp\n"
-            "or re-run scripts/setup_index.py, which installs it automatically.\n"
-            "(%s)" % (PYLIBS, exc)
+            "tree-sitter is not installed. From %s run:\n"
+            "  uv sync\n"
+            "(needs uv: pip install uv). scripts/setup_index.py does this for you.\n"
+            "(%s)" % (SKILL_DIR, exc)
         ) from exc
     _LANGUAGE = Language(tree_sitter_cpp.language())
     _PARSER = Parser(_LANGUAGE)

@@ -25,8 +25,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from gplates_index import indexer  # noqa: E402
 from gplates_index.common import (  # noqa: E402
-    CTAGS_EXE, CTAGS_URL, CTAGS_VERSION, DATA_DIR, DB_PATH, SkillError,
-    TOOLS_DIR, check_source_root, open_db, read_config, write_config,
+    CTAGS_EXE, CTAGS_URL, CTAGS_VERSION, DATA_DIR, DB_PATH, SKILL_DIR,
+    SkillError, TOOLS_DIR, check_source_root, open_db, read_config,
+    write_config,
 )
 
 
@@ -76,27 +77,27 @@ def find_ctags(explicit: str | None, quiet: bool) -> Path:
 
 
 def ensure_tree_sitter(quiet: bool):
-    """Install tree-sitter into the skill's own lib dir (no venv, no compiler)."""
+    """Materialise the skill's uv environment (.venv) from pyproject.toml."""
     from gplates_index import cpp_parse
     try:
         cpp_parse.ensure_parser()
         return
     except SkillError:
         pass
-    indexer.log(quiet, "installing tree-sitter into %s ..." % cpp_parse.PYLIBS)
-    cpp_parse.PYLIBS.mkdir(parents=True, exist_ok=True)
     import subprocess
-    proc = subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check",
-         "--target", str(cpp_parse.PYLIBS), "tree_sitter", "tree_sitter_cpp"],
-        capture_output=True, text=True)
-    if proc.returncode != 0:
+    uv = shutil.which("uv")
+    if not uv:
         raise SkillError(
-            "could not install tree-sitter (%s).\nInstall it manually:\n"
-            "  python -m pip install --target %s tree_sitter tree_sitter_cpp"
-            % (proc.stderr.strip()[:400], cpp_parse.PYLIBS))
+            "uv is not installed, so the skill's dependencies cannot be set up.\n"
+            "  pip install uv\n"
+            "then re-run this script (or run `uv sync` in %s)." % SKILL_DIR)
+    indexer.log(quiet, "uv sync (tree-sitter, graphify) ...")
+    proc = subprocess.run([uv, "sync", "--python", "3.12"], cwd=str(SKILL_DIR),
+                          capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise SkillError("uv sync failed:\n%s" % proc.stderr.strip()[:600])
     cpp_parse.ensure_parser()
-    indexer.log(quiet, "  tree-sitter ready")
+    indexer.log(quiet, "  environment ready (.venv)")
 
 
 def check_ctags(ctags: Path, quiet: bool) -> str:

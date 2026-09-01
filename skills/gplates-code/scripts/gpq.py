@@ -861,8 +861,188 @@ def cmd_gpgim(con, args):
     return 0
 
 
+
+# ----------------------------------------------------------------------------
+# Code communities (Graphify + Leiden), from data/graph.db
+# ----------------------------------------------------------------------------
+
+def _graph_db_path():
+    from gplates_index.common import DATA_DIR
+    return DATA_DIR / "graph.db"
+
+
+def attach_graph(con):
+    """ATTACH the graph database read-only. Raises SkillError when absent."""
+    path = _graph_db_path()
+    if not path.exists():
+        raise SkillError(
+            "no code graph yet - build it with:  python scripts/build_graph.py\n"
+            "(it is optional and separate from the main index)")
+    con.execute("ATTACH DATABASE ? AS g", ("file:%s?mode=ro" % path.as_posix(),))
+    return con
+
+
+def _community_header(con, cid):
+    row = con.execute(
+        "SELECT id, name, size, top_dirs, top_nodes FROM g.communities WHERE id = ?",
+        (cid,)).fetchone()
+    if row is None:
+        return None
+    label = row["name"] or ("Community %d" % row["id"])
+    note("community %d: %s  (%d nodes)" % (row["id"], label, row["size"]))
+    if row["top_dirs"]:
+        note("  dirs: %s" % row["top_dirs"])
+    return row
+
+
+def cmd_community(con, args):
+    """Which cluster of the codebase a symbol belongs to, and what else is in it."""
+    attach_graph(con)
+
+    if args.list:
+        rows = con.execute(
+            "SELECT id, name, size, top_dirs, top_nodes FROM g.communities "
+            "ORDER BY size DESC LIMIT ?", (args.limit,)).fetchall()
+        total = con.execute("SELECT COUNT(*) FROM g.communities").fetchone()[0]
+        note("%d communities, largest %d shown" % (total, len(rows)))
+        for r in rows:
+            emit("%-6d %-5d %-46s %s"
+                 % (r["id"], r["size"], clip(r["top_dirs"] or "", 46),
+                    clip(r["top_nodes"] or "", 70)), dict(r))
+        return 0
+
+    if args.id is not None:
+        if _community_header(con, args.id) is None:
+            note("no community with id %d" % args.id)
+            return 1
+        return _print_members(con, args.id, args)
+
+    if not args.name:
+        note("give a symbol name, --id N, or --list")
+        return 2
+
+    like = args.name if args.case else args.name.lower()
+    col = "label" if args.case else "label_lc"
+
+    # Graphify emits "stub" nodes for names it saw only in another file's
+    # extraction: no source location, one edge, and a misleading community.
+    # Rank against the entity index so a real definition always wins.
+    rank = ("(CASE WHEN EXISTS (SELECT 1 FROM entities e JOIN files f ON f.id = e.file_id "
+            "   WHERE f.path = n.path AND e.line = n.line AND e.is_def = 1) THEN 0 "
+            " WHEN n.path IS NOT NULL AND n.line IS NOT NULL THEN 1 ELSE 2 END)")
+    base = ("SELECT n.id, n.label, n.path, n.line, n.community, n.is_class, "
+            + rank + " AS rank FROM g.graph_nodes n WHERE n.")
+    rows = con.execute(base + "%s = ? ORDER BY rank, n.is_class DESC, n.path"
+                       % col, (like,)).fetchall()
+    if not rows:
+        rows = con.execute(
+            base + "%s LIKE ? ORDER BY rank, n.is_class DESC, length(n.label) LIMIT 40"
+            % col, ("%" + like + "%",)).fetchall()
+    if not rows:
+        note("no graph node matches %r" % args.name)
+        return 1
+
+    real = [r for r in rows if r["rank"] == 0]
+    stubs = len(rows) - len(real)
+    shown = real or rows
+    for r in shown[:args.limit]:
+        tag = {0: "def", 1: "ref", 2: "stub"}[r["rank"]]
+        emit("%-38s %-44s [%s] -> community %s"
+             % (r["label"], "%s:%s" % (r["path"] or "?", r["line"] or "?"), tag,
+                r["community"]), dict(r))
+    if stubs and real:
+        note("%d stub/reference node(s) hidden - they carry no definition" % stubs)
+    elif not real:
+        note("no node with a definition in the index; these may be stubs")
+
+    seen = [r["community"] for r in shown if r["community"] is not None]
+    if not seen:
+        note("matched nodes carry no community (was the graph clustered?)")
+        return 1
+    uniq = list(dict.fromkeys(seen))
+    if len(uniq) > 1:
+        note("%d distinct communities matched; showing the best-ranked one" % len(uniq))
+    emit("")
+    _community_header(con, uniq[0])
+    return _print_members(con, uniq[0], args)
+
+
+def _print_members(con, cid, args):
+    rows = con.execute(
+        "SELECT label, path, line, is_class, is_callable FROM g.graph_nodes "
+        "WHERE community = ? AND path IS NOT NULL "
+        "ORDER BY is_class DESC, path, line", (cid,)).fetchall()
+    hidden = con.execute(
+        "SELECT COUNT(*) FROM g.graph_nodes WHERE community = ? AND path IS NULL",
+        (cid,)).fetchone()[0]
+    note("%d member(s) with a source location%s"
+         % (len(rows), (", %d stubs hidden" % hidden) if hidden else ""))
+    for r in rows[:args.limit]:
+        kind = "class" if r["is_class"] else ("callable" if r["is_callable"] else "")
+        emit("  %-10s %-44s %s:%s" % (kind, clip(r["label"], 44),
+                                      r["path"] or "?", r["line"] or "?"), dict(r))
+    if len(rows) > args.limit:
+        note("%d more - raise --limit" % (len(rows) - args.limit))
+    return 0
+
+
+def cmd_neighbors(con, args):
+    """Direct graph edges into and out of a symbol."""
+    attach_graph(con)
+    col = "label" if args.case else "label_lc"
+    key = args.name if args.case else args.name.lower()
+    # Same stub guard as `community`: prefer nodes that sit on a real definition,
+    # then nodes that at least have a source location, then bare stubs.
+    rank = ("(CASE WHEN EXISTS (SELECT 1 FROM entities e JOIN files f ON f.id = e.file_id "
+            "   WHERE f.path = n.path AND e.line = n.line AND e.is_def = 1) THEN 0 "
+            " WHEN n.path IS NOT NULL THEN 1 ELSE 2 END)")
+    nodes = con.execute(
+        "SELECT n.id, n.label, n.path, n.line, " + rank + " AS rank, "
+        "  (SELECT COUNT(*) FROM g.graph_edges e2 "
+        "     WHERE e2.src = n.id OR e2.dst = n.id) AS degree "
+        "FROM g.graph_nodes n WHERE n.%s = ? "
+        "ORDER BY rank, degree DESC, n.is_class DESC LIMIT 5" % col, (key,)).fetchall()
+    if not nodes:
+        note("no graph node named %r" % args.name)
+        return 1
+    connected = [n for n in nodes if n["degree"] > 0]
+    if connected:
+        nodes = connected[:args.nodes]
+    else:
+        nodes = nodes[:args.nodes]
+    for n in nodes:
+        note("%s  %s:%s  (degree %d)"
+             % (n["label"], n["path"] or "?", n["line"] or "?", n["degree"]))
+        where = "e.relation IN (%s)" % ",".join("?" * len(args.relation)) \
+            if args.relation else "1=1"
+        params = list(args.relation) if args.relation else []
+        out = con.execute(
+            "SELECT e.relation, t.label, t.path, t.line FROM g.graph_edges e "
+            "JOIN g.graph_nodes t ON t.id = e.dst WHERE e.src = ? AND " + where +
+            " ORDER BY e.relation, t.label LIMIT ?", [n["id"]] + params + [args.limit]
+        ).fetchall()
+        for r in out:
+            emit("  -> %-14s %-40s %s:%s" % (r["relation"], clip(r["label"], 40),
+                                             r["path"] or "?", r["line"] or "?"), dict(r))
+        inc = con.execute(
+            "SELECT e.relation, t.label, t.path, t.line FROM g.graph_edges e "
+            "JOIN g.graph_nodes t ON t.id = e.src WHERE e.dst = ? AND " + where +
+            " ORDER BY e.relation, t.label LIMIT ?", [n["id"]] + params + [args.limit]
+        ).fetchall()
+        for r in inc:
+            emit("  <- %-14s %-40s %s:%s" % (r["relation"], clip(r["label"], 40),
+                                             r["path"] or "?", r["line"] or "?"), dict(r))
+        if not out and not inc:
+            note("  (no edges)")
+    return 0
+
+
 def cmd_sql(con, args):
-    """Escape hatch: raw read-only SQL against the index."""
+    """Escape hatch: raw read-only SQL against the index (graph attached as `g` if built)."""
+    try:
+        attach_graph(con)
+    except SkillError:
+        pass
     rows = con.execute(args.query).fetchall()
     note("%d row(s)" % len(rows))
     for r in rows[:args.limit]:
@@ -1000,6 +1180,20 @@ def build_parser():
     p = add("gpgim", cmd_gpgim, "GPGIM feature classes and properties")
     p.add_argument("name", nargs="?", default="")
     p.add_argument("--detail", action="store_true", help="include descriptions and property lists")
+
+    p = add("community", cmd_community, "code communities (clusters) from the graph")
+    p.add_argument("name", nargs="?", default="")
+    p.add_argument("--id", type=int, help="show one community by id")
+    p.add_argument("--list", action="store_true", help="list communities by size")
+    p.add_argument("--case", action="store_true")
+
+    p = add("neighbors", cmd_neighbors, "graph edges into and out of a symbol")
+    p.add_argument("name")
+    p.add_argument("--relation", action="append",
+                   help="calls, references, inherits, contains, defines, imports, method")
+    p.add_argument("--nodes", type=int, default=2,
+                   help="how many same-named nodes to expand (default 2)")
+    p.add_argument("--case", action="store_true")
 
     p = add("sql", cmd_sql, "run a read-only SQL query against the index")
     p.add_argument("query")

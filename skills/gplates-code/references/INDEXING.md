@@ -11,8 +11,9 @@
    `src/qt-resources/gpgim/gpgim.xml` — and `GPLATES_VERSION_{MAJOR,MINOR,PATCH}`
    parsed out of `Version.cmake` must be ≥ 2.5.0. Nothing is downloaded before
    this passes.
-2. **Get the parsers.** Universal Ctags, and tree-sitter (`pip install --target
-   data/pylibs tree_sitter tree_sitter_cpp` — prebuilt wheels, no compiler).
+2. **Get the parsers.** Universal Ctags, and the uv environment (`uv sync`
+   materialises `.venv` from `pyproject.toml`: tree-sitter for the deep C++ pass,
+   graphifyy[leiden] for the optional graph — all prebuilt wheels, no compiler).
    Universal Ctags: `data/tools/ctags.exe` if already there, else `ctags`
    on `PATH`, else download the pinned Windows build
    (`universal-ctags/ctags-win32` v6.1.0, x64, ~2.9 MB) and extract `ctags.exe`.
@@ -66,7 +67,10 @@ an entity plus a confidence label.
 |---|---|
 | `data/config.json` | remembered source root, version, ctags path and banner |
 | `data/tools/ctags.exe` | the downloaded Universal Ctags |
-| `data/gplates.db` | the index |
+| `data/gplates.db` | the main index |
+| `data/graph.db` | the optional code graph + communities |
+| `data/graphify-out/` | raw graphify output (`graph.json`, `GRAPH_REPORT.md`) |
+| `.venv/` | the uv environment from `pyproject.toml` |
 
 `data/` is git-ignored. The GPlates source tree is only ever read.
 
@@ -136,7 +140,8 @@ python scripts/setup_index.py --check          # re-verify the current index
 python scripts/setup_index.py --rebuild        # rebuild from the stored source path
 python scripts/setup_index.py --source <DIR>   # point at a different source tree
 python scripts/setup_index.py --validate-only --source <DIR>
-python scripts/test_gpq.py                     # 91 tests
+python scripts/build_graph.py --check          # verify the optional code graph
+python scripts/test_gpq.py                     # 109 tests
 ```
 
 Rebuild whenever the source tree changes — the index stores absolute line numbers,
@@ -174,8 +179,11 @@ symbols, try `--mode sub` or drop `--kind`.
 **Line numbers are off by a few** — the index is stale. Rebuild.
 
 **`tree-sitter is not installed`** — the deep pass needs it. Re-run
-`setup_index.py`, which installs it, or do it by hand:
-`python -m pip install --target data/pylibs tree_sitter tree_sitter_cpp`.
+`setup_index.py`, which runs `uv sync`, or run `uv sync` yourself in the skill
+folder. If `uv` itself is missing: `pip install uv`.
+
+**`no code graph yet`** — the graph layer is optional. Build it with
+`python scripts/build_graph.py`; see [GRAPH.md](GRAPH.md).
 
 **`uses` misses a call site** — resolution is syntactic. Check whether the name is
 reached through a macro, a template instantiation, or an overload; `gpq refs` finds

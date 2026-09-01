@@ -1,6 +1,6 @@
 ---
 name: gplates-code
-description: Deeply index and search the GPlates 2.5+ C++/Python source tree. Finds the declaration, definition, usages, subclasses and base classes of any type, member, variable, template or preprocessor macro, plus Qt dialogs and signal/slot wiring, the GPGIM feature model, OpenGL shaders and sample data. Use for any question about GPlates or pyGPlates internals, or when writing code against them.
+description: Deeply index and search the GPlates 2.5+ C++/Python source tree. Finds the declaration, definition, usages, subclasses and base classes of any type, member, variable, template or preprocessor macro, plus Qt dialogs and signal/slot wiring, the GPGIM feature model, OpenGL shaders, sample data, and an optional Leiden-clustered code graph for semantic grouping. Use for any question about GPlates or pyGPlates internals, or when writing code against them.
 license: MIT
 ---
 
@@ -19,11 +19,13 @@ Everything is one command: `scripts/gpq.py`. Output is one result per line, most
 `path:line: text`, so it pipes into `grep`, `head` and friends.
 
 No GPlates build is required — nothing needs Qt, Boost, CGAL, GDAL or PROJ
-installed. Setup downloads a 2.9 MB ctags binary and pip-installs tree-sitter into
-the skill's own folder.
+installed. Dependencies are declared in `pyproject.toml` and materialised by
+`uv sync` into the skill's own `.venv`; setup also downloads a 2.9 MB ctags binary.
 
 **Platform:** Windows (the ctags download is Windows-only; the rest is portable).
-**Python:** `C:\Python312\python.exe`, or any Python 3.12+ on `PATH`.
+**Python:** 3.12 (`C:\Python312\python.exe`). Pinned `>=3.12,<3.13` because the
+fast Leiden clustering backend has no wheel for 3.13.
+**Needs:** `uv` (`pip install uv`).
 
 ## 1. Check the index
 
@@ -50,6 +52,13 @@ This validates the tree is really GPlates ≥ 2.5.0, downloads Universal Ctags i
 `data/gplates.db` (~191 MB, about 30 seconds). It refuses to continue on a wrong
 directory, an old version, or an index that comes out short on any expected row count.
 
+Optionally, then build the code graph (~100 s), which adds Leiden-detected
+communities for semantic grouping:
+
+```bash
+C:\Python312\python.exe scripts/build_graph.py
+```
+
 Useful variants: `--validate-only` (check the path, build nothing), `--check`
 (re-verify an existing index), `--rebuild` (rebuild from the stored path),
 `--ctags <path>` (use your own Universal Ctags).
@@ -66,6 +75,13 @@ python scripts/gpq.py uses d_anchor_plate_id       # resolved usages, by role
 python scripts/gpq.py hier LayerProxy              # bases and subclasses, transitively
 python scripts/gpq.py members ReconstructionTree   # fields, methods, typedefs, enums
 python scripts/gpq.py macro GPLATES_ASSERTION_SOURCE --uses
+```
+
+Two more commands come from the optional code graph (see step 2):
+
+```bash
+python scripts/gpq.py community ReconstructLayerProxy  # which cluster it belongs to
+python scripts/gpq.py neighbors LayerProxy --relation inherits
 ```
 
 Text-level search remains for everything the parser cannot bind:
@@ -111,6 +127,8 @@ covers more than C++:
 | What derives from this class? What does it derive from? | `gpq hier <class>` |
 | What is inside this class or namespace? | `gpq members <class> --kind field` |
 | What does this macro expand to, and who uses it? | `gpq macro <name> --uses` |
+| Which cluster of the codebase does this belong to? | `gpq community <name>` |
+| What connects to this symbol in the graph? | `gpq neighbors <name>` |
 | Which dialog has this button / label? | `gpq ui "Reconstruction Time"` |
 | What is on this dialog? | `gpq ui TotalReconstructionPoles` |
 | What reacts to this Qt signal? | `gpq signals reconstruction_time_changed` |
@@ -124,12 +142,15 @@ covers more than C++:
 ```
 skills/gplates-code/
 ├── SKILL.md
+├── pyproject.toml         dependencies (uv sync -> .venv)
 ├── references/
 │   ├── SEARCH.md          full gpq reference and recipes
 │   ├── ARCHITECTURE.md    GPlates source tree map
-│   └── INDEXING.md        how the index is built, schema, troubleshooting
+│   ├── INDEXING.md        how the index is built, schema, troubleshooting
+│   └── GRAPH.md           the optional code graph and communities
 ├── scripts/
 │   ├── setup_index.py     validate source, fetch tools, build the index
+│   ├── build_graph.py     optional: code graph + Leiden communities
 │   ├── gpq.py             the query CLI
 │   ├── test_gpq.py        test suite
 │   └── gplates_index/     common, schema, build, indexer,
@@ -137,8 +158,9 @@ skills/gplates-code/
 └── data/                  generated, git-ignored
     ├── config.json        remembered source path
     ├── tools/ctags.exe    downloaded Universal Ctags
-    ├── pylibs/            tree-sitter + tree-sitter-cpp
-    └── gplates.db         the index
+    ├── gplates.db         the main index
+    ├── graph.db           the optional code graph + communities
+    └── graphify-out/      raw graphify output (graph.json, GRAPH_REPORT.md)
 ```
 
 The GPlates source tree itself is never copied or modified — `data/` only holds
@@ -150,9 +172,9 @@ the index and the ctags binary.
 C:\Python312\python.exe scripts/test_gpq.py
 ```
 
-91 tests. Parser, extractor and source-tree validation tests run without an
-index; index-integrity and CLI tests need one and are skipped (with a warning)
-otherwise.
+109 tests. Parser, extractor and source-tree validation tests run without an
+index; index-integrity and CLI tests need one, and the graph tests need
+`build_graph.py` to have run. Anything unavailable is skipped, not failed.
 
 ## When results look wrong
 
@@ -165,3 +187,6 @@ otherwise.
   and reports how many same-named occurrences it could **not** bind to a specific
   entity. Overload resolution and template instantiation are out of reach — the
   limits are spelled out in [references/SEARCH.md](references/SEARCH.md).
+- The code graph is a **separate, optional** layer in `data/graph.db`; the main
+  index works without it. Details and its limits:
+  [references/GRAPH.md](references/GRAPH.md).

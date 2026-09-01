@@ -304,6 +304,21 @@ property definitions (with value types, multiplicity and description), parsed fr
 `src/qt-resources/gpgim/gpgim.xml`. `--detail` adds descriptions, the property list
 of a feature class, and the feature classes that use a property.
 
+### `community` / `neighbors` — code clusters and graph edges
+
+From the optional code graph (`scripts/build_graph.py`). Full reference:
+[GRAPH.md](GRAPH.md).
+
+```bash
+python scripts/gpq.py community ReconstructLayerProxy
+python scripts/gpq.py community --list --limit 20
+python scripts/gpq.py community --id 65
+python scripts/gpq.py neighbors LayerProxy --relation inherits
+```
+
+Both rank candidates against the entity index, so a real definition beats one of
+graphify's location-less stub nodes; lines are tagged `[def]`, `[ref]`, `[stub]`.
+
 ### `sql <query>` — escape hatch
 
 ```bash
@@ -311,7 +326,8 @@ python scripts/gpq.py sql "SELECT kind, COUNT(*) FROM symbols GROUP BY kind ORDE
 ```
 
 Read-only SQL against the index. The connection is opened `mode=ro`, so writes fail.
-Schema: [INDEXING.md](INDEXING.md).
+When the code graph exists it is attached as schema `g` (`g.communities`,
+`g.graph_nodes`, `g.graph_edges`). Schema: [INDEXING.md](INDEXING.md).
 
 ---
 

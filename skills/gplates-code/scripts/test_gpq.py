@@ -12,6 +12,7 @@ index. The query tests need a built index and are skipped (loudly) without one.
 from __future__ import annotations
 
 import json
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -813,6 +814,146 @@ class DeepQueries(unittest.TestCase):
         rows = json.loads(out)
         self.assertTrue(rows)
         self.assertIn("qname", rows[0])
+
+
+# ---------------------------------------------------------------------------
+# Code graph and communities (optional layer - skipped when not built)
+# ---------------------------------------------------------------------------
+
+from gplates_index.common import DATA_DIR as _DATA_DIR  # noqa: E402
+
+GRAPH_DB = _DATA_DIR / "graph.db"
+HAVE_GRAPH = GRAPH_DB.exists()
+needs_graph = unittest.skipUnless(
+    HAVE_GRAPH, "no code graph - run scripts/build_graph.py (optional)")
+
+
+@needs_graph
+class CodeGraphIntegrity(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.con = sqlite3.connect("file:%s?mode=ro" % GRAPH_DB.as_posix(), uri=True)
+        cls.con.row_factory = sqlite3.Row
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.con.close()
+
+    def count(self, sql, *params):
+        return self.con.execute(sql, params).fetchone()[0]
+
+    def test_minimum_size(self):
+        self.assertGreater(self.count("SELECT COUNT(*) FROM graph_nodes"), 30000)
+        self.assertGreater(self.count("SELECT COUNT(*) FROM graph_edges"), 60000)
+        self.assertGreater(self.count("SELECT COUNT(*) FROM communities"), 200)
+
+    def test_every_node_has_a_community(self):
+        self.assertEqual(self.count(
+            "SELECT COUNT(*) FROM graph_nodes WHERE community IS NULL"), 0)
+
+    def test_community_sizes_match_membership(self):
+        bad = self.count(
+            "SELECT COUNT(*) FROM communities c WHERE c.size <> "
+            "(SELECT COUNT(*) FROM graph_nodes n WHERE n.community = c.id)")
+        self.assertEqual(bad, 0)
+
+    def test_edges_reference_known_nodes(self):
+        self.assertEqual(self.count(
+            "SELECT COUNT(*) FROM graph_edges e "
+            "LEFT JOIN graph_nodes n ON n.id = e.src WHERE n.id IS NULL"), 0)
+        self.assertEqual(self.count(
+            "SELECT COUNT(*) FROM graph_edges e "
+            "LEFT JOIN graph_nodes n ON n.id = e.dst WHERE n.id IS NULL"), 0)
+
+    def test_expected_relations_present(self):
+        rels = {r[0] for r in self.con.execute(
+            "SELECT DISTINCT relation FROM graph_edges")}
+        for required in ("inherits", "calls", "references", "contains", "defines"):
+            self.assertIn(required, rels)
+
+    def test_paths_do_not_leak_the_build_mirror(self):
+        """The graph is built from data/graph-src; no path may still point there."""
+        self.assertEqual(self.count(
+            "SELECT COUNT(*) FROM graph_nodes WHERE path LIKE '%graph-src%'"), 0)
+
+    def test_paths_are_relative_to_the_source_root(self):
+        self.assertEqual(self.count(
+            "SELECT COUNT(*) FROM graph_nodes "
+            "WHERE path IS NOT NULL AND (path LIKE '%:%' OR path LIKE '/%')"), 0)
+
+    def test_qt_heavy_headers_were_extracted(self):
+        """Raw graphify yields almost nothing here; the prepared mirror fixes it."""
+        for path in ("src/qt-widgets/HellingerDialog.h", "src/gui/TopologyTools.h"):
+            n = self.count("SELECT COUNT(*) FROM graph_nodes WHERE path = ?", path)
+            self.assertGreater(n, 30, "%s should yield many nodes after Qt preparation"
+                               % path)
+
+    def test_known_inheritance_edge(self):
+        got = self.count(
+            "SELECT COUNT(*) FROM graph_edges e "
+            "JOIN graph_nodes s ON s.id = e.src JOIN graph_nodes t ON t.id = e.dst "
+            "WHERE e.relation = 'inherits' AND s.label = 'LayerProxy' "
+            "AND t.label = 'LayerProxyHandle'")
+        self.assertGreaterEqual(got, 1)
+
+
+@needs_graph
+class CommunityQueries(unittest.TestCase):
+
+    def test_list(self):
+        rc, out, _ = gpq("community", "--list", "--limit", "5")
+        self.assertEqual(rc, 0)
+        self.assertEqual(len(hits(out)), 5)
+
+    def test_symbol_resolves_to_its_defining_node(self):
+        """Must pick the real definition, not one of graphify's stub nodes."""
+        rc, out, _ = gpq("community", "ReconstructLayerProxy", "--limit", "5")
+        self.assertEqual(rc, 0)
+        first = hits(out)[0]
+        self.assertIn("src/app-logic/ReconstructLayerProxy.h", first)
+        self.assertIn("[def]", first)
+
+    def test_community_by_id(self):
+        rc, out, _ = gpq("community", "--id", "0", "--limit", "5")
+        self.assertEqual(rc, 0)
+        self.assertTrue(hits(out))
+
+    def test_unknown_symbol_exits_nonzero(self):
+        rc, _, _ = gpq("community", "ZzNoSuchThingZz")
+        self.assertEqual(rc, 1)
+
+    def test_members_share_the_community(self):
+        rc, out, _ = gpq("community", "--id", "65", "--limit", "200", "--json")
+        self.assertEqual(rc, 0)
+        rows = json.loads(out)
+        self.assertTrue(rows)
+
+    def test_neighbors_prefers_the_connected_definition(self):
+        rc, out, _ = gpq("neighbors", "ReconstructionTree", "--limit", "10")
+        self.assertEqual(rc, 0)
+        self.assertTrue(any("->" in h or "<-" in h for h in hits(out)))
+
+    def test_neighbors_relation_filter(self):
+        rc, out, _ = gpq("neighbors", "LayerProxy", "--relation", "inherits", "--limit", "10")
+        self.assertEqual(rc, 0)
+        for h in hits(out):
+            self.assertIn("inherits", h)
+
+    def test_sql_can_reach_the_graph(self):
+        rc, out, _ = gpq("sql", "SELECT COUNT(*) FROM g.communities")
+        self.assertEqual(rc, 0)
+        self.assertGreater(int(hits(out)[0]), 200)
+
+
+class GraphAbsentBehaviour(unittest.TestCase):
+    """The graph is optional; its absence must be a clear message, not a crash."""
+
+    @unittest.skipIf(HAVE_GRAPH, "graph is built")
+    def test_clear_error_when_missing(self):
+        rc, out, err = gpq("community", "--list")
+        self.assertEqual(rc, 2)
+        self.assertIn("build_graph.py", out + err)
 
 if __name__ == "__main__":
     if not HAVE_INDEX:
