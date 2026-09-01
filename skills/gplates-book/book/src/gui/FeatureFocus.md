@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FeatureFocus tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureFocus` is the single place in the application that holds "which feature is
+selected". Canvas tools, the feature table, the property editor, the topology
+tools and the pole-adjustment widgets all write to it and all listen to it, so
+selection never has to be propagated widget-to-widget. It is owned by
+`GPlatesPresentation::ViewState` and reached as
+`view_state.get_feature_focus()`; the fan-in table below is essentially the list
+of everything in the GUI that cares about selection.
+
+The focus is not one value but three, and the distinction is the whole design.
+`d_focused_feature` is a `GPlatesModel::FeatureHandle::weak_ref` into the model.
+`d_associated_geometry_property` is a properties iterator naming *which* geometry
+property of that feature the user actually picked. `d_associated_reconstruction_geometry`
+is the concrete `GPlatesAppLogic::ReconstructionGeometry` produced for that
+property at the current reconstruction time. Only the first two are durable: every
+reconstruction throws away all `ReconstructionGeometry` objects and builds new
+ones, so the third has to be re-derived continually. That is why the constructor
+connects to `RenderedGeometryCollection::collection_was_updated` — on every
+collection update `find_new_associated_reconstruction_geometry()` re-runs and
+re-attaches the focus to whatever new RG now observes the same feature and the
+same geometry property.
+
+That search deliberately goes through `GPlatesViewOperations::RenderedGeometryUtils::get_unique_reconstruction_geometries_observing_feature`
+against the collection's `RECONSTRUCTION_LAYER` rather than through the
+`Reconstruction` object directly. The in-code rationale is twofold: the rendered
+collection already holds a flat, uniform list of what is actually *visible*,
+whereas pulling geometries out of `Reconstruction` would mean knowing how to ask
+each `LayerProxy` subclass for its output. The free function `locate_focus()` sits
+apart from the class — it runs a `ConstReconstructionGeometryVisitor` over the
+focused RG to extract the first exterior vertex as a `GPlatesMaths::LatLonPoint`,
+and exists for the Python binding in `src/api/PyViewportWindow.cc`, which uses it
+to centre the camera after setting focus from a script.
 
 ## Declared types
 
@@ -76,9 +104,49 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FeatureFocus tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Everything you get back is weak.** `focused_feature()` returns a `weak_ref` that
+may be invalid and `associated_geometry_property()` returns an iterator that may
+no longer be valid; the header says to check `is_valid()` / `is_still_valid()`
+every time. `associated_reconstruction_geometry()` legitimately returns null
+*while a feature is still focused* — step the reconstruction time past the
+feature's period of validity and the RG disappears, but the geometry property
+iterator is deliberately retained so stepping back restores the RG. Treat "focused
+but no RG" as normal, not as an error.
+
+**Two weak refs to the same feature, on purpose.** `d_callback_focused_feature`
+exists only to carry the `FocusedFeatureDeactivatedCallback` that unsets focus
+when the feature is deactivated in the model. Keeping the callback off
+`d_focused_feature` means the callback is not copied out with every
+`focused_feature()` call; a copy escaping into a longer-lived object would, at
+shutdown, fire against a destroyed `FeatureFocus` because `ViewState` is destroyed
+before the app-logic state. If you add another weak ref here, keep the callback on
+the private one.
+
+**The re-entrancy guards are partial.** Both two-argument `set_focus()` overloads
+return early when the new value equals the current one — the comment calls it
+avoiding infinite signal/slot loops, which matters because `set_focus` is a slot
+and `focus_changed` is a signal that many of the same widgets are wired to. But
+each overload compares only the pair it was given: feature + RG in one, feature +
+property iterator in the other. A call that changes only the field the guard does
+not look at will be dropped silently.
+
+**`announce_modification_of_focused_feature()` does not return after unsetting.**
+If the geometry property has become invalid it calls `unset_focus()` — which
+already emits `focus_changed` — and then falls through and emits
+`focused_feature_modified` as well, with the focus by then cleared. Slots on
+`focused_feature_modified` must not assume `is_valid()`.
+
+**Focus-by-feature only works on what is already rendered.** The single-argument
+`set_focus()` picks the first RG observing the feature in the rendered collection,
+and calls `unset_focus()` if there is none. Focusing a feature that has not yet
+been through a reconstruction, or that lives in an invisible layer, quietly
+clears the focus instead.
+
+**Layer ambiguity is unresolved.** When one feature is reconstructed by two
+layers, each produces its own RG and the first match is taken arbitrarily, so the
+re-association after a reconstruction can silently switch which layer's geometry
+is focused. The code notes that fixing this needs a way to identify the
+originating layer.
 
 ## Used by
 

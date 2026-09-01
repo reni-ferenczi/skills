@@ -9,9 +9,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/Rotation tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Rotation` is a time-independent rigid rotation of the sphere: an axis, an angle in radians, and the
+`UnitQuaternion3D` that actually effects them, all three stored together. The header opens with the
+warning that matters most — this is *not* the class for plate motion. Reconstruction rotations are
+`FiniteRotation` and `StageRotation`, which carry the time semantics and the plate circuit;
+`Rotation` is the plain geometric operation, and its callers reflect that: `SimpleGlobeOrientation`
+dragging the globe, `EllipseGenerator` and `GeneratePoints` laying out shapes, `DateLineWrapper` and
+`GreatCircleArc` moving geometry into a convenient frame.
+
+Two things dominate the design. First, application is deliberately asymmetric premultiplication:
+`r * v` reads as "apply r to v", and `r1 * r2` means "take r2, then apply r1", following matrix
+convention — the header says so twice, because quaternion multiplication does not commute and
+getting the order backwards is a silent error. The vector product is not a matrix multiply either;
+`operator*(const Vector3D &)` carries the full derivation in comments and evaluates the quaternion
+sandwich in expanded closed form directly from the scalar and vector parts. Second, the family of
+free `operator*` overloads makes every geometry type rotatable with the same syntax. Point,
+multi-point, polyline and polygon each have their own overload that rotates the vertices and calls
+`create` to build a fresh geometry; the `GeometryOnSphere` overload dispatches through
+`RotateGeometryOnSphere`, a file-local `ConstGeometryOnSphereVisitor` that picks the right one when
+only the base type is known.
+
+The static factories carry the awkward cases. `create(initial, final)` has to invent an axis when
+the two unit vectors are collinear and therefore define no unique plane: parallel gives a zero-angle
+rotation about `initial`, anti-parallel gives a PI rotation about `generate_perpendicular(initial)`.
+Composition has the mirror problem — when the composed quaternion is the identity there is no
+meaningful axis, so it reuses `r1`'s; otherwise it asks
+`UnitQuaternion3D::get_rotation_params` for axis and angle, passing `r1`'s axis as a hint to
+disambiguate the sign. A protected `create` overload takes a quaternion together with a matching
+axis and angle so these paths can build a `Rotation` without re-deriving anything.
 
 ## Declared types
 
@@ -69,9 +94,35 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/Rotation tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The quaternion is authoritative; axis and angle are a redundant, non-canonical label.** The
+protected `create(uq, axis, angle)` states outright that the supplied axis and angle must match the
+quaternion and that this will *not* be checked. Several paths supply an arbitrary-but-deterministic
+axis on purpose — the identity cases in `create(initial, final)`, in `create_identity_rotation`
+(z-basis) and in `operator*` for composed rotations. Two `Rotation` objects can therefore describe
+the same transformation with different `axis()` and `angle()` values, and `get_reverse` inverts the
+quaternion while merely negating the stored angle and keeping the same axis. Compare rotations
+through `quat()`, never through axis and angle.
+
+**Rotating a `UnitVector3D` re-validates it.** `operator*(const UnitVector3D &)` computes in
+`Vector3D` and then constructs a `UnitVector3D` with validity checking on, so if accumulated
+floating-point error moves the magnitude-squared away from 1 by more than `Real`'s epsilon the call
+throws `ViolatedUnitVectorInvariantException`. Long chains of rotations applied one vector at a time
+are the way to provoke this; composing the rotations first and applying once is not.
+
+**Rotated geometries are new objects, built through the normal `create` path.** They are fully
+revalidated, and they start with an empty calculation cache — every cached area, centroid, bounding
+circle or point-in-polygon structure on the source geometry is lost. The rotation overloads use the
+default `check_distinct_points = false`, which is the lenient setting the geometry headers describe
+precisely so that rotating a tiny polygon does not throw; the price is that a rotated geometry may
+contain degenerate, zero-length segments.
+
+**Adding a `GeometryOnSphere` subclass means editing this file.** `RotateGeometryOnSphere::rotate`
+asserts that the visitor produced a result, so an unhandled geometry type fails there — as a thrown
+`AssertionFailureException` in release, and via `GPlatesGlobal::Abort` in a debug build.
+
+**`Rotation.h` has a namespace-scope `using namespace GPlatesGlobal;`.** Every translation unit that
+includes it, directly or transitively, pulls the whole `GPlatesGlobal` namespace into `GPlatesMaths`.
+Bear it in mind when a name resolves somewhere you did not expect.
 
 ## Used by
 

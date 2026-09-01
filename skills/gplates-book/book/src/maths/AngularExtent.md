@@ -9,9 +9,32 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/AngularExtent tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The arithmetic counterpart of `AngularDistance`: an angle in `[0, PI]` held as its
+cosine, plus a lazily computed sine and a lazily computed angle. Where
+`AngularDistance` exists to be returned and compared cheaply, `AngularExtent`
+exists to be *adjusted* — grown and shrunk — which is why it carries the sine.
+`operator+=` and `operator-=` use the angle-sum identities
+`cos(a±b) = cos a cos b ∓ sin a sin b` and `sin(a±b) = sin a cos b ± cos a sin b`,
+so adding two extents costs four multiplies and no `acos`.
+
+That capability is what makes region-of-interest queries possible without ever
+leaving cosine space. `BoundingSmallCircle` and `InnerOuterBoundingSmallCircle`
+in `SmallCircleBounds` store their radii as `AngularExtent` and expose
+`expand()` / `contract()` directly in terms of it; a "everything within 10 km of
+this geometry" query becomes "expand the bounding circle by the angle subtended
+by 10 km, then do an ordinary overlap test". The same objects are what
+`GeometryDistance` takes as its optional `minimum_distance_threshold`, letting
+the distance routines reject candidate pairs by a single cosine comparison, and
+what `CubeQuadTreePartition` traversals use to prune subtrees.
+
+Conversion between the two types is explicit in both directions —
+`get_angular_distance()` down, the `AngularExtent(const AngularDistance &)`
+constructor up — and the mixed-type operator set means an `AngularExtent` can be
+compared with, added to and subtracted from an `AngularDistance` without the
+caller writing the conversion. The declared base list is one deeply chained
+template rather than a dozen sibling bases purely to stop the empty boost
+operator bases from inflating the object; the effective operator set is
+enumerated in the comments in the header.
 
 ## Declared types
 
@@ -56,9 +79,50 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/AngularExtent tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Arithmetic saturates, it does not wrap.** The class invariant is that the angle
+stays in `[0, PI]`, and both operators enforce it: `operator+=` clamps to `PI`
+(cosine `-1`) and `operator-=` clamps to `ZERO` (cosine `1`). This is not an error
+path, it is the intended semantics — a bounding small circle of radius PI already
+covers the globe, and contracting past zero would be meaningless. It does mean
+`a + b - b != a` in general, and that `-=` cannot be used to detect
+"the threshold was exceeded".
+
+**`operator+=` has two code paths with different cost and different precision.**
+If either cosine is strictly negative — i.e. either angle exceeds PI/2 — the
+angle-sum identity is abandoned, because beyond PI the cosine stops being a
+one-to-one encoding of the angle. That branch calls `acos` on both operands, adds
+the angles, and clamps. Large extents therefore cost roughly two `acos` per
+addition; the header notes this is expected to be rare.
+
+**Comparisons run backwards and are epsilon-fuzzy.** As in `AngularDistance`,
+`operator<` returns `d_cosine > rhs.d_cosine`, and because `d_cosine` is
+`GPlatesMaths::Real` the comparison carries an epsilon; `boost::equivalent`
+derives `==` from it, so equality means "within epsilon in cosine". Use
+`is_precisely_less_than()` / `is_precisely_greater_than()` when an exact
+comparison is required — they compare raw doubles via `Real::dval()` and are
+templated on anything exposing `get_cosine()`, so they work against either type.
+
+**`const` methods mutate the object.** `d_sine` and `d_angle` are `mutable`
+`boost::optional` caches filled on first call to `get_sine()` and `get_angle()`.
+Two threads calling `get_sine()` concurrently on the same `const AngularExtent &`
+is a data race. Because `SmallCircleBounds` hands out `const AngularExtent &`
+from its bounding circles, sharing one bound across worker threads is exactly the
+situation where this bites.
+
+**Nothing validates cosine against sine.** `create_from_cosine_and_sine()` takes
+the caller's word that both describe the same angle — the header says so
+explicitly — and inconsistent inputs silently corrupt every subsequent addition
+and subtraction. When only a cosine is supplied, `get_sine()` derives it as
+`sqrt(1 - cos²)`, which is correct precisely because the angle is constrained to
+`[0, PI]` where the sine is non-negative.
+
+**Converting from `AngularDistance` is not free.** The conversion constructor
+copies only the cosine, so the first `+=` or `-=` involving a converted value
+pays a `sqrt` to recover the sine. The `operator+=`/`operator-=` overloads taking
+an `AngularDistance` are convenience wrappers around exactly that conversion.
+`AngularExtent` is also several times the size of `AngularDistance` — cosine plus
+two `boost::optional<Real>` — so it is the wrong type to return from a
+tight-loop distance calculation.
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLRenderer tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLRenderer` is the single funnel through which every drawing operation in GPlates reaches OpenGL. Nothing in `gui` or `opengl` calls `glEnable`, `glBindTexture` or `glDrawElements` itself; instead it calls the matching `gl_*` method here, which forwards to the `GLState` of the currently active state block rather than to the driver. State only reaches OpenGL at a draw call — `draw()` invokes `GLRendererImpl::Drawable::draw` with the operation's state and with `d_last_applied_state`, and `GLState` applies just the difference. That deferral is the whole point of the class: redundant state changes made between draw calls are collapsed, and each draw pays only for what actually changed. `end_render()` and the explicitly documented escape hatch `apply_current_state_to_opengl()` are the only other places state is pushed out.
+
+Internally the renderer is three nested stacks. The outermost is a stack of `GLRendererImpl::RenderTargetBlock`; `begin_render` pushes one that stands for the main framebuffer, and `begin_render_target_2D` pushes another for each render-to-texture. Each render target block owns its own stack of `GLRendererImpl::StateBlock` (the save/restore scopes behind `begin_state_block`) and its own stack of `GLRendererImpl::RenderQueue` (the deferral scopes behind `begin_render_queue_block`). All three come in `begin_`/`end_` pairs with a matching RAII scope class, and mismatched nesting is caught by `GLRendererAPIError` — a `GPlatesGlobal::PreconditionViolationError`, so it signals a programming error, not a runtime condition.
+
+Most of the complexity exists to make render-to-texture work on hardware without `GL_EXT_framebuffer_object`. When the extension is present, `begin_framebuffer_object_2D` acquires a `GLFrameBufferObject` (and, for depth or stencil, a packed `GL_DEPTH24_STENCIL8_EXT` `GLRenderBufferObject`) from the context's shared state; when it is not — or when the driver rejects the FBO configuration — `begin_rgba8_main_framebuffer_2D` draws into the main framebuffer instead, saving the affected region with `GLSaveRestoreFrameBuffer` and splitting the render into tiles with `GLTileRender` if the texture is larger than the window. Callers see only the tile loop: `begin_tile_render_target_2D` returns a `GLTransform` to pre-multiply into the projection, and `end_tile_render_target_2D` says whether another tile is needed. Render queues exist for the same fallback path — deferring draws that *use* a render texture means the render target never has to save and restore the main framebuffer around itself. The third block type, `begin_compile_draw_state`, records state changes and draw calls into a `GLCompiledDrawState` for replay; because it records a state *change* rather than a full state, an applied compiled draw state merges into whatever is current at the point of application.
 
 ## Declared types
 
@@ -322,9 +324,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLRenderer tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The default-state contract.** `begin_render` assumes OpenGL is in the full default state and `end_render` restores it — the no-QPainter overload even loads identity modelview and projection matrices first, because Qt has almost certainly left non-default ones behind. Break either half and state tracking silently diverges from the driver, since `d_last_applied_state` is a model of OpenGL, never a query of it. The `gl_get_*` accessors read that model too, not the driver.
+
+**Lifetime.** Create a renderer through `GLContext::create_renderer`, not `GLRenderer::create`; the header says so and the context supplies the shared `GLStateStore` that makes `GLState` allocation cheap. A renderer is a per-frame object — every call site in `qt-widgets` and `gui` makes one, wraps it in a `RenderScope`, and drops it. `GLRenderer` holds a strong reference to its `GLContext`, which is why `get_context()` deliberately hands back a bare reference rather than a shared pointer.
+
+**Deferred errors.** Enabling `GL_DEPTH_TEST`/`gl_depth_mask` (or the stencil equivalents) inside a `begin_render_target_2D` block that was not given a depth or stencil buffer throws `GLRendererAPIError` at the *draw call*, not at the `gl_enable`. Similarly, block-nesting violations surface at `end_render`, so the stack trace points at the end of the frame rather than at the code that unbalanced it.
+
+**Queued drawing traps.** A render target 2D block nested inside a render queue block or a compile-draw-state block does *not* queue or compile its draws — they execute immediately. The header explains why: a render target may stream vertices through one buffer and emit several draw calls, and queueing those would make them all draw the buffer's final contents. That hazard is not confined to render targets — mixing streamed vertex buffers with queued or compiled rendering anywhere is unsafe for the same reason. Note also that only state set *during* compilation is captured; a compiled draw state therefore depends on the ambient state where it is applied.
+
+**The `_and_apply` family.** `gl_bind_*_and_apply` and their RAII wrappers bypass deferral for code that talks to OpenGL directly — the implementations of `GLFrameBufferObject`, `GLProgramObject` and `GLVertexArrayObject`, and Qt during text rendering. Their destructors revert the *binding* but not the *apply*, deliberately leaving OpenGL dirty relative to the tracked state, which the next draw reconciles. They exist because a `StateBlockScope` would save and restore everything, and are the cheap alternative, not a general-purpose tool.
+
+**Cross-context compiled draw states.** `apply_compiled_draw_state` calls `update_compiled_draw_state_for_current_context`, which re-resolves any bound `GLVertexArrayObject` to a native handle valid for the current context — native vertex array objects cannot be shared across contexts. That resolution can re-enter the renderer and apply bind state before it returns, so be careful adding work around it.
+
+**Fallback-only bookkeeping.** `d_current_frame_buffer_draw_count` is meaningful only when the main framebuffer is emulating render targets; on FBO-capable hardware it is incremented and ignored.
 
 ## Used by
 

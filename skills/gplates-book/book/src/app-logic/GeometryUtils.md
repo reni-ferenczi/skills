@@ -9,9 +9,42 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/GeometryUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesMaths::GeometryOnSphere` is an abstract base with four unrelated concrete
+types — `PointGeometryOnSphere`, `MultiPointOnSphere`, `PolylineOnSphere`,
+`PolygonOnSphere` — and deliberately no common "give me your points" interface.
+The only sanctioned way to branch on the concrete type is
+`GPlatesMaths::ConstGeometryOnSphereVisitor`, and writing a four-method visitor
+class is a lot of ceremony for "how many points is that". So this namespace writes
+them once. Every class on this page lives in an anonymous namespace inside the
+`.cc`; the actual interface is the flat list of free functions, and each one is
+typically three lines — construct the visitor, `accept_visitor`, return its
+result. That is the whole design, and it is why 50-odd units across app-logic,
+file-io, gui, opengl and view-operations depend on this file.
+
+Three distinct jobs hide behind that uniform surface. The first is *interrogation*:
+type, point count, points (optionally reversed, optionally a half-open index
+range), end points, bounding small circle. The second is *coercion* between
+geometry types, for consumers that can only handle one shape — topology resolution
+wants polylines, exporters want a specific OGR-compatible type, rendering wants
+multi-points. Each conversion comes in two flavours: `convert_geometry_to_*`
+returns `boost::none` when the source has too few points, and
+`force_convert_geometry_to_*` always succeeds by duplicating the last point until
+the minimum is reached. The third job is the *model bridge*.
+`get_geometry_from_property` peels the GPML property-value onion — `GpmlConstantValue`
+unwrapped, `GpmlPiecewiseAggregation` resolved by picking the time window
+containing the reconstruction time, `GmlOrientableCurve` unwrapped — down to the
+`GeometryOnSphere` inside; `create_*_geometry_property_value` builds the matching
+GML property value going the other way. These are the functions that let the rest
+of app-logic treat a feature's geometry as maths rather than as XML.
+
+Running through all of it is the exterior/interior distinction. `PolygonOnSphere`
+has one exterior ring and zero or more interior rings (holes), and most callers
+mean only the outer ring — hence the paired `get_geometry_points` /
+`get_geometry_exterior_points`, the `include_polygon_interior_ring_points` and
+`exclude_polygons_with_interior_rings` flags, and
+`convert_polygon_to_oriented_polygon`'s option to force interior rings to wind
+opposite the exterior. If you are adding a function here, decide which of the two
+it is and say so in the name, because the callers cannot tell otherwise.
 
 ## Declared types
 
@@ -195,9 +228,77 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/GeometryUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The `get_*_points` functions append; they never clear.** The header says so, and
+`GetGeometryOnSpherePoints` holds a reference to the caller's vector. Passing a
+vector you have already filled silently concatenates. Related: the `reserve` call
+inside each visit method reserves only the number of points *about to be appended*,
+so it is a no-op when the vector is already larger — the anti-reallocation
+optimisation only helps for a fresh vector.
+
+**Some accessors return references into the argument.** `get_point_on_sphere`
+returns `boost::optional<const PointOnSphere &>` and
+`get_geometry_bounding_small_circle` returns a reference to the geometry's own
+cached bounding circle. Both dangle if the geometry dies first. The four
+`get_*_on_sphere` functions are plain `dynamic_cast` type tests rather than
+visitors — cheap, and they hand back the same object, not a copy.
+
+**Index ranges are half-open and bounds-checked by assertion.** `[start, end)`, and
+an empty range is filtered out in the free function before the visitor is built.
+Anything else out of bounds raises `PreconditionViolationError` rather than
+clamping. For polygons the index space is the *whole* vertex sequence — exterior
+ring first, then interior rings — so `get_geometry_exterior_points_range` merely
+asserts that `end` stays within the exterior ring; it does not remap indices.
+
+**Adding a fifth `GeometryOnSphere` type means editing this file in several
+places, and the failures are assertions.** `GetGeometryOnSphereExteriorEndPoints`,
+`ConvertGeometryToMultiPoint::get_multi_point` and
+`CreateGeometryProperty::create_geometry_property` all assert that they produced a
+result, on the stated assumption that all derived types are visited. An
+unhandled type throws `AssertionFailureException` at the point of use rather than
+failing to compile.
+
+**Polygon to polyline gains a vertex.** `ConvertGeometryToPolyline` uses
+`exterior_polyline_vertex_begin/end`, which iterates one past the usual ring
+vertices so the closing segment from last vertex back to first is preserved. A
+polygon with N exterior vertices becomes a polyline with N+1. This is intended —
+the comment explains it — but it will surprise anyone comparing point counts
+before and after.
+
+**`force_convert_*` produces deliberately degenerate geometry.** A point becomes a
+two-vertex polyline or a three-vertex polygon with all vertices identical; a
+two-point geometry becomes a zero-area polygon. Downstream code that computes
+areas, orientations or arc directions on the result has to cope. Both functions
+assert that the source has at least one point.
+
+**`convert_polygon_to_oriented_polygon` returns the input unchanged where it can**
+— by pointer, no copy — when the orientation already matches and interior rings
+either do not exist or are not being checked. Note that in the final branch, the
+one taken when the exterior ring needs no reversal but interior rings were
+rebuilt, the exterior ring is passed to `PolygonOnSphere::create` as
+`(exterior_ring_vertex_end(), exterior_ring_vertex_begin(), ...)` — end before
+begin, the opposite order from every other call site in the function. Check this
+path before relying on it.
+
+**`remove_geometry_properties_from_feature` is the only function here that mutates
+the model.** It installs a `GPlatesModel::NotificationGuard` for its whole scope,
+so the removals surface as one batch rather than one reconstruction per property,
+and it advances the property iterator before removing. Which properties count as
+geometry is decided by `GPlatesFeatureVisitors::is_geometry_property`, not by this
+file.
+
+**Two smaller shapes worth knowing.** `create_polyline_geometry_property_value`
+does not return a bare `GmlLineString` — it wraps it in a `GmlOrientableCurve` via
+`ModelUtils`, which is why `GetGeometryFromPropertyVisitor` has to unwrap
+orientable curves on the way back. And the templated
+`create_geometry_property_value(begin, end, type)` returns `boost::none` for an
+empty range or `GeometryType::NONE`, and merely `qWarning`s on an unrecognised
+type — no exception, so a caller that ignores the optional gets silence.
+
+**No shared state.** Every visitor is stack-allocated per call and the geometries
+are immutable `non_null_ptr_to_const`, so these functions are safe to call
+concurrently on distinct arguments. The exception is
+`remove_geometry_properties_from_feature`, which edits the model and belongs on
+the thread that owns it.
 
 ## Used by
 

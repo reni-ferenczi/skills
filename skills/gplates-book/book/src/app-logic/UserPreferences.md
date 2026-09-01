@@ -9,9 +9,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/UserPreferences tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The application's key/value store, and despite the name it holds far more than user
+preferences: recent sessions (`SessionManagement`, `InternalSession`), the last
+executable path, drawing styles, dialog geometry, the Python script directories. It is
+a `GPlatesUtils::ConfigInterface` implementation backed by `QSettings`, owned by
+`ApplicationState` and reached everywhere through
+`ApplicationState::get_user_preferences()`. Keys are `/`-separated paths with no
+leading slash (`set_value` asserts on one), no values at the root, and `general`
+reserved because Qt's `.ini` backend uses it.
+
+Reads fall through two layers. The user layer is whatever `QSettings` chooses for the
+platform — registry, `.conf`, or `plist`. Under it sits a read-only defaults layer:
+`:/DefaultPreferences.conf`, a compiled-in Qt resource loaded once into the static
+`s_defaults`, then topped up by the file-local `set_magic_defaults` with values that
+can only be discovered at runtime — the platform's user-data and Documents
+directories, the per-platform system script directory, and the HTTP proxy taken from
+`QNetworkProxyFactory` or overridden by the `http_proxy` environment variable.
+`get_value` returns the user value if the key has been set, otherwise the default,
+otherwise a null `QVariant`; `has_been_set`, `default_exists` and `exists` let a
+caller distinguish those cases, which is what the preferences dialog needs to show
+which settings the user has actually touched.
+
+The bulk operations exist because a subtree of keys is often one logical object. A
+stored session is a prefix such as `session/recent/sessions/1` whose subkeys are its
+fields, and `get_keyvalues_as_map` / `set_keyvalues_from_map` (and the
+`GPlatesUtils::ConfigBundle` pair) move that whole subtree in and out in one pass, with
+the prefix stripped. `subkeys` and `root_entries` merge the user keys and the default
+keys, so they enumerate every key that *could* be read, not just the ones stored.
 
 ## Declared types
 
@@ -59,9 +83,45 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/UserPreferences tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**There is no cached `QSettings` member — every call builds one on the stack.** Its
+destructor syncs, which both flushes writes and re-reads anything another GPlates
+process changed, so concurrent instances stay consistent. The price is that every
+`get_value` is a registry or file access; `subkeys` and the map/bundle helpers call
+`get_value` once per key, so a bulk read of a large prefix is that many accesses.
+Read a preference once and keep it, rather than calling this in a loop or per frame.
+
+**Constructing one has side effects, and it is constructed more than once.** The
+constructor writes `version/current` and `paths/executables/gplates/last_used`
+unconditionally, and on first construction it loads the defaults resource and runs
+`set_magic_defaults`. That is why `s_defaults` is `static`: the header's long comment
+records that GPlates could not guarantee a single `UserPreferences` instance, and that
+re-running the magic defaults re-runs the macOS proxy probe — a nested `QEventLoop`
+that waits on a network request (the sole `connect()` in this unit) and can stall
+startup by a full network timeout when an interface is up but not working. The
+`QPointer` also exists to *delay* that resource load until the application is running,
+because loading `:/DefaultPreferences.conf` too early silently yielded zeroed defaults.
+
+**Version sandboxing is declared but not wired up.** `d_key_root` is never assigned
+anywhere in the unit, so it is always null and every `if (!d_key_root.isNull())
+beginGroup(...)` guard is dead code; `initialise_versioning` only records the current
+version. The header says as much ("NOT FULLY IMPLEMENTED") — do not rely on old
+versions' settings being isolated.
+
+**`clear_value` can create user-set keys as a side effect.** `QSettings::remove`
+deletes an entire subtree, so to clear one leaf the method backs the subtree up with
+`get_keyvalues_as_map`, removes, then writes the backup back. But that map is the
+*merged* view: any subkey that previously existed only as a compiled-in default is
+written into the user scope by the restore, and `has_been_set` will report it as
+user-set from then on. `clear_prefix` is the honest way to drop a subtree.
+
+**Signals and lifetimes.** `key_value_updated` is emitted from `set_value` only when
+the value actually changed, but unconditionally from `clear_value` and once per call
+from `clear_prefix` — the source carries a FIXME noting that one signal for a whole
+prefix may not be what listeners want. `extract_keyvalues_as_configbundle` returns a
+raw pointer to a `ConfigBundle` parented to the `UserPreferences` object, so it lives
+until the application exits unless the caller reparents it; repeated calls accumulate.
+Finally, values round-trip through the backend and may come back typed as `QString` —
+always convert through `QVariant` rather than testing `type()`.
 
 ## Used by
 

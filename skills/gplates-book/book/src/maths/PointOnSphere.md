@@ -9,9 +9,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PointOnSphere tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the atom of GPlates spherical geometry. A point is stored as nothing but a
+`UnitVector3D`, so "lies on the unit sphere" is guaranteed by that class's magnitude
+invariant rather than re-checked here; `PointOnSphere` itself has no validation logic
+and no default constructor. Everything geometric in `maths` is built on top of it:
+`GreatCircleArc` holds two of them, `MultiPointOnSphere` holds a
+`std::vector<PointOnSphere>`, and `PolylineOnSphere`/`PolygonOnSphere` hold vectors of
+arcs.
+
+The header's own note explains the split into two classes: `PointOnSphere` deliberately
+does *not* derive from `GeometryOnSphere`, because a vtable pointer plus a reference
+count would take it from 24 to 40 bytes, and it is multiplied by every vertex of every
+polyline and polygon in a reconstruction. `PointGeometryOnSphere` is the heap-allocated,
+reference-counted, visitable wrapper you use only when a single point has to travel
+through the polymorphic `GeometryOnSphere` interface — its `accept_visitor` dispatches
+to `ConstGeometryOnSphereVisitor::visit_point_on_sphere`, and `get_geometry_on_sphere()`
+/ `get_point_geometry_on_sphere()` are the promotion path from the cheap value type to
+the wrapper.
+
+The free functions here define the "closeness" measure the rest of the geometry code
+speaks in: `calculate_closeness` is simply the dot product of the two position vectors,
+so it runs from -1 (antipodal) to 1 (coincident) and larger means nearer. `test_proximity`
+compares that against `ProximityCriteria::closeness_inclusion_threshold` and, on a hit,
+returns a `PointProximityHitDetail`; `lies_on_gca` delegates to the
+`PointLiesOnGreatCircleArc` predicate. `populate_point_on_sphere_sequence` is the bridge
+from file-io: it consumes a flat sequence of doubles in GML `gml:posList` order
+(longitude first, the reverse of GPlates' usual lat/lon convention) and builds points via
+`LatLonPoint`, raising `TrailingLatLonCoordinateException` on an odd-length input and
+`InvalidLatLonCoordinateException` on an out-of-range coordinate.
 
 ## Declared types
 
@@ -81,9 +106,37 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PointOnSphere tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Equality is fuzzy, and not transitive.** `operator==` forwards to
+`UnitVector3D::operator==`, which is `dot(u1, u2) >= 1.0` evaluated in `real_t`
+(`GPlatesMaths::Real`), whose `operator<` is an epsilon comparison against
+`GPlatesMaths::EPSILON` (1e-12). So two points compare equal when their dot product is
+within an epsilon of 1, `points_are_coincident` is exactly the same test spelled
+differently, and equality does not chain the way exact comparison would. Anything
+relying on `!=` — `count_distinct_adjacent_points`, `GreatCircleArc`'s zero-length
+handling — inherits that tolerance.
+
+**`PointOnSphereMapPredicate` is a different equivalence relation from `operator==`.**
+It orders on x, then y, then z, each with its own `EPSILON` band, so two points can be
+equal under `operator==` yet occupy separate `std::map` entries, or land in the same
+entry while `operator==` would separate them. The class comment explains why it is *not*
+written as exact floating-point comparisons: excess-precision effects (an 80-bit register
+value compared against the same value truncated to 64 bits in memory) can make identical
+computations disagree.
+
+**Closeness is not a distance.** It is a cosine: bigger is nearer, and the header notes
+it cannot be used to construct a valid metric. Only
+`calculate_distance_on_surface_of_sphere` converts to an actual arc length, and it
+short-circuits `p1 == p2` to exactly zero rather than trusting `acos` near 1.
+
+`north_pole` and `south_pole` are non-trivially constructed namespace-scope objects
+built by `make_point_on_sphere` at static-initialisation time, so they carry the usual
+static-initialisation-order caveat if another translation unit reads them during its own
+static initialisation.
+
+`PointGeometryOnSphere` can only be created on the heap via `create`; its lifetime is
+managed by the atomic reference count in `GPlatesUtils::ReferenceCount` inherited through
+`GeometryOnSphere`. It stores a *copy* of the point, so `get_geometry_on_sphere()`
+allocates on every call — do not put it inside a per-vertex loop.
 
 ## Used by
 

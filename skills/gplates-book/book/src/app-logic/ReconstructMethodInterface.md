@@ -9,9 +9,35 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodInterface tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the polymorphic core of reconstruction: one instance per feature,
+knowing how *that* feature's geometry moves through time. The six
+implementations cover reconstruction by plate ID, by half-stage rotation
+(left/right plate pair), flowlines, motion paths, small circles and virtual
+geomagnetic poles. `ReconstructMethodRegistry` decides which one a given feature
+gets and constructs it; `ReconstructContext` then holds the instances and drives
+them. Above that sit `ReconstructLayerProxy` and the layer system.
+
+The design splits reconstruction state in two, and the split is what makes the
+caching upstream work. *Intrinsic* state — plate IDs, geometry properties,
+begin/end times — belongs to the feature and is captured once, at construction,
+in the derived instance. *Extrinsic* state travels in a `Context`: the
+`ReconstructParams`, a `ReconstructionTreeCreator` and, when features are being
+deformed rather than rigidly rotated, a `TopologyReconstruct`. Because `Context`
+is passed to each call rather than stored, one instance can serve many
+reconstruction times; because it is fixed at construction time for
+initialisation purposes, the header states plainly that a *changed* context
+requires a new reconstruct method instance. That is exactly the rule
+`ReconstructLayerProxy` implements when it keys its reconstruct context states
+on `ReconstructParams`.
+
+Note that the interface deliberately hands out a `ReconstructionTreeCreator`
+rather than a single `ReconstructionTree` for the requested time: flowlines and
+motion paths integrate over many times, so they need trees at times other than
+the one being asked for, and routing through the creator lets those lookups hit
+the tree cache. The `reverse_reconstruct` flag on `reconstruct_geometry` serves
+the editing path — a geometry edited at some past time must be rotated back to
+present day before it can be stored on the feature, since features hold
+present-day geometry.
 
 ## Declared types
 
@@ -53,9 +79,43 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodInterface tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Contract when implementing a new method.** All output parameters are appended
+to, never assigned. `get_present_day_feature_geometries` must return one
+`Geometry` for *every* reconstructable geometry property of the feature,
+including properties that are not active at present day — order is free, but
+completeness is required, because callers index into that sequence. Any
+`ReconstructedFeatureGeometry` or `MultiPointVectorField` you create must be
+stamped with the `reconstruct_handle` your caller passed in; that handle is how
+the results are later found again among a feature's weak observers.
+
+**Two of the virtuals are optional.**
+`reconstruct_feature_velocities` defaults to
+`reconstruct_feature_velocities_by_plate_id`, which is correct for the methods
+whose motion really is a single plate rotation. Override it where it is not.
+`get_topology_reconstructed_geometry_time_spans` defaults to doing nothing and
+is currently overridden only by `ReconstructMethodByPlateId` — that is, only
+plate-ID reconstruction participates in topological deformation.
+
+**`get_resolved_feature_geometries` is not part of the interface.** It is
+`#if 0`-ed out in the header even though the Doxygen for
+`get_present_day_feature_geometries` still refers to it. The comment describing
+the difference (a resolved geometry that is inactive at the requested time is
+simply absent, whereas the present-day call returns everything) is the
+specification of the surviving method, not of a second one you can call.
+
+**`d_feature_weak_ref` is weak.** The instance does not keep its feature alive.
+An instance outliving its feature is a real possibility when caches hold on to
+context state, so treat the feature reference as needing an `is_valid()` check;
+the default velocity implementation dereferences it directly.
+
+**The default velocity path has two documented rough edges.** When the feature
+has no reconstruction plate ID it silently falls back to plate 0, which still
+yields a non-identity rotation whenever the anchored plate is non-zero. And it
+converts every present-day geometry to a `MultiPointOnSphere` domain, so the
+resulting `MultiPointVectorField` can carry a property iterator pointing at a
+non-multipoint property — the source calls this "slightly dodgy". It also
+fabricates a throwaway `ReconstructedFeatureGeometry` purely so the velocity
+arrows have a reconstruction geometry to colour by.
 
 ## Used by
 

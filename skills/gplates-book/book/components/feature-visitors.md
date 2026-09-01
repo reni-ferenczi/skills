@@ -23,7 +23,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [GeometrySetter](../src/feature-visitors/GeometrySetter.md) | 2 | 281 | 362 | Writes a given GeometryOnSphere into an existing geometry PropertyValue |
 | [GeometryTypeFinder](../src/feature-visitors/GeometryTypeFinder.md) | 2 | 465 | 64 | Counts geometry types found on a feature or GeometryOnSphere without collecting them |
 | [KeyValueDictionaryFinder](../src/feature-visitors/KeyValueDictionaryFinder.md) | 2 | 180 | 43 | Collects GpmlKeyValueDictionary property values from a feature |
-| [PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | 1 | 951 | 320 | (pending) |
+| [PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | 1 | 951 | 320 | typed, time-aware lookup of a feature's property values via macro-generated per-type const visitors |
 | [QueryFeaturePropertiesWidgetPopulator](../src/feature-visitors/QueryFeaturePropertiesWidgetPopulator.md) | 3 | 945 | 4 | Populates a tree widget with all properties of a feature for display in the GUI |
 | [ShapefileAttributeFinder](../src/feature-visitors/ShapefileAttributeFinder.md) | 2 | 309 | 95 | Reads one named shapefile attribute out of a feature's key-value dictionary |
 | [ToQvariantConverter](../src/feature-visitors/ToQvariantConverter.md) | 2 | 575 | 38 | Converts a visited PropertyValue into a display- or edit-role QVariant |

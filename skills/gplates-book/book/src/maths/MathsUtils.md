@@ -9,9 +9,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/MathsUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header defines the tolerances that the rest of GPlates compares floating-point
+numbers with. It is a small file with very large consequences: `GPlatesMaths::EPSILON`
+is what makes `Real::operator<` — and therefore `Real`'s `==`, `UnitVector3D`'s `==`,
+`PointOnSphere`'s `==`, `GreatCircleArc`'s zero-length test and every "closeness"
+comparison in `maths` — approximate rather than exact. `GEO_TIMES_EPSILON` plays the
+same role for reconstruction time, where `GeoTimeInstant` needs two times a fraction of
+a day apart to count as the same instant. Changing a constant here changes the behaviour
+of geometry code that never mentions this file.
+
+The comments are worth reading before touching the values, because they record how the
+numbers were arrived at and that the author was not confident in them. `EPSILON` started
+as 1e-14 — two orders of magnitude above IEEE 754 machine epsilon, chosen to absorb
+accumulated error from chains of operations such as rotating a unit vector by a matrix
+and then re-checking its magnitude — and was loosened to 1e-12 in 2004 because 1e-14
+turned out to be too strict. `TIGHTER_EPSILON` sits marginally below `EPSILON` and
+exists so `are_slightly_more_strictly_equal` can be a shade stricter than
+`are_almost_exactly_equal`. `is_in_range` widens both of its bounds by `EPSILON`, which
+is why the latitude and longitude checks in `LatLonPoint` accept values a hair outside
+their nominal ranges.
+
+The degree/radian conversions are the other half of the file. They are templates
+dispatched on `boost::is_integral` for one specific reason, spelled out in the comment:
+an integer literal argument must not be truncated back to `int` by the `T(...)`
+construction, so the integral overload returns `double`. Otherwise `T` passes straight
+through, which is what lets the same call site work for `double` and for
+`GPlatesMaths::Real`. `has_infinity_and_nan` and `assert_has_infinity_and_nan` are a
+startup platform check rather than general utilities — all three entry points
+(`gplates_main.cc`, `gplates_demo_no_gui_main.cc`, `gplates_unit_test_main.cc`) call the
+assert form early, because `Real`'s NaN and infinity handling assumes those values
+exist.
 
 ## Declared types
 
@@ -47,9 +74,35 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/MathsUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The comparisons are absolute, not relative.** Every one of them computes
+`value1 - value2` and tests it against a fixed epsilon. That is a reasonable tolerance
+for the unit-magnitude vectors, dot products and cosines this file was written for, all
+of which live in [-1, 1]. It degenerates towards exact equality for large magnitudes: at
+a value of around 1e4 the 1e-12 band is already down to a few ulps, so
+`are_almost_exactly_equal` on projected map coordinates or long time spans is not doing
+what its name suggests. The `T` template parameter also has to be something whose
+difference converts to `double`, so it is not meaningful for unsigned integer types.
+
+**`Real` does not use these templates on itself.** `Real.h` declares
+`are_almost_exactly_equal`, `are_slightly_more_strictly_equal` and `is_in_range` as
+friend overloads that unwrap to the raw `double` and then call the versions here,
+explicitly "for consistency". `Real::operator<` inlines the `EPSILON` comparison
+directly. So a change to `EPSILON` propagates to `Real` through two separate paths, and
+both must stay in agreement.
+
+**Constant definitions, not declarations.** `EPSILON`, `TIGHTER_EPSILON`,
+`GEO_TIMES_EPSILON`, `PI` and `HALF_PI` are `static const double` at namespace scope in
+a header, so each translation unit that includes it gets its own copy with internal
+linkage. The values are identical, but their addresses are not, and they are not
+external symbols you can inspect from a single place.
+
+`assert_has_infinity_and_nan` calls `exit(1)` after a `qWarning`. It does not throw, so
+it cannot be caught, mocked, or exercised by a test — the check is deliberately fatal and
+happens before anything else runs.
+
+The `FIXME` on `EPSILON` is still open: the header records that the value was guessed
+rather than derived, and was already loosened once when the original guess proved too
+strict.
 
 ## Used by
 

@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/Transcription tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `Transcription` is the neutral middle of the serialisation pipeline: the transcribed state
+of an object network, held in memory and addressable at random. It sits between two very
+different consumers. `Scribe` writes and reads it through `TranscriptionScribeContext` while
+walking a live object graph; the archive readers and writers stream it to and from a file,
+where the representation is sequential and compressed. Keeping the two apart is what lets
+the same session state be written as binary, text or XML without the transcribing code
+knowing which, and what lets a project be loaded into a `Transcription` before any GPlates
+object is built from it.
+
+The model is deliberately small. Every transcribed object is an integer object id indexing
+`d_object_locations`, and each entry says which kind it is — signed integer, unsigned
+integer, float, double, string, composite, or `UNUSED` — and where in the corresponding
+`std::vector` its value lives. So the whole graph reduces to five primitive pools plus a
+pool of `CompositeObject`s. A `CompositeObject` is a node: it maps an `object_key_type`
+(an interned tag-name id paired with a tag version) to one or more child object ids, and a
+child id may in turn name a primitive or another composite. That "one or more" is how arrays
+and sequences are represented — several children under a single key, indexed — and
+`set_child()` deliberately tolerates being filled out of order, marking absent slots with
+`UNUSED_OBJECT_ID` until they are set.
+
+Two forms of interning keep the memory down, and both are exposed as separate APIs for
+archive readers and writers. Tag names are stored once in `d_object_tag_names`, and every
+composite refers to them by index. String values are stored once in
+`d_unique_string_objects`, with a string object holding only the index — so an archive
+writer emits the unique-string table and the indices, not the strings. A `CompositeObject`
+goes further and packs its keys, child counts and child ids into a single flat
+`std::vector<unsigned int>` (`d_encoding`), which is searched linearly; the class is a
+compact encoding, not a map. `is_complete()` is the validator over all of this: it verifies
+that every child id a composite references actually exists, that no slot was left as a
+hole, and that all children under one key share a type — a `Scribe` load constructor refuses
+a transcription that fails it.
 
 ## Declared types
 
@@ -98,9 +126,45 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/Transcription tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Object ids and types are write-once.** `add_object_location()` throws
+`ScribeLibraryError` if the slot for an id is anything other than `UNUSED`, and every
+accessor asserts that the requested kind matches the recorded one — asking for a signed
+integer where a string was stored is an error, not a conversion. Only
+`set_signed_integer()` and `set_unsigned_integer()` may overwrite, and only a value that
+already exists. Likewise `CompositeObject::set_child()` refuses to overwrite a slot that has
+already been filled, which is what turns a duplicated object tag into a diagnosable failure.
+
+**`UNUSED_OBJECT_ID` is `numeric_limits<unsigned int>::max()`, not zero.** Zero is a
+perfectly valid object id — `Scribe` reserves it for null pointers via
+`TranscriptionScribeContext::NULL_POINTER_OBJECT_ID`, which is why `is_complete()` takes the
+null-pointer id as a parameter rather than assuming one. Holes left by an out-of-order
+`set_child()` are `UNUSED_OBJECT_ID`, and `has_valid_child()` is the way to test for them;
+`get_child()` throws on one.
+
+**`CompositeObject` search is linear.** `find_key()`, `get_num_keys()` and `get_key()` all
+walk `d_encoding` from the start, so lookups and key enumeration are O(keys) and building a
+composite with many distinct keys is quadratic. `set_child()` at a new index calls
+`std::vector::insert` in the middle of the encoding, moving everything after it. This is a
+size-over-speed trade; it is fine for the fan-out real objects have and would not be for a
+composite with thousands of keys.
+
+**Objects are pool-allocated and the class is noncopyable in practice.**
+`CompositeObject`s come from a `boost::object_pool` and `d_composite_objects` holds raw
+pointers into it, precisely to avoid copying their vectors during reallocation. The
+`Transcription` is reference counted (`GPlatesUtils::ReferenceCount`) and always handed
+around as `non_null_ptr_type`; its constructor is private, so `create()` is the only way in.
+
+**`operator==` compares transcriptions, not object graphs.** It requires the same tag table,
+the same unique-string table and the same object ids in the same order, so two runs only
+compare equal if they transcribed the same state through the same code path — the intended
+use is detecting whether session state changed between two saves. Floating-point values are
+compared with a relative tolerance (1e-5 for `float`, 1e-12 for `double`, with explicit
+infinity and NaN handling), so equality here is not bitwise.
+
+**`is_complete()` is a diagnostic as well as a check.** With `emit_warnings` it names, via
+`qWarning`, the parent object id, the tag and the child index for each dangling or
+mistyped reference; that output is often the only usable evidence when a project or session
+file fails to load.
 
 ## Used by
 

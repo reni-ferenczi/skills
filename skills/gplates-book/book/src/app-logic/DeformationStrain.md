@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/DeformationStrain tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A small immutable value type holding one 2x2 deformation gradient tensor F, in the
+local surface frame at a point: the axes are co-latitude (theta, pointing South)
+and longitude (phi, pointing East), with no depth component. F answers "how has
+the infinitesimal patch of crust around this point been stretched and sheared
+since it started deforming". It is the *finite*, accumulated counterpart of
+`DeformationStrainRate`, which holds the instantaneous velocity spatial gradient L
+in the same frame; this unit and that one are deliberately the same shape, four
+doubles and nothing else.
+
+The reason both exist is the integration in `accumulate_strain`. A point carried
+through a deforming network by
+`TopologyReconstruct::GeometryTimeSpan` picks up a strain *rate* at each time step
+from the network it happens to be inside; the total strain is the solution of
+dF/dt = L·F along that point's path. `accumulate_strain` advances one step of that
+ODE with a central-difference (trapezoidal) scheme, using both the previous and
+the current L, which in matrix form is a 2x2 inversion and two multiplications.
+`TopologyReconstruct::GeometryTimeSpan::initialise_deformation_total_strains` is
+its only caller in the tree, and it walks the time span in order, feeding each
+sample's F forward into the next. So a `DeformationStrain` is never computed
+standalone — it is always a partial sum along a trajectory.
+
+The two accessors are where the tensor becomes something a user sees.
+`get_strain_dilatation` is `|det(F)| - 1`, the fractional area change of the patch
+(the header derives it from the parallelepiped volume ratio and explains why the
+2-D determinant gives the same answer as the 3-D one when there is no strain in
+depth). `get_strain_principal` diagonalises the Cauchy deformation tensor
+c = transpose(F⁻¹)·F⁻¹ to give the two principal engineering strains and the angle
+of their axes. Those are what the deformation exporters
+(`GMTFormatDeformationExport`, `GpmlFormatDeformationExport`, `DeformationExport`),
+the scalar-coverage path (`ScalarCoverageTimeSpan`,
+`ReconstructScalarCoverageLayerProxy`) and the strain-arrow rendering in
+`ReconstructionGeometryRenderer` consume — none of them touch F directly.
 
 ## Declared types
 
@@ -43,9 +72,47 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/DeformationStrain tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Units are seconds and 1/second, not million years.** `accumulate_strain` documents
+its strain rates as 1/second and its time increment as seconds, which is not the Ma
+convention used almost everywhere else in app-logic — the caller in
+`TopologyReconstruct` converts explicitly (`time_increment_in_seconds`). Nothing
+checks this, and a wrong scale just produces plausible-looking wrong strain.
+
+**Both degenerate paths fail silently.** If the implicit matrix
+`I - L(n+1)·dt/2` has a determinant within `GPlatesMaths::EPSILON` of zero,
+`accumulate_strain` returns the *previous* strain unchanged. If `det(F) <= 0`,
+`get_strain_principal` returns `StrainPrincipal(0, 0, 0)`. Neither throws or
+signals, so zero principal strain is indistinguishable from "F was not invertible",
+and a stalled accumulation looks like a step with no deformation. Both are
+commented as should-not-happen cases.
+
+**The default constructors mean "not deforming", and they differ between the two
+types.** `DeformationStrain()` is the *identity* F, whereas `DeformationStrainRate()`
+is the *zero* L. `TopologyReconstruct` relies on exactly this when a point has no
+recorded strain or strain rate yet.
+
+**`get_strain_principal` normalises the ordering, and the angle follows it.**
+`principal1` is always the larger (positive is extension, negative compression);
+when the raw eigenvalues come out the other way the code swaps them *and* adds
+90 degrees to the angle, because the angle is specified relative to `principal1`.
+The angle is counter-clockwise viewed from outside the globe, since x is
+co-latitude and y is longitude. If you consume the angle, do not assume it lies in
+`atan2`'s original half-range — the swap can push it past it.
+
+**`interpolate_strain` interpolates F, not strain.** It blends the four tensor
+components linearly. Dilatation and principal strains are non-linear functions of
+those components, so interpolating a strain and then asking for its dilatation is
+not the same as interpolating the two dilatations. That is deliberate — F is the
+quantity that composes — but it means you cannot substitute one for the other.
+The function also does not clamp `position`; feeding it a value outside [0, 1]
+extrapolates.
+
+**Cheap, copyable, and treated as immutable.** Four doubles, no virtuals, no
+allocation. `TopologyReconstruct` allocates them from a pool and, when a step
+produces no change, shares a single instance's pointer between successive geometry
+samples — so mutating one in place would corrupt other samples. There is no
+mutating API, and it should stay that way. The whole unit is stateless free
+functions plus a value type, so there is nothing to synchronise across threads.
 
 ## Used by
 

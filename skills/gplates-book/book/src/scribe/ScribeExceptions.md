@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeExceptions tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Every failure the scribe library can raise is declared here, in one namespace, under one
+root: `BaseException`, itself a `GPlatesGlobal::Exception`. That is the point of the file —
+a caller that wants to survive any serialisation failure catches `Exceptions::BaseException`
+and nothing else, while a caller that cares about a specific contract violation can catch
+the leaf. The classes are pure diagnostics: each captures whatever context it needs at
+throw time (a type name, a class name, an XML element name) and turns it into text in a
+`write_message()` override defined in the `.cc`. They carry no recovery information and
+nothing catches them to make a decision.
+
+The line these exceptions draw is the one worth remembering when reading the rest of the
+library. **Compatibility problems are not exceptions.** A tag that is missing from an
+archive, a primitive of the wrong kind, or an export-registered class name the running
+binary does not know are reported as `TRANSCRIBE_INCOMPATIBLE` or `TRANSCRIBE_UNKNOWN_TYPE`
+return codes, which the caller may recover from by supplying a default. Everything in this
+header is a situation from which transcribing cannot continue: a corrupt or future archive,
+a bug inside the library, or — most of them — the client using the library incorrectly.
+Almost all the messages start with "Incorrect Scribe usage".
+
+They fall into four rough families. Archive-level failures raised by the readers and
+writers: `UnsupportedVersion`, `InvalidArchiveSignature`, `ArchiveStreamError` and the XML
+trio. Catch-alls that separate blame: `ScribeLibraryError` for an internal inconsistency or
+a corrupt transcription, `ScribeUserError` for a call made in the wrong direction (saving
+when only loading is legal, and vice versa). Violations of the object-tracking and
+relocation contract described in [Scribe](Scribe.md), which is the largest group —
+`AlreadyTranscribedObject`, `UntrackingObjectWithReferences`,
+`TranscribedUntrackedPointerBeforeReferencedObject`, the `Relocated*` set,
+`TranscribedReferenceInsteadOfObject` and `ScribeTranscribeResultNotChecked`. And
+registration failures, where a type was used in a way that needed a registration nobody
+performed: `UnregisteredCast` and `AmbiguousCast` from `VoidCastRegistry`,
+`UnregisteredClassType` and the two `ExportRegistered*` clashes from `ExportRegistry`,
+`UnregisteredEnumValue` from the enum protocol, and `UnregisteredQVariantMetaType` from the
+Qt bindings.
 
 ## Declared types
 
@@ -371,9 +400,40 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeExceptions tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**In a debug build these are not thrown at all.** Nearly every one is raised through
+`GPlatesGlobal::Assert<ExceptionType>(condition, GPLATES_ASSERTION_SOURCE, args...)`, and
+that template calls `GPlatesGlobal::Abort()` when `GPLATES_DEBUG` is defined, throwing only
+in release builds. A debug run therefore dies at the assertion site with the call stack
+printed, and no `catch` in the session or project code ever sees it. That is usually what
+you want while debugging, but it means exception-handling paths in scribe clients are
+exercised only by release builds.
+
+**The constructor signature is fixed by that mechanism.** `Assert` always passes the
+`GPlatesUtils::CallStack::Trace` first and forwards its remaining arguments verbatim, so
+every class here must take the trace as its first constructor parameter and its extra
+context after it. Adding a new exception means matching that shape, and matching the
+`exception_name()` / `write_message()` pair inherited from `GPlatesGlobal::Exception`. All
+destructors are declared `throw()`, as the base requires.
+
+**Two of these are declared but never thrown.** `TranscriptionIncompatible` and
+`LoadedObjectTrackedButNotRelocated` have full definitions and message text, and no throw
+site anywhere in the tree — incompatibility is signalled by the `TRANSCRIBE_INCOMPATIBLE`
+return code instead, and an unrelocated tracked load is handled by silently untracking the
+object when its last `LoadRef` dies. Do not take their existence as evidence of a code path.
+
+**`TranscriptionIncomplete` is mostly thrown by callers, not by the library.** `Scribe`'s
+loading constructor raises it when handed an incomplete `Transcription`; the rest of the
+throw sites are in `presentation/InternalSession.cc` and `presentation/ProjectSession.cc`,
+which assert on `Scribe::is_transcription_complete()` after saving and after restoring.
+
+**The `.cc` includes `Scribe.h`.** `AlreadyTranscribedObject` phrases its message
+differently depending on whether the scribe was saving or loading, which is why the
+implementation of a leaf exception depends on the main header — worth knowing before
+assuming this file is free of the rest of the library.
+
+**Messages name types with `std::type_info::name()`.** What reaches the user is therefore
+the compiler's mangled or decorated spelling, which differs between MSVC and GCC and is not
+something to parse.
 
 ## Used by
 

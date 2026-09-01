@@ -9,9 +9,44 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeometryIntersect tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the primitive that finds every point where two polylines or polygons meet
+on the sphere, and it is the thing the topology machinery is built on:
+`GPlatesMaths::PolylineIntersections` and `GPlatesMaths::GeometryCrossing` wrap
+it, and `GPlatesAppLogic::TopologyIntersections` uses it to work out where plate
+boundary sections cut one another. The interface deliberately does not return
+partitioned geometries — it returns a `Graph` of intersection *locations*, each
+carrying the segment index and the angle into that segment for both inputs. That
+is what lets a caller map a vertex of a partitioned piece back to a vertex of the
+original geometry, which matters when a per-vertex quantity (a scalar coverage
+value, a velocity) has to travel with the partition. `PolylineIntersections`,
+which does return geometries, throws that association away.
+
+The dominant concern in this code is robustness under finite precision, not
+speed, and the whole design follows from it. Every segment is treated as a
+*thick* great-circle plane whose half-thickness is
+`THICKNESS_THRESHOLD_SINE` — about 1e-6 radians, metres on the Earth's surface —
+and every vertex has a matching coincidence radius `THICKNESS_THRESHOLD_COSINE`.
+Two further decisions fall out. First, of the nine ways two segments can meet
+(start/middle/end against start/middle/end, drawn as ASCII art in the header),
+only four are recorded, because an intersection at a segment's *end* point is
+always recorded instead as the *start* point of the following segment; this
+removes duplicates and makes vertex-touching cases uniform. Second, since a
+polyline's last segment has no following segment, its final vertex is reported
+against a *fictitious one-past-the-last* segment index — the same trick as an
+end iterator. Polygons need none of this because their rings wrap around, which
+is what the `POLYGON_NEEDS_NO_LAST_SEGMENT_INDEX` sentinel disables.
+
+Cost is controlled by the cached `PolyGreatCircleArcBoundingTree` that each
+`PolylineOnSphere` and `PolygonOnSphere` already builds: the two trees are
+descended in tandem, pruning whenever the nodes' bounding small circles miss,
+and recursing into the larger node first so fewer small-circle tests are needed.
+Only when both sides reach leaves is `intersect_segments` run over the segment
+pairs. Below that, `add_segments_crossing_intersection` handles the ordinary case
+with a normalised cross product of the two segment planes, and then carries three
+successive fallbacks for degenerate configurations — segments sharing a great
+circle, a segment whose endpoints are nearly antipodal, and both segments being
+near half-circles on the same great circle, where it bisects the first segment
+and interpolates within whichever half actually crosses.
 
 ## Declared types
 
@@ -86,9 +121,52 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeometryIntersect tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **A segment index can be one past the last segment.** For polylines,
+  `segment_index1` may equal `polyline1.number_of_segments()`, meaning the
+  intersection is at the polyline's final vertex. Indexing a geometry with it —
+  `get_segment()`, or the segment iterators — is out of range. Polygon indices
+  never do this, and are always valid for `PolygonOnSphere::get_segment()`,
+  including when interior rings are included.
+- **The two thresholds are coupled to code in other files, and the coupling is
+  load-bearing.** `get_on_segment_start_threshold_cosine()` is deliberately equal
+  to `GreatCircleArc::get_zero_length_threshold_cosine()`, so that a zero-length
+  segment straddling another segment's plane still touches it and no intersection
+  is lost. Separately, `BoundingSmallCircleBuilder`'s default angular expansion
+  must match the same threshold, or the bounding-tree pruning could discard a
+  pair of segments that do touch. Changing one threshold without the others
+  silently loses intersections.
+- **Test order inside `intersect_segments` is not arbitrary.** The
+  distance-to-vertex tests run *before* the signed-distance-to-plane tests, and
+  the crossing test is skipped entirely when any endpoint of one segment is
+  coincident with any endpoint of the other. The long comment in the source
+  explains the failure this prevents: one segment tunnelling through a shared
+  vertex of two adjacent segments without any intersection being reported.
+  Reordering these for tidiness reintroduces the bug.
+- **Coincidence tests must stay exactly complementary.** The code consistently
+  uses `dot >= THICKNESS_THRESHOLD_COSINE` for "coincident" and `<` for "not
+  coincident", so that the same vertex reached from two adjacent segments always
+  classifies identically. Any inconsistency here produces contradictory results
+  for the shared vertex.
+- **One segment pair can yield more than one intersection.** Overlapping
+  collinear segments can produce two from a single pair — the header enumerates
+  the cases. Do not assume a single result per pair, nor that the count matches a
+  naive crossing count.
+- **`Graph` is an out-parameter that is cleared on entry** by
+  `intersect_geometries`, so reusing one instance across many calls avoids
+  reallocation; when `intersect` returns `false` the graph is left empty. The
+  two ordered vectors are index permutations into `unordered_intersections` and
+  always have the same length as it — they are not separate intersection lists.
+- **The ordering is by segment index then angle within the segment**, using
+  `AngularDistance::is_precisely_less_than` (exact, not epsilon-tolerant), so two
+  intersections at the same position within one segment have an unspecified
+  relative order.
+- The `Intersection::position` is not always exactly on both segments: for the
+  three touching types it is a *vertex* of one geometry, which may be off the
+  other segment by up to the threshold. Only `SEGMENTS_CROSS` computes a genuine
+  crossing point.
+- `get_bounding_tree()` builds and caches the tree on first call, so the first
+  intersection test against a large geometry pays for the tree; there is no
+  threading protection around that lazy build.
 
 ## Used by
 

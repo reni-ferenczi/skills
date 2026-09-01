@@ -9,9 +9,46 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLUtils` is a namespace, not a class, and it holds the two kinds of small shared
+machinery that the rendering backend needs everywhere but that belong to no
+single renderer. The first kind is a handful of helpers layered over
+`GLRenderer`. Apart from `check_gl_errors` nothing here talks to OpenGL
+directly: the texture helpers go through `GLRenderer::gl_bind_texture`,
+`gl_enable_texture`, `gl_tex_env`, `gl_tex_gen` and `gl_load_texture_matrix`, so
+the state they set joins the renderer's shadowed state block rather than being
+poked in behind its back. The `create_full_screen_*_quad` functions build a
+`GLVertexArray` from four `GLColourVertex` or `GLColourTextureVertex` corners
+spanning clip space `[-1,1]` and compile it into a `GLCompiledDrawState` drawn as
+`GL_QUADS`; the vertex array itself is then dropped, because the compiled draw
+state holds shared references to the underlying buffers. This is how the backend
+applies a texture across the whole of a render target.
+
+`set_frustum_texture_state` is the projective-texturing primitive the cube
+quad-tree raster path is built on. It enables object-linear texture coordinate
+generation via `set_object_linear_tex_gen_state` — identity object planes for s,
+t, r and q, so the generated coordinates are simply the vertex's own object-space
+`(x,y,z,1)` — and then loads a texture matrix of clip-space-to-texture-space
+times projection times view. The net effect is that a texture rendered through
+one `GLCubeSubdivision` frustum can be looked up from geometry drawn through a
+different one, which is what lets a raster tile, an age grid tile and a normal
+map tile of different resolutions all be sampled by the same draw call.
+
+The second kind is `QuadTreeClipSpaceTransform` and `QuadTreeUVTransform`, which
+are pure arithmetic — no GL objects, no `GLRenderer`, nothing to release. They
+answer the question "where does this quad-tree tile sit inside one of its
+ancestors", in clip space `[-1,1]` and in texture space `[0,1]` respectively, and
+in both directions; `QuadTreeUVTransform` delegates the actual quad-tree
+bookkeeping to `QuadTreeClipSpaceTransform` and only re-bases the result into
+`[0,1]`. The multi-resolution raster path needs this constantly because its
+inputs are separate cube quad trees of differing depth: when one of them runs out
+of resolution, `GLMultiResolutionStaticPolygonReconstructedRaster` keeps sampling
+an ancestor's texture and folds the descendant's sub-rectangle into the texture
+matrix with `inverse_transform`. `GLMultiResolutionCubeMesh` and
+`GLMultiResolutionMapCubeMesh` use the clip-space form for the mirror-image case:
+once traversal goes deeper than their pre-generated mesh quad tree they keep
+reusing the ancestor's mesh drawable and start a non-identity clip-space
+transform to clip it down to the current tile. `GLRasterCoRegistration` uses the
+loose variants to place a seed frustum inside a raster frustum.
 
 ## Declared types
 
@@ -86,9 +123,53 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `check_gl_errors` drains the error queue in a loop, so it clears any pending
+  error for whoever calls next. On the first error it logs a `qWarning`, and in
+  `GPLATES_DEBUG` builds it then calls `GPlatesGlobal::Abort` with the passed
+  trace — every call site passes `GPLATES_ASSERTION_SOURCE`. It is deliberately
+  only called after resource creation (texture allocation, buffer map/unmap,
+  render-target construction) because `glGetError` is slow on some drivers; do
+  not scatter it through per-frame code.
+- `get_clip_space_to_texture_space_transform` returns a `const` reference to a
+  function-local `static GLMatrix`, and that same call is the default argument of
+  `set_frustum_texture_state`. Copy it before mutating, which is what
+  `GLMultiResolutionStaticPolygonReconstructedRaster` does when it builds a tile
+  texture matrix.
+- `transform`, `loose_transform` and their inverses *post*-multiply the caller's
+  matrix (`GLMatrix::gl_mult_matrix`), so in OpenGL order the last matrix
+  multiplied in is the one applied to the vertex first. The established idiom is:
+  start from an identity `GLMatrix`, apply the UV or clip-space transform, then
+  post-multiply clip-to-texture, then the projection transform, then the view
+  transform.
+- The child constructor takes the parent transform but the resulting object is
+  expressed relative to whatever node the *identity* transform was created at,
+  not relative to the parent — scale doubles and the node offsets shift left by
+  one and add the child offset at each level. To re-base a subtree you construct
+  a fresh identity transform, as `GLMultiResolutionCubeMesh::get_child_node` does
+  when it runs off the end of its pre-generated mesh tree. Note also that scale
+  grows as `2^depth`, so the offsets are bounded by the quad-tree depth the
+  caller is willing to descend.
+- The `expand_tile_ratio` handed to these transforms must match the frustum
+  expansion of the `GLCubeSubdivision` that produced the tiles.
+  `get_expand_tile_ratio` is intentionally the same formula as
+  `GLCubeSubdivision::get_expand_frustum_ratio`; if the two disagree, tile borders
+  will not line up and bilinear filtering will show seams. `d_inverse_scale` and
+  `d_inverse_expand_tile_ratio` are cached reciprocals kept only to avoid
+  divisions — keep them consistent if you add state.
+- Both transform classes are plain copyable values, cheap enough that
+  `GLMultiResolutionStaticPolygonReconstructedRaster` allocates one per traversal
+  node from a `boost::object_pool`, and safe to construct outside a render block.
+  The `GLRenderer`-based helpers are not: they require an active renderer, and the
+  quad builders each allocate a fresh vertex buffer, vertex element buffer and
+  vertex array, so cache the returned `GLCompiledDrawState` rather than rebuilding
+  it per frame.
+- `set_object_linear_tex_gen_state` uses `GL_OBJECT_LINEAR`, which means texgen
+  sees pre-modelview object-space positions; the view transform therefore has to
+  be baked into the texture matrix by the caller. `set_frustum_texture_state`
+  already does that, but a caller using the tex-gen helper on its own must.
+- Everything these helpers configure — texture environment mode, texture
+  coordinate generation, the texture matrix, `GL_QUADS` — is fixed-function
+  state.
 
 ## Used by
 

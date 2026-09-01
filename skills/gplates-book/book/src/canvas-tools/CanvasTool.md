@@ -8,9 +8,45 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/CanvasTool tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CanvasTool` is the view-agnostic half of GPlates' canvas-tool design. The real
+mouse-handling interfaces are `GPlatesGui::GlobeCanvasTool` and
+`GPlatesGui::MapCanvasTool`, and they are genuinely different: the globe hands a
+tool two `PointOnSphere` positions (unoriented and oriented) plus an
+`is_on_globe` flag, while the map hands it `QPointF` coordinates in the
+`QGraphicsScene` plus a translation vector. Most tools do not care about that
+difference — they want "where on the Earth did the user click, and how close does
+a geometry have to be to count as hit". `CanvasTool` is that reduced interface:
+one `GPlatesMaths::PointOnSphere`, an `is_on_earth` flag, and a
+`proximity_inclusion_threshold`. Everything in `gpq hier CanvasTool` — feature
+clicking, digitisation, vertex editing, topology building, distance measurement,
+pole manipulation — is written once against it and works in both views.
+
+The translation is done by `CanvasToolAdapterForGlobe` and
+`CanvasToolAdapterForMap`, which derive from `GlobeCanvasTool` and
+`MapCanvasTool` respectively and each hold a `CanvasTool::non_null_ptr_type`. A
+workflow such as `GPlatesGui::DigitisationCanvasToolWorkflow` creates the tool
+once (`ClickGeometry::create(...)`, `DigitiseGeometry::create(...)`, …) and wraps
+that *same* instance in both adapters, then registers each adapter with the
+corresponding canvas. The globe adapter forwards the *oriented* click position
+but derives the proximity threshold from the *unoriented* one via
+`GlobeCanvas::current_proximity_inclusion_threshold`; the map adapter inverts the
+`GPlatesGui::MapProjection` to recover a point on the sphere and asks `MapView`
+for the threshold. So a subclass sees a uniform coordinate space regardless of
+which projection produced it.
+
+Two conventions carry the rest of the design. Every handler is a header-only
+virtual with a do-nothing body, so a subclass overrides only the gestures it
+cares about and new handlers can be added without touching the thirteen existing
+tools. And the four `handle_*ctrl*` drag/release handlers return `bool`: `true`
+(the default) tells the adapter to also invoke `GlobeCanvasTool::handle_...` or
+`MapCanvasTool::handle_...`, which reorients the globe or pans the map, so
+Ctrl-drag navigation keeps working under every tool unless a tool deliberately
+returns `false`. Tools that really do need the view-specific parameters bypass
+`CanvasTool` entirely and derive from `GlobeCanvasTool` / `MapCanvasTool`
+directly — `ReorientGlobe`, `ZoomGlobe`, `PanMap`, `ZoomMap`, `MovePoleGlobe` /
+`MovePoleMap` and `ChangeLightDirectionGlobe` / `ChangeLightDirectionMap` are
+the whole set, and they come in globe/map pairs precisely because they cannot use
+this base class.
 
 ## Declared types
 
@@ -55,9 +91,55 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/CanvasTool tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**One tool, two adapters.** Because the globe adapter and the map adapter share
+a single `CanvasTool` instance, every event would be delivered twice if both
+forwarded. Each adapter therefore guards every forward on
+`globe_canvas().isVisible()` / `map_view().isVisible()` — the explicit comment on
+`handle_deactivation` is "Avoid deactivating twice (in globe and map adaptor)".
+Any handler you add to `CanvasTool` must be forwarded under the same guard in
+both adapters, and a tool must not assume it is talked to by only one adapter
+over its lifetime: switching between globe and map view swaps which one is live
+while the tool's own state carries across.
+
+**Ownership.** Tools are reference-counted through
+`GPlatesUtils::ReferenceCount<CanvasTool>` and handed around as
+`non_null_intrusive_ptr`; the workflow drops its local pointer after
+construction and the two adapters keep the tool alive. The count is a
+`boost::detail::atomic_count`, so the pointer itself is safe to copy across
+threads even though the handlers are called from Qt's GUI thread.
+
+**Oriented versus unoriented positions.** The `PointOnSphere` a handler receives
+is the *oriented* position — the one to compare against geometry. The threshold
+argument was computed by the adapter from the *unoriented* screen-relative
+position, because that is what determines on-screen pixel distance. Do not try
+to recompute the threshold from the point you were given.
+
+**Off-globe and off-map are not symmetric.** In globe view the handlers are still
+called when the click misses the globe: `is_on_earth` is `false` and the point is
+the nearest point on the horizon. In map view `CanvasToolAdapterForMap` returns
+early whenever `is_on_surface` is false, and also whenever the inverse map
+projection yields no point, so the handler is simply never invoked — a tool
+cannot rely on seeing an `is_on_earth == false` call in map view, nor on seeing
+every gesture at all. Correspondingly `centre_of_viewport` is
+`boost::optional`: the globe always supplies it, the map supplies the
+inverse-projected viewport centre, which can be `boost::none`.
+
+**Status bar strings must be untranslated.** `set_status_bar_message` takes a raw
+`const char *` and the callback installed by `ViewportWindow` runs
+`ViewportWindow::tr(message)` itself before appending a view-specific suffix
+(different text for globe and map). Passing an already-`tr()`'d `QString`'s data
+would defeat the lookup and lose the suffix. The call is also a silent no-op when
+the `boost::function` is empty, so a tool constructed with a default-constructed
+callback will not report an error.
+
+**Two gaps in the map adapter.**
+`CanvasToolAdapterForMap::handle_shift_ctrl_left_drag` dispatches to
+`&CanvasTool::handle_ctrl_left_drag`, not to `handle_shift_ctrl_left_drag`, and
+falls back to `MapCanvasTool::handle_ctrl_left_drag`; and
+`handle_shift_ctrl_left_release_after_drag` is commented out in both the header
+and the `.cc` with a `FIXME` noting that it is commented out in
+`MapCanvasTool.h`. Overriding either of those two handlers in a `CanvasTool`
+subclass will therefore not behave as declared in map view.
 
 ## Used by
 

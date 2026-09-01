@@ -9,9 +9,45 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GlobeCanvasTool tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GlobeCanvasTool` is the abstract state in a State pattern: exactly one instance
+is active at a time, and it defines what the mouse does on the 3-D globe. The
+whole interface is a grid of virtual handlers — press, click, drag and
+release-after-drag, crossed with no modifier, Shift, Ctrl, and Shift+Ctrl, plus
+activation, deactivation and bare mouse movement — every one of which has a
+default body, so a subclass overrides only the gestures it actually cares about.
+`GPlatesGui::GlobeCanvasToolAdapter` is what turns Qt mouse signals from
+`GPlatesQtWidgets::GlobeCanvas` into these calls: it holds one active tool at a
+time and connects or disconnects the canvas signals in
+`activate_canvas_tool()` / `deactivate_canvas_tool()`, which the
+`CanvasToolWorkflow` classes drive when the user picks a tool from the toolbar.
+
+The parameter convention repeated across the handlers is the important part to get
+right when writing a subclass. Every position arrives twice: the unoriented
+`*_pos_on_globe`, in which the centre of the canvas is always (0, 0) regardless of
+how the globe is turned, and the `oriented_*_pos_on_globe`, which is the same
+screen point mapped through the current globe orientation. Hit-testing against
+real geometry uses the oriented position; screen-space work such as the proximity
+threshold for a click uses the unoriented one. The accompanying `is_on_globe` /
+`was_on_globe` flag is false when the pointer is off the sphere, in which case the
+positions are the nearest points on the globe rather than nothing — a subclass
+that ignores the flag will silently act on the limb of the globe.
+
+The base class is not purely abstract: it also implements globe navigation, which
+is why every tool inherits it rather than a bare interface. Ctrl+drag defaults to
+`reorient_globe_by_drag_*` and Shift+Ctrl+drag to `rotate_globe_by_drag_*`, so
+those two gestures work identically under every tool unless a subclass
+deliberately overrides them. Both go through `GPlatesGui::Globe` onto
+`GlobeOrientation`, whose model is a "handle" planted on the sphere at the press
+point and then dragged: `set_new_handle_at_pos()` once, `move_handle_to_pos()` on
+every update. Rotation-about-the-viewport-centre reuses the same machinery by
+projecting the mouse position onto the horizon circle with the file-local
+`get_closest_point_on_horizon()` and dragging *that* point instead, so a
+twist gesture becomes an ordinary handle drag. Subclasses split into two
+families: real tools such as `GPlatesCanvasTools::ReorientGlobe`, `ZoomGlobe`,
+`MovePoleGlobe` and `ChangeLightDirectionGlobe`, and
+`GPlatesCanvasTools::CanvasToolAdapterForGlobe`, which wraps a projection-agnostic
+`GPlatesCanvasTools::CanvasTool` so that one tool implementation can serve both
+the globe and the map.
 
 ## Declared types
 
@@ -60,9 +96,46 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GlobeCanvasTool tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The class comment is stale.** It says the active tool is referenced by a
+`GlobeCanvasToolChoice`; no such class exists in this tree any more. Activation is
+now `GlobeCanvasToolAdapter::activate_canvas_tool()`, called from
+`CanvasToolWorkflow::activate_selected_tool()`, which activates the globe and map
+tools as a pair.
+
+**Ownership is borrowed, and the base class does not check it.** `Globe` and
+`GlobeCanvas` are taken by reference and stored as raw pointers that are never
+null-checked and never reseated; both outlive the tool, which lives only as long
+as its workflow. The class is `boost::noncopyable` and the destructor is pure
+virtual with an out-of-line definition, so it cannot be instantiated but derived
+destructors still chain correctly.
+
+**`d_is_in_reorientation_op` is the drag state machine, and it is per-tool.** The
+`*_update` functions plant the handle on the first call and leave the flag set;
+only the `*_release` functions clear it. Two consequences. First, if a subclass
+overrides the Ctrl+drag *update* handler but not the matching *release* handler
+(or the reverse), the flag desynchronises and the next drag will move a stale
+handle instead of planting a new one — override both halves or neither. Second,
+the flag lives on the tool instance, so switching tools mid-drag abandons an
+in-progress reorientation with the flag still true.
+
+**The `in_mouse_drag` argument is asymmetric on purpose.**
+`reorient_globe_by_drag_update()` passes `true` to `Globe::update_handle_pos()`
+while `rotate_globe_by_drag_update()` does not. The in-code reason is that the
+flag must only be raised when a release event is guaranteed to lower it again,
+otherwise the globe stays stuck in the "orientation changing during mouse drag"
+state.
+
+**Rotation silently no-ops at the viewport centre.** `get_closest_point_on_horizon()`
+returns `boost::none` when the point is collinear with the centre of the viewport,
+and both rotate functions then return without touching the handle *and without
+clearing `d_is_in_reorientation_op`*. Dragging out from dead centre therefore does
+nothing until the pointer moves off the axis.
+
+**The rotate handlers ignore `oriented_centre_of_viewport`.** They use a
+file-static `PointOnSphere` at lat/lon (0, 0) as the viewport centre rather than
+the parameter they were passed, which is correct only because the unoriented
+coordinate frame is defined with the canvas centre at (0, 0). Any subclass that
+reasons about the passed-in centre must use the oriented frame consistently.
 
 ## Used by
 

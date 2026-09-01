@@ -9,9 +9,48 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/Scribe tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Scribe` is the client-facing half of GPlates' own serialisation library — the one the
+project wrote instead of adopting boost::serialization (the header points at
+`DesignRationale.txt` for why). It never touches a file. A `Scribe` moves a live C++
+object graph into or out of a `Transcription`, the in-memory random-access form of the
+transcribed state; the archive readers and writers in `Scribe*ArchiveReader/Writer` turn
+that `Transcription` into bytes. Direction is fixed at construction: the default
+constructor starts a *save* and builds an empty `Transcription`, the constructor taking a
+`Transcription::non_null_ptr_type` starts a *load* and rejects an incomplete transcription
+up front. Everything below that decision is expressed as "transcribe", so a client writes
+one function that serves both directions — which is the point of the design, and why the
+implementation casts away every `const` in the object type before it does anything else.
+
+Dispatch runs in layers. `Scribe::transcribe()` (and `save`/`load`,
+`save_reference`/`load_reference` where the two paths genuinely differ in signature)
+strips const through a wall of preprocessor-generated `*_const_cast` overloads, allocates
+or looks up an object id, then *streams* the object. Arithmetic types and `std::string` go
+straight to `TranscriptionScribeContext`; everything else is handed to the non-member
+`GPlatesScribe::transcribe()` found by ADL on the object's own namespace (see
+`Transcribe.h`), which in turn may reach a private member function through
+`GPlatesScribe::Access`. Objects without a default constructor first pass through
+`transcribe_construct_data()` with a `ConstructObject` wrapper, and `Scribe::load()` hands
+the result back in a `LoadRef` that owns the heap-allocated object until the client
+relocates it. Each call site passes `TRANSCRIBE_SOURCE`, which pushes a
+`GPlatesUtils::CallStack::Trace` so failures can name the file and line that made the call.
+
+Identity is the part worth understanding before changing anything here. Every transcribed
+object — including every *pointer*, since a pointer is an object others can point at — gets
+an integer object id and an `ObjectInfo`; every type gets a `ClassInfo` carrying its size,
+`std::type_info` and relocation handler. Tracked objects are keyed by
+`InternalUtils::ObjectAddress`, an address *plus* type pair, because a class object, its
+first data member and its first base subobject all share one address and only the type
+tells them apart. On save, an owning pointer transcribes its pointee; a non-owning pointer
+records only the pointee's id and is back-patched by
+`resolve_pointers_referencing_object()` whenever that object is finally transcribed or
+relocated. `VoidCastRegistry` applies the pointer offsets that multiple inheritance
+requires, which only works because `transcribe_base()` registered the derived-to-base link,
+and for a polymorphic pointee the concrete class *name* is transcribed via `ExportRegistry`
+(populated from `ScribeExportRegistration.h`). Versioning has two independent levels: the
+per-object `ObjectTag` name and version, scoped to the enclosing object, which is how a
+client makes an incompatible field change visible as `TRANSCRIBE_INCOMPATIBLE` rather than
+a misread; and `CURRENT_SCRIBE_VERSION`, which is 0 and moves only when the library's own
+wire behaviour breaks forward compatibility.
 
 ## Declared types
 
@@ -259,9 +298,79 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/Scribe tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Checking results is enforced at run time.** `transcribe()` and `transcribe_base()` return
+a `Scribe::Bool`, not a `bool`. The value lives in a `boost::shared_ptr` whose
+`CheckDeleter` throws `Exceptions::ScribeTranscribeResultNotChecked` if it is destroyed
+without `boolean_test()` having been called — but only on the load path, since
+`require_check` is `is_loading()`. Saving may ignore the return value; loading may not.
+`LoadRef::is_valid()` carries the same obligation.
+
+**Tracking is opt-in and its absence is unforgiving.** `TRACK` is off by default, which is
+correct for scratch values nobody points at. Once anything else refers to an object,
+tracking becomes mandatory: untracking an object that has transcribed pointers or
+references throws `UntrackingObjectWithReferences`, and an untracked pointer transcribed
+before its pointee throws `TranscribedUntrackedPointerBeforeReferencedObject`, because an
+untracked pointer can never be back-patched. Conversely, transcribing the same address
+twice with `TRACK` on throws `AlreadyTranscribedObject` — the fix is `relocated()`, not
+untracking.
+
+**`relocated()` is load-only and recursive.** It asserts `is_loading()`, computes the byte
+delta between old and new addresses, and walks the object's `sub_objects` — the children
+whose addresses fall inside the parent's memory extent, decided from
+`ClassInfo::object_size` — applying the same delta to each. Constructor parameters loaded
+outside an object and then relocated into it are *added* to that sub-object list at
+relocation time, which is what makes a later relocation of the whole object correct.
+Anything the scribe cannot see, notably a member pointer that *owns* heap memory the copy
+constructor duplicated, must be reported by the type's own `relocated()` hook. An object
+that already has a reference or an untracked pointer bound to it cannot be relocated at
+all: `RelocatedObjectBoundToAReferenceOrUntrackedPointer`.
+
+**A tracked object loaded via `load()` and never relocated is discarded.** When the last
+`LoadRef` to it goes out of scope its `TrackingDeleter` untracks it. That is deliberate
+(you decided not to use it), and harmless unless some transcribed pointer was counting on
+it — then the load fails later instead of here.
+
+**Call `is_transcription_complete()` after saving, not just after loading.** Tracked
+non-owning pointers are allowed to stay unresolved while transcribing, on the expectation
+that their pointee shows up later. If it never does, nothing complains at the time; this
+check is what catches it, walking every `ObjectInfo` for the pre-initialised-but-not-post-
+initialised state and (with `emit_warnings`) printing the recorded call stack of each
+offending transcribe call site. An archive saved without passing this check will load into
+incomplete state.
+
+**Compatibility failures are return codes, not exceptions.** A missing or renamed object
+tag, or a primitive of the wrong kind, yields `TRANSCRIBE_INCOMPATIBLE`; an export-registered
+class name the running binary does not know yields `TRANSCRIBE_UNKNOWN_TYPE`. Both are
+recoverable — the caller may substitute a default and continue.
+`get_transcribe_incompatible_call_stack()` returns the trace captured at the first
+transition from success to failure, which is normally the only clue about *why* a session
+or project failed to restore.
+
+**Compile-time cost is a real constraint.** The const-cast delegates are generated for
+every combination of pointer level and `const` placement:
+`GPLATES_SCRIBE_MAX_POINTER_DIMENSION` is 2 and each increment doubles the number of
+instantiations (the header records 2 GB of compiler memory at dimension 4 on one platform,
+and a hard MSVC macro-nesting failure at 7). `GPLATES_SCRIBE_MAX_ARRAY_DIMENSION` is 3.
+Exceeding either produces a `boost::STATIC_ASSERTION_FAILURE` rather than a useful message.
+
+**Pass the object, not a base reference.** `transcribe()`, `save()` and `relocated()` assert
+`typeid(ObjectType) == typeid(object)` and throw `TranscribedReferenceInsteadOfObject` /
+`RelocatedReferenceInsteadOfObject` otherwise. The check only bites for polymorphic types;
+for a non-polymorphic base the object is silently sliced. Genuine references belong in
+`save_reference`/`load_reference`, and a loaded reference must not be relocated.
+
+**Ownership and lifetime.** `ObjectInfo`, `ClassInfo` and the object-id list nodes are
+allocated from `boost::object_pool` members and are deliberately never released
+individually — untracking resets an `ObjectInfo` in place rather than freeing it, so peak
+memory scales with the number of objects transcribed, and everything is freed with the
+`Scribe`. A `Scribe` is noncopyable, holds all this state in plain per-instance maps and
+pools, and takes no locks; the `TranscribeContext` stacks it exposes are likewise per-Scribe
+and must be popped by the client (`ScopedTranscribeContextGuard` does this).
+
+**`d_exported_registered_classes` is not used for anything.** It is a reference to
+`Access::EXPORT_REGISTERED_CLASSES` held solely to force the linker to include
+`ScribeAccess.o`, and with it the export registrations. Removing it silently breaks loading
+of polymorphic pointers.
 
 ## Used by
 

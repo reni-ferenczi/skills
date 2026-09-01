@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/PreconditionViolationError tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+One of the two branch points in the GPlates exception tree. `AssertionFailureException` means the program's own internal state is broken; `PreconditionViolationError` means a caller handed a function arguments it documented as unacceptable. The distinction is purely one of intent — the class adds nothing to `Exception` except the name it returns from `exception_name()`, and it does not override `write_message`, so the base's empty default applies and the printed text is just `PreconditionViolationError:` plus the call-stack trace.
+
+Its value is as a base class, and the subclasses show what "precondition" means in practice: geometry constructors rejecting inputs that cannot form a valid shape (`GPlatesMaths::InvalidPointsForPolylineConstructionError`, `InvalidPointsForPolygonConstructionError`, `InsufficientPointsForMultiPointConstructionError`), coordinates out of range (`GPlatesMaths::InvalidLatLonException`), degenerate maths cases (`IndeterminateArcRotationAxisException`, `UnableToIntersectEquivalentGreatCirclesException`), a time period whose begin follows its end (`GPlatesPropertyValues::GmlTimePeriod::BeginTimeLaterThanEndTimeException`), misuse of the OpenGL renderer API (`GPlatesOpenGL::GLRenderer::GLRendererAPIError`), and dereferencing a null `non_null_intrusive_ptr` (`GPlatesUtils::NullNonNullIntrusivePointerException`). Several carry extra state and override `write_message` to print it — `InvalidPointsForPolylineConstructionError` stores the `PolylineOnSphere::ConstructionParameterValidity` code that says *why* the points were rejected.
+
+Reach for it when adding a check that validates what came in, and derive a named subclass if the caller could plausibly want to catch that specific failure and recover. Some of these genuinely are: `GPlatesMaths::InvalidLatLonException` is caught in `EditGeometryWidget`, `Dialogs` and the Python bindings to reject a coordinate the user typed, rather than being left to reach the top-level handler. Throwing the base class directly is legal but tells a handler nothing beyond the category.
 
 ## Declared types
 
@@ -36,9 +38,11 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/PreconditionViolationError tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`Assert` and `throw` are not interchangeable here.** `GPlatesGlobal::Assert<SomeSubclass>(...)` aborts instead of throwing on `GPLATES_DEBUG` builds, so a precondition failure that callers are expected to catch and recover from must be thrown directly — `throw InvalidPointsForPolylineConstructionError(GPLATES_EXCEPTION_SOURCE, v)`, as `PolylineOnSphere` does. Route a check through `Assert` only when reaching it is a bug that should stop a developer's build.
+- Unlike `AssertionFailureException`, this class does not override `write_message`, so the base's empty default runs: with no override in your own subclass, the printed message is the exception name and the call-stack trace and nothing more.
+- Unlike its sibling `AssertionFailureException`, this unit has no `.cc` — the whole class is header-inline. Adding a `write_message` that needs `<ostream>` would mean either a new translation unit or pushing the include into a header that hundreds of files pull in.
+- Subclass constructors must take `const GPlatesUtils::CallStack::Trace &` first, and should declare `~Subclass() throw() {}` to match the base's exception specification.
+- Every construction pays for a call-stack trace snapshot (see `GPlatesException`), so these are for rejecting bad input at an API boundary, not for routine validation inside a loop.
 
 ## Used by
 

@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/RasterLayerProxy tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The output end of a raster layer. Like every `LayerProxy` it is a pull-model
+cache: `RasterLayerTask` pushes in the inputs (the raster feature and its
+`RasterLayerParams`, the current reconstruction time, and the connected
+`ReconstructLayerProxy` polygon layers, age-grid layer and normal-map layer), and
+nothing is computed until a client asks. What a client gets back depends on why it
+is asking, and this class serves three distinct answers from three separate
+caches.
+
+`get_proxied_raster` / `get_proxied_rasters` is the plain data path: it runs
+`ExtractRasterFeatureProperties` over the raster feature at a time and hands back
+the proxied `RawRaster` for the selected band — proxied, so the pixels are still
+on disk. `get_resolved_raster` is the *visualisation* path, and deliberately
+computes nothing: it just packages this proxy plus the connected polygon, age-grid
+and normal-map proxies into a `ResolvedRaster` reconstruction geometry, leaving
+`GLVisualLayers::render_raster()` in the presentation tier to do the drawing —
+app-logic is not supposed to know about colour. `get_multi_resolution_data_raster`
+is the *analysis* path, and does build OpenGL objects: a `GLDataRasterSource` over
+the proxied raster, a `GLMultiResolutionRaster` over that, and — if reconstructed
+polygons or an age grid are connected — a cube raster and a
+`GLMultiResolutionStaticPolygonReconstructedRaster` on top. It exists for clients
+that need to read numerical values back, principally raster co-registration in
+`data-mining` and numerical raster export.
+
+The fourth role is passive: a raster layer can *be* an age grid for some other
+raster layer. `get_multi_resolution_age_grid_mask` builds the age-grid pyramid
+from this layer's own present-day raster, and the neighbouring raster layer calls
+it while reconstructing itself. A single `RasterLayerProxy` can play both roles at
+once — visualised as a raster in its own right while also assisting another
+layer's reconstruction — which is why the age-grid pyramid lives in its own
+`MultiResolutionAgeGridRaster` cache, entirely separate from
+`MultiResolutionDataRaster`.
 
 ## Declared types
 
@@ -94,9 +122,73 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/RasterLayerProxy tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The cache holds exactly one reconstruction time.** All the `get_*` overloads
+that take no time simply substitute `d_current_reconstruction_time`, and
+`resolve_raster_feature` re-runs whenever the requested time differs from
+`cached_reconstruction_time`. For a time-dependent raster, alternating requests
+between two times therefore thrashes the cache. Note also that
+`set_current_reconstruction_time` deliberately does *not* invalidate anything —
+invalidation happens lazily, on the first request at a different time.
+
+**Three subject tokens, three granularities**, and picking the wrong one costs
+correctness or performance. `d_subject_token` means "anything about this layer
+changed". `d_proxied_raster_subject_token` means "the raw raster for this time
+changed", which is what a time-dependent raster moves. `d_raster_feature_subject_token`
+is the narrowest and exists specifically for age-grid consumers: they only ever
+read the present-day raster, so they must not be woken by time changes.
+Invalidation cascades downward — `invalidate_raster_feature` implies
+`invalidate_proxied_raster` implies `invalidate` — never upward.
+
+**`get_subject_token()` has a side effect and must be called.** Input layer
+proxies are *polled*, not pushed: the method walks each
+`InputLayerProxy`/`OptionalInputLayerProxy` wrapper, and invalidates
+`d_subject_token` if any input has moved. A client that reads `d_subject_token`
+without going through this method will miss upstream changes. The same method
+explicitly skips the age-grid and normal-map inputs when they point at `this`,
+because a raster layer may legitimately be its own age grid and polling itself
+would recurse.
+
+**`get_multi_resolution_*` need a live OpenGL context.** They take a
+`GLRenderer &` and must be called from the render thread with the context current;
+they are not usable from arbitrary app-logic code. They also fail softly, by
+returning `boost::none` after a `qWarning`, for the ordinary runtime conditions:
+no floating-point texture support, no georeferencing, or an RGBA (non-numerical)
+raster. Callers must handle `boost::none` as normal, not exceptional.
+
+**Cached rasters are deliberately memory-hungry.** Both the data raster and the
+age-grid mask are created with
+`CACHE_TILE_TEXTURES_ENTIRE_LEVEL_OF_DETAIL_PYRAMID`, because the analysis clients
+re-read the whole raster every frame and re-loading tiles from disk would dominate.
+The documented mitigation is to let the user choose a lower level of detail, not
+to change this flag. Note also that `MultiResolutionDataRaster::invalidate()`
+deliberately keeps the unreconstructed `cached_data_raster`, relying on
+`cached_proxied_raster_observer` to rebuild it only when the proxied raster
+actually changed; only the reconstructed raster and the borrowed objects from
+other layers are dropped.
+
+**The age-grid mask has two implementations.** `use_age_grid_data_source` probes
+`GLMultiResolutionStaticPolygonReconstructedRaster::supports_age_mask_generation`
+once and caches the answer in a `mutable` field: on capable hardware the returned
+raster is a floating-point `GLDataRasterSource` holding actual ages, otherwise a
+fixed-point `GLAgeGridMaskSource` holding pre-computed comparisons that must be
+told the reconstruction time via `update_reconstruction_time`. Code consuming the
+returned cube raster must not assume either encoding.
+
+**`get_multi_resolution_data_cube_raster` may hand back shared state.** The
+returned cube raster is cached, and a world transform set on it by one caller
+persists for the next; the header recommends wrapping
+`get_multi_resolution_data_raster` in your own cube raster instead.
+
+**Feature ownership.** `d_current_raster_feature` is a `weak_ref` and is
+re-checked with `is_valid()` on every resolve; a deleted feature makes the proxy
+return `boost::none` rather than fail. `set_raster_params` re-reads everything
+from `RasterLayerParams` and falls back to an identity
+`CoordinateTransformation` whenever the raster has no spatial reference system or
+one that cannot be turned into a transformation.
+
+The normal-map input is carried here only so it can be forwarded into
+`ResolvedRaster`; the header itself flags this as a layering violation, since a
+normal map is purely a visualisation concern.
 
 ## Used by
 

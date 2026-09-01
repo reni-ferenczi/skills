@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportAnimationContext tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the driver of the whole animation-export feature: the loop that steps the
+application through a range of geological times and asks each configured exporter to
+write one frame. The header names it as the Context of a textbook Strategy pattern,
+with `ExportAnimationStrategy` as the abstract Strategy and one concrete subclass per
+kind of output (reconstructed geometries, resolved topologies, velocities, rasters,
+SVG snapshots, and so on). The Context holds the strategies; the strategies hold a
+raw back-pointer to the Context, and that back-pointer is how they reach everything
+they need — `ViewState`, `ViewportWindow`, the target directory, the current view
+time and the sequence definition. The header cites the same book for that decision
+too, so the back-reference is deliberate rather than accidental coupling.
+
+Using it is a three-phase protocol driven by `ExportAnimationDialog`. First
+`set_target_dir()` and `set_sequence()`; then one
+`add_export_animation_strategy()` call per row the user configured, each of which
+delegates construction to the `ExportAnimationRegistry` held by `ViewState` —
+looked up by `ExportAnimationType::ExportID` and handed the per-row configuration
+object. Finally `do_export()`. The ordering matters and the header says why: each
+concrete strategy builds its `GPlatesFileIO::ExportTemplateFilenameSequence` in its
+constructor from `get_sequence()`, so a sequence set after the strategies exist is
+ignored by their filename templates.
+
+`do_export()` itself is small. For each frame it computes the time from the
+`SequenceInfo`, pushes it into `AnimationController::set_view_time()` — which is what
+actually drives the application to reconstruct — and then walks the multimap calling
+`check_filename_sequence()` and `do_export_iteration(frame_index)` on every strategy.
+Filenames are the strategies' business, not the Context's: each pulls the next name
+off its own filename iterator and joins it to `target_dir()`. The one piece of state
+the Context keeps for its own sake is `d_sequence_info`, which deliberately does *not*
+track the `AnimationController`'s global animation sequence — the header explains
+that the snapshot (single-frame) and sequence export dialogs were merged, so the
+export range is set independently and strategies must read it from `get_sequence()`
+rather than from the controller.
 
 ## Declared types
 
@@ -62,9 +91,45 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportAnimationContext tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`do_export()` runs synchronously on the GUI thread and blocks for the entire
+export — there is no worker thread. Abort works only because
+`ExportAnimationDialog::update_progress_bar()` and `update_status_message()` both
+call `QCoreApplication::processEvents()` after repainting, which is what lets the
+Abort button's click be delivered and set `d_abort_now`. That has two consequences
+worth knowing before writing a new strategy. A strategy that runs a long frame
+without calling `update_status_message()` makes the application unresponsive and
+delays abort for that whole frame. And because events *are* processed mid-export,
+arbitrary other slots can run between frames; `ExportAnimationDialog::setVisible()`
+relies on this, calling abort if the user closes the dialog while `is_running()`.
+
+`d_abort_now` is tested once per frame, at the top of the loop, so aborting is
+granular to a whole frame and never interrupts a strategy mid-iteration. On the
+failure path the `ok = ok && check_filename_sequence() && do_export_iteration(...)`
+chain short-circuits, so once one strategy fails, the remaining strategies for that
+frame are skipped entirely rather than run and ignored — then every strategy gets
+`wrap_up(false)` and `do_export()` returns false. On success every strategy gets
+`wrap_up(true)`. Either way the view time is left wherever the last exported frame
+put it; nothing restores the time the user was viewing before the export.
+
+Ownership is strictly nested but held with raw pointers in both directions. The
+Context is reference counted and owned by `ExportAnimationDialog`, but keeps
+unguarded raw pointers to the dialog, the `AnimationController`, the `ViewState` and
+the `ViewportWindow` — all of which outlive it in practice. It owns its strategies
+(`non_null_ptr_type` values in the multimap), and each strategy points back at it
+raw, so no strategy may outlive the Context. `ExportAnimationDialog` calls
+`clear_export_animation_strategies()` immediately after `do_export()` returns, so
+strategies are freshly constructed for every export run and cannot carry state
+between runs — anything a strategy caches in its constructor (loaded file lists, for
+instance) is a snapshot of the moment the user pressed Export.
+
+The multimap is keyed rather than a plain list because the same `ExportID` can appear
+more than once: the user may configure two exports of the same type and format with
+different options. Iteration order within a frame is therefore the map's key order,
+not the order the user added the rows.
+
+One thing the member table above overstates: `EXPORT_ITEMS` is inside an `#if 0`
+block, with a comment saying it appears obsolete. It is not compiled and nothing
+refers to it.
 
 ## Used by
 

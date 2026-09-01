@@ -9,9 +9,35 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/UnicodeString tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A compatibility shim, not a string implementation. GPlates once used ICU's
+`icu::UnicodeString` throughout; when the dependency was dropped, rather than
+rewriting several hundred call sites the class was replaced by a thin wrapper
+holding a single `QString` and exposing just the slice of the ICU interface that
+the tree actually called — `length()`, `isEmpty()`, `indexOf()`,
+`extractBetween()`, `removeBetween()`, `operator+=`. Every method in the `.cc`
+is a one-liner forwarding to the corresponding `QString` call, each with a
+comment naming the ICU page it implements and the `QString` page it implements
+it with. There is no behaviour of its own to understand: read the `QString`
+documentation for the semantics.
+
+`qstring()` is the escape hatch, and the header says so — it is the only member
+that breaks the ICU illusion. Because the wrapper's surface is so narrow, most
+code that needs to do real string work calls `qstring()` and works in Qt, which
+is why the class shows up in a hundred and forty units without any of them
+depending on much of it. New code should use `QString` directly; this type exists
+to keep the old call sites compiling and to be the element type of
+`GPlatesUtils::StringSet` and `GPlatesUtils::IdStringSet`, where its `operator<`
+supplies the strict weak ordering for the interning `std::set` and its
+`operator==` the string comparison.
+
+Two pieces of integration are worth knowing about. Deriving from
+`GPlatesUtils::QtStreamable<UnicodeString>` (a Barton-Nackman friend-injection
+template) means that defining the `std::ostream` inserter in the `.cc` is enough
+to also get `qDebug()`, `qWarning()` and `QTextStream` output for free. And the
+private `transcribe()`, befriended to `GPlatesScribe::Access`, uses
+`transcribe_delegate_protocol` on the wrapped `d_qstring`, which makes
+`UnicodeString` and `QString` interchangeable in saved sessions and projects —
+either may be transcribed and read back as the other.
 
 ## Declared types
 
@@ -50,9 +76,37 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/UnicodeString tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Units are UTF-16 code units, not code points.** `length()` returns
+  `QString::length()`, which counts 16-bit `QChar`s; the `.cc` comment spells
+  this out, and the header's ICU-inherited advice to "use `countChar32()`" points
+  at a function this wrapper does not provide. Every offset taken by `indexOf()`,
+  `extractBetween()` and `removeBetween()` is in the same units, so a surrogate
+  pair can be split by an unlucky index.
+- **`const char *` conversion is implicit and assumes ASCII.** The comment on
+  that constructor warns not to pass local-code-page data. Because it is not
+  explicit, a stray string literal silently becomes a `UnicodeString`; the
+  `QString` constructor is explicit, so only the char-pointer path has this
+  hazard.
+- **`GPLATES_ICU_BOOL` has two different definitions in the tree.** This header
+  defines it as the identity `(b)` — the ICU version returning `UBool` is
+  commented out and the macro is kept only because it still pervades the code —
+  while `StringSet.h` defines it as `((b) != 0)` *before* including this header.
+  Both are guarded by `#ifndef`, so which one a translation unit gets depends on
+  include order. The two agree for a `bool` operand, but do not add a definition
+  that does not.
+- **`extractBetween()` and `removeBetween()` do not validate their range.** They
+  compute `limit - start` and hand it to `QString::mid()` / `QString::remove()`,
+  so out-of-range or inverted arguments give whatever `QString` gives, not the
+  ICU clamping behaviour the linked documentation describes.
+- **The `std::ostream` inserter writes UTF-8 via `ostream::write`,** deliberately
+  passing an explicit byte count rather than treating the buffer as
+  NUL-terminated, so embedded zero bytes survive. Do not simplify it to a
+  `const char *` insertion.
+- **Copy is `QString` copy.** Implicitly shared and cheap, but with `QString`'s
+  copy-on-write, which means the usual Qt rule applies: a `UnicodeString` is not
+  safe to share across threads while any copy of it may be mutated.
+- **No inheritance is intended.** There is no virtual destructor; the
+  `QtStreamable` base exists only to inject the streaming operators.
 
 ## Used by
 

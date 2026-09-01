@@ -9,9 +9,41 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLCapabilities tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLCapabilities` is the single snapshot of what the OpenGL implementation
+underneath GPlates can actually do — which extensions are present, and the
+implementation-dependent limits that go with them — grouped into nested structs
+by subsystem. It exists so that no other part of the backend has to touch a
+`GLEW_*` macro or issue a `glGetIntegerv` of its own. Almost every branch in
+`src/opengl` that chooses between a modern path and a fallback reads a field
+here: `GLBuffer::create` picking `GLBufferObject` over `GLBufferImpl`,
+`GLStateSets` deciding how much fixed-function state exists to shadow,
+`GLScalarField3D` deciding whether it can run at all.
+
+Construction and initialisation are private, with `GLContext` as the only
+friend, and the instance itself is a static member of `GLContext` populated by
+`GLContext::initialise` immediately after `glewInit()` succeeds. Clients reach it
+through `GLContext::get_capabilities` or the `GLRenderer::get_capabilities`
+that forwards to it, which is the point of the arrangement: the header comment
+records that this used to be globally accessible and was deliberately tied to a
+`GLContext` so that no one can read capabilities before GLEW has run. The
+`initialise_*` methods each issue real GL queries, so a context must be current
+when they run.
+
+Two details of the design are worth knowing before editing it. First, the
+per-struct constructors do not zero the limits — they set them to what plain
+OpenGL guarantees without the extension (one texture unit, one draw buffer, one
+viewport, one texture-array layer, 1.0 anisotropy, a 64-texel texture), so
+callers may read a limit without first testing its flag. Second, a few fields
+are inferred rather than queried, because no query exists:
+`gl_supports_floating_point_filtering_and_blending` is deduced from OpenGL 3.0
+or `GL_EXT_texture_array`, `gl_is_texture3D_supported` tests core OpenGL 1.2
+rather than the EXT extensions because MacOS does not expose them, and
+`gl_ARB_gpu_shader_fp64` is detected by probing for non-null `glUniform*d`
+entry points — and then written *back* into GLEW's own
+`__GLEW_ARB_gpu_shader_fp64` flag so the rest of the program agrees. The two
+static `GLenum` constants exist purely as header hygiene: `<GL/glew.h>` has to
+precede every OpenGL and Qt header, so it is confined to `.cc` files, and these
+smuggle `GL_COLOR_ATTACHMENT0` and `GL_TEXTURE0` out to headers that need them.
 
 ## Declared types
 
@@ -58,9 +90,36 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLCapabilities tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+There is exactly one instance in the process. `GLContext` holds it as a *static*
+member alongside a static "GLEW initialised" flag, and `GLContext::initialise`
+populates it only the first time it is called for the whole application — the
+comment there explains why: GLEW would have to be built with `GLEW_MX` to
+support per-context state, and that build is not available everywhere. So
+capabilities are process-wide even when several contexts exist, and the code
+assumes those contexts are equivalent. `get_capabilities` asserts the GLEW flag,
+so reading capabilities before `GLContext::initialise` raises a
+`PreconditionViolationError` rather than returning stale zeroes.
+
+The `noncopyable` base is a deliberate barrier, not an accident: the comment on
+it says clients must not copy and cache capabilities but retrieve them from a
+`GLContext`. The fields themselves are public and non-const, so nothing stops a
+client writing to them — only the private constructor and the `GLContext`
+friendship keep that from being routine.
+
+Extensions can legitimately read as unsupported for reasons other than the
+hardware. `GLContext::disable_opengl_extensions` runs immediately *before*
+`initialise` and clears GLEW flags: `GL_ARB_vertex_array_object` is switched off
+permanently because vertex array objects measured slower than re-specifying the
+attribute arrays, and a commented-out block beside it is the intended way to
+force any other fallback path for testing. Separately, several blocks are
+wrapped in `#ifdef` guards against an old build-time `glew.h`, so a capability
+can be false simply because the header GPlates was compiled against did not
+declare that extension.
+
+When adding a field, add its default to the corresponding struct's constructor
+as well. That default is what every driver lacking the extension will report,
+and the convention throughout is a value the caller can use unconditionally —
+not zero.
 
 ## Used by
 

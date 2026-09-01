@@ -9,9 +9,44 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GreatCircleArc tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GreatCircleArc` is the edge primitive of GPlates geometry: the shortest path between
+two `PointOnSphere`s, and the element type of the `std::vector<GreatCircleArc>` that
+`PolylineOnSphere` and `PolygonOnSphere` store. That storage role dominates the class's
+design. An arc keeps only its two endpoints and the pre-computed dot product of their
+position vectors; everything else — arc length, whether the arc is degenerate, the
+rotation axis — lives in the private `CachedOnDemand` block and is computed on first
+request. The header spells out why that block is a hand-packed struct of two booleans
+plus a `UnitVector3D` and a `real_t` rather than a set of `boost::optional` members:
+each `optional` would cost an extra eight bytes after alignment, multiplied by every
+edge of every reconstructed geometry. The same reasoning explains why animating a
+reconstruction is cheap — displaying a polyline never asks for a rotation axis, so the
+axis is never computed.
+
+The domain has two edge cases that shape the whole interface. Antipodal endpoints do not
+determine an arc, so `create` throws `IndeterminateResultException` for them (and
+`evaluate_construction_parameter_validity` lets a caller check first and then pass
+`check_validity = false` on the hot path). Coincident endpoints, by contrast, *are*
+legal: they give a zero-length, point-like arc that has no determinate rotation axis, so
+`rotation_axis()` throws `IndeterminateArcRotationAxisException`. Every algorithm in the
+`.cc` therefore branches on `is_zero_length()` first and falls back to point-to-point
+comparisons — `intersect`, `arcs_lie_on_same_great_circle` and `minimum_distance` all
+open that way, and `ArcHasIndeterminateRotationAxis` exists so callers can filter such
+arcs out of a sequence.
+
+The free functions are the geometric kernel that `GeometryDistance`, `GeometryIntersect`,
+`PolylineIntersections`, `SphericalArea` and the OpenGL raster code build on. Distances
+are returned as `AngularDistance` and thresholds taken as `AngularExtent` — cosine/sine
+pairs rather than angles, which keeps the common case to dot products and avoids `acos`.
+The threshold arguments are not just filters but an optimisation and a correctness
+device: when a threshold is exceeded the functions return `AngularDistance::PI` as a
+sentinel and deliberately leave the caller's closest-point out-parameters untouched, and
+the arc-to-arc `minimum_distance` tightens the threshold after each of its four
+point-to-arc probes so a later, further probe cannot overwrite the closest point found
+by an earlier one. `maximum_distance` is implemented as PI minus the minimum distance to
+the antipodal arc (or antipodal point), citing the Minkowski-addition thesis the
+lune-based point-to-arc test also comes from. `tessellate` is the subdivision routine the
+renderers and exporters use; it re-appends the original end point rather than the last
+rotated one, so accumulated rotation error never moves an arc's endpoint.
 
 ## Declared types
 
@@ -96,9 +131,52 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GreatCircleArc tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Invariant.** The endpoints are never antipodal, so the spanned angle lies in [0, PI)
+and the arc is unique. The test is `dot_p1_p2 <= -1.0` evaluated in `real_t`, hence
+epsilon-tolerant like all `GPlatesMaths::Real` comparisons. Everything else about the
+arc is derived from the two endpoints, which is why `operator==` compares only
+`d_start_point` and `d_end_point` and ignores the cached fields.
+
+**The cache is `mutable` and lazily filled by `const` member functions, with no
+locking.** `is_zero_length()`, `rotation_axis()` and `arc_length()` all write into
+`d_cached_on_demand` on first call, so sharing one arc — or one `PolylineOnSphere`,
+whose arcs are owned by an immutable, reference-counted geometry — across threads and
+querying it concurrently is a data race even though every call site looks read-only.
+
+**Two different notions of "zero length" coexist.** `is_zero_length()` tests
+`cross(start, end).magSqrd() <= 0` under `real_t`'s epsilon, while `arc_length()` is
+`acos` of the endpoint dot product. The header states the consequence explicitly: an arc
+can report zero length and still return a non-zero `arc_length()`.
+`get_zero_length_threshold_cosine()` exists only to tell other classes the approximate
+upper bound of a zero-length arc; it is not the predicate the class actually uses, and
+the header warns against using it as one.
+
+**`create_rotated_arc` and `create_antipodal_arc` copy the cache instead of
+invalidating it**, on the reasoning that the endpoint dot product and the arc length
+survive both transforms and the rotation axis only needs rotating (and is left alone
+under the antipodal transform). If you add a cached quantity that is not invariant under
+those operations, both functions must be updated or they will silently propagate a stale
+value.
+
+**Threshold semantics in the distance functions.** Exceeding a `minimum_distance`
+threshold is signalled by returning `AngularDistance::PI`, not by a boolean or an
+optional — and in that case the caller's closest-point references are left *unmodified*,
+so an uninitialised out-parameter stays uninitialised. `maximum_distance` mirrors this
+with `AngularDistance::ZERO`. The private helper
+`minimum_distance_for_position_inside_arc_lune` additionally requires that the position
+not equal the arc's plane normal; its caller guards that with epsilon-tested dot products
+rather than an explicit check, so calling the helper directly is unsafe.
+
+**Other sharp edges.** `direction_on_arc` throws `IndeterminateArcRotationAxisException`
+on a zero-length arc even though `point_on_arc` handles that case silently.
+`point_on_arc` returns the stored endpoints exactly at 0 and 1 rather than rotating, and
+accepts values outside [0, 1] as extrapolation. When two arcs overlap along the same
+great circle, `intersect` reports an arbitrary endpoint of one of them as *the*
+intersection. `arcs_are_near_each_other` is a conservative pre-filter only — a false
+result rules out intersection, a true result proves nothing.
+`calculate_angle_between_adjacent_non_zero_length_arcs` trusts the caller on both of its
+preconditions (neither arc zero-length, and the arcs genuinely adjacent in sequence
+order) and returns an angle in [0, 2PI).
 
 ## Used by
 

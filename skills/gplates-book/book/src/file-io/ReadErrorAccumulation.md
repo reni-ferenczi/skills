@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReadErrorAccumulation tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Every file reader in GPlates takes a `ReadErrorAccumulation &` as an out-parameter and reports problems into it rather than throwing. That is the central design decision this tiny struct encodes: loading a geological data file is expected to be partially successful, so a reader must be able to say "I skipped this feature and carried on" and still return a usable feature collection. The accumulation is the bucket those reports land in, and its four vectors are not a taxonomy of causes but a taxonomy of *consequences* — the Doxygen on each field spells out exactly what the reader is asserting by choosing it. A warning means nothing was lost; a recoverable error means some bounded chunk of data was discarded and reading continued; a terminating error means reading stopped part-way, so the collection is truncated; a failure to begin means the parser never got as far as the data, so nothing was loaded at all. Choosing the wrong vector is the main way to get this wrong, because downstream code branches on the distinction and the user is shown different text.
+
+An accumulation aggregates across files as well as within one. A reader typically fills a local accumulation for the file it is parsing, and the caller folds it into a longer-lived one with `accumulate` — which is why the per-file "there can only be one terminating error" and "only one failure to begin" invariants in the Doxygen apply to a single file's worth of reporting, not to the accumulation itself, which may hold many. `GPlatesAppLogic::FeatureCollectionFileIO` is the usual funnel: after each load it calls `emit_handle_read_errors_signal`, which tests `is_empty()` and emits `handle_read_errors` only when there is something to say, so the errors dialog never pops up for a clean load. `most_severe_error_type` exists for exactly that consumer — it collapses the four vectors into a single `ReadErrors::Severity` so the window can decide how loudly to complain, and it is documented as being for `ViewportWindow::handle_read_errors()`.
+
+The individual reports are `ReadErrorOccurrence` values, which carry a data source, a location and a pair of enum codes rather than a formatted message; `ReadErrorMessages` turns those codes into translated text at display time, and `ReadErrorUtils` regroups a collection by file or by error type for `ReadErrorAccumulationDialog`, which keeps its own accumulation and grows it across successive loads.
 
 ## Declared types
 
@@ -46,9 +48,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReadErrorAccumulation tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The four vectors are public fields with no accessors, and readers push onto them directly — there is no method that classifies an occurrence for you. Severity is decided entirely at the call site by which vector the reader chooses, so classification consistency across readers is a convention, not something the type enforces.
+
+`accumulate` appends and never de-duplicates, so folding the same source accumulation in twice yields duplicate entries, and re-reading a file that keeps reporting the same problem grows the destination without bound. The long-lived accumulation inside `ReadErrorAccumulationDialog` is cleared explicitly rather than per-load, which is what makes it a running log across successive file loads.
+
+Nothing here is copy-on-write or reference-counted at the accumulation level: `ReadErrorAccumulation` is a plain value with `std::vector` members, so copying one deep-copies the vectors. The elements are cheap to copy despite that, because `ReadErrorOccurrence` holds its data source and location behind `boost::shared_ptr`, so those objects are shared, not cloned — see the notes on `ReadErrorOccurrence` for what that implies about lifetimes.
+
+There is no locking. An accumulation is intended to be filled by one reader on one thread and then handed on; `is_empty()`, `size()` and `most_severe_error_type()` all recompute from the four vectors on each call, so do not treat them as cached state while another thread might be appending.
 
 ## Used by
 

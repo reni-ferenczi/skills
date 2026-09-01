@@ -9,9 +9,43 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/Gpgim tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+GPlates does not hard-code its schema. What feature types exist, which
+properties each may carry, what structural types those property values may take,
+which properties are geometry, and which may be wrapped in a time-dependent
+wrapper is all declared in `gpgim.xml`, compiled into the executable as the Qt
+resource `:/gpgim/gpgim.xml`. This class is the parser and the query point for
+that file. On construction it reads the document once and turns it into
+`GpgimStructuralType`, `GpgimTemplateStructuralType`, `GpgimEnumerationType`,
+`GpgimProperty` and `GpgimFeatureClass` objects, together with the lookup maps
+that answer the questions the rest of GPlates asks by name. It is a
+`GPlatesUtils::Singleton`, so all of that happens on the first
+`Gpgim::instance()` call and there is exactly one copy of the model definition
+in the process.
+
+The three big consumers are the GPML reader, the create/edit dialogs, and
+`ModelUtils`. `GpmlFeatureReaderFactory` builds a reader per feature type from
+the feature class and its properties, so the parser knows what to expect rather
+than guessing from the XML it is handed. `CreateFeatureDialog`,
+`AddPropertyDialog`, `ChoosePropertyWidget` and friends populate their lists
+straight from `get_concrete_feature_types` and the feature class's properties —
+abstract classes such as `gpml:TangibleFeature` are excluded from that list
+precisely because they are never instantiated. `ModelUtils` uses
+`get_property_template_structural_type` when it needs to instantiate a template
+type such as `gpml:Array<gml:TimePeriod>`. `GpmlOutputVisitor` stamps
+`get_version()` onto every file it writes, and `GpmlReader` warns when it reads a
+file whose GPGIM version is newer than this build's.
+
+Loading proceeds in dependency order, and the code says so: structural types
+first, then properties (which reference structural types), then feature classes
+(which reference properties). Feature classes are the awkward step, because a
+class may inherit from one defined later in the file. The loader therefore reads
+all feature class elements into a temporary feature-type-to-XML-element map
+first, then walks the inheritance chain on demand — `create_feature_class` calls
+`create_feature_class_if_necessary` for its parent before building itself, so
+the XML file's ordering does not matter. `gpml:UnclassifiedFeature` is
+synthesised at the end rather than declared: it clones every property in the
+GPGIM with the multiplicity forced to `ZERO_OR_MORE`, which the comment defends
+as preferable to scattering special cases through the application.
 
 ## Declared types
 
@@ -100,9 +134,46 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/Gpgim tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All of the parsing work happens in the constructor, so a malformed `gpgim.xml`
+throws out of the first `Gpgim::instance()` call — `GpgimInitialisationException`
+for any structural problem (carrying the resource filename and the offending XML
+line number), or `ErrorOpeningFileForReadingException` if the Qt resource cannot
+be opened. Since that first call typically happens deep inside startup, a broken
+GPGIM resource is a fatal startup failure rather than a degraded mode. There is
+no reload: only the current version is supported, `d_version` is set once, and
+`get_version()` asserts it was set.
+
+The object is effectively immutable after construction, but nothing enforces it
+and nothing synchronises it. Every accessor is `const` and returns
+`non_null_ptr_to_const_type`, so the safe reading is: treat the GPGIM as
+read-only global state, and never mutate a `GpgimProperty` obtained from it —
+the same instance is shared by every feature class that inherits the property
+(`create_feature_properties` looks each one up in `d_property_map` and stores the
+pointer). `create_unclassified_feature_class` is the exception that proves the
+rule: it clones before changing multiplicity, and its comment flags the
+consequence, that the unclassified feature class holds properties which are
+*not* in the global property list returned by `get_properties()`.
+
+`create_feature_class_if_necessary` has no cycle detection. A feature class is
+inserted into `d_feature_class_map` only after it and its ancestors are fully
+built, so a circular `gpgim:Inherits` chain in the XML recurses until the stack
+runs out rather than raising `GpgimInitialisationException`. Anything else
+missing or duplicated in the file is diagnosed properly.
+
+Note the "uninstantiated" versus "instantiated" template distinction, which is
+easy to trip over. `get_property_structural_types` and
+`get_property_structural_type` deal in bare structural types (`gpml:Array`) and
+deliberately exclude instantiations; `get_property_template_structural_type`,
+keyed on the structural type *and* the value type, is the only way to reach
+`gpml:Array<gml:TimePeriod>`. Enumerations are a subset of the structural types,
+so they appear in both `get_property_structural_types` and
+`get_property_enumeration_types`.
+
+`get_feature_property` and `get_feature_properties` are thin conveniences that
+delegate to `GpgimFeatureClass`, which is where inherited properties are
+resolved. Both return `boost::none` / `false` for an unrecognised feature type
+and for a recognised type that lacks the property, so a negative result does not
+distinguish "no such feature type" from "no such property on it".
 
 ## Used by
 

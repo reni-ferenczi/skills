@@ -17,12 +17,12 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [AbortException](../src/global/AbortException.md) | 2 | 104 | 47 | Exception subclass for aborts signalling corrupted internal program state |
-| [AssertionFailureException](../src/global/AssertionFailureException.md) | 1 | 105 | 2599 | (pending) |
+| [AssertionFailureException](../src/global/AssertionFailureException.md) | 1 | 105 | 2599 | the exception thrown when an internal-state check fails; carries only the throw location |
 | [CompilerWarnings](../src/global/CompilerWarnings.md) | 2 | 136 | 56 | Compiler-neutral macros to push/pop/enable/disable specific gcc and MSVC warnings |
 | [ControlFlowException](../src/global/ControlFlowException.md) | 3 | 75 | 0 | Exception thrown when unreachable code is executed |
 | [ExternalResourceFailureException](../src/global/ExternalResourceFailureException.md) | 2 | 58 | 27 | Base exception for failures of external resources such as files or drivers |
-| [GPlatesAssert](../src/global/GPlatesAssert.md) | 1 | 267 | 3310 | (pending) |
-| [GPlatesException](../src/global/GPlatesException.md) | 1 | 325 | 777 | (pending) |
+| [GPlatesAssert](../src/global/GPlatesAssert.md) | 1 | 267 | 3310 | the project's assert: aborts into the debugger on debug builds, throws a chosen exception on release |
+| [GPlatesException](../src/global/GPlatesException.md) | 1 | 325 | 777 | the root of the GPlates exception hierarchy and the call-stack snapshot taken at each throw |
 | [GdalVersion](../src/global/GdalVersion.md) | 2 | 60 | 22 | Re-declares GDAL's version-compute macros so version checks compile on old GDAL |
 | [IllegalParametersException](../src/global/IllegalParametersException.md) | 3 | 75 | 2 | Exception thrown for illegal or unreasonable method parameters |
 | [InternalInconsistencyException](../src/global/InternalInconsistencyException.md) | 3 | 127 | 1 | Exception thrown when unexpected internal inconsistencies are detected |
@@ -34,8 +34,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [LogException](../src/global/LogException.md) | 2 | 117 | 102 | Catch-all exception carrying a free-form message when no dedicated type exists |
 | [NotYetImplementedException](../src/global/NotYetImplementedException.md) | 3 | 62 | 3 | Exception for code that has not yet been implemented |
 | [NullParameterException](../src/global/NullParameterException.md) | 3 | 74 | 1 | Exception for NULL pointer parameters when non-null expected |
-| [PointerTraits](../src/global/PointerTraits.md) | 1 | 89 | 477 | (pending) |
-| [PreconditionViolationError](../src/global/PreconditionViolationError.md) | 1 | 63 | 522 | (pending) |
+| [PointerTraits](../src/global/PointerTraits.md) | 1 | 89 | 477 | names a class's non\_null\_ptr\_type without including its header, to break include cycles |
+| [PreconditionViolationError](../src/global/PreconditionViolationError.md) | 1 | 63 | 522 | the branch of the exception tree for invalid arguments, as opposed to broken internal state |
 | [RetrievalFromEmptyContainerException](../src/global/RetrievalFromEmptyContainerException.md) | 3 | 82 | 1 | Exception when retrieving from an empty container |
 | [UnexpectedEmptyFeatureCollectionException](../src/global/UnexpectedEmptyFeatureCollectionException.md) | 3 | 73 | 1 | Exception when receiving an unexpectedly empty FeatureCollectionHandle |
 | [UninitialisedIteratorException](../src/global/UninitialisedIteratorException.md) | 3 | 74 | 4 | Exception when dereferencing an uninitialized iterator |

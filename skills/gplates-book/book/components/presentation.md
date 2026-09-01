@@ -31,8 +31,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [TopologyNetworkVisualLayerParams](../src/presentation/TopologyNetworkVisualLayerParams.md) | 2 | 796 | 223 | Triangulation draw/colour modes and strain-rate colour palettes for a network layer |
 | [TranscribeSession](../src/presentation/TranscribeSession.md) | 2 | 3805 | 153 | Scribe-based save/load of an entire GPlates session: files, layers, params, view state |
 | [VelocityFieldCalculatorVisualLayerParams](../src/presentation/VelocityFieldCalculatorVisualLayerParams.md) | 2 | 146 | 31 | Arrow body scale, arrowhead scale and spacing for a velocity-field-calculator layer |
-| [ViewState](../src/presentation/ViewState.md) | 1 | 1174 | 1718 | (pending) |
-| [VisualLayer](../src/presentation/VisualLayer.md) | 1 | 642 | 490 | (pending) |
+| [ViewState](../src/presentation/ViewState.md) | 1 | 1174 | 1718 | the presentation-tier state hub owning all non-widget display state, between ApplicationState and ViewportWindow |
+| [VisualLayer](../src/presentation/VisualLayer.md) | 1 | 642 | 490 | presentation counterpart of one ReconstructGraph layer; turns its output into rendered geometry |
 | [VisualLayerGroup](../src/presentation/VisualLayerGroup.md) | 3 | 57 | 30 | Enumeration of visual layer categories controlling on-screen organization |
 | [VisualLayerInputChannelName](../src/presentation/VisualLayerInputChannelName.md) | 3 | 154 | 1 | Mapping from layer input channel enumerations to GUI display strings |
 | [VisualLayerParams](../src/presentation/VisualLayerParams.md) | 2 | 167 | 64 | Base class for per-visual-layer-type display parameters, kept separate from app-logic LayerParams |

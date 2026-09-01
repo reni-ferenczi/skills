@@ -9,9 +9,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/AgeColourPalettes tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit supplies the two built-in palettes that colour geometry by *feature age*
+— the age of a feature relative to the current reconstruction time. They are
+`ColourPalette<GPlatesMaths::Real>` specialisations, so the key they are indexed
+by is a geological time in Ma rather than a plate id or a raster value. In
+practice they are never used bare: `ColourSchemeContainer::create_built_in_colour_schemes`
+pairs each one with a `GPlatesAppLogic::AgePropertyExtractor` via
+`make_colour_scheme()` and registers the result under
+`ColourSchemeCategory::FEATURE_AGE` as the "Default" and "Monochrome" entries the
+user picks in the draw-style UI. The extractor is what turns a feature into an
+age; the palette only turns an age into a `Colour`.
+
+The reason `AgeColourPalette` exists as an intermediate abstract base — rather
+than the two concrete palettes deriving from `ColourPalette` directly — is the
+mutable `[lower, upper]` age window plus the visitor hook. Every other palette
+family has its range baked into its data (a CPT file, a hard-coded table), so
+code that wants to draw a colour scale needs a way to ask an age palette what
+range it currently spans. That is exactly what
+`ConstColourPaletteVisitor::visit_age_colour_palette` is for: the `RangeVisitor`
+in `ColourPaletteUtils` and the one inside `ColourScaleGenerator` implement that
+one hook to read `get_range()`, which lets the colour-scale widgets label the
+bar without downcasting. The `d_default_*` pair exists only so `reset_bounds()`
+can restore the constructor's window after the user has moved it.
+
+The two concrete palettes differ in how they handle out-of-range ages, not just
+in colour. `MonochromeAgeColourPalette` clamps: anything at or beyond a bound
+gets that bound's colour, so `get_colour()` always yields a value.
+`DefaultAgeColourPalette` normalises the age into a `[0, 1]` position and hands
+it to a temporary `ColourSpectrum`, which returns `boost::none` outside that
+interval — so it can, and does, return no colour for a feature outside the
+window, and callers must be ready for that. It does special-case the infinities
+first: a positive-infinity age (distant past) is pinned to the upper bound and
+negative infinity (distant future) to the lower bound, so `GPlatesMaths::Real`
+values coming from unbounded time periods still colour.
 
 ## Declared types
 
@@ -82,9 +112,39 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/AgeColourPalettes tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The "rainbow" in the class comment is stale.** `DefaultAgeColourPalette` builds
+a default-constructed `ColourSpectrum`, whose defaults are white upper / black
+lower over `[0, 1]`; the actual rainbow constructor in `ColourSpectrum.cc` is
+inside an `#if 0` block. Working through `Colour::linearly_interpolate` (position
+0 gives the *first* argument) and `ColourSpectrum::get_colour_at`'s inverted
+`(upper - position)` term, the palette in this release runs black at the youngest
+age to white at the oldest — i.e. the same greyscale ramp as
+`MonochromeAgeColourPalette` but in the opposite direction. Do not trust the
+Doxygen here; if you change `ColourSpectrum`'s defaults you silently change what
+the "Default" feature-age colour scheme looks like.
+
+`ColourSpectrum::get_colour_at`'s own comment claims it clamps positions outside
+`[0, 1]`; it does not — it returns `boost::none`. (`get_colour_or_bound_colour`
+is the clamping variant, and this unit does not use it.) That is what makes
+`DefaultAgeColourPalette::get_colour` fallible while the monochrome one is not.
+`get_background_colour()` and `get_foreground_colour()` dereference the optional
+unconditionally, which is safe only because they pass exactly 0.0 and 1.0.
+
+Nothing in the 2.5.0 tree calls `set_upper_bound`, `set_lower_bound`,
+`set_range` or `reset_bounds` — the mutable-window API is present and reachable
+(the palettes are held as non-const `non_null_ptr_type`) but currently unused, so
+in practice both palettes stay on the 0–450 Ma default. If you do start moving
+the bounds, note there is no validation: nothing keeps `d_lower_bound` below
+`d_upper_bound`, and an equal pair divides by zero in both `get_colour`
+implementations.
+
+Lifetime is the usual GPlates intrusive-refcount pattern inherited from
+`ColourPalette` / `GPlatesUtils::ReferenceCount`: constructors are private and
+the static `create()` returns a `non_null_ptr_type`, so instances are always
+heap-allocated and shared. Instances are cheap and stateless apart from the two
+bounds, but `DefaultAgeColourPalette::get_colour` constructs a fresh
+`ColourSpectrum` on every call, which matters if you ever put this palette on a
+per-vertex path rather than a per-feature one.
 
 ## Used by
 

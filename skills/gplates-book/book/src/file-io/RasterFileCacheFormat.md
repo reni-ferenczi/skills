@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RasterFileCacheFormat tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+GPlates never reads a large raster directly off disk while painting the globe. Instead it converts each band of each source raster into its own block-encoded binary sidecar file — one file holding the full-resolution band, another holding the downsampled mipmap pyramid — and then serves texture tiles out of those. `RasterFileCacheFormat` is the single header that defines what those sidecar files look like: the `"GPlates\0"` magic number, the format version, the 256×256 block size, the `QDataStream` version used for every read and write, and the `LevelInfo` / `BlockInfo` records that the header of such a file is made of. It declares no reader or writer of its own; it is the shared vocabulary that `GdalRasterReader` and `RgbaRasterReader` (which write the source-level caches), `MipmappedRasterFormatWriter` (which writes the pyramid), and `SourceRasterFileCacheFormatReader`, `MipmappedRasterFormatReader` and `RasterFileCacheFormatReader` (which read them back) all agree on. The file-level Doxygen comment on `RasterFileCacheFormat.h` is the authoritative byte-layout description for both file kinds and is worth reading before changing anything here.
+
+The second half of the unit is the naming and location policy for those sidecar files. `get_writable_mipmap_cache_filename` and `get_writable_source_cache_filename` derive a name from the source raster's own path plus the band number (and, for mipmaps, an optional colour-palette id), and try the source raster's own directory first, falling back to the temporary directory via `TemporaryFileRegistry::make_filename_in_tmp_directory` when the source directory is not writable — so read-only data directories still get caches, they just land in `/tmp` and are cleaned up at exit. `get_existing_*_cache_filename` mirrors that search order for reads. `RasterFileCache` is the client that drives this: it looks for an existing cache, compares modification times against the source raster, and regenerates when the cache is stale, missing, corrupt or carries a version this build cannot read.
+
+The pyramid geometry is defined by two small free functions rather than by any stored metadata. `get_number_of_mipmapped_levels` halves the source dimensions (rounding up, `(w >> 1) + (w & 1)`) until neither exceeds `BLOCK_SIZE`, and `get_mipmap_dimensions` walks the same loop to reach one level; because both derive from the source dimensions alone, a reader can reproduce the writer's level list without trusting the file. `BLOCK_SIZE` is 256 because that is the texture size every OpenGL implementation supports, which is also why the pyramid stops once the largest dimension fits in one block — a raster that small needs no mipmap file at all. `UnsupportedVersion` is the signal raised once the magic number has matched but the version has not: it means "this is our file, from a build we do not understand", and callers treat it as an instruction to delete and rebuild rather than as a hard failure.
 
 ## Declared types
 
@@ -115,9 +117,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RasterFileCacheFormat tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`VERSION_NUMBER` is shared by both file kinds, source-level and mipmap, even though they are separate files with separate layouts. The comment on it is a standing instruction: any breaking change to either layout, or to a block-encoding algorithm, must bump it. Readers cope by testing version sub-ranges — `MipmappedRasterFormatReader` and `SourceRasterFileCacheFormatReaderImpl` both dispatch `version_number == 1` to a `VersionOneReader` and carry a commented-out `>= 3 && <= VERSION_NUMBER` branch as a worked example of how to add a second reader later — so bumping the constant for one file kind does not force any change in the other beyond its accepted range.
+
+Do not persist the value returned by `get_colour_palette_id`: it is `reinterpret_cast<std::size_t>` of the palette object's address, computed by `GetColourPaletteIdVisitor`. It is unique among the palettes alive at that moment and nothing more — it is not stable across runs, and an address freed and reused by a different palette will collide. It exists only to keep concurrently-live palette-specific mipmap files apart within one session. `RasterColourPalette::empty` maps to `boost::none`, which selects the palette-free filename.
+
+`STREAM_SIZE` on `LevelInfo` and `BlockInfo` is deliberately *not* `sizeof` the struct — the comment says so explicitly. It is the sum of the member widths as they appear in the stream, and the struct may be larger because of padding. Header offsets must be computed from `STREAM_SIZE`; using `sizeof` will silently produce files this code cannot read back. In the same spirit the stream is fixed at `Q_DATA_STREAM_VERSION` (`QDataStream::Qt_4_4`) and big-endian, the `QDataStream` default, so caches are portable between platforms; the one portability assumption baked in is that `float` is 32-bit and `double` 64-bit.
+
+`BlockInfos`'s constructor allocates blocks *uninitialised* — the vector is sized from the image dimensions, but the `BlockInfo` values are garbage until a writer fills them or a reader streams them in. Both `get_block_info` overload pairs assert their indices via `GPlatesGlobal::Assert`, and the non-const overloads simply `const_cast` the const result, so the bounds check is never skipped. `get_mipmap_dimensions` calls `GPlatesGlobal::Abort` if the requested level exceeds the pyramid depth rather than returning an error.
+
+The two filename lookups answer different questions and the difference matters. `get_existing_*` checks that the file exists *and* opens for reading, while `get_writable_*` only asks `GPlatesFileIO::is_writable`; neither validates content, so a truncated file from a crashed write still passes both. That check lives in the readers, which compare the file-size field in the header against the actual size and throw `FileFormatNotSupportedException` on a mismatch. Consequently `RasterFileCache` wraps reader construction in a catch-and-rebuild: `UnsupportedVersion` and any other `std::exception` both lead to deleting the file and regenerating it, so a bad cache degrades to a slow first load rather than a failure to display the raster.
 
 ## Used by
 

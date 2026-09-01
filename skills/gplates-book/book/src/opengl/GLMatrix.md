@@ -9,9 +9,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMatrix tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A plain 4x4 double-precision matrix value in OpenGL's column-major layout, and
+the only matrix type GPlates has. The header states the policy that explains its
+scope: the rest of GPlates does its transformation maths with quaternions
+(`GPlatesMaths::UnitQuaternion3D`, and `FiniteRotation` above it) and converts to
+matrix form only at the OpenGL boundary. `GLMatrix` *is* that boundary, so
+everything it computes is view- or projection-related — camera placement, globe
+orientation, cube-face subdivision frusta, texture coordinate generation — never
+plate reconstruction. The header also records the intended refactor: move the
+arithmetic into a row-major `GPlatesMaths` class and leave `GLMatrix` as a
+wrapper.
+
+The method names mirror the fixed-function GL and GLU entry points, and they
+behave the same way: everything except `gl_load_*` post-multiplies, matching
+OpenGL's convention, which for column-major storage is the same operation as
+pre-multiplying a row-major matrix. But nothing here calls OpenGL. The whole
+class is CPU arithmetic on a member array, which is what lets `GLState` and
+`GLStateSets` keep the modelview, projection and per-texture-unit matrices as
+shadow state: `GLLoadMatrixStateSet::apply_state` compares the incoming
+`GLMatrix` against the last applied one and issues `glLoadMatrixd` only when they
+differ. `GLProjectionUtils` (project/unproject and pixel-size estimation),
+`GLProgramObject` (matrix uniforms) and the culling code in `GLCubeSubdivision`
+and `GLMultiResolutionCubeRaster` consume the same values. Every mutator returns
+`*this`, so the call sites read as a chained transform build-up.
 
 ## Declared types
 
@@ -52,9 +72,36 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMatrix tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`gl_rotate` does not actually normalise its axis.** It computes
+  `mag_xyz = x*x + y*y + z*z` — the *squared* magnitude, no `sqrt` — and then
+  scales by `1.0 / mag_xyz`. The result is only correct for an axis that is
+  already unit length. Every current call site (`Globe`, `OpaqueSphere`,
+  `SphericalGrid`) passes the components of a `GPlatesMaths::UnitVector3D` or a
+  literal axis, so the defect is masked; passing an arbitrary vector will
+  silently produce a wrong rotation. The zero-axis guard compares that squared
+  magnitude against `1e-12` and warns under the class's former name,
+  `GLTransform::gl_rotate`.
+- **Equality is epsilon-based, and that is load-bearing.** `operator==` compares
+  all 16 elements with `GPlatesMaths::are_almost_exactly_equal`, i.e. within
+  `GPlatesMaths::EPSILON`, not bitwise. Because `GLLoadMatrixStateSet` and
+  `GLLoadTextureMatrixStateSet` use that comparison to decide whether to skip a
+  `glLoadMatrixd`, two matrices differing by less than epsilon per element are
+  the same GL state as far as the renderer is concerned.
+- **`get_element(row, column)` reverses its arguments internally**
+  (`d_matrix[column][row]`), and `get_matrix()` hands out a raw pointer into the
+  member array in column-major order. The non-const overload lets a caller write
+  through it, which is how the implementation-facing users fill a matrix in
+  place.
+- **Storage is `GLdouble`.** Anything feeding a shader has to narrow to float
+  itself; `GLMatrix` never does.
+- The quaternion constructor's Doxygen says only the 3x3 rotation part is
+  initialised and the rest zeroed, but the code also sets `m[3][3] = 1.0`, so it
+  produces a complete affine rotation matrix that can be fed straight to
+  `gl_mult_matrix`.
+- `gl_mult_matrix` accumulates into a local and copies back, so
+  `m.gl_mult_matrix(m)` is safe.
+- `IDENTITY` is a namespace-scope object with a dynamically-run constructor, so
+  it is subject to static initialisation order across translation units.
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionGeometryVisitor tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the Visitor half of the double dispatch that `ReconstructionGeometry` exposes through its two `accept_visitor` overloads. It is written once as a template over the visited type rather than twice for const and non-const: `GPlatesUtils::CopyConst` propagates the const-ness of the template argument onto every concrete reconstruction-geometry type, so a single class body serves both `ReconstructionGeometryVisitor` and `ConstReconstructionGeometryVisitor`. Only those two instantiations exist — the `.cc` instantiates them explicitly and nothing else will link.
+
+Every `visit` overload has a default body, so a concrete visitor overrides only the cases it cares about, but the defaults come in two kinds and the difference is the important part. For the eight types that derive directly from `ReconstructionGeometry` the default is empty and inline. For the seven that derive from another visitable type the default is defined in the `.cc` and `static_pointer_cast`s the argument up to its base before re-dispatching: `ReconstructedFlowline`, `ReconstructedMotionPath`, `ReconstructedSmallCircle`, `ReconstructedVirtualGeomagneticPole` and `TopologyReconstructedFeatureGeometry` all fall through to the `ReconstructedFeatureGeometry` overload, and `ResolvedTopologicalBoundary` and `ResolvedTopologicalLine` fall through to `ResolvedTopologicalGeometry`. A visitor that overrides only `visit(...reconstructed_feature_geometry_type...)` therefore sees flowlines, motion paths, small circles, VGPs and topology-reconstructed geometries too, unless it also overrides the specific overload and stops the delegation. `ReconstructionGeometryUtils::ReconstructionGeometryDerivedTypeFinder` is built entirely on that behaviour, and so are the property-extraction visitors in the same file.
+
+Adding a new `ReconstructionGeometry` subclass means touching this header: forward-declare it, add its `CopyConst` typedef, add the `visit` overload, and — if it derives from an existing visitable type rather than from `ReconstructionGeometry` directly — add the delegating default to the `.cc`, which needs the full class definition for the cast and so includes each such header.
 
 ## Declared types
 
@@ -76,9 +78,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionGeometryVisitor tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`visit` is an overload set, so a derived visitor that declares any `visit` of its own hides all fifteen inherited ones. Every visitor in the tree opens with `using base_class_type::visit;` (or `using ConstReconstructionGeometryVisitor::visit;`) for exactly this reason; leaving it out does not fail loudly — the delegating defaults stop being reachable and the visitor quietly stops seeing derived types.
+
+The destructor is pure virtual purely to make the class abstract, since every other member has a definition; its out-of-line inline body at the bottom of the header is what keeps that legal. Copy-assignment is declared private and never defined.
+
+`ReconstructionGeometryVisitor` and `ConstReconstructionGeometryVisitor` are also typedef'd, identically, in `ReconstructionGeometry.h` so that the base class need not include this header. Both copies have to change together.
+
+The header comment asks that the overloads be kept in alphabetical order by visited type; it is worth honouring, because the only way to see whether a type is handled is to read the list.
 
 ## Used by
 

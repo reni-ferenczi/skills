@@ -18,7 +18,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [AnimationSequenceUtils](../src/utils/AnimationSequenceUtils.md) | 2 | 316 | 69 | Turns a start/end time and increment into a shared animation frame schedule |
 | [Base2Utils](../src/utils/Base2Utils.md) | 2 | 234 | 114 | Bit-hack helpers for power-of-two rounding and log2 on 32-bit integers |
-| [CallStackTracker](../src/utils/CallStackTracker.md) | 1 | 288 | 1195 | (pending) |
+| [CallStackTracker](../src/utils/CallStackTracker.md) | 1 | 288 | 1195 | opt-in manual call stack, captured at exception construction because GPlates catches at the top of main |
 | [CommandLineParser](../src/utils/CommandLineParser.md) | 2 | 555 | 68 | Shared boost::program\_options wrapper for command-line, response-file and config-file parsing |
 | [ComponentManager](../src/utils/ComponentManager.md) | 2 | 137 | 294 | Process-wide singleton bitset gating optional feature areas (Python, data mining, etc.) |
 | [ConfigBundle](../src/utils/ConfigBundle.md) | 3 | 541 | 0 | Lightweight portable key-value configuration store with user and default values |
@@ -36,7 +36,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [GeometryCreationUtils](../src/utils/GeometryCreationUtils.md) | 2 | 519 | 89 | Validated construction of GeometryOnSphere derivations from raw point sequences |
 | [GetPropertyAsPythonObjVisitor](../src/utils/GetPropertyAsPythonObjVisitor.md) | 3 | 628 | 2 | Visitor that converts GPlates property values to Boost.Python objects |
 | [HasFunction](../src/utils/HasFunction.md) | 3 | 114 | 1 | Compile-time meta-functions for detecting functions with specific signatures |
-| [IdStringSet](../src/utils/IdStringSet.md) | 1 | 810 | 356 | (pending) |
+| [IdStringSet](../src/utils/IdStringSet.md) | 1 | 810 | 356 | reference-counted feature-ID pool where each string carries back-references to the objects it identifies |
 | [IntrusiveSinglyLinkedList](../src/utils/IntrusiveSinglyLinkedList.md) | 2 | 348 | 336 | Zero-allocation singly-linked list where elements embed their own next-pointer |
 | [KeyValueCache](../src/utils/KeyValueCache.md) | 2 | 429 | 47 | LRU cache that creates and owns a value object per key on first request |
 | [LatLonAreaSampling](../src/utils/LatLonAreaSampling.md) | 2 | 839 | 6 | Downsamples points on the sphere to roughly one representative per lat/lon area bin |
@@ -45,33 +45,33 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [NullIntrusivePointerHandler](../src/utils/NullIntrusivePointerHandler.md) | 2 | 90 | 116 | Failure policy invoked when a non-nullable intrusive pointer would become null |
 | [NullNonNullIntrusivePointerException](../src/utils/NullNonNullIntrusivePointerException.md) | 3 | 70 | 0 | Exception thrown when constructing a non-null intrusive pointer with NULL |
 | [ObjectCache](../src/utils/ObjectCache.md) | 2 | 936 | 152 | Bounded, recyclable object pool supporting volatile (stealable) and non-volatile allocation |
-| [ObjectPool](../src/utils/ObjectPool.md) | 1 | 534 | 428 | (pending) |
+| [ObjectPool](../src/utils/ObjectPool.md) | 1 | 534 | 428 | boost::object\_pool wrapper adding O(1) individual release via slot reuse |
 | [OverloadResolution](../src/utils/OverloadResolution.md) | 2 | 382 | 87 | Template helpers to take a function pointer to one specific overload of a function |
 | [Parse](../src/utils/Parse.md) | 2 | 350 | 36 | Extensible QString-to-value parsing via Parse\<T\> functor specializations |
-| [Profile](../src/utils/Profile.md) | 1 | 2019 | 166 | (pending) |
+| [Profile](../src/utils/Profile.md) | 1 | 2019 | 166 | GPlates' own call-graph CPU profiler, compiled in only under GPLATES\_PROFILE\_CODE |
 | [QtFormattingUtils](../src/utils/QtFormattingUtils.md) | 3 | 77 | 1 | Formatting utilities for Qt types |
 | [QtStreamable](../src/utils/QtStreamable.md) | 2 | 111 | 57 | CRTP mixin deriving QDebug/QTextStream operator\<\< from an existing ostream operator\<\< |
 | [Reducer](../src/utils/Reducer.md) | 3 | 73 | 4 | Template base class for reduction operations over value ranges |
-| [ReferenceCount](../src/utils/ReferenceCount.md) | 1 | 272 | 231 | (pending) |
+| [ReferenceCount](../src/utils/ReferenceCount.md) | 1 | 272 | 231 | the intrusive ownership base behind non\_null\_ptr\_type across the whole tree |
 | [SafeBool](../src/utils/SafeBool.md) | 2 | 125 | 10 | Reusable safe-bool-idiom base preventing accidental bool-to-int misuse |
 | [Select](../src/utils/Select.md) | 3 | 53 | 9 | Compile-time type selection via template specialization |
 | [SetConst](../src/utils/SetConst.md) | 2 | 53 | 73 | Adds or strips top-level const on a type based on a compile-time bool |
 | [Singleton](../src/utils/Singleton.md) | 2 | 341 | 75 | Policy-based CRTP singleton base with pluggable creation and lifetime policies |
-| [SmartNodeLinkedList](../src/utils/SmartNodeLinkedList.md) | 1 | 405 | 886 | (pending) |
+| [SmartNodeLinkedList](../src/utils/SmartNodeLinkedList.md) | 1 | 405 | 886 | intrusive circular list whose nodes unlink themselves on destruction, chosen for its splice semantics |
 | [SmartNodeLinkedList_test](../src/utils/SmartNodeLinkedList_test.md) | 3 | 203 | 0 | Tests for SmartNodeLinkedList template class |
 | [StringFormattingUtils](../src/utils/StringFormattingUtils.md) | 2 | 255 | 74 | Fixed-width, fixed-precision number-to-string formatting for column-based export formats |
-| [StringSet](../src/utils/StringSet.md) | 1 | 824 | 351 | (pending) |
+| [StringSet](../src/utils/StringSet.md) | 1 | 824 | 351 | reference-counted string interning pool giving O(1) identity comparison of repeated names |
 | [StringUtils](../src/utils/StringUtils.md) | 3 | 144 | 7 | Utilities for converting between QString and std::wstring |
 | [SubjectObserverToken](../src/utils/SubjectObserverToken.md) | 2 | 147 | 202 | Polling subject-observer pattern via a shared invalidation counter |
 | [TypeTraits](../src/utils/TypeTraits.md) | 2 | 170 | 34 | Minimal compile-time traits for built-in, integral and floating-point types |
-| [UnicodeString](../src/utils/UnicodeString.md) | 1 | 374 | 784 | (pending) |
+| [UnicodeString](../src/utils/UnicodeString.md) | 1 | 374 | 784 | thin QString wrapper mirroring the slice of ICU's UnicodeString the tree still calls |
 | [UnicodeStringUtils](../src/utils/UnicodeStringUtils.md) | 2 | 94 | 289 | Conversions between ICU UnicodeString and Qt/std string types |
 | [UniqueId](../src/utils/UniqueId.md) | 3 | 110 | 3 | Generation of globally unique XML-ID-compliant string identifiers |
 | [VirtualProxy](../src/utils/VirtualProxy.md) | 3 | 81 | 0 | Defers creation of a pointee object until first dereference via pointer-like interface |
 | [XPath](../src/utils/XPath.md) | 3 | 623 | 0 | Tokenizer for breaking XPath expressions into individual tokens |
 | [XQueryUtils](../src/utils/XQueryUtils.md) | 2 | 547 | 102 | QXmlQuery-based XQuery evaluation helpers for GeoSciML/GML XML data |
 | [XmlNamespaces](../src/utils/XmlNamespaces.md) | 2 | 433 | 57 | Registry of GPlates' XML namespace URIs and their standard aliases |
-| [non_null_intrusive_ptr](../src/utils/non_null_intrusive_ptr.md) | 1 | 305 | 1689 | (pending) |
+| [non_null_intrusive_ptr](../src/utils/non_null_intrusive_ptr.md) | 1 | 305 | 1689 | the codebase's ownership primitive: a forked boost::intrusive\_ptr that can never be null |
 
 ### `src/utils/deprecated`
 

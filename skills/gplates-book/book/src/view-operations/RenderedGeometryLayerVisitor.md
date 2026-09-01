@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryLayerVisitor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Defines the visitor interface for traversing a `RenderedGeometryLayer` and its child `RenderedGeometry` objects. Two versions are provided: `ConstRenderedGeometryLayerVisitor` for const-only traversal, and `RenderedGeometryLayerVisitor` for mutable access to the layer itself while visiting its geometries as const. The core method, `visit_rendered_geometry_layer()`, returns a bool that controls whether the visitor will continue to its child geometries — the default implementation visits only active layers.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryLayerVisitor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/Real tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Real` is a `double` with different comparison semantics, and nothing else. Arithmetic, streaming
+and the transcendental functions all forward straight to the underlying `double`; the whole point of
+the class is that `operator<` is written as `r2.dval() - r1.dval() > EPSILON` (1e-12, from
+`MathsUtils.h`), so "less than" means "less by more than a tolerance". Everything else follows from
+Boost.Operators: the base is a chain of `less_than_comparable` → `equivalent` →
+`equality_comparable`, so `==` is *defined* as "neither operand is less than the other", i.e. the
+two values are within `EPSILON`. That chaining is deliberate rather than incidental — the comment
+above the base list notes it keeps `sizeof(Real)` at 8 instead of the 16 that multiple inheritance
+from several empty bases would produce, which matters because `real_t` (the alias in
+`src/maths/types.h`) is `Real`, and it is the scalar of every vector, rotation and geometry type in
+`GPlatesMaths`.
+
+The reason for all this is that spherical geometry accumulates rounding error and then feeds it into
+functions with hard domain boundaries. `acos` and `asin` in particular are handed dot products that
+should lie in [-1, 1] but land at 1.0000000000000002; so the free functions here clamp: if the
+argument is outside the domain but inside it *by `Real`'s own tolerant comparison*, they silently
+return the value at the boundary (`asin` gives ±HALF_PI, `acos` gives 0 or PI, `sqrt` gives 0), and
+only a genuinely out-of-range value raises `FunctionDomainException`. `atan2` is likewise defined to
+return 0 at (0, 0) so it has no invalid domain at all. Callers that need the *exact* comparison
+back — because the tolerant one would be wrong, as when testing the sign of a signed area or picking
+the greater of two closeness values — use `is_precisely_greater_than` / `is_precisely_less_than`, or
+the `is_strictly_*` free functions, which all bypass the epsilon.
+
+The remaining surface is plumbing: NaN and infinity predicates in both member and free-template form
+(over `boost::math::isnan` and friends), streaming to `std::ostream`, `QDebug` and `QTextStream` as
+non-member overloads (again to keep the object small — the comment explains it is why `Real` does
+not inherit `GPlatesUtils::QtStreamable`), and a private `transcribe` that delegates to the raw
+`double` so `Real`, `float` and `double` are interchangeable in saved sessions and projects.
 
 ## Declared types
 
@@ -81,9 +106,39 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/Real tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Equality is not transitive, and the ordering is not a strict weak ordering.** `a == b` means
+`|a - b| <= EPSILON`, so `a == b` and `b == c` does not give `a == c`. That makes `Real` unsafe as a
+`std::map` or `std::set` key and unsafe for `std::sort`, `std::lower_bound` and anything else that
+requires a strict weak ordering — the standard library's preconditions are violated, not merely
+strained. Sort on `dval()` if you need an ordering you can rely on.
+
+**EPSILON is absolute, not relative.** It is a fixed 1e-12 difference. Two values around 1e9 will
+compare equal only if they are bitwise near-identical (the tolerance is far below their ULP), while
+two values around 1e-13 always compare equal to each other and to zero. `Real` is calibrated for
+quantities of order one — direction cosines, unit-sphere coordinates, radians — which is what the
+rest of `GPlatesMaths` deals in. It is the wrong type for very large or very small magnitudes.
+
+**Conversion from `double` is implicit.** The single-argument constructor is not `explicit`, so a
+`double` silently becomes a `Real` in any comparison or overload resolution, picking up the epsilon
+semantics with it. That is convenient in expressions and a trap when you meant an exact comparison;
+`is_precisely_greater_than` and `is_precisely_less_than` take a raw `double` for exactly this
+reason.
+
+**Domain corrections are silent.** `sqrt`, `asin` and `acos` clamp a slightly-out-of-domain argument
+to the boundary and return without any diagnostic — the "we should log that we corrected this here"
+FIXMEs are still open, and the `std::cerr` traces are behind a `WARNINGS` macro that the top of
+`Real.cc` deliberately leaves undefined. If a result looks pinned at exactly 0, PI or ±PI/2, suspect
+a clamp upstream.
+
+**Out-of-domain aborts in debug builds.** The failure path goes through
+`GPlatesGlobal::Assert<FunctionDomainException>`, which throws only when `GPLATES_DEBUG` is *not*
+defined; in a debug build it calls `GPlatesGlobal::Abort` instead. Do not write a debug-build test
+that expects to catch `FunctionDomainException` from `acos`.
+
+**`0.0` is the one exact comparison in the file.** `atan2` compares both arguments against zero with
+`==`, with a comment noting zero is the only floating-point value for which exact equality is valid
+— but since `Real::operator==` is the epsilon one, that comparison actually accepts anything within
+1e-12 of zero.
 
 ## Used by
 

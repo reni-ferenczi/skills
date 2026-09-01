@@ -9,9 +9,32 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/AngularDistance tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A distance on the unit sphere, stored as the cosine of the angle rather than the
+angle itself. The point of the class is that the natural way to obtain such a
+distance — a dot product of two unit vectors — already *is* the cosine, and the
+natural things to do with it (compare it against another distance, compare it
+against a threshold) can be done directly on cosines. Converting to an angle
+would mean an `acos` per comparison, which the header puts at roughly 100 cycles;
+`calculate_angle()` exists for when the caller genuinely wants radians, and
+deliberately does not cache the result so that the object stays the size of a
+`double`.
+
+It is the return type of the whole `GeometryDistance` family — `minimum_distance`
+between points, great circle arcs, polylines and polygons — where a distance is
+produced for every candidate pair and almost all of them are only ever compared.
+Its heavier sibling `AngularExtent` also carries the sine and the angle so that
+extents can be added and subtracted; `AngularExtent::get_angular_distance()`
+converts down, and `AngularExtent`'s constructor converts back up. The split is
+deliberate: `AngularDistance` is what you return from a calculation,
+`AngularExtent` is what you use as a threshold or a bound you want to grow or
+shrink.
+
+Only `operator<` is written by hand; every other relational and equality operator
+comes from the chained `boost::less_than_comparable` / `boost::equivalent` /
+`boost::equality_comparable` bases. The chaining (rather than plain multiple
+inheritance from three empty bases) is what keeps `sizeof(AngularDistance)` at 8
+rather than 16, which matters because these objects are returned by value from
+inner loops.
 
 ## Declared types
 
@@ -48,9 +71,38 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/AngularDistance tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Comparisons run backwards.** The stored value is a cosine, which is
+monotonically *decreasing* over `[0, PI]`, so `operator<` returns
+`d_cosine > rhs.d_cosine`. Every comparison in this class and in `AngularExtent`
+reverses the same way. Getting this wrong compiles cleanly and silently inverts
+the meaning of a distance test.
+
+**The domain is `[0, PI]`, and only one entry point enforces it.**
+`create_from_angle()` asserts the range with `GPlatesGlobal::Assert` and throws
+`PreconditionViolationError`; `create_from_cosine()` performs no check at all, so
+a cosine outside `[-1, 1]` — for example a dot product of vectors that were not
+actually normalised — produces an object whose `calculate_angle()` is NaN. The
+half-globe limit is the same one great circle arcs live under.
+
+**Equality is an epsilon test and is not transitive.** `d_cosine` is
+`GPlatesMaths::Real`, whose comparisons are fuzzy to `GPlatesMaths::EPSILON`, and
+`boost::equivalent` synthesises `==` as `!(a < b) && !(b < a)`. So `==` on
+`AngularDistance` means "within epsilon in cosine", which is not an equivalence
+relation. Do not use these objects as keys in an ordered container expecting a
+strict weak ordering, and note that the epsilon is on the *cosine*, so the
+implied angular tolerance is coarse near 0 and PI and finest near PI/2.
+`is_precisely_less_than()` and `is_precisely_greater_than()` are the escape
+hatch: they go through `Real::dval()` and compare raw doubles.
+
+**The `is_precisely_*` templates are duck-typed.** They accept anything with a
+`get_cosine()` returning a `Real`, which is how the same code serves both
+`AngularDistance` and `AngularExtent`; there is no concept check, so a wrong
+argument type fails deep inside the template.
+
+`ZERO`, `HALF_PI` and `PI` are namespace-scope objects defined in
+`AngularDistance.cc`, so they are subject to the usual cross-translation-unit
+static initialisation order rule — do not read them from another translation
+unit's static initialiser.
 
 ## Used by
 

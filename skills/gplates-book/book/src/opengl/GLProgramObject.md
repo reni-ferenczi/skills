@@ -9,9 +9,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLProgramObject tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A linked GLSL program: the object that `GLShaderObject`s get attached to and
+linked into, and the handle every shader-based renderer in `src/opengl` holds
+onto. Like the rest of the module it is written against the ARB extension rather
+than the OpenGL 2.0 core entry points — `glCreateProgramObjectARB`,
+`glDeleteObjectARB`, `glUniform*ARB` — and `is_supported` gates on
+`GL_ARB_shader_objects` together with `GL_ARB_vertex_shader`. Unlike
+`GLFrameBufferObject`, the resource manager lives in `GLContext::SharedState`,
+so a program object is valid across contexts that share state. Most clients
+never construct one directly: `GLShaderProgramUtils` assembles the shader source
+(`GLShaderSource`), compiles the shader objects and links them, and hands back
+the program that `GLScalarField3D`, `GLRasterCoRegistration`,
+`GLMultiResolutionStaticPolygonReconstructedRaster` and `LayerPainter` then use.
+
+The bulk of the class — and the reason it is worth its size — is the uniform
+interface. Uniforms are addressed by *name*, not by location. Each name is
+resolved once through `glGetUniformLocationARB` and cached in
+`d_uniform_locations`, which `gl_link_program` clears because linking reassigns
+locations and resets uniform values to zero. Every setter opens a
+`GLRenderer::BindProgramObjectAndApply` scope guard, which binds this program
+through the renderer, forces the renderer's deferred state out to OpenGL before
+the raw `glUniform*` call, and restores the caller's previous program binding on
+return — so a uniform can be set from anywhere, with no bind/unbind dance at the
+call site. Setting a uniform that the linker did not consider *active* is not an
+error: the setter returns `false` and logs a warning once per name.
+
+On top of the mechanical `glUniform*` mirror there is a layer of GPlates-typed
+overloads — `GPlatesMaths::UnitVector3D`, `Vector3D`, `UnitQuaternion3D`,
+`GPlatesGui::Colour`, and `GLMatrix` singly or as a vector — which keeps the
+narrowing from GPlates' double-precision maths types to `GLfloat` in one place
+instead of at every call site. The double-precision and unsigned-integer
+variants exist in parallel because they need extensions the base set does not
+(`GL_ARB_gpu_shader_fp64`, `GL_EXT_gpu_shader4`), and they are compiled
+conditionally on the glew headers actually declaring those functions.
 
 ## Declared types
 
@@ -117,9 +147,52 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLProgramObject tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Must be owned by a `shared_ptr`.** Every `gl_uniform*` call goes through
+  `shared_from_this()`; a stack-allocated or `unique_ptr`-held program throws
+  `boost::bad_weak_ptr` on the first uniform set. `create_as_unique_ptr` is for
+  handing single ownership to `GPlatesUtils::ObjectCache`, which is also why the
+  class uses `boost::shared_ptr` rather than `non_null_intrusive_ptr`.
+- **Re-linking invalidates everything you loaded.** `gl_link_program` clears
+  `d_uniform_locations`, and OpenGL itself resets all uniform values to zero on
+  a successful link. Every uniform has to be set again after a re-link. Likewise
+  `gl_bind_attrib_location` and `gl_program_parameteri` only take effect at the
+  *next* link, not immediately.
+- **A misspelled uniform name is a warning, not a failure.** `get_uniform_location`
+  caches the `-1` result along with the successful ones, so the warning is
+  emitted once per name per link and the setter quietly returns `false`
+  thereafter. A shader silently running on zeroed uniforms is a realistic
+  failure mode — check the return value where it matters. Note that
+  `is_active_uniform` bypasses the cache and queries OpenGL on every call.
+- **Nothing validates uniform type or size against the shader declaration.**
+  OpenGL requires them to match exactly; a mismatch here produces a GL error
+  rather than an assertion from this class.
+- **The header's claim that the class does not keep a shared reference to the
+  attached `GLShaderObject` is wrong.** `gl_attach_shader` inserts the
+  `shared_ptr` into `d_shader_objects` and keeps it until `gl_detach_shader`;
+  the set is what `output_info_log` walks to report which shader source files
+  went into a failed link. Attached shaders therefore stay alive as long as the
+  program does.
+- **Attach/detach are not idempotent at the OpenGL level.** Attaching an
+  already-attached shader, or detaching one that is not attached, is an OpenGL
+  error. The `std::set` bookkeeping absorbs the duplicate on the C++ side but
+  the `glAttachObjectARB`/`glDetachObjectARB` call is still issued.
+- **Generic vertex attribute indices alias built-in attributes on NVIDIA
+  hardware** — `gl_Vertex` is 0, `gl_Normal` 2, `gl_Color` 3,
+  `gl_MultiTexCoord0` 8, and so on. Mixing `glColorPointer` with a generic
+  attribute bound to index 3 collides. The header also records an empirical
+  requirement: bind *something* to attribute index zero, because some hardware
+  (an NVIDIA 7400M) does not work otherwise. Binding a location here is only
+  half the job — the matching generic index also has to be bound in the
+  `GLVertexArray`.
+- **`gl_uniform_matrix4x4f` allocates on every call.** It heap-allocates a
+  `GLfloat` array to narrow `GLMatrix`'s doubles before the upload — worth
+  knowing if it sits in a per-tile or per-draw path.
+- `gl_validate_program` logs its info log on success *and* failure and is
+  explicitly documented as development-only; do not leave it in a render path.
+- The double-precision and unsigned-integer entry points `GPlatesGlobal::Abort`
+  when the glew headers used at build time did not declare the corresponding GL
+  function, so the failure is a build-configuration abort rather than a runtime
+  capability check.
 
 ## Used by
 

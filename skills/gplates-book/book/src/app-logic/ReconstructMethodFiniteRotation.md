@@ -8,9 +8,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodFiniteRotation tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GPlatesMaths::FiniteRotation` that remembers *why* it is that rotation, so
+that two of them can be compared cheaply. Comparing finite rotations directly
+means comparing several doubles with an epsilon; comparing the parameters they
+were derived from usually means comparing one plate ID. This class carries the
+rotation plus a `ReconstructMethod::Type` tag, and delegates the actual
+comparison to the derived class through
+`less_than_compare_finite_rotation_parameters`. `boost::equivalent` then derives
+`operator==` from that ordering, and the rotation itself is never looked at
+during a comparison.
+
+The three subclasses are all called `Transform` and all live in anonymous
+namespaces inside the corresponding reconstruct method's `.cc`
+(`ReconstructMethodByPlateId`, `ReconstructMethodHalfStageRotation`,
+`ReconstructMethodVirtualGeomagneticPole`), so this header is the only public
+face of them. The by-plate-ID one, for example, holds a
+`boost::optional<integer_plate_id_type>` and compares on that alone.
+
+The pay-off is downstream. A `ReconstructedFeatureGeometry` that was produced by
+a rigid rotation exposes a `FiniteRotationReconstruction` holding one of these
+alongside the *unreconstructed* geometry, which lets consumers defer or skip the
+transform entirely. `GLReconstructedStaticPolygonMeshes` is the clearest case:
+it keys a `std::map` on `boost::reference_wrapper<const ReconstructMethodFiniteRotation>`
+to bucket every reconstructed polygon mesh sharing a rotation into one transform
+group, then uploads a single matrix per group to the GPU. That grouping is only
+affordable because equality here is a plate-ID comparison rather than a
+floating-point one. `ReconstructLayerProxy` exploits the same property when
+inserting into its spatial partitions.
 
 ## Declared types
 
@@ -41,9 +65,29 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodFiniteRotation tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The contract a subclass must uphold:** equal parameters must imply an equal
+finite rotation. `operator<` compares `d_reconstruct_method_type` first and only
+calls the virtual comparison when the types match, so a subclass may
+`dynamic_cast` `rhs` to its own type without checking — but that is safe only
+while exactly one class exists per `ReconstructMethod::Type`. Introducing a
+second subclass under an existing tag would make that cast throw. If two objects
+compare equal but hold different rotations, consumers that group by transform
+(`GLReconstructedStaticPolygonMeshes`) will silently render geometries with the
+wrong matrix.
+
+**Not every reconstruction has one.** Reconstruct methods that do not reduce to
+a rigid rotation — deformation via topologies in particular — produce no
+`ReconstructMethodFiniteRotation` at all, and
+`ReconstructedFeatureGeometry::finite_rotation_reconstruction()` returns
+`boost::none`. Code that wants the fast path must handle that case; the pattern
+in the tree is to fall back to the already-reconstructed geometry.
+
+Instances are reference-counted (`GPlatesUtils::ReferenceCount`) and immutable
+after construction, so sharing one across transform groups and spatial
+partitions is intended. When storing them in an associative container, note that
+comparison is defined on the object and not on the pointer, so a
+`reference_wrapper` (or an explicit comparator) is required — comparing
+`non_null_ptr_type` values compares addresses instead and defeats the grouping.
 
 ## Used by
 

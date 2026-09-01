@@ -9,9 +9,35 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/GpgimProperty tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+One `GpgimProperty` is one property definition from `gpgim.xml`. `Gpgim` parses
+that file at startup into these objects and hands them to the
+`GpgimFeatureClass`es that may carry them; from then on this object is the
+authority on four questions the rest of GPlates keeps asking about a property:
+what is it called (`PropertyName`), what structural types may its value have
+(`GpgimStructuralType`, with one of them designated the default), how many times
+may it appear on one feature (`MultiplicityType`), and may its value be wrapped
+in a time-dependent wrapper — and if so which of `gpml:ConstantValue`,
+`gpml:PiecewiseAggregation` and `gpml:IrregularSampling`. Because none of that
+is compiled in, adding a property to the model is an edit to the GPGIM XML
+rather than to C++.
+
+The consumers split roughly in two. `ModelUtils` and the GPML readers use it to
+decide what to build and whether to accept what they read — which structural
+type to instantiate for a new property, whether to add or strip a time-dependent
+wrapper, whether a property occurrence count is legal. The `qt-widgets` creation
+and editing dialogs use it to populate themselves: `get_user_friendly_name` and
+`get_property_description` are the label and the tooltip the user sees, and
+`has_geometry_structural_type` is how a dialog tells a geometry property from an
+ordinary one without enumerating type names itself.
+
+The class is reference-counted via `GPlatesUtils::ReferenceCount` and normally
+passed as `non_null_ptr_to_const_type`, because a single instance is shared by
+every feature class that inherits the property. The setters and `clone` exist
+for one specific pattern, used by `GpmlUpgradeReaderUtils`: to read a file
+written by an older GPlates, it clones the affected `GpgimProperty`, renames the
+clone to the old property name, and builds a reader against that altered copy of
+the schema. That is the intended way to vary a definition — clone first, then
+mutate.
 
 ## Declared types
 
@@ -64,9 +90,37 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/GpgimProperty tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The default structural type is not stored as an index. `set_default_structural_type`
+physically moves the chosen entry to the front of `d_structural_types`, so
+`get_structural_types()` does not return them in GPGIM XML order and index 0 is
+always the default. `get_default_structural_type()` relies on this by simply
+calling `front()` with no check. Two consequences: a structural-type index taken
+from one `GpgimProperty` is meaningless against another, and `clone()` correctly
+passes a default index of 0 rather than re-deriving one.
+
+There must be at least one structural type. `set_default_structural_type`
+asserts both non-emptiness and that the index is in range, throwing
+`GPlatesGlobal::PreconditionViolationError`; the constructor and
+`set_structural_types` are the only callers, so the invariant holds from
+construction onward. `get_default_structural_type()` has no guard of its own and
+would be undefined on an empty sequence.
+
+`d_has_geometry_structural_type` is a cache, recomputed by
+`set_has_geometry_structural_type()` from the structural types at construction
+and again on every `set_structural_types`. Any future path that edits
+`d_structural_types` without going through that setter would leave it stale.
+
+Instances are shared, not owned, so mutating one through a `non_null_ptr_type`
+changes the schema seen by every feature class that inherits it, including for
+files already loaded. The usual holder type is `non_null_ptr_to_const_type`
+precisely to prevent that; reach for `clone()` when you need a variant. The
+reference count itself is atomic (`boost::detail::atomic_count`), but nothing
+about the object's contents is synchronised — treat the GPGIM as read-only after
+`Gpgim` has finished loading it.
+
+`NUM_TIME_DEPENDENT_TYPES` is the sentinel that sizes `time_dependent_flags_type`,
+so it must stay last in `TimeDependentType`. An all-zero bitset means the value
+must not be wrapped at all, which is what `is_time_dependent()` tests.
 
 ## Used by
 

@@ -8,9 +8,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/HandleTraits tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header is the single declaration of the model's containment tree, expressed
+as types. The model is a three-level hierarchy — `Model` owns a
+`FeatureStoreRootHandle`, which contains `FeatureCollectionHandle`s, which
+contain `FeatureHandle`s, which contain `TopLevelProperty` objects — and each
+handle also has a matching revision class (`FeatureRevision`,
+`FeatureCollectionRevision`, `FeatureStoreRootRevision`) holding its actual
+children. `HandleTraits` states, for one handle type, what its parent, its
+child, its revision, its owning pointer, its weak reference and its iterator
+are. `BasicHandle<HandleType>` then pulls every one of those typedefs out of
+the traits and implements `add`, `remove`, `begin`/`end`, `reference`,
+`set_active` and the notification machinery once, generically, for all three
+handles.
+
+The reason it is a separate header, and the reason the file forward-declares
+everything rather than including anything, is stated in the class comment: you
+can learn a handle's associated types without including that handle's header.
+That matters because the participants are mutually recursive —
+`RevisionAwareIterator` needs its handle's revision type and value type,
+`WeakReference` needs its handle type, `TopLevelPropertyRef` is constructed
+from `HandleTraits<FeatureHandle>::iterator`, and each handle contains the one
+below it. Routing all of that through this one dependency-free header is what
+keeps the include graph acyclic. Its only include is `global/PointerTraits.h`,
+which supplies the `non_null_ptr_type` spelling.
+
+The `unsaved_changes_flag_policy` typedef is a policy in the classic sense, not
+just a description: `BasicHandle` derives from
+`HandleTraits<HandleType>::unsaved_changes_flag_policy` and pulls
+`set_unsaved_changes` into scope with a `using` declaration. `BasicHandle` can
+therefore call `set_unsaved_changes()` on every mutation without asking which
+handle it is; on `FeatureHandle` and `FeatureStoreRootHandle` the call compiles
+to nothing, and only `FeatureCollectionHandle` — the granularity at which
+GPlates decides a file is dirty — actually carries the bool and exposes
+`contains_unsaved_changes()` / `clear_unsaved_changes()`.
 
 ## Declared types
 
@@ -116,9 +146,39 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/HandleTraits tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `const` specialisations do not add const anywhere. `HandleTraits<const
+FeatureHandle>` simply inherits `HandleTraits<FeatureHandle>`, so
+`HandleTraits<const FeatureHandle>::iterator` is still
+`RevisionAwareIterator<FeatureHandle>` and its `weak_ref` is still
+`WeakReference<FeatureHandle>`. They exist so that a template instantiated on
+`const H` still compiles; choosing const-ness is the caller's job, done by
+naming the `const_`-prefixed member. `RevisionAwareIterator` shows the intended
+pattern — its internal `Traits<const HandleType>` partial specialisation strips
+the const and then reads `const_iterator_value_type` and `const_weak_ref` from
+`HandleTraits<HandleType>`.
+
+`iterator_value_type` is deliberately asymmetric, and this is the one place the
+copy-on-write design leaks into a typedef. Dereferencing a
+`FeatureCollectionHandle` or `FeatureStoreRootHandle` iterator, or a *const*
+`FeatureHandle` iterator, yields an owning pointer to the child. Dereferencing a
+non-const `FeatureHandle` iterator yields a `TopLevelPropertyRef` proxy instead,
+whose assignment operator clones the current `FeatureRevision`, clones the
+assigned property into the new revision and commits a transaction. That is how
+property writes are captured for the unsaved-changes flag and for undo/redo;
+pointers obtained before such an assignment point at the superseded revision.
+
+The base class supplies no `revision_type`, `parent_type`, `child_type` or
+`unsaved_changes_flag_policy` — those come only from the specialisations, and the
+primary template is empty. Instantiating `HandleTraits` on anything other than
+the three handle types (or their const forms) therefore fails at the point of
+use with a missing-typedef error rather than a clear one. Adding a fourth level
+to the model tree means adding a specialisation here first; nothing else needs
+to change for `BasicHandle`, `RevisionAwareIterator` and `WeakReference` to work
+on it.
+
+The two policy classes have non-virtual protected destructors, which is correct
+for a base that is only ever destroyed through the derived handle, but means
+they must never be deleted polymorphically.
 
 ## Used by
 

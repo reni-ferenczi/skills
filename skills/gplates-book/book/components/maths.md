@@ -18,10 +18,10 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [CubeCoordinateFrame](../src/maths/CubeCoordinateFrame.md) | 1 | 865 | 443 | (pending) |
-| [CubeQuadTree](../src/maths/CubeQuadTree.md) | 1 | 901 | 521 | (pending) |
+| [CubeCoordinateFrame](../src/maths/CubeCoordinateFrame.md) | 1 | 865 | 443 | The one convention for the cube around the globe: face axes, corners, edges, cross-face node offsets |
+| [CubeQuadTree](../src/maths/CubeQuadTree.md) | 1 | 901 | 521 | Six quad trees on a cube plus a cube-root element; pure structure with no geometry knowledge |
 | [CubeQuadTreeLocation](../src/maths/CubeQuadTreeLocation.md) | 2 | 546 | 84 | Value type identifying a cube-face quad-tree node, or the cube's root, by address |
-| [CubeQuadTreePartition](../src/maths/CubeQuadTreePartition.md) | 1 | 2036 | 580 | (pending) |
+| [CubeQuadTreePartition](../src/maths/CubeQuadTreePartition.md) | 1 | 2036 | 580 | Loose cube quad tree indexing geometries by bounding small circle, rebuilt each reconstruction time |
 | [CubeQuadTreePartitionUtils](../src/maths/CubeQuadTreePartitionUtils.md) | 2 | 949 | 26 | Algorithms to mirror, merge and find intersections across CubeQuadTreePartition trees |
 
 #### Geometry
@@ -32,8 +32,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [GeometryDistance](../src/maths/GeometryDistance.md) | 2 | 2704 | 13 | Minimum angular distance, closest points and segment indices between any two geometry shapes |
 | [GeometryForwardDeclarations](../src/maths/GeometryForwardDeclarations.md) | 3 | 51 | 0 | Forward declarations for spherical geometry classes to reduce compilation dependencies |
 | [GeometryInterpolation](../src/maths/GeometryInterpolation.md) | 3 | 1730 | 0 | Interpolates between two polylines along small circle arcs with latitude and longitude alignment |
-| [GeometryIntersect](../src/maths/GeometryIntersect.md) | 1 | 1848 | 270 | (pending) |
-| [GeometryOnSphere](../src/maths/GeometryOnSphere.md) | 1 | 112 | 893 | (pending) |
+| [GeometryIntersect](../src/maths/GeometryIntersect.md) | 1 | 1848 | 270 | finds every crossing and vertex-touch between two polylines/polygons, robustly and with segment provenance |
+| [GeometryOnSphere](../src/maths/GeometryOnSphere.md) | 1 | 112 | 893 | abstract root of the four sphere geometries: immutable, reference-counted, reached by visitor |
 | [GeometryType](../src/maths/GeometryType.md) | 2 | 47 | 463 | Runtime tag distinguishing point, multi-point, polyline and polygon GeometryOnSphere shapes |
 
 #### Invalid
@@ -54,7 +54,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [PointInPolygon](../src/maths/PointInPolygon.md) | 2 | 1933 | 36 | Spherical point-in-polygon testing, from a cheap linear function to an O(log n) tree-based test |
 | [PointLiesOnGreatCircleArc](../src/maths/PointLiesOnGreatCircleArc.md) | 3 | 176 | 1 | Function object testing whether a point lies on a great circle arc |
-| [PointOnSphere](../src/maths/PointOnSphere.md) | 1 | 815 | 371 | (pending) |
+| [PointOnSphere](../src/maths/PointOnSphere.md) | 1 | 815 | 371 | the 24-byte unit-vector point every other spherical geometry is built from, plus its heap-allocated wrapper |
 | [PointProximityHitDetail](../src/maths/PointProximityHitDetail.md) | 3 | 98 | 2 | Proximity hit information for single-point geometries |
 
 #### Polygon
@@ -63,7 +63,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [PolygonFan](../src/maths/PolygonFan.md) | 2 | 456 | 24 | Builds a triangular fan mesh anchored at a polygon's centroid, for stencil-based interior fill rendering |
 | [PolygonMesh](../src/maths/PolygonMesh.md) | 2 | 1558 | 31 | Triangulates a polygon's true interior region via gnomonic projection, CGAL Delaunay triangulation and edge-split refinement |
-| [PolygonOnSphere](../src/maths/PolygonOnSphere.md) | 1 | 3415 | 1296 | (pending) |
+| [PolygonOnSphere](../src/maths/PolygonOnSphere.md) | 1 | 3415 | 1296 | closed spherical geometry of one exterior ring plus optional holes, with a lazy cache of derived values |
 | [PolygonOrientation](../src/maths/PolygonOrientation.md) | 2 | 364 | 98 | Determines whether a polygon ring winds clockwise or counterclockwise viewed from above the globe |
 | [PolygonPartitioner](../src/maths/PolygonPartitioner.md) | 2 | 1137 | 11 | Clips points, polylines and polygons against a fixed polygon, classifying pieces inside/outside/intersecting |
 | [PolygonProximityHitDetail](../src/maths/PolygonProximityHitDetail.md) | 3 | 101 | 4 | Proximity hit information for polygon geometries |
@@ -74,7 +74,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [PolylineEquivalencePredicates](../src/maths/PolylineEquivalencePredicates.md) | 3 | 110 | 1 | Function objects for testing polyline equivalence |
 | [PolylineIntersections](../src/maths/PolylineIntersections.md) | 2 | 933 | 36 | Builds a traversable graph of intersections and partitioned segments for two geometries |
-| [PolylineOnSphere](../src/maths/PolylineOnSphere.md) | 1 | 1601 | 158 | (pending) |
+| [PolylineOnSphere](../src/maths/PolylineOnSphere.md) | 1 | 1601 | 158 | open chain of great circle arcs on the sphere, with a lazy cache of length, centroid and bounds |
 | [PolylineProximityHitDetail](../src/maths/PolylineProximityHitDetail.md) | 3 | 101 | 3 | A concrete ProximityHitDetail subclass for polyline proximity hits |
 
 #### Proximity
@@ -82,7 +82,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [ProximityCriteria](../src/maths/ProximityCriteria.md) | 3 | 120 | 1 | Parameter holder for proximity testing criteria on the sphere |
-| [ProximityHitDetail](../src/maths/ProximityHitDetail.md) | 1 | 173 | 210 | (pending) |
+| [ProximityHitDetail](../src/maths/ProximityHitDetail.md) | 1 | 173 | 210 | the shared result vocabulary for geometry hit tests: closeness, optional vertex index, visitable subclasses |
 | [ProximityHitDetailVisitor](../src/maths/ProximityHitDetailVisitor.md) | 2 | 146 | 6 | Abstract Visitor base for the ProximityHitDetail hierarchy, with a no-op default per hit type |
 
 #### Small
@@ -91,7 +91,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [SmallCircle](../src/maths/SmallCircle.md) | 2 | 384 | 47 | A circle of latitude around an arbitrary axis, stored as axis plus cosine of colatitude |
 | [SmallCircleArc](../src/maths/SmallCircleArc.md) | 2 | 266 | 108 | A bounded arc of a small circle defined by axis, start point and angular extent |
-| [SmallCircleBounds](../src/maths/SmallCircleBounds.md) | 1 | 2613 | 105 | (pending) |
+| [SmallCircleBounds](../src/maths/SmallCircleBounds.md) | 1 | 2613 | 105 | Spherical bounding volumes: a centred small circle, or two concentric ones bounding an annulus, plus their builders |
 | [SmallCircleCoverageMesh](../src/maths/SmallCircleCoverageMesh.md) | 3 | 238 | 0 | A triangular mesh that covers a region bounded by a small circle |
 | [SmallCircleProximityHitDetail](../src/maths/SmallCircleProximityHitDetail.md) | 3 | 96 | 0 | A concrete ProximityHitDetail subclass for small circle proximity hits |
 
@@ -116,41 +116,41 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AngularDistance](../src/maths/AngularDistance.md) | 1 | 244 | 3228 | (pending) |
-| [AngularExtent](../src/maths/AngularExtent.md) | 1 | 560 | 1170 | (pending) |
+| [AngularDistance](../src/maths/AngularDistance.md) | 1 | 244 | 3228 | Lightweight spherical distance held as a cosine, the size of a double, for comparison-only use |
+| [AngularExtent](../src/maths/AngularExtent.md) | 1 | 560 | 1170 | Angular distance that can be grown and shrunk, carrying lazily computed sine and angle |
 | [AzimuthalEqualAreaProjection](../src/maths/AzimuthalEqualAreaProjection.md) | 2 | 320 | 104 | Lambert azimuthal equal-area projection centred on an arbitrary point, not just a pole |
 | [CalculateVelocity](../src/maths/CalculateVelocity.md) | 2 | 457 | 149 | Computes plate velocity vectors and stage rotations from pairs of finite rotations |
 | [CartesianConvMatrix3D](../src/maths/CartesianConvMatrix3D.md) | 2 | 350 | 8 | Change-of-basis matrix between geocentric and local North/East/Down frames at a point |
 | [Centroid](../src/maths/Centroid.md) | 2 | 636 | 31 | Three weighting schemes (point-average, arc-length, area) for spherical geometry centroids |
 | [ConstGeometryOnSphereVisitor](../src/maths/ConstGeometryOnSphereVisitor.md) | 2 | 125 | 111 | Abstract Visitor base for read-only traversal of concrete geometry-on-sphere types |
-| [DateLineWrapper](../src/maths/DateLineWrapper.md) | 1 | 4466 | 350 | (pending) |
+| [DateLineWrapper](../src/maths/DateLineWrapper.md) | 1 | 4466 | 350 | clips polylines and polygons at the dateline and converts them to lat/lon for map views and OGR export |
 | [EllipseGenerator](../src/maths/EllipseGenerator.md) | 2 | 206 | 32 | Samples points on an oriented ellipse on the sphere via one tangent-plane rotation |
-| [FiniteRotation](../src/maths/FiniteRotation.md) | 1 | 1155 | 2110 | (pending) |
+| [FiniteRotation](../src/maths/FiniteRotation.md) | 1 | 1155 | 2110 | the plate-motion value type: an Euler-pole rotation held as a unit quaternion, with composition and SLERP |
 | [FiniteRotationSnapshotTable](../src/maths/FiniteRotationSnapshotTable.md) | 3 | 60 | 0 | Snapshot of the rotation hierarchy at a particular geological time |
 | [FunctionDomainException](../src/maths/FunctionDomainException.md) | 2 | 76 | 56 | Exception thrown when a math function's argument falls outside its valid domain |
 | [GeneratePoints](../src/maths/GeneratePoints.md) | 2 | 732 | 6 | Generates uniform point distributions across the globe, a lat/lon box, or a polygon |
-| [GenericVectorOps3D](../src/maths/GenericVectorOps3D.md) | 1 | 111 | 682 | (pending) |
+| [GenericVectorOps3D](../src/maths/GenericVectorOps3D.md) | 1 | 111 | 682 | the single shared implementation of 3-D vector arithmetic behind Vector3D and UnitVector3D |
 | [GnomonicProjection](../src/maths/GnomonicProjection.md) | 2 | 409 | 12 | Projects sphere points to and from a tangent plane, preserving great circles as lines |
 | [GreatCircle](../src/maths/GreatCircle.md) | 2 | 288 | 29 | A whole great circle stored as its axis, with containment, equivalence and tessellation helpers |
-| [GreatCircleArc](../src/maths/GreatCircleArc.md) | 1 | 2026 | 837 | (pending) |
+| [GreatCircleArc](../src/maths/GreatCircleArc.md) | 1 | 2026 | 837 | the edge primitive of spherical geometry: two endpoints plus lazily cached length and rotation axis |
 | [HighPrecision](../src/maths/HighPrecision.md) | 2 | 140 | 27 | Stream wrapper that prints one value at 18 significant digits, then restores precision |
 | [IndeterminateArcRotationAxisException](../src/maths/IndeterminateArcRotationAxisException.md) | 3 | 81 | 1 | Exception thrown for zero-length great-circle arcs with indeterminate rotation axes |
 | [IndeterminateResultException](../src/maths/IndeterminateResultException.md) | 3 | 75 | 7 | Exception thrown when mathematical calculations produce indeterminate results |
-| [LatLonPoint](../src/maths/LatLonPoint.md) | 1 | 256 | 2111 | (pending) |
+| [LatLonPoint](../src/maths/LatLonPoint.md) | 1 | 256 | 2111 | degrees latitude/longitude boundary type and the only conversion to and from unit-vector positions |
 | [MathematicalException](../src/maths/MathematicalException.md) | 2 | 50 | 20 | Common base class for every exception thrown by the GPlatesMaths module |
-| [MathsUtils](../src/maths/MathsUtils.md) | 1 | 328 | 699 | (pending) |
-| [MultiPointOnSphere](../src/maths/MultiPointOnSphere.md) | 1 | 739 | 1875 | (pending) |
+| [MathsUtils](../src/maths/MathsUtils.md) | 1 | 328 | 699 | the epsilon constants, approximate comparisons and degree/radian conversions the whole maths module rests on |
+| [MultiPointOnSphere](../src/maths/MultiPointOnSphere.md) | 1 | 739 | 1875 | immutable ordered bag of points as a GeometryOnSphere, with lazily cached centroid and bounding small circle |
 | [MultiPointProximityHitDetail](../src/maths/MultiPointProximityHitDetail.md) | 3 | 100 | 2 | Proximity hit information for multi-point geometries |
 | [PolyGreatCircleArcBoundingTree](../src/maths/PolyGreatCircleArcBoundingTree.md) | 2 | 743 | 99 | Binary bounding-small-circle tree over a sequence of great circle arcs, shared by polylines and polygons |
-| [Real](../src/maths/Real.md) | 1 | 875 | 629 | (pending) |
-| [Rotation](../src/maths/Rotation.md) | 1 | 696 | 194 | (pending) |
+| [Real](../src/maths/Real.md) | 1 | 875 | 629 | the epsilon-tolerant double used as the scalar of every GPlatesMaths type, with domain-guarded functions |
+| [Rotation](../src/maths/Rotation.md) | 1 | 696 | 194 | time-independent axis-angle rotation backed by a unit quaternion, applied to vectors and whole geometries |
 | [SphericalArea](../src/maths/SphericalArea.md) | 2 | 592 | 14 | Free functions computing signed spherical areas of polygons and point/edge triangles |
 | [SphericalSubdivision](../src/maths/SphericalSubdivision.md) | 2 | 533 | 41 | Two recursive whole-sphere subdivision schemes exposed via a shared visitor traversal |
 | [TrailingLatLonCoordinateException](../src/maths/TrailingLatLonCoordinateException.md) | 3 | 128 | 1 | Exception for odd-length latitude/longitude coordinate sequences |
-| [UnitQuaternion3D](../src/maths/UnitQuaternion3D.md) | 1 | 988 | 366 | (pending) |
-| [UnitVector3D](../src/maths/UnitVector3D.md) | 1 | 611 | 1281 | (pending) |
-| [Vector3D](../src/maths/Vector3D.md) | 1 | 403 | 248 | (pending) |
-| [types](../src/maths/types.md) | 1 | 49 | 798 | (pending) |
+| [UnitQuaternion3D](../src/maths/UnitQuaternion3D.md) | 1 | 988 | 366 | The unit-norm quaternion underneath every finite rotation, with axis/angle recovery and slerp scaffolding |
+| [UnitVector3D](../src/maths/UnitVector3D.md) | 1 | 611 | 1281 | Magnitude-1 3D vector enforced at construction; the type that represents a position or axis on the globe |
+| [Vector3D](../src/maths/Vector3D.md) | 1 | 403 | 248 | Unconstrained 3D vector, the invariant-free counterpart that holds non-unit results |
+| [types](../src/maths/types.md) | 1 | 49 | 798 | Header holding the module-wide real\_t alias for the epsilon-comparing Real, plus a vestigial rotation-id alias |
 
 ### `src/maths/deprecated`
 

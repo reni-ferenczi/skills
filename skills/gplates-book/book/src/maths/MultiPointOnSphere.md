@@ -9,9 +9,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/MultiPointOnSphere tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MultiPointOnSphere` is the simplest of the four `GeometryOnSphere` implementations: an
+ordered, immutable bag of `PointOnSphere` with no connectivity implied between them. It
+is what a `gml:MultiPoint` property becomes when read, what velocity-domain generators
+such as `GenerateVelocityDomainCitcoms` produce, and the geometry type that survives a
+reconstruction unchanged point by point. Unlike `PolylineOnSphere` and
+`PolygonOnSphere`, it stores the points directly rather than deriving
+`GreatCircleArc`s from them, so there is no minimum of two vertices — one point is
+enough, and that is the only construction constraint.
+
+The class follows the same shape as the other geometries in `maths`, and the shape is
+worth recognising because it recurs: no public constructor, creation only through the
+static `create` overloads which validate first and then hand back a
+`non_null_ptr_to_const_type`; no mutators at all; lifetime managed by the atomic
+reference count inherited from `GeometryOnSphere` via `GPlatesUtils::ReferenceCount`;
+and polymorphic access through `accept_visitor`, which dispatches to
+`ConstGeometryOnSphereVisitor::visit_multi_point_on_sphere`. Immutability is what makes
+the caching design below legal — see the comment on `d_cached_calculations`, which
+argues that derived quantities belong *with* the geometry rather than in a side table at
+a higher level, precisely so that repeated queries of the same geometry from unrelated
+parts of the code can share the work.
+
+Those derived quantities are the centroid (via `Centroid::calculate_points_centroid`)
+and the bounding small circle built around it (via `BoundingSmallCircleBuilder`). They
+are the entry point for the spatial acceleration used throughout the codebase —
+`GeometryDistance` and `SmallCircleBounds` reject far-apart geometries with a bounds test
+before touching individual points. Both are held behind a single reference-counted
+`CachedCalculations` block that is not allocated at all until the first query, so a
+multi-point that is only ever read back costs nothing beyond its vector of points.
 
 ## Declared types
 
@@ -82,9 +107,43 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/MultiPointOnSphere tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Invariant: at least one point.** `start_point()` and `end_point()` call `front()` and
+`back()` with no bounds check and say so in their comments; only `get_point` guards, via
+`GPlatesGlobal::Assert<PreconditionViolationError>`. The invariant is established by
+`create`, which rejects an empty range with
+`InsufficientPointsForMultiPointConstructionError`. Note that
+`s_min_num_collection_points` is defined but never read — the check is the literal
+`begin == end` inside `evaluate_construction_parameter_validity`. (The corresponding
+constant in `PolylineOnSphere` *is* used, which is presumably why this one survives.)
+
+**`collection()` returns the point vector by value.** Every call copies the whole
+multi-point. Iterate with `begin()`/`end()`, or index with `get_point`, unless you
+genuinely want a detached copy.
+
+**The cache is `mutable` and lazily built by `const` methods, with no locking.** The
+first call to `get_centroid` or `get_bounding_small_circle` heap-allocates the
+`CachedCalculations` block and fills it in. Two threads doing that concurrently on the
+same geometry is a data race, even though the object is otherwise immutable and shared
+freely through `non_null_ptr_to_const_type` — the reference count is atomic, but this is
+not.
+
+**The constructor and destructor are deliberately out-of-line in the `.cc`.** Both
+comments explain why: `boost::intrusive_ptr`'s destructor needs the complete
+`MultiPointOnSphereImpl::CachedCalculations` type, which is only defined in the `.cc`.
+Moving either one into the header will not compile.
+
+**Equality is order-sensitive and epsilon-based.** `operator==` compares the two
+`std::vector<PointOnSphere>`s element-wise, which means `PointOnSphere::operator==` and
+therefore a dot-product-with-epsilon test per point.
+`multi_points_are_ordered_equivalent` is the same comparison written out, with an
+explicit size check first. Neither treats two multi-points holding the same points in a
+different order as equal.
+
+`test_proximity` carries a standing FIXME: it delegates to `is_close_to` and so returns a
+`MultiPointProximityHitDetail` without an index, unable to say *which* point was hit.
+`test_vertex_proximity` does the per-point loop itself and does report the index of the
+closest one. The non-const `non_null_ptr_type` is private, so nothing outside the class
+can obtain a mutable handle.
 
 ## Used by
 

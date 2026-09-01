@@ -9,9 +9,52 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/BasicHandle tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The model is a four-level tree — `Model` owns a `FeatureStoreRootHandle`, which
+contains `FeatureCollectionHandle`s, which contain `FeatureHandle`s, which contain
+`TopLevelProperty` objects. Each of the three handle levels needs the same
+machinery: a container of children that lives in a separate revision object, a
+parent pointer, a conceptual-deletion flag, and a way to tell observers that
+something changed. `BasicHandle` is that machinery, written once as a template
+and mixed into each level by inheritance (`FeatureHandle` derives from
+`BasicHandle<FeatureHandle>`). Everything that varies between the levels — the
+revision type, the parent type, the child type, the iterator and weak-ref
+typedefs, and whether the level carries an unsaved-changes flag — is supplied by
+`HandleTraits<HandleType>`, so the same code compiles into three different
+positions in the tree. The two ends of the tree do not fit the generic pattern
+and are handled by explicit template specialisations in `BasicHandle.cc`:
+`BasicHandle<FeatureStoreRootHandle>` treats its parent pointer as a pointer to
+the `Model` itself, and `BasicHandle<FeatureHandle>` disables the parent-pointer,
+active-flag and notification logic for its children, because `TopLevelProperty`
+has none of those things.
+
+The central design idea is that identity is separate from content. A handle is
+the permanent identity of a feature (or collection); its children live in a
+`BasicRevision` subclass held through `d_current_revision`. Because the handle
+address never changes when the content is edited, other tiers can hold
+`WeakReference`s and `RevisionAwareIterator`s into the model and survive edits.
+`WeakReference` deliberately does not keep the handle alive — the app-logic tier
+must not override the model's own lifetime control, in particular because a
+`FeatureHandle` keeps its feature ID registered for as long as it exists — so
+instead of ref-counting, every observer registers itself on the handle through
+`WeakObserverPublisher<HandleType>`, and `BasicHandle` pushes events at them.
+Modification, addition, deactivation, reactivation and impending destruction each
+have their own `WeakObserverVisitor` subclass (`WeakReferencePublisherModifiedVisitor`
+and friends in `WeakReferenceVisitors.h`), applied to both the const and non-const
+observer lists.
+
+The rest of the class is about when those events are delivered. Every
+modification bubbles up the parent chain via `notify_parent_of_modification()` so
+that a change to a property registers as a change to the enclosing collection,
+which is what drives the unsaved-changes flag. When a `NotificationGuard` is
+active on the `Model`, modification and addition events are not delivered but
+recorded in per-handle pending flags, and `flush_pending_notifications()` later
+walks the subtree and emits one coalesced event per handle — this is how a bulk
+edit avoids emitting thousands of individual notifications. `add()` and `remove()`
+also open a `ChangesetHandle` on the model and register the touched handles with
+whichever changeset is outermost, so that a group of fine-grained model
+transactions can be presented to the user as a single undoable operation — the
+plumbing is in place but the collected handles are currently discarded when the
+changeset is destroyed.
 
 ## Declared types
 
@@ -93,9 +136,64 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/BasicHandle tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The revisioning is not yet copy-on-write.** `d_current_revision` is set in the
+constructor and never reassigned anywhere in the tree; `add()`, `remove()` and
+property edits mutate the single revision object in place. The revision-aware
+plumbing — `RevisionAwareIterator` re-reading the current revision on every
+dereference, the `RevisionId` on `FeatureRevision`, and the explicit FIXME on
+`FeatureRevision::update_revision_id()` — exists in anticipation of a scheme that
+creates a new revision per edit. Do not write code that assumes an old revision
+is still reachable after a modification.
+
+**`remove()` does not shrink the container.** It deactivates the child and NULLs
+its slot in the revision, so `end()` and the indices of every other child are
+unchanged, but `size()` (live children) and `container_size()` (slots) diverge.
+Iterating and indexing must tolerate empty slots.
+
+**`add()` may clone its argument, and always for `FeatureHandle`.** The
+`BasicHandle<FeatureHandle>` specialisation deep-clones the `TopLevelProperty`
+before inserting it, because property objects inside the model must not be
+modified directly through a caller-held pointer. The object you passed in is not
+the object in the model — use the returned iterator.
+
+**Ownership and lifetime.** Children are owned by the revision through
+`boost::intrusive_ptr`; the parent pointer is raw and back-pointing. The
+destructor first notifies weak observers of impending destruction and then NULLs
+its children's parent pointers, because clients can still hold owning pointers to
+children after the parent is gone. Weak references never keep a handle alive:
+always check `is_valid()` before every dereference, since the referent may have
+been destroyed or merely deactivated.
+
+**Deletion is conceptual and recursive.** `set_active(false)` deactivates the
+whole subtree and can be reversed; the C++ object is untouched. Removing a child
+also deactivates it, so a removed feature's weak refs report invalid rather than
+dangling.
+
+**Detached handles behave differently.** `model_ptr()` walks up parent pointers
+and returns NULL if any link is missing, so a handle not yet attached to the
+model has no changeset and no notification guard — its edits notify immediately
+and are never batched.
+
+**Notification-guard corner cases.** The unsaved-changes flag and the parent
+notification are always applied immediately, guard or not; only the observer
+events are deferred. Impending-destruction events are also never deferred, so a
+handle can be destroyed while notifications for it are still pending. The
+deactivation/reactivation pair is coalesced through
+`d_was_active_before_pending_notifications`: toggling active twice under a guard
+emits nothing. `flush_pending_notifications()` recurses into children first, and
+delivering a batched event can itself trigger further model changes, so listeners
+run while the tree is mid-flush.
+
+**`remove_child_from_pending_notification()` is broken.** It calls the two-argument
+`std::find(first, last)` with no value to search for, which does not compile as
+written; the function is dead code today, but any change that starts calling it
+must fix the call.
+
+**Not copyable**, by declared-but-undefined copy constructor and assignment
+operator, so misuse fails at link time rather than compile time. The class also
+relies on `dynamic_cast` to reach `BasicHandle<parent_type>` and
+`BasicHandle<child_type>` from a bare handle pointer, so the handle types must
+stay polymorphic.
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlPropertyStructuralTypeReader tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the dispatch table that answers "given the structural type name on this GPML element, which function parses it into a `GPlatesModel::PropertyValue`?". It is a single `std::map` from `GPlatesPropertyValues::StructuralType` to a `boost::function`, and every parsing function it hands out lives in `GpmlPropertyStructuralTypeReaderUtils`. `GpmlPropertyReader` holds one of these and consults it once per property; `GpmlFeatureReaderFactory` threads it down into every `GpmlFeatureReader` in a chain. In practice the whole GPML read path shares the one instance created by `FeatureCollectionFileFormatRegistry`, which is why the class is reference-counted rather than a free function table.
+
+Three sources feed the map, and the separation matters. Time-dependent wrappers (`gpml:ConstantValue`, `gpml:IrregularSampling`, `gpml:PiecewiseAggregation`) and the aggregate types `gpml:Array` and `gpml:KeyValueDictionary` are bound with `boost::cref(*this)` so that the reader is passed back into their own parse function — these types contain nested property values, so parsing is recursive through the same table. Native leaf types (the `xsi:`, `gml:` and non-enumeration `gpml:` entries) are a hard-coded list bound directly to their `create_*` functions. Enumerations are not hard-coded at all: they are enumerated from `GPlatesModel::Gpgim::instance().get_property_enumeration_types()` and all bound to the same `create_gpml_enumeration` with the `GpgimEnumerationType` captured, so adding an enumeration to `gpgim.xml` needs no C++ change while adding a native type does.
+
+`create_empty` plus the individual `add_*` methods exist for the old-GPML upgrade path rather than for general use. `GpmlUpgradeReaderUtils` builds a throwaway reader containing only the time-dependent wrappers plus its own reader functions for structural types that no longer exist in the current GPGIM (`gpml:TopologicalInterior`, and an old-format `gpml:TopologicalPolygon`), so that a deprecated property can be parsed with old semantics and then rewritten into a current one. `add_structural_type` is the hook for that: it overwrites whatever entry the type already had.
 
 ## Declared types
 
@@ -49,9 +51,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlPropertyStructuralTypeReader tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The recursive entries capture `boost::cref(*this)`, so a `GpmlPropertyStructuralTypeReader` must not be copied or moved after its map is populated — the bound references would dangle. It is only ever created through the static factories into a `non_null_intrusive_ptr`, which keeps that safe as long as you do not add another construction path.
+
+Adding a native structural type means editing `add_native_structural_types` *and* the GPGIM XML. `add_all_structural_types` cross-checks the finished map against `Gpgim::instance().get_property_structural_types()` and, for anything the GPGIM declares but the map lacks, emits only a `qWarning()` — the code says outright that it perhaps should throw. So a type you forgot to register produces a console warning at startup and then silently fails to parse at load time, with the property demoted to an `UninterpretedPropertyValue` by the readers above. The check does not run in the other direction: a map entry with no GPGIM counterpart is not reported.
+
+The class holds an unguarded `std::map` and calls `Gpgim::instance()`, so construction depends on the GPGIM singleton already being loaded. Lookups are const and thread-safe against each other, but the `add_*` methods mutate the map and must not run concurrently with a read — in practice the shared instance is fully populated by `create()` before any file is opened, and the upgrade path builds its own private instance instead of mutating the shared one. Follow that pattern rather than adding types to the shared reader.
+
+`add_structural_type` and the other `add_*` methods use `operator[]` assignment, so a later registration silently replaces an earlier one for the same type. `add_enumeration_structural_types` therefore overrides any hard-coded native entry that happens to share a structural type name with a GPGIM enumeration. Note that a nested type like `gpml:TopologicalSection`, which can never be a top-level feature property, is deliberately absent from this map; those are parsed by the enclosing type's function directly.
 
 ## Used by
 

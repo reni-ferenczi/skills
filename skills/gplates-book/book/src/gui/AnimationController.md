@@ -9,9 +9,45 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/AnimationController tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AnimationController` is the single, widget-free home for "what time is the view
+showing, and how do we walk it through a range". It exists because at least four
+separate pieces of UI — `AnimateDialog`, `AnimateControlWidget`,
+`TimeControlWidget` and `ExportAnimationDialog` — all need to read and drive the
+same animation settings, and none of them should own that state. `ViewState`
+constructs exactly one (`boost::scoped_ptr<AnimationController>
+d_animation_controller`) and hands out references through
+`get_animation_controller()`; everything else, including the export machinery and
+the external-control paths (`ExternalSyncController`, `CommandServer`), talks to
+that one instance. The class comment notes it arguably belongs in the
+presentation tier — it is a `QObject` purely for signals and slots, with no
+widget of its own.
+
+The crucial design decision is that the controller keeps *no copy of the current
+time*. `view_time()` reads
+`GPlatesAppLogic::ApplicationState::get_current_reconstruction_time()` and
+`set_view_time()` writes back through `set_reconstruction_time()`, which
+performs a reconstruction. The controller's own `view_time_changed` signal is
+emitted only from the `react_view_time_changed` slot, which is wired to
+`ApplicationState::reconstruction_time_changed`. So a time change made anywhere —
+by the animation timer, by a slider, by a Python script — travels out to
+app-logic and comes back through the same signal, and every animation widget
+updates identically. `ApplicationState` is the single source of truth for the
+time; the controller owns only the *range* (`d_start_time`, `d_end_time`,
+`d_time_increment`, `d_frames_per_second`) and the three behaviour flags.
+
+Playback itself is a plain `QTimer` on the GUI event loop: `start_animation_timer`
+sets the interval to `1000 / d_frames_per_second`, and each `timeout()` runs
+`react_animation_playback_step`, which decides between "step by the increment",
+"snap to the end time", "loop back to the start" and "stop". Everything about
+*frame arithmetic*, however, is delegated to
+`GPlatesUtils::AnimationSequence::calculate_sequence()` — the shared helper whose
+whole point (per its own namespace comment) is that
+`ExportTemplateFilenameSequence` and this class must agree on frame counts.
+`duration_in_frames`, `duration_in_ma`, `ending_frame_time`,
+`calculate_time_for_frame` and `get_sequence` are all thin wrappers over it.
+That is why `ExportAnimationContext` can snapshot a `SequenceInfo` once at
+construction and then drive frames by calling `set_view_time()` directly,
+bypassing the timer entirely.
 
 ## Declared types
 
@@ -101,9 +137,71 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/AnimationController tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Start may be later or earlier than end.** This is the invariant most new code
+gets wrong. `d_start_time > d_end_time` is perfectly legal — it just means the
+animation runs forwards in real time. `d_time_increment` therefore carries a
+sign, maintained by `recalculate_increment()` (called from `play()`,
+`set_start_time()` and `set_end_time()`), while `time_increment()` returns
+`fabs()` of it for the UI. Read `raw_time_increment()` if you are doing
+arithmetic and `time_increment()` if you are showing a number. Note also that
+`recalculate_increment()` deliberately does *not* emit `time_increment_changed`,
+on the reasoning that only the sign changed — so a widget that caches the raw
+increment will go stale after a range edit.
+
+**Playing state lives in the timer.** `is_playing()` is just
+`d_timer.isActive()`; there is no separate flag to fall out of sync. Both
+`start_animation_timer()` and `stop_animation_timer()` emit unconditionally, so
+calling `pause()` when already paused still fires `animation_paused()` and
+`animation_state_changed(false)`. `play()`, by contrast, returns early when
+already playing, and also silently does nothing when the increment exceeds the
+total range — a "nothing happened" case with no signal and no diagnostic.
+
+**Each frame is a synchronous reconstruction.** `set_view_time()` calls
+`ApplicationState::set_reconstruction_time()` on the GUI thread, so the requested
+frames-per-second is only an upper bound; with a heavy layer graph the timer
+simply falls behind. There is no threading here at all — the whole class assumes
+the Qt main thread.
+
+**Feedback loops are real but bounded.** `react_view_time_changed` calls
+`ensure_bounds_contain_current_time()` when
+`d_adjust_bounds_to_contain_current_time` is set, which can call
+`set_start_time`/`set_end_time` and hence `recalculate_increment()` — so simply
+scrubbing the time can move the animation range under a dialog's feet. The
+converse path, `ensure_current_time_lies_within_bounds()`, changes the view time
+and so re-enters via the signal; it terminates because the second pass finds the
+time already inside the bounds. `swap_start_and_end_times()` exists solely to
+dodge one of these loops: it first sets both endpoints to the current time so the
+intermediate state cannot trigger a clamp, then assigns the swapped values. Both
+it and `ensure_current_time_lies_within_bounds` carry FIXMEs and are the fragile
+part of this file.
+
+Smaller traps:
+
+- `set_view_time()` silently ignores any time failing `is_valid_reconstruction_time`
+  (outside 0–10000 Ma) and, separately, ignores changes smaller than
+  `GPlatesMaths::are_geo_times_approximately_equal` — so no signal is emitted for
+  sub-epsilon steps. `is_valid_reconstruction_time` itself has a copy-paste bug:
+  the upper-bound branch compares against `min_reconstruction_time()` rather than
+  `max_reconstruction_time()`. It is harmless today only because no time can be
+  both above 10000 and approximately 0.
+- `step_forward()` and `step_back()` clamp the result at 0.0 rather than at the
+  animation bounds, so stepping cannot walk into negative (future) times even
+  when the range would allow it.
+- `calculate_sequence()` throws `AnimationSequence::TimeIncrementZero` on a zero
+  increment, and every accessor here (`duration_in_frames`, `get_sequence`,
+  `ending_frame_time`, `calculate_time_for_frame`) calls it. None of them guard,
+  so a zero increment turns ordinary-looking getters into throwing calls.
+- Those same accessors each recompute the whole sequence from scratch. Calling
+  `calculate_time_for_frame()` in a loop is quadratic-ish; grab one `SequenceInfo`
+  from `get_sequence()` and use `GPlatesUtils::AnimationSequence::calculate_time_for_frame`
+  on it, as `ExportAnimationContext` does.
+- `init_default_time_range()` is not called by the constructor. Constructor
+  defaults are 250 → 0 Ma at 1 Ma and 5 fps; the `UserPreferences` keys
+  (`view/animation/default_time_range_*`) are only applied when a caller invokes
+  it, and doing so also resets the reconstruction time to `end_time()`.
+- `duration_in_frames()` still carries a large `#if 0` block of the original
+  hand-rolled frame arithmetic, kept for its commentary on the floating-point
+  fencepost cases. It is dead; the live answer comes from `calculate_sequence`.
 
 ## Used by
 

@@ -62,8 +62,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [CoordinateTransformation](../src/property-values/CoordinateTransformation.md) | 2 | 505 | 63 | Wraps GDAL's OGRCoordinateTransformation to convert coordinates between two spatial reference systems |
-| [GeoTimeInstant](../src/property-values/GeoTimeInstant.md) | 1 | 613 | 1175 | (pending) |
-| [Georeferencing](../src/property-values/Georeferencing.md) | 1 | 1192 | 556 | (pending) |
+| [GeoTimeInstant](../src/property-values/GeoTimeInstant.md) | 1 | 613 | 1175 | the scalar geological-time value type, with distant past and distant future as first-class instants |
+| [Georeferencing](../src/property-values/Georeferencing.md) | 1 | 1192 | 556 | the six-coefficient affine transform mapping raster pixels to lat-lon, in GDAL's parameter order |
 | [GpmlAge](../src/property-values/GpmlAge.md) | 2 | 895 | 102 | PropertyValue for gpml:Age, holding absolute and/or named geological age data with independent uncertainty fields |
 | [GpmlArray](../src/property-values/GpmlArray.md) | 3 | 298 | 2 | GPML array property value holding heterogeneous collection of property values |
 | [GpmlConstantValue](../src/property-values/GpmlConstantValue.md) | 2 | 318 | 54 | Property-value wrapper marking an inner value as constant across all reconstruction times |
@@ -93,9 +93,9 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [ProxiedRasterCache](../src/property-values/ProxiedRasterCache.md) | 3 | 326 | 2 | Cached raster band proxies with file modification detection |
 | [ProxiedRasterResolver](../src/property-values/ProxiedRasterResolver.md) | 2 | 1170 | 14 | Resolves a proxied RawRaster into real pixel or mipmap data read from disk |
 | [RasterStatistics](../src/property-values/RasterStatistics.md) | 2 | 45 | 315 | Optional min/max/mean/standard-deviation statistics for a raster band |
-| [RasterType](../src/property-values/RasterType.md) | 1 | 298 | 347 | (pending) |
-| [RawRaster](../src/property-values/RawRaster.md) | 1 | 1401 | 794 | (pending) |
-| [RawRasterUtils](../src/property-values/RawRasterUtils.md) | 1 | 1203 | 305 | (pending) |
+| [RasterType](../src/property-values/RasterType.md) | 1 | 298 | 347 | runtime tag for raster element types, plus the two maps between that tag and real C++ types |
+| [RawRaster](../src/property-values/RawRaster.md) | 1 | 1401 | 794 | in-memory raster pixel data as a closed set of policy-based template instantiations with a matching visitor |
+| [RawRasterUtils](../src/property-values/RawRasterUtils.md) | 1 | 1203 | 305 | the visitor and tag-dispatch layer that answers questions about a raster held as a RawRaster reference |
 | [ScalarCoverageStatistics](../src/property-values/ScalarCoverageStatistics.md) | 2 | 57 | 42 | Required min/max/mean/standard-deviation statistics for a scalar coverage |
 | [SpatialReferenceSystem](../src/property-values/SpatialReferenceSystem.md) | 2 | 247 | 82 | Reference-counted wrapper around GDAL/OGR's OGRSpatialReference |
 | [StructuralType](../src/property-values/StructuralType.md) | 2 | 55 | 668 | Qualified XML name identifying a property value's GPML/GML structural type |

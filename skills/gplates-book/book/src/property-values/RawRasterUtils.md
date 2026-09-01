@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/RawRasterUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RawRasterUtils` is the layer that makes `RawRaster` usable. `RawRaster` is deliberately almost empty — its whole interface is `accept_visitor` — so any question about a raster held as a `RawRaster &` ("how big is it", "what element type", "does it have a no-data value", "is it really an `Rgba8RawRaster`") has to be answered by a visitor. This namespace provides those visitors once, so that `GPlatesGui::Mipmapper`, `GPlatesFileIO::GDALRasterReader`, `ProxiedRasterResolver` and the `GLDataRasterSource` family do not each write their own.
+
+It works in two registers. The runtime half, in the `.cc`, is a family of small visitor implementations in an anonymous namespace, each plugged into `TemplatedRawRasterVisitor` so it needs only one `do_visit` member template rather than twenty overrides. The trick worth noticing is that `do_visit` does not have to take the raster type at all: `RawRasterStatisticsVisitorImpl` declares `do_visit(RawRasterStatisticsPolicies::WithStatistics &)` and `do_visit(...WithoutStatistics &)`, and ordinary derived-to-base overload resolution routes each concrete raster to the right one. `RawRasterNoDataValueVisitorImpl` does the same across the three no-data policies. Others (`RawRasterSizeVisitorImpl`, `RawRasterHasDataVisitorImpl`, `RawRasterTypeInfoVisitorImpl`) instead take the raster and dispatch on its compile-time `has_data` / `has_proxied_data` flags or on `RasterType::get_type_as_enum<element_type>()`. Because `do_visit` is private in each of them, every one declares `TemplatedRawRasterVisitor<...>` a friend.
+
+The compile-time half, in the header's `RawRasterUtilsInternals`, is tag dispatch on the policy flags: `CreateCoverageRawRaster`, `DoesRasterContainANoDataValue`, `AddNoDataValue` and `AddRasterStatistics` all have a do-nothing primary template and a specialisation for the case where the policy actually supports the operation, so calling `add_no_data_value` on a raster that has no no-data value compiles and does nothing rather than failing. `RawRasterTraits` is the exception: its primary template is intentionally left undefined, so `convert_proxied_raster_to_unproxied_raster` on a non-proxied raster is a deliberate compile error. That function, together with `ConvertProxiedRasterToUnproxiedRaster`, is how the reader path materialises a region of a proxied raster into a real in-memory one while carrying the statistics and no-data policies across.
 
 ## Declared types
 
@@ -244,9 +246,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/RawRasterUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Two comments in the header do not describe the code.** `has_fully_transparent_pixels` is documented as returning true if any pixel has alpha 255; the implementation tests `alpha == 0`, which is what the name says and what callers want. And `create_coverage_raster` carries a copy of `does_raster_contain_a_no_data_value`'s comment — it returns a `CoverageRawRaster`, or `boost::none` for a raster type with no no-data value. Trust the code, not those two comments.
+
+**`does_raster_contain_colour_data` is the complement of `does_raster_contain_numerical_data`, not an independent test.** Numerical means `RasterType::is_integer || is_floating_point`, so an `UninitialisedRawRaster` — or any raster whose element type has no `get_type_as_enum` specialisation, which yields `UNKNOWN` — is reported as *colour* data. Check `get_raster_type` yourself if that distinction matters.
+
+**`get_raster_statistics` returns a raw pointer into the raster,** not a copy, and `NULL` when the raster's statistics policy is `WithoutStatistics`. It is a handle for mutation, and it dangles as soon as the raster is released.
+
+**`get_no_data_value` returns an engaged optional holding NaN for float and double rasters.** `NanNoDataValue` has a fixed sentinel, so the visitor stores `quiet_nan<T>()`. Comparing pixels against `*get_no_data_value()` with `==` is therefore always false — use the raster's own `is_no_data_value`, or the function object from `get_is_no_data_value_function`, which for a raster with no no-data value returns `always_false` so the caller needs no special case.
+
+**Full-raster scans hide behind innocuous names.** `does_raster_contain_a_no_data_value` and `has_fully_transparent_pixels` each walk every pixel; `create_coverage_raster` allocates a second full-size float raster and walks the source. None of them cache. In the mipmap and rendering paths these are called per tile, so hoist them if you find one inside a loop.
+
+**`apply_coverage_raster` mutates its "const" argument.** The `const` binds to the `non_null_ptr_type`, not the pixels — the RGBA raster's alpha channel is multiplied in place. It asserts equal dimensions with `GPlatesGlobal::Assert<AssertionFailureException>` (a thrown exception, not an abort) and clamps each coverage value into `[0, 1]` first, so out-of-range coverage data is tolerated rather than diagnosed.
+
+**Two `AddNoDataValue` specialisations overlap, and the more specialised one wins outright.** For a `WithData` + `WithNoDataValue` raster the `<T, WithData, StatisticsPolicy, WithNoDataValue>` specialisation is selected; despite the comment in the less specialised one suggesting the next specialisation will "catch" the data case, there is no chaining — the winning specialisation both rewrites the old sentinel pixels and calls `set_no_data_value` itself. There is no `WithProxiedData` + data specialisation, and there could not be: a proxied raster has no pixels to rewrite, so setting a no-data value on one only records the value.
+
+**`convert_integer_raster_to_float_raster` is unchecked.** Nothing enforces that the source element type is integral or the destination floating point — the requirement is documented only. It always allocates a fresh destination raster and maps the source's no-data pixels to NaN, discarding the source's statistics and no-data policy.
+
+**`try_raster_cast` requires a non-const `RawRaster &`** because `accept_visitor` is non-const, and it hands back a `non_null_ptr_type` constructed from `&raster` — a second owning reference to an object you already hold. That is safe with intrusive reference counting, but the returned pointer keeps the raster alive independently of the reference you passed in.
 
 ## Used by
 

@@ -9,9 +9,44 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLFrameBufferObject tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the off-screen render-target primitive that everything else in
+`src/opengl` renders to texture through: `GLRenderTargetImpl`,
+`GLScreenRenderTarget`, `GLScalarField3D`, `GLLight` and
+`GLRasterCoRegistration` all end up holding one. It wraps a single native
+framebuffer name from `GL_EXT_framebuffer_object` — deliberately the EXT
+extension rather than the more capable `GL_ARB_framebuffer_object`, because EXT
+had far wider driver support at the time. The cost of that choice is the
+restriction repeated throughout the header: every attachment point must have the
+same 2D dimensions, which is why `get_frame_buffer_dimensions` needs no
+attachment argument and why `Classification` carries one width/height pair for
+the whole object.
+
+The distinguishing design decision is that none of the `gl_*` methods assume the
+framebuffer is bound. Each one opens a `GLRenderer::BindFrameBufferAndApply`
+scope guard (`gl_generate_mipmap` uses the `UnbindFrameBufferAndApply` sibling),
+which binds through the renderer, forces the renderer's deferred state to be
+flushed to real OpenGL before the raw `gl*EXT` call is issued, and restores the
+caller's previous binding on the way out. That is what makes it safe to attach a
+texture or change draw buffers from anywhere inside a render pass. Alongside the
+native handle the object keeps a shadow copy of every attachment in
+`d_attachment_points`, holding a `shared_ptr` to the attached `GLTexture` or
+`GLRenderBufferObject` so it cannot be destroyed while attached; `gl_detach`
+replays that record to issue the matching detach call, and
+`get_frame_buffer_dimensions` answers from the attached object rather than
+querying GL.
+
+`Classification` is the second half of the design. It is a plain value — a
+`boost::tuple` of dimensions plus a per-attachment-point (type, internal format,
+target) triple — describing the *shape* of a framebuffer without holding one.
+`GLContext::NonSharedState` uses it two ways: as the key of a pool of recyclable
+framebuffer objects, so render targets with the same texture format and
+dimensions share one FBO (the Nvidia guidance quoted in the header), and as the
+key of `check_framebuffer_object_completeness`, which memoises the result of the
+expensive `glCheckFramebufferStatus` call per shape. The pool lives in
+`NonSharedState` rather than `SharedState` because native framebuffer objects
+cannot be shared between OpenGL contexts — `GLRenderTargetImpl` works around
+that by creating one `GLFrameBufferObject` per context and sharing only the
+texture.
 
 ## Declared types
 
@@ -70,9 +105,54 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLFrameBufferObject tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Must be owned by a `shared_ptr`.** Every mutator calls `shared_from_this()`
+  to bind itself through the renderer. `create_as_unique_ptr` exists only to
+  hand a uniquely-owned object to `GPlatesUtils::ObjectCache`, which
+  immediately wraps it in a `shared_ptr`; calling `gl_attach_*` on a
+  `unique_ptr` you still hold yourself throws `boost::bad_weak_ptr`. The whole
+  class hierarchy uses `boost::shared_ptr` instead of
+  `non_null_intrusive_ptr` for the same reason — `ObjectCache` compatibility.
+- **Recycled objects are not clean.** The cache installs a custom deleter, so
+  releasing the last `shared_ptr` returned by
+  `GLContext::NonSharedState::acquire_frame_buffer_object` returns the object to
+  the pool instead of deleting the GL name — attachments and draw/read buffer
+  state survive. That is why `acquire_frame_buffer_object` calls
+  `gl_detach_all`, `gl_draw_buffers` and `gl_read_buffer` before handing an
+  object back out. If you create your own framebuffer objects instead of going
+  through the pool, you own that reset.
+- **Draw/read buffer state lives inside the framebuffer object**, not in the
+  renderer's state vector. `gl_draw_buffers` and `gl_read_buffer` therefore bind
+  and issue immediately rather than being recorded as `GLState` sets, and the
+  window-system framebuffer's equivalents are not managed here at all.
+- **Attachment preconditions are dimensionality checks.** `gl_attach_texture_1D`
+  asserts width and *no* height/depth, `_2D` asserts width and height and no
+  depth, `_3D` asserts all three. A texture that has not had storage specified
+  yet (`GLTexture::gl_tex_image_*`) or the wrong overload both trip the same
+  `PreconditionViolationError`. The attachment enum itself is validated against
+  the runtime `gl_max_color_attachments`, so an attachment index legal on one
+  card can throw on another.
+- **`d_attachment_points` is always 18 slots** (16 colour plus depth plus
+  stencil, the EXT maximum) regardless of what the driver actually supports;
+  slots above the runtime limit simply stay empty. `get_attachment_index` maps
+  depth to 16 and stencil to 17.
+- **`gl_check_frame_buffer_status` is a profiling hazard.** Measured at
+  40–100 µs per call against a couple of µs for a draw call, and it showed up
+  high on the CPU profile for age-grid-smoothed reconstructed rasters and filled
+  polygons. Prefer `GLContext::NonSharedState::check_framebuffer_object_completeness`,
+  which caches per `Classification`. It returns `false` both for
+  `GL_FRAMEBUFFER_UNSUPPORTED_EXT` and for any unexpected status (logged via
+  `qWarning`) — the abort was deliberately removed after a user hit an
+  unexpected status on a virtualised GPU.
+- **Detaching a texture array uses `glFramebufferRenderbufferEXT` with a zero
+  render buffer**, not `glFramebufferTextureEXT` with a zero texture, because
+  the latter produced an invalid-value error on an NVIDIA driver. Both are legal
+  per spec. Detaching a point that is not attached is not an error: it logs a
+  warning and returns.
+- **One context only.** The resource manager is in `GLContext::NonSharedState`,
+  so the native name belongs to the context that created it and stays invalid in
+  any other context, even one sharing textures with it.
+- `Classification`'s setters take a `GLRenderer &` purely to validate the
+  attachment enum against capabilities; `set_dimensions` ignores it entirely.
 
 ## Used by
 

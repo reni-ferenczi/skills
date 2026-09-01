@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/XmlNode tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the small, deliberately uninterpreted DOM that sits between Qt's streaming
+XML parser and every part of GPlates that needs to look at an XML subtree more than
+once. `QXmlStreamReader` is a one-pass pull parser, but the GPML reader has to look
+ahead within a property, retry the same subtree against a different structural-type
+reader, and hold on to properties it does not understand at all — none of which a
+forward-only cursor supports. So `XmlElementNode::create` drains the reader from the
+current start element to its matching end element and materialises the subtree, and
+interpretation happens afterwards against the in-memory tree. There are only two node
+kinds. Comments, DTDs, processing instructions and whitespace-only character data are
+dropped on the way in; what is kept, besides names, attributes and text, is the line
+and column at which each node began, which is what lets `GpmlReader` and
+`GpmlReaderException` point the user at the offending line of their file.
+
+Three places build these trees, each starting from a fresh empty
+`AliasToNamespaceMap`: `GpmlReader` for `.gpml` files, `GsmlPropertyHandlers` for
+GeoSciML fragments held in a `QBuffer`, and `Gpgim`, which parses
+`qt-resources/gpgim/gpgim.xml` through the same class at startup. On the consuming
+side, `GpmlStructuralTypeReaderUtils` and `GpmlPropertyStructuralTypeReaderUtils`
+navigate with `get_child_by_name` and `get_next_child_by_name` (both implemented on
+top of `XmlNodeUtils::XmlElementNodeExtractionVisitor`, since a child may be either
+node kind), while `UninterpretedPropertyValue` keeps a whole `XmlElementNode` subtree
+as a property value — that is the mechanism by which a GPML property GPlates has no
+reader for still survives a load-and-save round trip, replayed verbatim by
+`write_to`.
+
+Namespace handling is copy-on-declare rather than a walk up the tree. Every element
+holds a `boost::shared_ptr` to an alias-to-namespace map; an element that declares no
+namespaces of its own simply shares its parent's map pointer, and one that does
+declare copies the parent map and inserts its declarations into the copy. Since the
+tree carries no parent pointers, `get_namespace_from_alias` on any node still sees
+exactly the declarations in scope at that node.
 
 ## Declared types
 
@@ -116,9 +144,46 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/XmlNode tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`XmlElementNode::operator==` is not structural equality.** The name and the
+  attribute map compare by value, but `d_children` is a list of
+  `non_null_intrusive_ptr`, whose `operator==` compares raw pointers, and `d_alias_map`
+  is a `shared_ptr` compared the same way. Two separately parsed but textually
+  identical elements therefore compare unequal. Use it as an identity test, not as a
+  content test.
+- **Ownership is one-directional.** Nodes are reference-counted via
+  `GPlatesUtils::ReferenceCount` and are only ever handed out as
+  `non_null_intrusive_ptr`; a parent owns its children through `ChildCollection`.
+  There is no parent pointer, so holding a child does *not* keep the rest of the tree
+  alive, and a subtree pulled out of a document is a perfectly valid standalone tree —
+  which is exactly what `UninterpretedPropertyValue` relies on.
+- **`accept_visitor` wraps a bare `this` in a fresh `non_null_ptr_type`** (the "this
+  is nasty" FIXME in the `.cc`). The count is incremented for the duration of the
+  visit and dropped on return, so the node must already be owned by another intrusive
+  pointer; visiting a node whose only owner is a raw pointer destroys it as the visit
+  ends. In practice the private constructors and the `create` factories make that
+  hard to get wrong.
+- **`create` requires a device-backed reader.** The parse loop calls
+  `reader.device()->waitForReadyRead(1000)` on every iteration — a workaround for
+  `atEnd()` being unreliable on a `QProcess` — so a `QXmlStreamReader` constructed
+  over a `QString` or `QByteArray` has a null device and will crash. Every existing
+  caller wraps the data in a `QFile` or `QBuffer` first.
+- **Text is not trimmed and can be split.** The comment in `XmlTextNode::create`
+  records that Qt breaks a run of characters containing an ampersand into two tokens,
+  so one logical text value may arrive as several `XmlTextNode` children. Do not read
+  `get_text()` off the first child; use `XmlNodeUtils::get_text`, whose
+  `TextExtractionVisitor` concatenates them.
+- **Malformed input is not reported here.** `XmlElementNode::create` asserts its
+  start-element precondition with `Q_ASSERT` (compiled out in release builds), silently
+  skips node kinds it does not model, and stops at the matching end element *or* at
+  end-of-document — so a truncated file yields a partial tree rather than an error.
+  Detecting that is the caller's job, from `QXmlStreamReader`'s own error state.
+- `get_child_by_name` and `get_next_child_by_name` are const members that hand back
+  non-const `non_null_ptr_type`, so const-ness does not propagate down the tree.
+  `non_null_ptr_to_const_type` exists but is only used at the boundary, by
+  `UninterpretedPropertyValue`.
+- The base-class `XmlNode::create` factory shown in the header — and its advice to
+  prefer it over the subclass factories — is inside `#if 0` and is not compiled. Call
+  `XmlElementNode::create` or `XmlTextNode::create`.
 
 ## Used by
 

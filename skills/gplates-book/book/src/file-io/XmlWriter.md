@@ -9,9 +9,48 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/XmlWriter tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the output half of the native GPML pipeline: a thin façade over a
+`QXmlStreamWriter` member, plus one piece of real logic. That logic is namespace
+prefix continuity. A `GPlatesModel::QualifiedXmlName` carries three
+`GPlatesUtils::StringSet::SharedIterator`s — namespace URI, namespace alias and
+local name — and the alias is whatever prefix the *originating* document used
+(the reader stores it; `set_namespace_alias()` falls back to
+`GPlatesUtils::XmlNamespaces::get_standard_alias_for_namespace` only when the
+file did not say). `QXmlStreamWriter` on its own would invent prefixes (`n1`,
+`n2`, …) for any namespace it has not been told about, so a round trip through
+GPlates would silently rewrite every prefix in the file. `XmlWriter` keeps its
+own `NamespaceStack` of (URI, alias) pairs and re-emits declarations so the
+output keeps the document's own spelling. Everything else on the class —
+`writeDecimal`, `writeNumericalSequence`, the `*GpmlElement` / `*GmlElement`
+shortcuts — is convenience formatting layered on the same `QXmlStreamWriter`.
+
+The mechanism has two directions. Downwards, `writeStartElement` calls the
+private `declare_namespace_if_necessary`, which walks the stack from the top and
+emits a fresh `xmlns` declaration in three cases: the URI has not been declared
+at all, it was declared under a *different* alias, or it was declared under this
+alias but a nearer declaration has since rebound that alias to something else
+(the `compare_aliases` search bounded by the first hit). It returns whether it
+declared anything, and that `bool` is the value the caller is expected to thread
+back into `writeEndElement` — this is why the two calls are paired by a local
+`pop` variable throughout `GpmlOutputVisitor`. Upwards, `getAliasForNamespace`
+answers "what prefix is currently in scope for this URI", which Qt cannot
+answer: `QXmlStreamWriter` exposes no read access to the declarations it is
+holding. That matters because GPML puts qualified names inside *character data*
+— a `gml:ValueType` element's text is literally `gpml:something` — so
+`GpmlOutputVisitor::writeTemplateTypeParameterType` has to build the prefix by
+hand from this stack.
+
+In practice `XmlWriter` has one serious client. `GpmlOutputVisitor` holds one by
+value, points it at either the plain `QFile` or the `GzipFile` chosen for
+`.gpml` versus `.gpmlz`, and drives every element of the document through it;
+the remaining callers use a handful of the formatting helpers or, in the case of
+`GPlatesModel::FeatureCollectionMetadata::serialize`, reach past the class
+entirely via `get_writer()`. Note that the `writeStartGpmlElement` /
+`writeStartGmlElement` / `writeGpmlAttribute` family does *not* consult the
+namespace stack at all — those hand the fixed URIs from
+`GPlatesUtils::XmlNamespaces` straight to `QXmlStreamWriter`, and are correct
+only because `GpmlOutputVisitor::start_writing_document` declares gpml, gml and
+xsi with their standard aliases before the root element.
 
 ## Declared types
 
@@ -74,9 +113,60 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/XmlWriter tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The namespace stack is only half-maintained.** `writeNamespace` pushes;
+`declare_namespace_if_necessary` emits an `xmlns` declaration but *does not*
+push. So `d_ns_stack` records what callers explicitly declared, not what the
+writer actually emitted — a second element in a not-yet-stacked namespace will
+be re-declared, and `writeEndElement(true)` pops an entry that
+`writeStartElement` never pushed, discarding an older, unrelated declaration.
+For ordinary GPML output the path is not reached: gpml, gml and xsi are on the
+stack with their standard aliases before the root element, so
+`writeStartElement` returns `false` and every `pop` in `GpmlOutputVisitor` is
+`false`. Anything that does trip it also writes `"Popping namespace stack."` to
+`std::cout` unconditionally — an "XXX: temporary" debug line still in the 2.5
+source — and, on an empty stack, writes to `std::cerr` instead of throwing (the
+`FIXME` is unresolved). In a headless or pyGPlates run that is stdout
+pollution, not a log message.
+
+**Bypassing the class breaks its only invariant.** `get_writer()` hands out the
+raw `QXmlStreamWriter`, and `FeatureCollectionMetadata::serialize` uses it to
+write literal `"gpml:"`-prefixed element names and its own `writeNamespace`.
+After that, `d_ns_stack` no longer describes what is in scope in the document.
+Treat `get_writer()` as an escape hatch, not an extension point.
+
+**Device ownership is entirely the caller's.** `XmlWriter` never opens, closes
+or deletes the `QIODevice`, and it does not check that one was set — the
+default constructor exists only so `GpmlOutputVisitor` can construct the member
+before it has decided between a `QFile` and a `GzipFile`, and writing before
+`setDevice()` is undefined rather than diagnosed. `GpmlOutputVisitor` declares
+`d_output` *after* its file members precisely so the writer is destroyed first.
+Because `QXmlStreamWriter` is non-copyable, so is `XmlWriter`; it is always
+passed by reference.
+
+**There is no error reporting.** Neither device write failures nor
+`QXmlStreamWriter::hasError()` are surfaced anywhere on this class, so a
+truncated or failed save is silent from here. `GpmlOutputVisitor` closes the
+root element and the document from its *destructor*, inside a catch-all, which
+compounds this: a failure at end-of-document has nowhere to go.
+
+**Formatting details that are load-bearing for the file format.**
+`writeDecimal` uses `QString::number(val, 'g', 17)` — 17 significant digits,
+enough to round-trip an IEEE double exactly; changing it changes every
+coordinate in every file GPlates has ever written. `writeNumericalSequence` and
+`writeStringSequence` append the separator *after* every item including the
+last, so `gml:posList` and `gml:tupleList` content always ends in a trailing
+space and readers must tolerate it. Auto-formatting is switched on in both
+constructors and is not exposed as an option, so output is always indented —
+byte-for-byte comparisons against reference files are formatting-sensitive.
+
+**A missing declaration degrades silently.** `getAliasForNamespace` returns the
+namespace URI itself when the URI is not on the stack, so the caller writes the
+whole URI where a prefix belongs (`http://www.gplates.org/gplates:something`)
+rather than failing. Stack lookups are linear `std::find_if` scans, which is
+fine only because the stack holds a handful of entries; the comparisons
+themselves are cheap `SharedIterator` identity checks, and holding those
+iterators also keeps the strings alive in the
+`GPlatesModel::StringSetSingletons` namespace sets.
 
 ## Used by
 

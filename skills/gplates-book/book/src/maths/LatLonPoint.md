@@ -9,9 +9,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/LatLonPoint tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LatLonPoint` is the boundary type between the outside world and GPlates' internal
+geometry. Files, dialogs, the Python API and map projections all speak degrees of
+latitude and longitude; everything inside `maths` speaks `UnitVector3D`. This unit holds
+the pair of doubles, validates them on construction, and provides the only two
+conversions — `make_point_on_sphere` and `make_lat_lon_point` — that cross that
+boundary. Its fan-in is correspondingly wide, and it is the unit you touch when a
+coordinate convention or a range check needs changing.
+
+The conversion is a plain spherical-to-Cartesian transform with the z axis through the
+poles and the x axis at (0, 0): `make_point_on_sphere` builds a `UnitVector3D` directly
+from cosines and sines, so the unit-magnitude invariant is satisfied by construction
+rather than by normalisation. The inverse is more careful than it looks. It deliberately
+uses `Real`'s `asin` and `atan2` rather than the ones from `<cmath>`, because the stored
+components may have drifted slightly outside [-1, 1] through accumulated rounding, and
+`Real`'s versions do domain checking and correct almost-valid arguments instead of
+returning NaN. It then folds a longitude of exactly -PI up to +PI, which is what makes
+the round trip land in the half-open output range (-180, 180] the header describes.
+
+Note that this file is also where `MathsUtils.h` enters the geometry headers:
+`LatLonPoint.h` includes it for `is_in_range`, and `PointOnSphere.h` in turn includes
+`LatLonPoint.h`, so `EPSILON`, `PI` and the degree/radian conversions are visible almost
+everywhere in `maths`.
 
 ## Declared types
 
@@ -44,9 +63,31 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/LatLonPoint tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Values are stored in **degrees**, never radians, and the constructor throws
+`InvalidLatLonException` rather than clamping. There is no default constructor.
+
+The two range checks are not symmetric. Latitude is restricted to [-90, 90], but
+longitude accepts the whole of [-360, 360] on input while the class's stated output
+convention is the half-open range (-180, 180]. Nothing in this unit normalises a
+longitude: a `LatLonPoint` constructed with 350 keeps 350, and only a round trip through
+`make_point_on_sphere` and `make_lat_lon_point` brings it back as -10. Code that
+compares stored longitudes, or feeds them to a map projection, has to account for that
+itself.
+
+Both checks go through `GPlatesMaths::is_in_range`, which widens each bound by
+`EPSILON`, so a latitude marginally past 90 is accepted and then passed to
+`std::cos`/`std::sin` unchanged — harmless here, but it means "valid latitude" is
+slightly wider than [-90, 90].
+
+`operator==` and `operator!=` are declared private and never defined, so comparing two
+`LatLonPoint`s is a compile or link error by design. This is deliberate rather than an
+oversight: the representation is not unique (every longitude names the same pole, and
+-180 and 180 are the same meridian), so equality only means something after conversion
+to `PointOnSphere`.
+
+`make_lat_lon_point` depends on `Real`'s domain-correcting `asin`/`atan2`. If you
+replace them with the `<cmath>` versions for speed, points whose components have drifted
+a few ulps outside [-1, 1] will start yielding NaN latitudes.
 
 ## Used by
 

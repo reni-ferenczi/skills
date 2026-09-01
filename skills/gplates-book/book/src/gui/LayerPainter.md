@@ -9,9 +9,51 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/LayerPainter tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`LayerPainter` is the batching layer between GPlates' rendered-geometry model and
+OpenGL. One rendered geometry layer is painted at a time by a
+`GlobeRenderedGeometryLayerPainter` or `MapRenderedGeometryLayerPainter`; those
+visitors do not issue draw calls themselves, they push vertices into the streams
+this class hands out and append `RasterDrawable` / `ScalarField3DDrawable` /
+`TextDrawable2D` / `TextDrawable3D` records to its public vectors. Nothing is
+drawn until `end_painting()`, which then emits everything in one carefully ordered
+pass. The point of the indirection is state sorting: geometry arrives in whatever
+order the layer visitor walks it, and drawing it in that order would mean
+thrashing OpenGL state per primitive.
+
+The sorting is two-dimensional. Along one axis the client chooses a bucket by
+depth semantics — `opaque_drawables_on_the_sphere`,
+`translucent_drawables_on_the_sphere`, `drawables_off_the_sphere` — and
+`end_painting()` gives each bucket a different depth and blend configuration.
+Geometry *on* the sphere gets depth test on but depth writes off, so tessellated
+polylines and filled-polygon meshes cannot depth-fight each other where the mesh
+dips below the true sphere; geometry *off* the sphere (velocity and direction
+arrows) gets depth writes on so later layers cannot paint over it, and must
+therefore be opaque, since writing depth from anti-aliased edges leaves blending
+artefacts. Along the other axis, inside each bucket `PointLinePolygonDrawables`
+keys points by point size and lines by line width into `std::map`s, so all points
+of one size become a single `GL_POINTS` draw call. Triangles need no such split
+and go into one stream, with a second stream for `AxiallySymmetricMeshVertex`
+meshes, whose extra per-vertex axis frame and radial/axial normal weights exist so
+the fragment shader can light a cone (an arrowhead) correctly at its apex, where
+per-vertex normals cannot. Within a bucket the fixed draw order is filled polygons
+first, then triangles, lines and points, then axially symmetric meshes; across
+buckets it is scalar fields, rasters, on-sphere, off-sphere, 2-D text, 3-D text.
+
+The same class serves both views: passing a `MapProjection` to the constructor
+switches it into 2-D map mode, which disables the depth buffer and depth writes,
+selects the map-view variants of the filled-polygon renderer and the lighting
+shader (compiled from the same GLSL with `#define MAP_VIEW`), and makes
+`paint_scalar_fields()` a no-op, since 3-D scalar fields have no map rendering.
+Lighting and rasters are delegated to `GPlatesOpenGL::GLVisualLayers`;
+`set_generic_point_line_polygon_lighting_state()` and
+`set_axially_symmetric_mesh_lighting_state()` return false and fall back to the
+fixed-function pipeline whenever the runtime lacks the shaders, lighting is
+switched off in `SceneLightingParameters`, or the renderer is not targeting the
+real framebuffer. That last case is the SVG/vector-export path: when
+`GLRenderer::rendering_to_context_framebuffer()` is false, every draw is rerouted
+through `FeedbackOpenGLToQPainter` — vector primitives via OpenGL feedback, and
+rasters, scalar fields and filled polygons rendered into a tiled `QImage` and
+blitted to the `QPainter`.
 
 ## Declared types
 
@@ -78,9 +120,65 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/LayerPainter tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Three-phase lifetime, and `initialise()` is separate for a reason.** The
+constructor only records parameters; the GL buffers, vertex arrays and shader
+programs are created in `initialise()`, which needs a live `GLRenderer` and is
+called once when the OpenGL context is ready. `begin_painting()` asserts those
+objects exist. The instance is then long-lived — `GlobeRenderedGeometryCollectionPainter`
+holds one `LayerPainter` by value and drives a `begin_painting`/`end_painting`
+cycle around *every* rendered geometry layer, every frame, reusing the same
+buffers throughout.
+
+**Everything is cleared by `end_painting()`, including the queues you filled
+directly.** `rasters`, `scalar_fields`, `text_drawables_2D`, `text_drawables_3D`
+and the filled-polygon lists are all `clear()`ed after being drawn, and the
+per-size point and line maps are erased so the next layer can use different
+widths. The vectors are public with no invariant guarding them, so pushing to
+them outside a begin/end pair means the entries sit there until the next
+`end_painting()` draws them as part of some other layer.
+
+**`get_renderer()` and every stream accessor are only valid inside a begin/end
+pair.** `d_renderer` is a `boost::optional<GLRenderer &>` set in
+`begin_painting()` and reset to `boost::none` at the end, so calling
+`get_renderer()` outside dereferences an empty optional. `Drawables::get_stream()`
+and `has_primitives()` assert on the stream object, which likewise exists only
+between the paired calls. Note the asymmetry that makes this work: `begin_painting()`
+starts streams for triangles only, and the point and line streams are created
+lazily by `get_points_stream()` / `get_lines_stream()` the first time a given size
+is asked for — but `end_painting()` must still be called on the axially symmetric
+drawable even when it has no primitives, which the code does explicitly with a
+dummy vertex array.
+
+**References returned by the stream accessors do not survive further calls.** The
+per-size drawables live in `std::map`s and the stream is created on first request
+for a size, so holding a `stream_primitives_type &` across a request for a
+different point size or line width is asking for trouble. Fetch, stream, discard.
+
+**The lighting state functions are silently permissive.** They return false and
+*leave the existing GL state alone* rather than reporting an error, in three
+distinct situations — no shader support, lighting disabled, or feedback rendering.
+So a geometry that looks unlit is not necessarily a bug in the shader; check
+`SceneLightingParameters` and whether the render is going to a `QPainter` first.
+
+**The `cache_handle_type` return value is load-bearing.** `end_painting()` returns
+an opaque `boost::shared_ptr<void>` holding the internal caches for the rasters and
+scalar fields it drew. The caller must keep it alive until the next frame or the
+OpenGL structures behind every raster and scalar field are rebuilt from scratch
+each frame.
+
+**Axially symmetric meshes have hard geometric preconditions.** The mesh must be
+symmetric about its model-space z-axis or the lighting fragment shader produces
+wrong results, and front faces must be counter-clockwise because back faces are
+culled (the lighting is one-sided). The vertex struct's field order is also fixed:
+`world_space_position` and `colour` must stay first, since the unlit path binds
+them as non-generic `GL_VERTEX_ARRAY`/`GL_COLOR_ARRAY` pointers at hard-coded
+offsets while the lit path binds all seven attributes generically and re-links the
+program. Reordering members breaks the unlit path quietly.
+
+**Feedback rendering forces the fixed-function pipeline.** OpenGL feedback here
+captures only fixed-function output, so vector export never gets shader lighting —
+there is a TODO in the code about implementing OpenGL 2/3 feedback extensions.
+This is why exported SVG can look different from the screen.
 
 ## Used by
 

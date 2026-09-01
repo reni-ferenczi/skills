@@ -18,10 +18,10 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [Colour](../src/gui/Colour.md) | 1 | 1272 | 4081 | (pending) |
+| [Colour](../src/gui/Colour.md) | 1 | 1272 | 4081 | the RGBA value type shared by the whole application, sized and laid out so arrays can go straight to OpenGL |
 | [ColourFilter](../src/gui/ColourFilter.md) | 3 | 60 | 7 | Abstract base class for colour transformation filters |
 | [ColourNameSet](../src/gui/ColourNameSet.md) | 2 | 151 | 812 | Base class for static named colour tables such as GMT and HTML colour names |
-| [ColourPalette](../src/gui/ColourPalette.md) | 1 | 117 | 643 | (pending) |
+| [ColourPalette](../src/gui/ColourPalette.md) | 1 | 117 | 643 | abstract key-to-colour lookup shared by geometry colouring, rasters and scalar fields |
 | [ColourPaletteAdapter](../src/gui/ColourPaletteAdapter.md) | 2 | 239 | 46 | Templated wrapper adapting a ColourPalette from one value type to another via a converter |
 | [ColourPaletteRangeRemapper](../src/gui/ColourPaletteRangeRemapper.md) | 3 | 273 | 1 | Remaps the value ranges of colour palettes to new bounds |
 | [ColourPaletteUtils](../src/gui/ColourPaletteUtils.md) | 2 | 345 | 20 | CPT loading and numeric-range extraction helpers built on ColourPalette and the CPT readers |
@@ -47,10 +47,10 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [ExportAnimationContext](../src/gui/ExportAnimationContext.md) | 1 | 473 | 401 | (pending) |
+| [ExportAnimationContext](../src/gui/ExportAnimationContext.md) | 1 | 473 | 401 | frame loop driving animation export, and the state hub every export strategy reads through |
 | [ExportAnimationRegistry](../src/gui/ExportAnimationRegistry.md) | 2 | 2226 | 32 | Type-erased factory table mapping ExportID to strategy/widget/validator callbacks |
-| [ExportAnimationStrategy](../src/gui/ExportAnimationStrategy.md) | 1 | 315 | 484 | (pending) |
-| [ExportAnimationType](../src/gui/ExportAnimationType.md) | 1 | 640 | 574 | (pending) |
+| [ExportAnimationStrategy](../src/gui/ExportAnimationStrategy.md) | 1 | 315 | 484 | abstract per-frame exporter plus the filename-template machinery every export type shares |
+| [ExportAnimationType](../src/gui/ExportAnimationType.md) | 1 | 640 | 574 | enumerations of export kinds and file formats, their packed identifier and their UI labels |
 | [ExportCitcomsResolvedTopologyAnimationStrategy](../src/gui/ExportCitcomsResolvedTopologyAnimationStrategy.md) | 2 | 474 | 113 | ExportAnimationStrategy writing resolved topological boundaries/networks for the CitcomS workflow |
 | [ExportCoRegistrationAnimationStrategy](../src/gui/ExportCoRegistrationAnimationStrategy.md) | 3 | 297 | 3 | Strategy for exporting co-registration data during animation playback |
 | [ExportDeformationAnimationStrategy](../src/gui/ExportDeformationAnimationStrategy.md) | 2 | 605 | 111 | ExportAnimationStrategy writing per-frame strain and strain-rate output for deformed geometries |
@@ -73,7 +73,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [FeatureFocus](../src/gui/FeatureFocus.md) | 1 | 730 | 508 | (pending) |
+| [FeatureFocus](../src/gui/FeatureFocus.md) | 1 | 730 | 508 | application-wide selected-feature state, re-binding its reconstruction geometry after every reconstruction |
 | [FeatureInspectionCanvasToolWorkflow](../src/gui/FeatureInspectionCanvasToolWorkflow.md) | 3 | 760 | 1 | Manages a suite of canvas tools for inspecting and editing a focused feature's geometry |
 | [FeaturePropertyTableModel](../src/gui/FeaturePropertyTableModel.md) | 2 | 728 | 92 | Qt table model showing a feature's top-level properties as name/value rows |
 | [FeatureTableModel](../src/gui/FeatureTableModel.md) | 2 | 1296 | 50 | Qt table model behind the search-results/clicked-feature lists of reconstruction geometries |
@@ -84,7 +84,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [Globe](../src/gui/Globe.md) | 2 | 856 | 231 | Draws the 3D globe: stars, sphere, grid and rendered geometries, and tracks its orientation |
-| [GlobeCanvasTool](../src/gui/GlobeCanvasTool.md) | 1 | 766 | 468 | (pending) |
+| [GlobeCanvasTool](../src/gui/GlobeCanvasTool.md) | 1 | 766 | 468 | abstract mouse-gesture state for the 3D globe, with built-in ctrl-drag reorient and shift-ctrl-drag rotate |
 | [GlobeCanvasToolAdapter](../src/gui/GlobeCanvasToolAdapter.md) | 3 | 555 | 6 | Adapts GlobeCanvas mouse signals to the GlobeCanvasTool interface |
 | [GlobeOrientation](../src/gui/GlobeOrientation.md) | 2 | 109 | 14 | Abstract handle-based interface for rotating and querying the globe's orientation |
 | [GlobeRenderedGeometryCollectionPainter](../src/gui/GlobeRenderedGeometryCollectionPainter.md) | 2 | 551 | 8 | Visits a RenderedGeometryCollection and paints its layers onto the globe |
@@ -98,9 +98,9 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [Map](../src/gui/Map.md) | 2 | 357 | 25 | Holds map view state and projection, and paints the map background, grid and rendered geometries |
 | [MapBackground](../src/gui/MapBackground.md) | 2 | 448 | 14 | Draws the coloured map background as a cached mesh reprojected under the current MapProjection |
 | [MapCanvasTool](../src/gui/MapCanvasTool.md) | 2 | 562 | 91 | Abstract State-pattern base for interactive tools on the map view, mirroring GlobeCanvasTool |
-| [MapCanvasToolAdapter](../src/gui/MapCanvasToolAdapter.md) | 1 | 519 | 335 | (pending) |
+| [MapCanvasToolAdapter](../src/gui/MapCanvasToolAdapter.md) | 1 | 519 | 335 | demultiplexes MapView mouse signals by button and modifier onto the active map canvas tool |
 | [MapGrid](../src/gui/MapGrid.md) | 3 | 498 | 1 | Renders latitude/longitude grid lines in the map view |
-| [MapProjection](../src/gui/MapProjection.md) | 1 | 1260 | 227 | (pending) |
+| [MapProjection](../src/gui/MapProjection.md) | 1 | 1260 | 227 | PROJ wrapper defining 2D map space, its boundary and bounding radius for the map view |
 | [MapRenderedGeometryCollectionPainter](../src/gui/MapRenderedGeometryCollectionPainter.md) | 2 | 347 | 14 | Draws a RenderedGeometryCollection onto the map view, visiting layers in the configured order |
 | [MapRenderedGeometryLayerPainter](../src/gui/MapRenderedGeometryLayerPainter.md) | 3 | 3540 | 1 | Visitor that renders geometries in a single map layer |
 | [MapTransform](../src/gui/MapTransform.md) | 2 | 305 | 63 | Holds the map view's centre, rotation and forwarded zoom, emitting transform\_changed on any change |
@@ -111,7 +111,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [PythonConfiguration](../src/gui/PythonConfiguration.md) | 2 | 437 | 219 | Named, typed configuration values shared between drawing-style Python scripts and Qt widgets |
 | [PythonConsoleHistory](../src/gui/PythonConsoleHistory.md) | 3 | 219 | 5 | Manages command history for the Python console with bash-like navigation. |
-| [PythonManager](../src/gui/PythonManager.md) | 1 | 1080 | 288 | (pending) |
+| [PythonManager](../src/gui/PythonManager.md) | 1 | 1080 | 288 | boots the embedded CPython interpreter, owns its runners and threads, and registers user scripts |
 
 #### Topology
 
@@ -128,19 +128,19 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [AddClickedGeometriesToFeatureTable](../src/gui/AddClickedGeometriesToFeatureTable.md) | 2 | 358 | 111 | Turns a globe/map click into rows in the clicked feature table via proximity hit-testing |
-| [AgeColourPalettes](../src/gui/AgeColourPalettes.md) | 1 | 379 | 431 | (pending) |
-| [AnimationController](../src/gui/AnimationController.md) | 1 | 1227 | 430 | (pending) |
+| [AgeColourPalettes](../src/gui/AgeColourPalettes.md) | 1 | 379 | 431 | the two built-in feature-age palettes, keyed by geological time and registered as the FEATURE\_AGE colour schemes |
+| [AnimationController](../src/gui/AnimationController.md) | 1 | 1227 | 430 | widget-free owner of the animation range and timer; ApplicationState remains the sole owner of the current time |
 | [BuiltinColourPaletteType](../src/gui/BuiltinColourPaletteType.md) | 2 | 681 | 379 | Tagged union identifying a built-in age/topography/SCM/ColorBrewer palette and its parameters |
-| [BuiltinColourPalettes](../src/gui/BuiltinColourPalettes.md) | 1 | 2331 | 424 | (pending) |
+| [BuiltinColourPalettes](../src/gui/BuiltinColourPalettes.md) | 1 | 2331 | 424 | factory namespace for every shipped palette, from embedded CPT resources and from computed colour ramps |
 | [CanvasToolWorkflow](../src/gui/CanvasToolWorkflow.md) | 2 | 503 | 85 | Abstract base implementing the activate/deactivate state machine for a tab of canvas tools |
-| [CanvasToolWorkflows](../src/gui/CanvasToolWorkflows.md) | 1 | 610 | 2722 | (pending) |
+| [CanvasToolWorkflows](../src/gui/CanvasToolWorkflows.md) | 1 | 610 | 2722 | registry and switchboard for the canvas tool bar tabs, one selected tool per workflow and one active overall |
 | [ChooseCanvasToolUndoCommand](../src/gui/ChooseCanvasToolUndoCommand.md) | 3 | 133 | 7 | Captures and restores the currently active canvas tool for undo/redo |
 | [CommandServer](../src/gui/CommandServer.md) | 2 | 1038 | 41 | QTcpServer exposing an XML remote-control protocol for a running GPlates instance |
 | [Completionist](../src/gui/Completionist.md) | 3 | 328 | 7 | Singleton that manages autocompletion for Qt line edits |
 | [CptColourPalette](../src/gui/CptColourPalette.md) | 2 | 1198 | 117 | In-memory representation of GMT regular and categorical CPT colour palette files |
 | [CsvExport](../src/gui/CsvExport.md) | 2 | 387 | 112 | Static helper for writing table widgets or row data to CSV files |
 | [CustomCompleter](../src/gui/CustomCompleter.md) | 3 | 165 | 3 | QCompleter subclass customizing popup display and path handling for two-column models |
-| [Dialogs](../src/gui/Dialogs.md) | 1 | 1523 | 212 | (pending) |
+| [Dialogs](../src/gui/Dialogs.md) | 1 | 1523 | 212 | lazy factory and single access point for the application's thirty-five top-level dialogs |
 | [DigitisationCanvasToolWorkflow](../src/gui/DigitisationCanvasToolWorkflow.md) | 3 | 626 | 1 | Canvas tool workflow managing interactive geometry digitization on globe and map |
 | [DockState](../src/gui/DockState.md) | 2 | 567 | 19 | Tracks and manipulates which dock widgets occupy which edges of the main window |
 | [DrawStyleAdapters](../src/gui/DrawStyleAdapters.md) | 2 | 555 | 159 | StyleAdapter implementations bridging feature colouring to C++ and Python draw styles |
@@ -161,7 +161,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [HTMLColourNames](../src/gui/HTMLColourNames.md) | 2 | 223 | 27 | Singleton table mapping standard HTML/CSS colour keywords to RGB values |
 | [HellingerCanvasToolWorkflow](../src/gui/HellingerCanvasToolWorkflow.md) | 3 | 300 | 1 | Canvas tool workflow for pole fits by the Hellinger method |
 | [ImportMenu](../src/gui/ImportMenu.md) | 3 | 237 | 8 | Manages the Import submenu in the File menu |
-| [LayerPainter](../src/gui/LayerPainter.md) | 1 | 2243 | 325 | (pending) |
+| [LayerPainter](../src/gui/LayerPainter.md) | 1 | 2243 | 325 | batches one rendered layer's primitives into size-sorted streams and draws them in one depth-ordered pass |
 | [LogFilterModel](../src/gui/LogFilterModel.md) | 3 | 283 | 3 | Qt proxy model for filtering and coloring log entries |
 | [Mipmapper](../src/gui/Mipmapper.md) | 2 | 1479 | 86 | Builds successive halved-resolution mipmap levels of a raster for cached-raster rendering |
 | [OpaqueSphere](../src/gui/OpaqueSphere.md) | 3 | 504 | 1 | Renders the background sphere of the 3D globe view |
@@ -169,7 +169,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [PlateIdColourPalettes](../src/gui/PlateIdColourPalettes.md) | 3 | 270 | 5 | Color palette implementations for mapping plate IDs to colors |
 | [PoleManipulationCanvasToolWorkflow](../src/gui/PoleManipulationCanvasToolWorkflow.md) | 3 | 483 | 1 | Workflow for manipulating rotation poles on globe and map views with three interactive tools. |
 | [ProjectionException](../src/gui/ProjectionException.md) | 3 | 77 | 9 | Exception class for map projection errors. |
-| [RasterColourPalette](../src/gui/RasterColourPalette.md) | 1 | 372 | 224 | (pending) |
+| [RasterColourPalette](../src/gui/RasterColourPalette.md) | 1 | 372 | 224 | type-erasing handle over the int32, uint32 and double colour palettes that can colour a non-RGBA raster |
 | [RenderSettings](../src/gui/RenderSettings.md) | 2 | 163 | 105 | Per-geometry-kind visibility flags letting layer painters know what to draw without a Globe reference |
 | [SceneLightingParameters](../src/gui/SceneLightingParameters.md) | 2 | 367 | 87 | Value object holding scene lighting config: enabled state, ambient level, globe/map light directions |
 | [SessionMenu](../src/gui/SessionMenu.md) | 2 | 304 | 19 | Builds and maintains the recent-sessions submenu from SessionManagement's session list |

@@ -26,8 +26,8 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | Name | Unit | Description |
 |---|---|---|
 | [`__CONVENTION__`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | Platform calling convention for OpenGL API calls (WINAPI on Windows, empty elsewhere) |
-| [`CALL_STACK_MAGIC1`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | Do not invoke this macro directly. |
-| [`CALL_STACK_MAGIC2`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | Do not invoke this macro directly. |
+| [`CALL_STACK_MAGIC1`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | internal indirection so \_\_LINE\_\_ expands before token pasting |
+| [`CALL_STACK_MAGIC2`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | internal expansion that names the tracker variable and fills in \_\_FILE\_\_ and \_\_LINE\_\_ |
 | [`CGAL_DT2_USE_RECURSIVE_PROPAGATE_CONFLICTS`](../src/app-logic/ResolvedTriangulationDelaunay2.md#free-functions-and-macros) | [app-logic/ResolvedTriangulationDelaunay2](../src/app-logic/ResolvedTriangulationDelaunay2.md) | — |
 | [`copysign`](../src/app-logic/ResolvedTriangulationNetwork.md#free-functions-and-macros) | [app-logic/ResolvedTriangulationNetwork](../src/app-logic/ResolvedTriangulationNetwork.md) | — |
 | [`copysign`](../src/app-logic/TopologyReconstruct.md#free-functions-and-macros) | [app-logic/TopologyReconstruct](../src/app-logic/TopologyReconstruct.md) | — |
@@ -37,15 +37,15 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | Name | Unit | Description |
 |---|---|---|
 | [`_DEBUG`](../src/global/python.md#free-functions-and-macros) | [global/python](../src/global/python.md) | — |
-| [`DECLARE_PROPERTY_VALUE_FINDER`](../src/feature-visitors/PropertyValueFinder.md#free-functions-and-macros) | [feature-visitors/PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | NOTE: DECLARE\_PROPERTY\_VALUE\_FINDER must be placed at the top of every derivation of GPlatesModel::PropertyValue in order for the get property functions in this file to work with that type of property value. |
-| [`DECLARE_PROPERTY_VALUE_FINDER_CLASS`](../src/feature-visitors/PropertyValueFinder.md#free-functions-and-macros) | [feature-visitors/PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | Macro to declare a template specialisation of class PropertyValueFinder. |
-| [`DEFINE_COLOUR`](../src/gui/Colour.md#free-functions-and-macros) | [gui/Colour](../src/gui/Colour.md) | Define a function (eg, "get\_black()") that creates a local static colour object and returns it. |
+| [`DECLARE_PROPERTY_VALUE_FINDER`](../src/feature-visitors/PropertyValueFinder.md#free-functions-and-macros) | [feature-visitors/PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | placed atop every property-value header to generate that type's const finder specialisation |
+| [`DECLARE_PROPERTY_VALUE_FINDER_CLASS`](../src/feature-visitors/PropertyValueFinder.md#free-functions-and-macros) | [feature-visitors/PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | expands to a whole finder specialisation for one property value type; invoked through the public macro |
+| [`DEFINE_COLOUR`](../src/gui/Colour.md#free-functions-and-macros) | [gui/Colour](../src/gui/Colour.md) | defines a named-colour accessor returning a function-local static, avoiding static initialisation order problems |
 | [`DEFINE_FUNCTION_DEEP_CLONE_AS_INTERP_FUNC`](../src/property-values/GpmlInterpolationFunction.md#free-functions-and-macros) | [property-values/GpmlInterpolationFunction](../src/property-values/GpmlInterpolationFunction.md) | Emits the boilerplate deep\_clone\_as\_interp\_func override in each interpolation-function subclass |
-| [`DEFINE_FUNCTION_DEEP_CLONE_AS_PROP_VAL`](../src/model/PropertyValue.md#free-functions-and-macros) | [model/PropertyValue](../src/model/PropertyValue.md) | This macro is used to define the virtual function 'deep\_clone\_as\_prop\_val' inside a class which derives from PropertyValue. |
+| [`DEFINE_FUNCTION_DEEP_CLONE_AS_PROP_VAL`](../src/model/PropertyValue.md#free-functions-and-macros) | [model/PropertyValue](../src/model/PropertyValue.md) | macro each derived class invokes to define the virtual deep-clone forwarder to its own deep\_clone() |
 | [`DEFINE_FUNCTION_DEEP_CLONE_AS_TOPO_SECTION`](../src/property-values/GpmlTopologicalSection.md#free-functions-and-macros) | [property-values/GpmlTopologicalSection](../src/property-values/GpmlTopologicalSection.md) | This macro is used to define the virtual function 'deep\_clone\_as\_topo\_section' inside a class which derives from TopologicalSection. |
 | [`DISABLE_GCC_WARNING`](../src/global/CompilerWarnings.md#free-functions-and-macros) | [global/CompilerWarnings](../src/global/CompilerWarnings.md) | — |
 | [`DISABLE_MSVC_WARNING`](../src/global/CompilerWarnings.md#free-functions-and-macros) | [global/CompilerWarnings](../src/global/CompilerWarnings.md) | — |
-| [`DISPATCH_GUI_FUN`](../src/api/PythonUtils.md#free-functions-and-macros) | [api/PythonUtils](../src/api/PythonUtils.md) | — |
+| [`DISPATCH_GUI_FUN`](../src/api/PythonUtils.md#free-functions-and-macros) | [api/PythonUtils](../src/api/PythonUtils.md) | macro re-entering the current method on the Qt main thread and returning, used by GUI-touching bindings |
 
 ## E
 
@@ -64,19 +64,19 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`GET_PROP_VAL_NAME`](../src/file-io/deprecated/FeaturePropertiesMap.md#free-functions-and-macros) | [file-io/deprecated/FeaturePropertiesMap](../src/file-io/deprecated/FeaturePropertiesMap.md) | — |
 | [`GPLATES_ACCESS_EXPORT_REGISTER_CLASS_TYPE`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | Registers a single class type in the export registry with private access |
 | [`GPLATES_ACCESS_EXPORT_REGISTER_CLASS_TYPE_MACRO`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | Boost preprocessor macro that wraps single-class registration |
-| [`GPLATES_ASSERTION_SOURCE`](../src/global/GPlatesAssert.md#free-functions-and-macros) | [global/GPlatesAssert](../src/global/GPlatesAssert.md) | — |
+| [`GPLATES_ASSERTION_SOURCE`](../src/global/GPlatesAssert.md#free-functions-and-macros) | [global/GPlatesAssert](../src/global/GPlatesAssert.md) | expands to a CallStack::Trace holding \_\_FILE\_\_ and \_\_LINE\_\_, passed as the assertion location |
 | [`GPLATES_DEFERRED_API_CALL`](../src/api/DeferredApiCall.md#free-functions-and-macros) | [api/DeferredApiCall](../src/api/DeferredApiCall.md) | Macro that creates a wrapper function for deferred execution on the main thread |
-| [`GPLATES_EXCEPTION_SOURCE`](../src/global/GPlatesException.md#free-functions-and-macros) | [global/GPlatesException](../src/global/GPlatesException.md) | Note: we don't use BOOST\_CURRENT\_FUNCTION anymore since it can produce some pretty verbose output when a function has arguments that are template types. |
+| [`GPLATES_EXCEPTION_SOURCE`](../src/global/GPlatesException.md#free-functions-and-macros) | [global/GPlatesException](../src/global/GPlatesException.md) | expands to a CallStack::Trace of \_\_FILE\_\_ and \_\_LINE\_\_ for an exception constructor's first argument |
 | [`GPLATES_GDAL_COMPUTE_VERSION`](../src/global/GdalVersion.md#free-functions-and-macros) | [global/GdalVersion](../src/global/GdalVersion.md) | Same as defined in GDAL \>= 1.10... |
 | [`GPLATES_GDAL_VERSION_NUM`](../src/global/GdalVersion.md#free-functions-and-macros) | [global/GdalVersion](../src/global/GdalVersion.md) | Same as defined in GDAL \>= 1.10... |
-| [`GPLATES_ICU_BOOL`](../src/utils/IdStringSet.md#free-functions-and-macros) | [utils/IdStringSet](../src/utils/IdStringSet.md) | — |
-| [`GPLATES_ICU_BOOL`](../src/utils/StringSet.md#free-functions-and-macros) | [utils/StringSet](../src/utils/StringSet.md) | — |
-| [`GPLATES_ICU_BOOL`](../src/utils/UnicodeString.md#free-functions-and-macros) | [utils/UnicodeString](../src/utils/UnicodeString.md) | The ICU UnicodeString binary comparison operators returned a UBool rather than a bool, which caused problems. |
+| [`GPLATES_ICU_BOOL`](../src/utils/IdStringSet.md#free-functions-and-macros) | [utils/IdStringSet](../src/utils/IdStringSet.md) | legacy coercion of a comparison result to bool, from when ICU returned UBool; now effectively identity |
+| [`GPLATES_ICU_BOOL`](../src/utils/StringSet.md#free-functions-and-macros) | [utils/StringSet](../src/utils/StringSet.md) | legacy coercion of a comparison result to bool, from when ICU returned UBool; now effectively identity |
+| [`GPLATES_ICU_BOOL`](../src/utils/UnicodeString.md#free-functions-and-macros) | [utils/UnicodeString](../src/utils/UnicodeString.md) | legacy coercion of a comparison result to bool, from when ICU returned UBool; now effectively identity |
 | [`GPLATES_OPENGL_BOOL`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | Normalises a GLboolean value to a real C++ boolean test |
 | [`GPLATES_OPENGL_BUFFER_OFFSET`](../src/opengl/OpenGL.md#free-functions-and-macros) | [opengl/OpenGL](../src/opengl/OpenGL.md) | Casts a byte offset into the void pointer expected by buffer-object drawing calls |
 | [`GPLATES_PINCH_ZOOM_ENABLED`](../src/qt-widgets/GlobeAndMapWidget.md#free-functions-and-macros) | [qt-widgets/GlobeAndMapWidget](../src/qt-widgets/GlobeAndMapWidget.md) | — |
 | [`GPLATES_QTWIDGETS_VelocityFieldCalculatorLayerOptionsWidget_H`](../src/qt-widgets/VelocityFieldCalculatorLayerOptionsWidget.md#free-functions-and-macros) | [qt-widgets/VelocityFieldCalculatorLayerOptionsWidget](../src/qt-widgets/VelocityFieldCalculatorLayerOptionsWidget.md) | — |
-| [`GPLATES_SCRIBE_ACCESS_CONSTRUCT_MAX_CONSTRUCTOR_ARGS`](../src/scribe/ScribeAccess.md#free-functions-and-macros) | [scribe/ScribeAccess](../src/scribe/ScribeAccess.md) | The maximum number of object constructor arguments supported in Access::construct\_object(). |
+| [`GPLATES_SCRIBE_ACCESS_CONSTRUCT_MAX_CONSTRUCTOR_ARGS`](../src/scribe/ScribeAccess.md#free-functions-and-macros) | [scribe/ScribeAccess](../src/scribe/ScribeAccess.md) | limit of 10 constructor arguments reachable through Access::construct\_object() |
 | [`GPLATES_SCRIBE_ACCESS_CONSTRUCT_OBJECT`](../src/scribe/ScribeAccess.md#free-functions-and-macros) | [scribe/ScribeAccess](../src/scribe/ScribeAccess.md) | — |
 | [`GPLATES_SCRIBE_ACCESS_CONSTRUCT_OBJECT_PARAM`](../src/scribe/ScribeAccess.md#free-functions-and-macros) | [scribe/ScribeAccess](../src/scribe/ScribeAccess.md) | The following preprocessor macros generate the following code: template \<typename ObjectType, typename A1\> static void construct\_object( ObjectType \*object, const A1 &a1); template \<typename ObjectType, typename A1, typename A2\> static ... |
 | [`GPLATES_SCRIBE_ARRAY_INDICES_OP`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Increment array index and decrements predicate counter. |
@@ -102,8 +102,8 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`GPLATES_SCRIBE_DELEGATE_SINGLE_ARG_FUNCTIONS_CALL`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Generates single argument function delegate overloads for a specific multi-level pointer level. |
 | [`GPLATES_SCRIBE_DELEGATE_SINGLE_ARG_FUNCTIONS_INDEX`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Generates single argument function delegate overloads for a multi-level pointer of dimension 'pointer\_level'. |
 | [`GPLATES_SCRIBE_DELEGATE_SINGLE_ARG_FUNCTIONS_NON_ARRAY_CALL`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Generates single argument function delegate overloads for \*non-arrays\* for a specific multi-level pointer level. |
-| [`GPLATES_SCRIBE_MAX_ARRAY_DIMENSION`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | The maximum dimension of transcribable native arrays. |
-| [`GPLATES_SCRIBE_MAX_POINTER_DIMENSION`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | The maximum dimension of transcribable multi-level pointers. |
+| [`GPLATES_SCRIBE_MAX_ARRAY_DIMENSION`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | limit of 3 on the rank of transcribable native C++ arrays |
+| [`GPLATES_SCRIBE_MAX_POINTER_DIMENSION`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | limit of 2 on transcribable pointer depth; each increment doubles the generated const-cast overloads |
 | [`GPLATES_SCRIBE_POW2`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | This is just pow(2,n) implemented as 1\*2\*2\*2\*, ie, repeated 'n' times... |
 | [`GPLATES_SCRIBE_POW2_MUL_BY_2`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Operation for GPLATES\_SCRIBE\_POW2. |
 | [`GPLATES_SCRIBE_POW2_PRED`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | Predicate for GPLATES\_SCRIBE\_POW2. |
@@ -175,14 +175,14 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | [`POP_GCC_WARNINGS`](../src/global/CompilerWarnings.md#free-functions-and-macros) | [global/CompilerWarnings](../src/global/CompilerWarnings.md) | — |
 | [`POP_MSVC_WARNINGS`](../src/global/CompilerWarnings.md#free-functions-and-macros) | [global/CompilerWarnings](../src/global/CompilerWarnings.md) | — |
 | [`PROFILE_ANONYMOUS_VARIABLE`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | — |
-| [`PROFILE_BEGIN`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | Starts profiling until the matching PROFILE\_END is reached or an exception is thrown or the function we're in returns early. name is a string of type "const char \*". |
-| [`PROFILE_CODE`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | Starts profiling just before the source code expression code and stops profiling just after. profile\_tag is only used internally to match PROFILE\_BEGIN and PROFILE\_END calls. profile\_tag is an identifier and must use C++ naming rules. ... |
+| [`PROFILE_BEGIN`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | starts a named profile run and caches its node lookup in a function-local static |
+| [`PROFILE_CODE`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | profiles a single statement, using its source text as the profile name |
 | [`PROFILE_CONCATENATE`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | — |
 | [`PROFILE_CONCATENATE_DIRECT`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | — |
-| [`PROFILE_END`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | Stops profiling the matching PROFILE\_BEGIN call. |
-| [`PROFILE_FUNC`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | Same as PROFILE\_BLOCK except the name of the profile is the function that PROFILE\_BLOCK is called from. |
-| [`PROFILE_REPORT_TO_FILE`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | Writes the profiling data as text to the file filename where filename is a std::string. |
-| [`PROFILE_REPORT_TO_OSTREAM`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | Writes the profiling data as text to the output stream output\_stream where output\_stream is a std::ostream &. |
+| [`PROFILE_END`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | ends the run started by the matching PROFILE\_BEGIN tag |
+| [`PROFILE_FUNC`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | profiles the enclosing scope under the current function's name |
+| [`PROFILE_REPORT_TO_FILE`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | writes the flat and call-graph reports to a named file |
+| [`PROFILE_REPORT_TO_OSTREAM`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | writes the flat and call-graph reports to a std::ostream |
 | [`PROFILE_SCOPE_VARIABLE`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | — |
 | [`PROFILE_UNUSED`](../src/utils/Profile.md#free-functions-and-macros) | [utils/Profile](../src/utils/Profile.md) | — |
 | [`PUSH_GCC_WARNINGS`](../src/global/CompilerWarnings.md#free-functions-and-macros) | [global/CompilerWarnings](../src/global/CompilerWarnings.md) | — |
@@ -209,9 +209,9 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | Name | Unit | Description |
 |---|---|---|
 | [`TEMPORARY_HACK_NO_DIRECTIONAL_LIGHT_FOR_NORMAL_MAPS`](../src/opengl/GLMultiResolutionStaticPolygonReconstructedRaster.md#free-functions-and-macros) | [opengl/GLMultiResolutionStaticPolygonReconstructedRaster](../src/opengl/GLMultiResolutionStaticPolygonReconstructedRaster.md) | Standing workaround disabling directional lighting on normal maps until a light canvas tool exists |
-| [`TRACK_CALL_STACK`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | Track the call stack. |
-| [`TRANSCRIBE_SOURCE`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | — |
-| [`TRANSCRIBE_SOURCE`](../src/scribe/TranscribeEnumProtocol.md#free-functions-and-macros) | [scribe/TranscribeEnumProtocol](../src/scribe/TranscribeEnumProtocol.md) | — |
+| [`TRACK_CALL_STACK`](../src/utils/CallStackTracker.md#free-functions-and-macros) | [utils/CallStackTracker](../src/utils/CallStackTracker.md) | declares a uniquely named CallStackTracker for the enclosing block |
+| [`TRANSCRIBE_SOURCE`](../src/scribe/Scribe.md#free-functions-and-macros) | [scribe/Scribe](../src/scribe/Scribe.md) | call-site file and line, passed to every transcribe call so failures can name where they came from |
+| [`TRANSCRIBE_SOURCE`](../src/scribe/TranscribeEnumProtocol.md#free-functions-and-macros) | [scribe/TranscribeEnumProtocol](../src/scribe/TranscribeEnumProtocol.md) | call-site file and line, passed to every transcribe call so failures can name where they came from |
 
 ## Z
 

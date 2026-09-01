@@ -8,9 +8,28 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerParams tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A layer's configuration is split in two along the app-logic / presentation line.
+Anything that changes what a layer *computes* — the band of a raster, the
+velocity delta time, the deformation options — lives in a `LayerParams`
+subclass owned by the layer's `LayerTask`; anything that only changes how the
+result is *drawn* lives in the parallel `GPlatesPresentation::VisualLayerParams`
+hierarchy. This class is the app-logic half's root, and it exists mainly to give
+that half a common type: `Layer::get_layer_params()` returns it, the eight
+concrete subclasses supply the actual fields, and `LayerParamsVisitor` /
+`ConstLayerParamsVisitor` recover the derived type for code that needs it.
+
+Its one real behaviour is the change notification. `ReconstructGraph::add_layer`
+connects each new layer's params `modified()` signal to its own
+`handle_layer_params_changed` slot, which finds the owning layer and re-emits it
+as the graph-level `layer_params_changed(Layer &, LayerParams &)`; that is how a
+settings edit made in a layer options widget becomes a reconstruction. A
+subclass mutator therefore has one obligation — call `emit_modified()` when it
+actually changes something — and gets the whole invalidation chain for free.
+
+The base is directly instantiable via `create()`, and its `accept_visitor`
+overrides do nothing. That is the parameterless case: a layer type with no
+options still hands out a `LayerParams` so that callers never have to test for
+absence.
 
 ## Declared types
 
@@ -41,9 +60,29 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerParams tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Double ownership: `QObject` parent *and* intrusive refcount.** The object is
+  reference-counted through `GPlatesUtils::ReferenceCount` and passed around as
+  `non_null_ptr_type`, but it is also a `QObject` — created with no parent, so
+  Qt does not delete it. Lifetime is the refcount's alone, held via the
+  `LayerTask` that `ReconstructGraphImpl::Layer::get_layer_params()` forwards to.
+  Never give one a `QObject` parent, and never hold a raw pointer past the
+  layer's removal.
+- **`emit_modified()` is the whole contract for subclasses.** Nothing polls
+  these objects; if a setter changes state without emitting, the layer proxy is
+  never invalidated and the change silently does not take effect. Subclasses
+  that also define their own finer-grained signals — `RasterLayerParams` emits
+  `modified_band_name` — still emit the base `modified()` alongside them.
+- **Not every base-class virtual is meaningful in the base.** `accept_visitor`
+  has empty bodies rather than being pure, so a subclass that forgets to
+  override it compiles and links, and simply never dispatches. When adding a
+  `LayerParams` subclass you must also add its forward declaration and
+  `visit_*` method to `LayerParamsVisitorBase` — those are likewise empty
+  by default, so the compiler will not remind you.
+- `ReconstructGraph::handle_layer_params_changed` locates the owning layer by
+  scanning `d_layers` and comparing raw pointers, and deliberately does nothing
+  if no match is found (the comment covers params modified while the layer is
+  being removed). A params object detached from its layer therefore produces no
+  graph-level signal rather than an error.
 
 ## Used by
 

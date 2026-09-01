@@ -8,9 +8,22 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/PropertyName tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PropertyName` is the interned, namespace-qualified name of a top-level property of a
+feature — `gpml:reconstructionPlateId`, `gml:validTime`, and so on. It is nothing more
+than `QualifiedXmlName` instantiated on `PropertyNameFactory`, and `PropertyNameFactory`
+in turn does nothing but name the process-wide string pool that property names live in:
+its single static `instance()` forwards to `StringSetSingletons::property_name_instance()`.
+The class is uninstantiable on purpose — its only constructor is private and never
+defined — because it is a compile-time tag, not an object.
+
+That indirection is what keeps the seven `QualifiedXmlName` instantiations in the tree
+apart. `FeatureType`, `StructuralType`, `XmlAttributeName`, `XmlElementName`,
+`EnumerationType` and `ValueObjectType` are built the same way, each with its own factory
+tag and its own `GPlatesUtils::StringSet` singleton, so a property name and a feature type
+that happen to spell the same word are stored in different pools and are different types.
+Every `TopLevelProperty` carries one `PropertyName`, `Gpgim` keys its property definitions
+by it, and the readers and writers in `file-io` construct them from XML through the
+`create_gpml` / `create_gml` named constructors inherited from `QualifiedXmlName`.
 
 ## Declared types
 
@@ -39,9 +52,18 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/PropertyName tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All the behaviour — comparison, lifetime, construction cost — comes from
+`QualifiedXmlName`; read its notes before changing anything here. Two points are specific
+to this header:
+
+- There is no implicit conversion between name kinds. `QualifiedXmlName`'s cross-type
+  constructor is `explicit` and re-inserts the local name into the target instantiation's
+  `StringSet`, so writing `FeatureType(some_property_name)` is a fresh interning in a
+  different pool, not a cast.
+- `StringSetSingletons::property_name_instance()` is a `GPlatesUtils::Singleton` created
+  lazily on first use, and that singleton template is not thread-safe unless
+  `GPLATES_SINGLETON_THREADSAFE` is defined (it is not, in this build). Constructing
+  `PropertyName` values from more than one thread races on the shared `std::set`.
 
 ## Used by
 

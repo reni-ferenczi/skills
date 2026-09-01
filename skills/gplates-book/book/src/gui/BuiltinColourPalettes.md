@@ -9,9 +9,44 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/BuiltinColourPalettes tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the catalogue of every colour palette GPlates ships with — not a class
+hierarchy but a namespace of factory functions, each returning a fresh
+`ColourPalette<double>::non_null_ptr_type`. It is the counterpart to
+`AgeColourPalettes` (which colours *features* by age) on the raster and
+scalar-field side: everything here maps a continuous `double` to a colour, and
+the callers are the visual-layer parameter objects
+(`RasterVisualLayerParams`, `TopologyNetworkVisualLayerParams`,
+`ReconstructScalarCoverageVisualLayerParams`, `ScalarField3DRenderParameters`)
+plus the palette-picking UI in `ChooseBuiltinPaletteDialog`.
+
+There are two quite different construction routes hidden behind the uniform
+return type, and knowing which is which matters when you add a palette. The
+**named palette families** — `Age`, `Topography` and `SCM` (Fabio Crameri's
+Scientific Colour Maps) — are backed by CPT files compiled into the binary as Qt
+resources; each namespace has a private `get_cpt_filename()` mapping its enum to
+a `:/…​.cpt` path, and all three `create_palette()` overloads are one-liners over
+the shared file-loading `create_palette(QString, bool)` in the anonymous
+namespace, which runs the file through
+`ColourPaletteUtils::read_cpt_raster_colour_palette`. The **computed palettes** —
+`create_scalar_colour_palette`, `create_gradient_colour_palette`, the three
+`create_strain_rate_*` functions and both ColorBrewer `create_palette`
+overloads — build a `RegularCptColourPalette` slice by slice in code. So adding
+an SCM entry means adding a `.cpt` resource and two switch cases; adding a
+strain-rate style means writing colour arithmetic.
+
+Every route converges on the same final step: a `RegularCptColourPalette`
+(keyed by `GPlatesMaths::Real`) wrapped by
+`convert_colour_palette<…, double>(…, RealToBuiltInConverter<double>())`. That
+is why each header comment repeats the warning that the returned object is a
+`ColourPaletteAdapter` and a visitor will therefore see a
+`RegularCptColourPalette` rather than anything named after the palette family —
+there is no distinct type per built-in palette, and visitors such as the
+`RangeVisitor`s in `ColourPaletteUtils` and `ColourScaleGenerator` can only
+match on `visit_regular_cpt_colour_palette`. The enums here are the *identity* of
+a palette; the object that carries a user's choice across sessions is
+`BuiltinColourPaletteType`, which stores one of these enums plus a `Parameters`
+struct (inversion, ColorBrewer class count, continuous vs. stepped) — which is
+why every enum in this file has a matching `transcribe()` overload.
 
 ## Declared types
 
@@ -171,9 +206,67 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/BuiltinColourPalettes tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The `transcribe()` string ids are a file-format contract.** Each carries an
+explicit warning: the `GPlatesScribe::EnumValue` strings are what land in saved
+sessions and `.gproj` files, so renaming an enumerator is fine but changing its
+string id breaks backward and forward compatibility. Adding an enumerator means
+adding it to `get_palette_name()`, to `get_cpt_filename()` or `get_colours()`,
+*and* to `transcribe()`; miss the last one and old projects still load while new
+ones silently lose the setting. The enumerator ordering is not part of the
+contract — the protocol is by name, not by value.
+
+**Assertions, not error handling, guard the built-in data.** The shared CPT
+loader deliberately discards its `ReadErrorAccumulation` ("the age CPT file is
+embedded and should just work") and then asserts that the result was a
+real-valued palette; if `invert` is requested it asserts again that the visitor
+produced something, which only holds if the loaded palette really was a
+`RegularCptColourPalette`. Both `get_cpt_filename()` and `get_palette_name()`
+end in `GPlatesGlobal::Abort` on an unhandled enum value, and the ColorBrewer
+factories assert `colours.size() == classes`. A malformed or missing `.cpt`
+resource is therefore an abort, not a user-visible error — correct for embedded
+data, but it means a botched `.qrc` edit shows up as a crash on palette
+selection.
+
+**Inversion is done two incompatible ways.** For CPT-backed palettes it goes
+through `InvertPaletteVisitor`, which rebuilds the slice list in reverse, mirrors
+each slice's value range about the palette bounds, swaps each slice's lower and
+upper colours, and swaps background with foreground — while deliberately leaving
+the NaN colour alone. It quietly returns nothing (leading to the assertion above)
+when the source palette has no range. For ColorBrewer it is just
+`std::reverse` on the colour vector before the slices are built. If you add a
+palette family, be clear which mechanism applies.
+
+**ColorBrewer's `Classes` enums are their own values.** `Three = 3` and the rest
+follow, so `std::size_t(classes)` is the actual class count and the code relies
+on that. `continuous` changes the slice count as well as the appearance:
+continuous uses `classes - 1` intervals blending between adjacent colours,
+stepped uses `classes` intervals each a flat colour. The diverging palette is
+further special-cased so that colours are only interpolated within `[-1, 0]` and
+`[0, 1]`: an odd class count places a sample exactly at zero, while an even count
+deliberately introduces a colour *discontinuity* at zero rather than blending
+across it. Do not "simplify" that branch — it is preserving the ColorBrewer
+design intent.
+
+Smaller points:
+
+- The ColorBrewer colour tables are generated, not hand-written. The Python
+  script that produced them is preserved verbatim in a comment at the top of the
+  `ColorBrewer` namespace, together with the upstream JSON source; regenerate
+  rather than edit by hand.
+- `get_colours()` lazily fills a function-local `static std::map` on first call,
+  guarded by a plain `static bool` flag. This is not thread-safe under C++03
+  semantics and there is no locking — everything here is assumed to run on the
+  GUI thread.
+- The strain-rate palettes are logarithmic. `min_abs_strain_rate` is silently
+  floored at `1e-40` and `max` silently raised to `min`, so passing junk gives a
+  degenerate palette rather than an error. `max_log_spacing` controls slice
+  density in log space; passing a value at or below `1e-6` yields
+  `num_slices_per_blend == 0`, which produces a palette with *no* interior
+  slices — only background, foreground and (for dilatation) the zero slice.
+- Every `create_*` call constructs a brand-new palette object; nothing here is
+  cached or shared. Reading a CPT resource on each call makes
+  `Age`/`Topography`/`SCM` `create_palette()` markedly more expensive than the
+  computed ones — call it when the user changes a setting, not per frame.
 
 ## Used by
 

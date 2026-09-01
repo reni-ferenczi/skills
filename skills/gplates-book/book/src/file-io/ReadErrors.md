@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReadErrors tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header is nothing but three enums, and it is a tier-one unit because those enums are the vocabulary every reader in `file-io` speaks. A reader never formats a user-facing message; it picks a `Description` (what went wrong) and a `Result` (what GPlates did in response), packs them into a `ReadErrorOccurrence`, and pushes that into a `ReadErrorAccumulation`. Translation to text happens later and elsewhere, in `ReadErrorMessages`, which is what makes read-error messages translatable, consistently worded, and groupable by code — `ReadErrorUtils::group_read_errors_by_type` keys its map directly on a `Description` value. Because it declares no types and includes nothing, this header sits at the very bottom of the file-io dependency graph and is pulled in by essentially every reader.
+
+`Description` and `Result` are flat, unnamespaced-by-format enumerations organised only by comment blocks — one run of enumerators per format family (PLATES rotation, PLATES line, OGR/shapefile, rasters, GPML, GMAP, CPT, Hellinger) followed by a tail of codes generic to any local file, such as `ErrorOpeningFileForReading` and `FileIsEmpty`. Nothing enforces that a `Description` from one family is paired with a `Result` from the same family; the pairing is a per-reader convention. The header's own instruction is that entries stay in the order used by the project's `ReadErrorMessages` wiki table and that every new enumerator gets a matching row in `ReadErrorMessages.cc`. That second half is the part that bites: the lookup is a `std::map` populated from a static table, and a code with no row silently renders as a placeholder like "(No error description found.)" rather than failing to build.
+
+`Severity` is a different kind of enum and the only one with meaningful numeric values: it is explicitly ordered least-to-most severe from `NothingWrong` upward, mirroring the four collections of `ReadErrorAccumulation`. It is not stored on an occurrence — severity is decided by *which* accumulation vector a reader pushes into — and it is produced on demand by `ReadErrorAccumulation::most_severe_error_type()` so the GUI can decide how prominently to report a load.
 
 ## Declared types
 
@@ -236,9 +238,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReadErrors tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The enumerator values are never persisted — they are not written to project files or transcriptions — so reordering or inserting enumerators is safe for data compatibility. `Severity` is the one exception in spirit: it is explicitly value-initialised (`NothingWrong = 0`) and its ordering is compared as an ordinal by callers deciding how severe an accumulation is, so its relative order is part of its contract even though the numbers themselves are not stored.
+
+Adding a `Description` or `Result` without a corresponding row in the static tables in `ReadErrorMessages.cc` produces no compile-time or run-time error. The lookup maps are built once from those tables and a miss yields a placeholder QString, so the failure mode is a user seeing "(Text not found for error description code.)" in the read-errors dialog. Check both the description and result tables — they are separate.
+
+A few enumerators are dead or on the way out and the comments say so: `NoPlateIdLoadedForFile` is marked with a TODO to remove along with its messages, and `ElementIgnored` is flagged as unused in the result table. Do not assume every enumerator here is currently emitted by some reader.
+
+The PLATES rotation-format enumerators at the top of both `Description` and `Result` were carried over verbatim from the ReconTreeViewer project's own enumerations, which is why their naming style differs from the rest of the file.
 
 ## Used by
 

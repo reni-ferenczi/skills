@@ -8,9 +8,26 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLViewport tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A header-only value type wrapping the `(x, y, width, height)` integer rectangle
+that OpenGL uses for both the viewport and the scissor box. It is tier 1 not
+because it is complicated but because it is the currency for every screen-space
+rectangle in the backend, and one of the most widely used types in `opengl`.
+
+The one design decision worth knowing is the private `Viewport` union: the four
+components are addressable both as named fields and as a `GLint[4]`. That is why
+`get_viewport()` can hand its storage straight to `gluProject` and `gluUnProject`
+in `GLProjectionUtils` with no repacking, while `GLStateSets` uses the named
+accessors to feed `glViewport` and `glScissor`, and packs several `GLViewport`
+objects into one contiguous array for the `glViewportArrayv` /
+`glScissorArrayv` multi-viewport paths.
+
+In the render path, `GLRenderer::gl_viewport` and `gl_scissor` store these into
+the shadowed state and `gl_get_viewport` / `gl_get_scissor` read them back;
+`GLViewportStateSet` and `GLScissorStateSet` hold them and use `operator==` to
+skip redundant driver calls. `GLTileRender` produces a triple of them per tile
+when rendering an image larger than the framebuffer, and the canvases
+(`GPlatesQtWidgets::GlobeCanvas`, `GPlatesQtWidgets::MapCanvas`) supply the
+window rectangle that everything downstream projects against.
 
 ## Declared types
 
@@ -44,9 +61,25 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLViewport tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `operator==` is load-bearing, not decoration: `GLViewportStateSet` and
+  `GLScissorStateSet` compare viewports to decide whether to issue `glViewport` /
+  `glScissor` at all. If you ever add a field here, extend `operator==` too, or
+  redundant-state elimination will silently start dropping real state changes.
+- The union aliases `width` and `height`, declared `GLsizei`, onto elements of a
+  `GLint[4]`. It works because the two are the same size on the supported
+  platforms, and the anonymous struct inside the union is a compiler extension
+  rather than standard C++. Both assumptions are worth remembering before
+  changing the member types.
+- Nothing is validated. The default constructor produces `(0, 0, 0, 0)` — a legal
+  but empty rectangle, not an "unset" marker — and negative widths or heights are
+  stored as given and only rejected later by OpenGL.
+- `get_viewport()` returns a reference into the object's own storage; do not hold
+  it past the `GLViewport`'s lifetime.
+- The class itself is a plain copyable value with no GL resources, safe to
+  construct and compare anywhere. `GLRenderer::gl_get_viewport` and
+  `gl_get_scissor`, however, must be called between `begin_render` and
+  `end_render`, and their `viewport_index` must be below
+  `GLCapabilities::viewport::gl_max_viewports`.
 
 ## Used by
 

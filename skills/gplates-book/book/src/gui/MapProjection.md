@@ -9,9 +9,44 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapProjection tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MapProjection` is GPlates' wrapper around the PROJ library, and the single point
+of truth for the 2-D map view's coordinate system. It converts between geographic
+`LatLonPoint` / `PointOnSphere` and a 2-D map space expressed as `QPointF`, and
+everything that draws or hit-tests the map goes through it — the layer painters,
+`MapGrid` and `MapBackground`, the OpenGL cube-mesh generators, `GLLight`, and the
+canvas tools that need to turn a scene position back into a location. It is
+reference-counted (`GPlatesUtils::ReferenceCount`) precisely because it is shared
+that widely; the projection settings themselves are chosen in
+`SetProjectionDialog` / `ProjectionControlWidget` and carried by
+`ViewportProjection`.
+
+Rather than configuring PROJ fully and trusting it, this class deliberately keeps
+several responsibilities on the GPlates side. The PROJ object is always created
+with `lon_0=0.0`, and the central meridian is applied by hand — subtracted from
+longitude and wrapped back into [-180, 180] before projecting, added back after
+inverting — because older PROJ versions misbehaved with a non-zero central
+meridian. The Rectangular projection bypasses PROJ entirely and is an identity map
+from degrees to map units, because PROJ treats `latlong` as a special case whose
+units varied across versions. The remaining projections come out of PROJ in
+metres, so each row of the file-local `projection_table` carries a `scaling_factor`
+that brings them roughly into the same degree-scaled units as Rectangular. On top
+of that the code carries three PROJ dialects at once: a `GPLATES_USING_PROJ4`
+compile-time branch, and a runtime `d_proj_info.major == 5` test, mostly because
+PROJ 4 and 5 want radians while PROJ 6+ accepts degrees for `latlong`.
+
+The most interesting design decision is that the map boundary is not described
+analytically anywhere. Latitude is clamped just inside the poles and longitude
+wrapped in `forward_transform()`, and that clamping *is* the definition of the map
+edge. `inverse_transform()` therefore validates itself: it inverts, then forward
+transforms the result and rejects the point unless the round trip lands back where
+it started within `CHECK_FORWARD_TRANFORM_MAP_SPACE_DELTA_THRESHOLD`. Without this
+the Mercator inverse cheerfully returns plausible longitudes for points far off
+the left or right of the map. `is_inside_map_boundary()` is nothing more than
+"did `inverse_transform()` succeed", `get_map_boundary_position()` bisects along a
+segment using that predicate to find the edge crossing (valid because the boundary
+is convex, so the segment crosses once), and `get_map_bounding_radius()` samples
+eight extremal lat/lon points and caches the largest distance from the origin —
+the origin being wherever (0, central meridian) lands.
 
 ## Declared types
 
@@ -98,9 +133,60 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapProjection tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**`ORTHOGRAPHIC` is not a projection, and an object set to it silently does
+nothing.** The enum starts at `ORTHOGRAPHIC = 0` only so its values line up with
+the projection combo box, whose zeroth entry is the 3-D globe.
+`set_projection_type(ORTHOGRAPHIC)` returns before creating any PROJ object, so
+`forward_transform()` returns its input unchanged and `inverse_transform()`
+returns `boost::none` / false. The no-argument `create()` leaves the object in
+exactly that state. The enum order must also stay in step with
+`projection_table`, which `get_display_name()` indexes directly with no bounds
+check.
+
+**Every transform is far more expensive than it looks.** `inverse_transform()`
+runs a full `forward_transform()` for its round-trip validation, so it costs at
+least two PROJ calls. `is_inside_map_boundary()` is a full inverse transform. And
+`get_map_boundary_position()` bisects until the interval falls below
+`bisection_iteration_threshold_ratio` (default 1e-6) times the bounding radius,
+calling `is_inside_map_boundary()` on every iteration — roughly twenty inverse
+transforms per call. None of this is suitable per-vertex in a render loop.
+
+**Error handling is asymmetric.** A failed inverse is reported by return value,
+but the forward path *throws*: `ProjectionException` from `set_projection_type()`
+when PROJ initialisation fails, and again from `forward_proj_transform()` if PROJ
+returns `HUGE_VAL`. Since the constructors call `set_projection_type()`, `create()`
+can throw. `get_map_boundary_position()` additionally asserts
+(`PreconditionViolationError`) that the caller really did pass one inside and one
+outside point.
+
+**Mutating a shared projection changes it for everyone.** The object is
+reference-counted and handed around widely, yet `set_projection_type()` and
+`set_central_meridian()` are non-const. Most clients therefore hold
+`non_null_ptr_to_const_type`. Note also that `set_central_meridian()` is not a
+cheap parameter tweak: it re-enters `set_projection_type()`, which destroys and
+recreates the PROJ object and invalidates the cached bounding radius.
+
+**`d_cached_bounding_radius` is `mutable` and lazily filled by a `const` method**,
+so `get_map_bounding_radius()` is not safe to call concurrently on one instance
+even though it looks like a read.
+
+**`MapProjectionSettings` is the comparison key, not a configuration struct.** Two
+`MapProjection`s produce identical results iff their settings compare equal, which
+is how callers decide whether cached projected geometry can be reused. It compares
+the central meridian with `are_almost_exactly_equal`, so it is an exact-value
+comparison, not a tolerance. It sits outside `MapProjection` rather than nested
+because the injected `friend operator==` caused compile problems on some systems.
+
+**The clamping epsilon has visible consequences.**
+`CLAMP_LATITUDE_NEAR_POLES_EPSILON` is 1e-5, applied to every projection for
+consistency even though only Mercator needs it. Because Mercator's y goes to
+infinity at the pole, this constant sets the *height* of the Mercator map — the
+code notes that changing it from 1e-3 to 1e-5 alters the range noticeably. There
+is a second, less obvious dependency: the comment in `forward_transform()` warns
+that global grid-line-registered raster export in the Rectangular projection
+relies on the extents being exactly [-90, 90] and [-180, 180] after subtracting
+the central meridian, so changes to the wrapping and clamping code there need to
+be checked against raster export.
 
 ## Used by
 

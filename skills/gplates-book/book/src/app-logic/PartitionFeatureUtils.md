@@ -9,9 +9,40 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/PartitionFeatureUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The machinery behind "Assign Plate IDs" / cookie-cutting. Given one feature and a
+`GeometryCookieCutter` (a set of partitioning polygons already resolved at some
+reconstruction time), this unit splits every geometry property of the feature at
+the polygon boundaries, and then redistributes the pieces into one or more
+features whose plate id, conjugate plate id and valid time are copied from the
+partitioning polygon's own feature. `GenericPartitionFeatureTask` is the caller
+that drives the whole sequence; `AssignPlateIds` supplies the flags that say which
+property types to copy.
+
+The unit is split into a read phase and a write phase, and the split matters.
+`partition_feature` only *reads*: an internal `PartitionFeatureGeometryProperties`
+visitor walks the feature's properties, hands each geometry to
+`GeometryCookieCutter::partition_geometry`, and returns a `PartitionedFeature`
+describing the result — keyed by geometry *domain* property name, and holding, per
+name, the inside geometries grouped by partitioning `ReconstructionGeometry`, the
+outside geometries, and shallow clones of the original properties. Optionally it
+also hands back iterators to the properties it partitioned. Only then does the
+caller remove those properties from the feature and call
+`add_partitioned_geometry_to_feature` (spread the pieces over their polygons) or
+`add_unpartitioned_geometry_to_feature` (move the whole property to one chosen
+polygon, using `find_partition_containing_most_geometry`) to write results back.
+Every geometry written back is first reverse-reconstructed to present day by
+`reverse_reconstruct`, because the model stores present-day geometry.
+
+Two supporting pieces carry most of the subtlety. `PartitionedFeatureManager`
+rations features: the original feature is handed out to the first requester and
+clones of a constructor-time snapshot to everyone after, with
+`PropertyValueAssigner` (in practice `GenericFeaturePropertyAssigner`) filling in
+each new feature's properties exactly once, at first use. And scalar coverages —
+a geometry *domain* property with an associated *range* of
+`GmlDataBlockCoordinateList` scalars — have to be cut in step with their geometry,
+which `partition_range` does by mapping each partitioned point back to its index
+in the original domain, and interpolating along the nearest segment for the new
+points that the intersection created.
 
 ## Declared types
 
@@ -165,9 +196,66 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/PartitionFeatureUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Ordering.** `partition_feature` must run to completion before the feature is
+modified — it holds `FeatureHandle::iterator`s and reads live property values.
+`GenericPartitionFeatureTask` relies on this: it partitions first, then removes
+the returned `partitioned_properties`, then adds new ones. Reversing that order
+invalidates the results.
+
+**The null return is normal.** With `respect_feature_time_period` true (the
+default), a feature that does not exist at the cookie cutter's reconstruction time
+yields an empty `boost::shared_ptr`, not an empty `PartitionedFeature`. Callers
+must test it.
+
+**Feature identity.** `PartitionedFeatureManager` never destroys the original
+feature — the constructor comment states that feature deletion is not fully
+supported — so the original is always the first feature handed out, and every
+later one is a clone of `d_feature_to_clone_from`, a snapshot taken in the
+constructor. The snapshot exists precisely so that edits the caller makes to the
+original feature (stripping its geometry properties, assigning it a new plate id)
+do not propagate into subsequent clones. All the manager's handles are `weak_ref`s
+into the model; the feature collection passed in must outlive it.
+
+**Why a feature can split further than you expect.**
+`get_feature_for_partition` refuses to put two geometry domains with the same
+property name into the same feature when either of them has an associated scalar
+range, because the domain-to-range association is by property name and would
+become ambiguous. So a coverage-bearing feature can yield more output features
+than there are partitioning polygons.
+
+**Property assignment is destructive by contract.** Every
+`assign_*_to_feature` helper removes all existing properties of that name first,
+then adds at most one. Passing `boost::none` therefore *deletes* the property.
+When `verify_information_model` is true the add goes through
+`ModelUtils::add_property` with GPGIM checking, and a property that would violate
+the GPGIM is silently not added after the old one has already been removed.
+
+**Coverage partitioning is approximate.** The domain-to-range map is keyed by
+`PointOnSphere` with `PointOnSphereMapPredicate`, an epsilon comparison, so two
+points closer than the tolerance collapse onto one entry and one point's scalar
+association is lost (flagged as a TODO in the source). Points created by the
+intersection are not in the map at all and get scalars interpolated along the
+closest segment, which is only correct because the current partitioner emits
+polylines that lie on the original geometry — the source notes this will need
+revisiting once the partitioner emits polygons. `minimum_distance` is first tried
+with a 0.5-degree threshold and repeated without one if that fails. Only
+*exterior* points are considered, so scalars on polygon interior rings are not
+supported. If the scalar count does not match the domain point count,
+`Range::range_matches_domain` rejects the coverage and the geometry is partitioned
+with no range at all — silently.
+
+**`GeometrySizeMetric` mixes units.** It accumulates point counts and arc lengths
+separately, and `operator<` compares arc distance whenever *either* side has seen a
+polyline or polygon. In a feature mixing point and line geometry, partitions
+holding only points therefore compare as zero-sized against any partition holding
+a line.
+
+**Performance.** `reverse_reconstruct` constructs a fresh
+`ReconstructMethodRegistry` — registering every default reconstruct method type —
+on each call, and it is called once per partitioned geometry. The write-back paths
+wrap their model edits in a `GPlatesModel::NotificationGuard` to coalesce model
+callbacks; keep that when adding new edits. `reverse_reconstruct` returns its
+input unchanged if the feature ref is invalid.
 
 ## Used by
 

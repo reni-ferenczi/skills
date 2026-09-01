@@ -9,9 +9,49 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLMultiResolutionRaster tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the class that puts a georeferenced raster onto the globe. It takes a
+`GLMultiResolutionRasterSource` (the pixel data, of any dimensions), a
+`GPlatesPropertyValues::Georeferencing` and a
+`GPlatesPropertyValues::CoordinateTransformation`, and builds a pyramid of
+square texture tiles where each tile also carries its own triangle mesh whose
+vertices lie on the unit sphere. Everything downstream builds on it:
+`GLMultiResolutionCubeRaster` re-renders it into cube-face tiles,
+`GLScalarField3DGenerator` drives it to extract depth layers,
+`RasterLayerProxy` and `GLVisualLayers` are where it gets created for a raster
+layer.
+
+Two problems are solved here, and the split runs through the whole class. The
+first is *which resolution*: `get_level_of_detail` asks
+`GLProjectionUtils::get_min_pixel_size_on_unit_sphere` how big a viewport pixel
+is on the globe and takes the log2 ratio against
+`d_max_highest_resolution_texel_size_on_unit_sphere`, which was measured once at
+construction by sampling the level-0 tiles. It returns the *unclamped* value on
+purpose, so a caller rendering into a texture can see it needs a bigger render
+target rather than settle for a blurrier raster. The second is *which tiles*:
+each level of detail owns its own oriented-bounding-box tree, built bottom-up
+over that level's tile grid, and `get_visible_tiles` walks it against a
+`GLFrustum` using `GLIntersect::intersect_OBB_frustum`, narrowing the active
+plane mask as it descends. Only tiles that survive that walk ever get a texture
+uploaded or a vertex buffer filled — the `LevelOfDetailTile` objects created up
+front hold nothing but the description needed to build them on demand, and both
+the textures and the vertices live behind `GPlatesUtils::ObjectCache` so they
+recycle as the view pans.
+
+A single `dynamic_cast` on `d_raster_source` selects between four rendering
+modes, and the branch is repeated wherever vertex size or shader setup matters.
+An ordinary fixed-point raster uses the fixed-function pipeline with a
+`GL_REPLACE` texture environment and a plain `GLTextureVertex`. A floating-point
+raster switches to a fragment shader purely to escape the fixed-function
+pipeline's clamping of values to [0,1], which would corrupt data-analysis
+rasters. A `GLNormalMapSource` or `GLScalarFieldDepthLayersSource` needs a
+per-vertex tangent-space frame — computed here from the neighbouring vertex
+positions, reaching outside the tile when the raster continues past its edge —
+and a `SURFACE_NORMALS` or `SCALAR_GRADIENT` variant of
+`multi_resolution_raster/render_raster_fragment_shader.glsl` to convert
+tangent-space normals into world space. `clear_frame_buffer` exists for the same
+family of cases: a *regional* normal map only covers part of a render target, so
+the area outside it has to be filled with sphere normals rather than zeros,
+which `RenderSphereNormals` does by drawing a cube and normalising in the shader.
 
 ## Declared types
 
@@ -122,9 +162,71 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLMultiResolutionRaster tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Crack avoidance is the invariant most likely to be broken by an edit.**
+  Adjacent tiles must produce *bitwise identical* vertex positions along their
+  shared edge or the raster shows intermittent gaps. Three things enforce it:
+  tile boundaries are integer geo (pixel) coordinates of the original raster;
+  `load_vertices_into_tile_vertex_buffer` special-cases the last row and column
+  to use `x_geo_end`/`y_geo_end` exactly instead of accumulating
+  `i * x_pixels_per_quad`; and `d_num_texels_per_vertex` is a 16:16 fixed-point
+  value rather than a float, so two adjacent tiles cannot disagree about how
+  many vertices go along a common edge. Any change to the vertex generation path
+  has to preserve all three.
+- **The caller owns the frame-to-frame cache.** `render` returns a
+  `cache_handle_type` that must be kept alive until *after* the next `render`
+  call — assign over it, do not clear it first. Dropping it early makes every
+  tile texture and vertex buffer eligible for recycling each frame. Note that
+  `ClientCacheTile` always retains the `GLMultiResolutionRasterSource` cache
+  handle but retains *our* tile texture only when `d_cache_tile_textures` is not
+  `CACHE_TILE_TEXTURES_NONE`.
+- **`CACHE_TILE_TEXTURES_ENTIRE_LEVEL_OF_DETAIL_PYRAMID` disables recycling
+  outright.** The constructor calls `set_min_num_objects(d_tiles.size())` on
+  both caches, so memory grows to hold every tile that is ever touched, across
+  every level. The header is explicit that this is for repeated data analysis
+  over a whole floating-point raster (raster co-registration), never for visual
+  display.
+- **Vertices are written by placement `new` into mapped, write-only buffer
+  memory.** `load_vertices_into_tile_vertex_buffer` maps the vertex buffer with
+  `GLBuffer::ACCESS_WRITE_ONLY` and constructs each vertex directly in place;
+  that memory may be video memory and must never be read back. It is filled with
+  `USAGE_STATIC_DRAW` deliberately, to get the driver to place it in fast
+  memory, even though a recycled tile rewrites it.
+- **The OBB tree is stored bottom-up in a flat vector,** so the root node is the
+  *last* element of `obb_tree_nodes`, not the first — always enter through
+  `obb_tree_root_node_index`. `OBBTreeNode` overlays the two child indices and
+  the tile handle in a union, discriminated by `is_leaf_node`.
+- **Tile textures are never mipmapped and are filtered `GL_NEAREST` in both
+  directions.** The auto-mipmap path is `#if 0`'d out because it misbehaved when
+  the source was itself a render-target texture (age grid mask), and the class
+  relies on its own LOD pyramid instead. Anisotropic filtering is the only
+  filtering applied, and only to non-floating-point textures when the extension
+  is present and `FIXED_POINT_TEXTURE_FILTER_ANISOTROPIC` was requested. The
+  Doxygen on `DEFAULT_FIXED_POINT_TEXTURE_FILTER` still says "bilinear"; the
+  enum comment nearby corrects this to nearest, which is what the code does.
+- **Staleness tracking runs through the source, not through this class.**
+  `get_subject_token` simply forwards the raster source's token — valid only
+  because there is exactly one input source, as the comment notes. Each
+  `LevelOfDetailTile` holds a mutable `ObserverToken`, and a tile texture that
+  survived in the cache is reloaded when the source token has moved on.
+- **`supports_normal_map_source` and `supports_scalar_field_depth_layers_source`
+  memoise into function-local statics** — the first `GLRenderer` to ask fixes
+  the answer for the whole process, including the test compile-and-link of the
+  fragment shader. `create_shader_program_if_necessary` asserts that the real
+  compile succeeds, so a client that skips the `supports_*` call and runs on
+  hardware that cannot compile the shader gets an assertion, not a graceful
+  fallback.
+- **Latitude clamping is conditional.** `convert_pixel_coord_to_geographic_coord`
+  clamps latitudes outside ±90 (rasters whose extent is, say, [-90.05, 90.05]),
+  but only compensates the `v` texture coordinate when the coordinate
+  transformation is the identity and the georeferencing has no rotation or skew
+  terms. Longitude is wrapped into [-360, 360] rather than clamped, so a raster
+  spanning [-0.05, 360.05] keeps its seamless wrap.
+- Per-tile vertex counts are capped at 256 in each direction so the total stays
+  inside the `GLushort` index range, and the index buffers themselves are shared
+  across every tile with the same vertex dimensions via
+  `d_vertex_element_buffers`.
+- `render` wraps its work in a `GLRenderer::StateBlockScope`, so it leaves the
+  renderer state as it found it.
 
 ## Used by
 

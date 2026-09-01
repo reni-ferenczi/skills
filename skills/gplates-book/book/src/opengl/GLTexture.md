@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLTexture tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLTexture` wraps one OpenGL texture name and adds the two things raw `glGenTextures` does not give you: lifetime tied to the context's resource manager, and a record of what the texture actually is. The `gl_tex_image_*` and `gl_copy_tex_image_*` methods cache the level-0 width, height and depth and the internal format as they go, so the rest of the backend can ask a texture its dimensions without a `glGetTexLevelParameteriv` round trip — `GLRenderer::begin_render_target_2D` depends on exactly this to size its render target, and `GLFrameBufferObject` and `GLSaveRestoreFrameBuffer` on the same information. The header notes why the name has no `Object` suffix, unlike `GLBufferObject` or `GLFrameBufferObject`: texture objects are core in OpenGL 1.1, the lowest version GPlates supports, so there is no software-emulation fallback to distinguish from.
+
+Every method takes a `GLRenderer &`, because a texture cannot be modified without being bound and binding is global state the renderer owns. Each one opens a `GLRenderer::BindTextureAndApply` scope on texture unit zero, which both forces the renderer to push the binding to the driver *before* the direct `glTexParameter*`/`glCopyTexImage2D` call and reverts the binding afterwards, so a client's own bindings survive. The image-upload paths go one step further and route through `GLPixelBuffer`: the client-memory overloads call the corresponding `GLPixelBufferImpl` static, which guarantees no native pixel buffer object is left bound while sourcing from client memory, and the `GLPixelBuffer` overloads hand the work to the buffer itself. That inversion — the pixel buffer uploads to the texture rather than the texture reading from the buffer — is why the buffer overloads take an `offset` and why `GLTexture` needs `boost::enable_shared_from_this` to pass itself along.
+
+The underlying name lives in a `GLObjectResource<GLuint, Allocator>` obtained from the context's shared state, so the texture is shared with any context that shares state with the one it was created on, and destruction only *queues* the `glDeleteTextures` — the resource manager issues it later, when a context is current.
 
 ## Declared types
 
@@ -73,9 +75,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLTexture tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The cached dimensions are a promise the caller must keep.** They are recorded only from level-0 calls, and only from the methods that specify a whole image — `gl_tex_sub_image_*` deliberately does not touch them. Nothing here re-reads the driver, so if you change a texture's size or format behind this class's back, everything downstream believes the stale values. `GLContext::SharedState::acquire_texture` treats that as a hard error: on recycling a cached texture it asserts that width, height, depth and internal format still match the key it was cached under, and throws `OpenGLException` if a previous client changed them.
+
+**Dimensions are `boost::optional` for a reason.** They stay `boost::none` until an image-specification call has been made, so `get_width()` returning nothing means "uninitialised texture", which is precisely the precondition `GLRenderer::begin_render_target_2D` asserts on. `get_height()` also carries the layer count for a `GL_TEXTURE_1D_ARRAY` and `get_depth()` for a `GL_TEXTURE_2D_ARRAY`, so a non-`none` height does not by itself mean the texture is two-dimensional. The Doxygen on `get_internal_format` is inverted and says the opposite of what the code does — the value is present *after* an image specification call, not before.
+
+**Must live in a `shared_ptr` before any method is called.** Every method that binds calls `shared_from_this()`. `create_as_unique_ptr` exists only so ownership can be handed straight to a `GPlatesUtils::ObjectCache` (which is also why `boost::shared_ptr` is used here rather than `non_null_intrusive_ptr`); calling a method on the `unique_ptr` before the cache has taken it throws `boost::bad_weak_ptr`.
+
+**Deallocation is deferred and context-aware.** `~GLObjectResource` only queues the handle with the resource manager rather than calling `glDeleteTextures`, so a texture can be dropped on any thread or with no context current. If the manager itself is already gone the handle is silently abandoned — correct, because that means the context died and took its objects with it.
+
+**Binding side effects.** The methods bind on unit zero and restore the previous binding, but they do *not* restore the renderer's applied state: `BindTextureAndApply` reverts the bind and leaves the apply, per its own contract. They also set the active texture unit as a side effect. For a cube map, `gl_copy_tex_image_2D` binds `GL_TEXTURE_CUBE_MAP_ARB` while passing the per-face target to OpenGL — a distinction the other methods do not make, so passing a cube face target to `gl_tex_parameter*` binds the wrong thing.
+
+**`is_format_floating_point` is a range test.** It works by comparing the internal format against `GL_RGBA32F_ARB`..`GL_LUMINANCE_ALPHA16F_ARB` and `GL_R16F`..`GL_RG32F` (plus two packed-float constants under `#ifdef GL_EXT_packed_float`), relying on those enum values being contiguous. It deliberately excludes floating-point *depth* formats, so a float depth texture reports `false` — which matters because `GLRenderer::supports_floating_point_render_target_2D` and its callers use this to decide whether a render target is viable.
 
 ## Used by
 

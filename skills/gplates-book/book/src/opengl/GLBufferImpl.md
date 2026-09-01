@@ -9,9 +9,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLBufferImpl tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLBufferImpl` is the fallback half of the `GLBuffer` abstraction: the
+implementation chosen by `GLBuffer::create` when `GLCapabilities` reports that
+the driver lacks the buffer-object extension the caller needs. It holds the
+"buffer" as a plain `boost::shared_array<GLubyte>` in system memory and lets
+OpenGL read it the pre-1.5 way, as a client-side array pointer handed straight
+to the draw call. That keeps the whole rendering backend able to run on a
+context that has no vertex or pixel buffer objects at all, without any client of
+`GLBuffer` knowing which representation it got.
+
+Because the data never leaves system memory, the entire synchronisation half of
+the `GLBuffer` contract collapses to nothing here. All three mapping entry
+points simply return the array pointer, both flush operations and the unmap are
+no-ops, and both `asynchronous_*_supported` predicates return true — OpenGL
+copies out of a client array while dereferencing it during the draw call, so
+there is no GPU-side reader to race with. `gl_map_buffer_stream` likewise
+reports the whole array as available from offset zero, since no part of it needs
+to be treated as still in flight.
+
+The counterpart to that design is `get_buffer_resource`, the escape hatch the
+render framework uses to obtain the raw client pointer. `GLRenderer`'s
+`DrawElementsDrawable`, `DrawRangeElementsDrawable`, `ReadPixelsDrawable` and
+`DrawPixelsDrawable`, the `gl_tex_image_*` and `gl_tex_sub_image_*` paths of
+`GLPixelBufferImpl`, and `Implementation::GLVertexAttributeBuffer` in
+`GLStateSets` all add their byte offset to it and pass the result to OpenGL where
+a buffer-object offset would otherwise go. Touch this class when adding a new
+kind of buffer usage: whatever `GLBufferObject` does with a bound handle, the
+equivalent here has to be expressible as a pointer into this array.
 
 ## Declared types
 
@@ -54,9 +78,32 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLBufferImpl tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`gl_buffer_data` always allocates a *new* array and drops the old one; it never
+resizes in place and never preserves the previous contents. Any raw pointer
+previously obtained from `get_buffer_resource` or from a mapping call therefore
+dangles afterwards, which is exactly why the base class publishes
+`has_buffer_been_allocated_since` and why `GLStateSets` re-reads the pointer
+whenever that observer fires. Do not cache the pointer across a
+`gl_buffer_data`.
+
+Handing out a raw pointer is only safe because the renderer keeps a shared
+reference to the `GLBufferImpl` itself until the queued drawable has been
+submitted to the GPU — the comment on `get_buffer_resource` states this
+explicitly. If you introduce a path that takes the pointer without the renderer
+holding the object, that guarantee is gone.
+
+The `target` and `usage` arguments are ignored entirely, as is the `GLRenderer &`
+passed to the constructor; they exist only so the signatures match
+`GLBufferObject`. Note also the asymmetry in NULL handling: `gl_buffer_data`
+explicitly leaves the array uninitialised when `data` is NULL, mirroring
+`glBufferData`, while `gl_buffer_sub_data` and `gl_get_buffer_sub_data` `memcpy`
+unconditionally after only a range assertion — the base class's `std::vector`
+overloads pass NULL with a zero size for an empty vector.
+
+This is the slow path by construction. Every draw re-reads the array through the
+driver instead of using GPU-resident storage, and each `gl_buffer_data` is a
+fresh heap allocation and copy, so it is not something to select deliberately —
+it is what you get when the extension is missing.
 
 ## Used by
 

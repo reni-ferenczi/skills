@@ -9,9 +9,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerModel tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the whole data model behind GPlates' Hellinger pole-fitting tool: the
+picks the user has digitised, the parameters that drive the fit, and the results
+that come back. It is a plain C++ class — no `QObject`, no signals, no dependency
+on anything but `GPlatesMaths::LatLonPoint` — deliberately kept as a passive value
+holder that `HellingerDialog` and its sub-widgets (`HellingerPickWidget`,
+`HellingerFitWidget`, `HellingerSegmentDialog`, `HellingerPointDialog`) all point
+at. It lives in `qt-widgets` only because that is where its owner lives; nothing
+about it is Qt-specific beyond the use of `QString`.
+
+The shape of the class is dictated by the Hellinger `.com` file format.
+`HellingerComFileStructure` is a field-for-field mirror of the parameter file that
+the original FORTRAN `hellinger1`/`hellinger3` codes read, and the model stores one
+of them as its live parameter block — so most of the "settings" accessors are thin
+forwarders onto `d_active_com_file_struct` rather than state of their own.
+`GPlatesFileIO::HellingerReader` and `GPlatesFileIO::HellingerWriter` populate and
+serialise both that struct and the picks; the reader is also what parses the fit
+results and error-ellipse point lists back out of the temporary files the solver
+writes.
+
+The picks themselves are a `std::multimap<int, HellingerPick>` keyed by segment
+number, and much of the class is the bookkeeping that keying implies:
+`renumber_segments()`, `make_space_for_new_segment()`, `segments_are_ordered()`,
+and a family of accessors that address a pick by (segment, row) by walking the
+`equal_range` for the segment. Actually computing a fit is not this class's job.
+`HellingerThread` reads the parameters straight off the model and passes them as
+arguments to `calculate_pole_2_way` / `calculate_pole_3_way` in a Python script
+executed through Boost.Python; the picks reach that script as a temporary pick file
+written by `HellingerWriter`, and the answers come back through `HellingerReader`
+into `set_fit_12()` and friends. So the model is the shared clipboard between the
+UI, the file-io layer and the Python solver, not a participant in the computation.
 
 ## Declared types
 
@@ -244,9 +271,68 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerModel tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The enumerator values are a file format.** `HellingerPlateIndex` is numbered
+1, 2, 3 and 31, 32, 33 because those are the plate codes written in and read from
+Hellinger pick files. Renumbering them silently breaks every existing `.pick` file.
+
+**"Enabled" is stored twice and the two copies can disagree.** A pick's state
+lives both in `HellingerPick::d_is_enabled` and in whether `d_segment_type` is a
+`PLATE_n_PICK_TYPE` or a `DISABLED_PLATE_n_PICK_TYPE`. The header's own FIXME
+flags this; `set_pick_state()` updates only the boolean. Any code that reads the
+enumerator — the writers, and `determine_fit_type_from_model()` — sees the other
+copy, so keep both in step whenever you touch a pick.
+
+**Row indices are positional and volatile.** `get_pick()`, `remove_pick()`,
+`pick_is_enabled()` and `set_pick_state()` address a pick by counting forward
+through the segment's `equal_range`, so every row after a removal or insertion
+renumbers. Out-of-range access is silent rather than diagnosed: `get_pick()`
+returns `end()` (compare against the model's `end()` before dereferencing),
+`pick_is_enabled()` returns `false` — indistinguishable from a genuinely disabled
+pick — and `remove_pick()` and `set_pick_state()` simply do nothing.
+
+**Segment numbering invariants.** `renumber_segments()` documents that it assumes
+keys are `>= 1`; with a segment 0 present it produces a zero-based result instead.
+`make_space_for_new_segment()` does not insert anything — it renumbers everything
+from `segment` upward by one to leave a hole, and the caller must then fill it.
+`segments_are_ordered()` is the check for the contiguous-from-1 invariant that
+most of the UI assumes; it is also O(n²), since it calls `unique_keys()` — which
+builds a fresh `std::set` over the whole multimap — once per iteration of its loop.
+`number_of_segments()` has the same per-call cost, so avoid it in inner loops.
+
+**No thread safety, and the fit runs on another thread.** `HellingerThread` is a
+`QThread` holding a raw `HellingerModel *`; its `run()` reads the parameter
+accessors from the worker thread while the dialog still owns the model on the GUI
+thread. Nothing here locks. The current code stays safe only because the dialog
+does not touch the model between `start()` and `handle_thread_finished()` — keep
+it that way, and write results back only from the `finished()` slot.
+
+**Which tolerance you get depends on the current fit type.** The no-argument
+`set_amoeba_tolerance()` and `get_amoeba_tolerance()` dispatch on `d_fit_type`, so
+changing the fit type silently retargets them at a different field with a very
+different default (`1e-10` for two-way, `0.005` for three-way). `get_fit_type(true)`
+recomputes the type from the picks and *writes* it back — it is not a pure
+accessor, and it decides three-way purely on the presence of any plate-three pick,
+enabled or not.
+
+**Partial construction and dead members.** `HellingerPick`'s default constructor
+leaves all five fields indeterminate, and `HellingerComFileStructure`'s constructor
+leaves `d_search_radius_degrees`, `d_significance_level`,
+`d_number_of_grid_iterations` and `d_number_amoeba_iterations` uninitialised —
+they are expected to be filled by the reader or the UI. `add_segment()` is
+declared but never defined anywhere in the tree; calling it is a link error.
+`clear_com_file_struct()` is defined but never called, so `reset_model()` clears
+picks and results while leaving the previous run's parameters, pick filename and
+initial guesses in place. Note also that if it were called it would set
+`d_generate_output_files` to `false`, the opposite of the constructor's default.
+
+**Two incompatible ellipse filename schemes.** The no-argument
+`error_ellipse_filename()` yields `<root>_ellipse.dat` while the
+`HellingerPlatePairType` overload yields `<root>_ellipse_12_sim.dat` and so on.
+They are not variants of one scheme; pick the one that matches what the Python
+solver actually wrote.
+
+`unique_keys()` and `determine_fit_type_from_model()` are in an anonymous
+namespace in the `.cc` and are not linkable from elsewhere.
 
 ## Used by
 

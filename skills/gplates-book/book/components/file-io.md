@@ -63,7 +63,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [File](../src/file-io/File.md) | 1 | 357 | 970 | (pending) |
+| [File](../src/file-io/File.md) | 1 | 357 | 970 | binds a feature collection to the file it came from, owning it until the model takes over |
 | [FileFormatNotSupportedException](../src/file-io/FileFormatNotSupportedException.md) | 2 | 73 | 41 | Exception thrown when a file format is recognised but unusable for the requested operation |
 | [FileInfo](../src/file-io/FileInfo.md) | 2 | 274 | 76 | Qt-based wrapper around a loaded file's path, display name and writability checks |
 | [FileLoadAbortedException](../src/file-io/FileLoadAbortedException.md) | 3 | 90 | 2 | Exception thrown when user cancels a file load operation |
@@ -97,7 +97,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [GpmlFeatureReaderFactory](../src/file-io/GpmlFeatureReaderFactory.md) | 3 | 962 | 4 | Creates feature readers configured for a specific GPGIM version with upgrade logic for older versions |
-| [GpmlFeatureReaderImpl](../src/file-io/GpmlFeatureReaderImpl.md) | 1 | 822 | 330 | (pending) |
+| [GpmlFeatureReaderImpl](../src/file-io/GpmlFeatureReaderImpl.md) | 1 | 822 | 330 | chain of readers, one per GPGIM feature class, turning a GPML element into a feature |
 | [GpmlFeatureReaderInterface](../src/file-io/GpmlFeatureReaderInterface.md) | 3 | 134 | 4 | Wrapper interface for reading individual features from GPML XML using an implementation backend |
 
 #### GpmlFormat
@@ -113,7 +113,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [GpmlPropertyReader](../src/file-io/GpmlPropertyReader.md) | 2 | 1076 | 23 | Reads one named feature property by validating it against a GpgimProperty |
-| [GpmlPropertyStructuralTypeReader](../src/file-io/GpmlPropertyStructuralTypeReader.md) | 1 | 529 | 1813 | (pending) |
+| [GpmlPropertyStructuralTypeReader](../src/file-io/GpmlPropertyStructuralTypeReader.md) | 1 | 529 | 1813 | dispatch table from GPML structural type name to the function that parses it |
 | [GpmlPropertyStructuralTypeReaderUtils](../src/file-io/GpmlPropertyStructuralTypeReaderUtils.md) | 2 | 1641 | 131 | Parses GPML/GML structural types that can appear directly as feature properties |
 
 #### GpmlReader
@@ -161,7 +161,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [PlatesLineFormatHeaderVisitor](../src/file-io/PlatesLineFormatHeaderVisitor.md) | 2 | 539 | 70 | Reconstructs or synthesizes a PLATES4 header line for a feature being exported |
 | [PlatesLineFormatReader](../src/file-io/PlatesLineFormatReader.md) | 3 | 2259 | 1 | Reads PLATES line-format files and converts them to GPlates GPML features |
 | [PlatesLineFormatWriter](../src/file-io/PlatesLineFormatWriter.md) | 3 | 485 | 1 | Feature visitor writing GPlates features to PLATES4 line format with headers |
-| [PlatesRotationFileProxy](../src/file-io/PlatesRotationFileProxy.md) | 1 | 2927 | 191 | (pending) |
+| [PlatesRotationFileProxy](../src/file-io/PlatesRotationFileProxy.md) | 1 | 2927 | 191 | .grot rotation format support, keeping the file's own text as editable segments beside the model |
 | [PlatesRotationFormatReader](../src/file-io/PlatesRotationFormatReader.md) | 3 | 930 | 1 | Reads PLATES rotation-format ASCII files and materializes them as total reconstruction sequence features grouped by reference frame pairs |
 | [PlatesRotationFormatWriter](../src/file-io/PlatesRotationFormatWriter.md) | 2 | 675 | 96 | Feature visitor writing total reconstruction sequences back out as PLATES4 .rot or GROT lines |
 
@@ -172,7 +172,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [RasterBandReader](../src/file-io/RasterBandReader.md) | 2 | 207 | 331 | RasterReader adapter bound to one fixed band number |
 | [RasterBandReaderHandle](../src/file-io/RasterBandReaderHandle.md) | 2 | 145 | 17 | Copyable handle to a RasterBandReader stored inside a proxied RawRaster |
 | [RasterFileCache](../src/file-io/RasterFileCache.md) | 3 | 377 | 4 | Utility for creating and managing disk caches of mipmapped raster files to avoid regeneration |
-| [RasterFileCacheFormat](../src/file-io/RasterFileCacheFormat.md) | 1 | 881 | 537 | (pending) |
+| [RasterFileCacheFormat](../src/file-io/RasterFileCacheFormat.md) | 1 | 881 | 537 | on-disk layout, versioning and filename policy for GPlates block-encoded raster and mipmap cache files |
 | [RasterFileCacheFormatReader](../src/file-io/RasterFileCacheFormatReader.md) | 3 | 516 | 6 | Reads cached raster images stored in blocks arranged in a Hilbert curve for optimal disk locality |
 | [RasterReader](../src/file-io/RasterReader.md) | 2 | 899 | 192 | Format-independent facade over the RGBA and GDAL raster-reading backends |
 | [RasterWriter](../src/file-io/RasterWriter.md) | 2 | 680 | 123 | Format-independent facade over the RGBA and GDAL raster-writing backends |
@@ -181,11 +181,11 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [ReadErrorAccumulation](../src/file-io/ReadErrorAccumulation.md) | 1 | 154 | 731 | (pending) |
+| [ReadErrorAccumulation](../src/file-io/ReadErrorAccumulation.md) | 1 | 154 | 731 | bucket of read problems that every file reader fills, classified by consequence rather than cause |
 | [ReadErrorMessages](../src/file-io/ReadErrorMessages.md) | 2 | 784 | 12 | Translates ReadErrors::Description and ReadErrors::Result codes into user-facing text |
-| [ReadErrorOccurrence](../src/file-io/ReadErrorOccurrence.md) | 1 | 395 | 285 | (pending) |
+| [ReadErrorOccurrence](../src/file-io/ReadErrorOccurrence.md) | 1 | 395 | 285 | one reported read problem: an abstract data source and location plus a description and result code |
 | [ReadErrorUtils](../src/file-io/ReadErrorUtils.md) | 2 | 217 | 44 | Groups and summarises a ReadErrorAccumulation for reporting |
-| [ReadErrors](../src/file-io/ReadErrors.md) | 1 | 309 | 1358 | (pending) |
+| [ReadErrors](../src/file-io/ReadErrors.md) | 1 | 309 | 1358 | the enum vocabulary every reader uses to report what went wrong and what GPlates did about it |
 
 #### Reconstructed
 
@@ -201,7 +201,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [AgeModelReader](../src/file-io/AgeModelReader.md) | 3 | 231 | 2 | Parses tab-delimited age model files for geological chronology data |
-| [CptReader](../src/file-io/CptReader.md) | 1 | 2623 | 156 | (pending) |
+| [CptReader](../src/file-io/CptReader.md) | 1 | 2623 | 156 | GMT colour palette (.cpt) parsing: a traits-driven template reader plus a separate newer parser |
 | [DeformationExport](../src/file-io/DeformationExport.md) | 2 | 482 | 171 | Writes per-point deformation strain and stretch data to GPML or GMT format |
 | [GeometryExporter](../src/file-io/GeometryExporter.md) | 2 | 56 | 19 | Single-method interface letting callers export any GeometryOnSphere polymorphically |
 | [GeoscimlProfile](../src/file-io/GeoscimlProfile.md) | 3 | 244 | 3 | Parses GeoSciML XML documents and populates a feature collection with GeoSciML features |
@@ -219,7 +219,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [MultiPointVectorFieldExport](../src/file-io/MultiPointVectorFieldExport.md) | 2 | 741 | 67 | Groups and dispatches velocity multi-point vector fields to GPML, GMT, Terra or CitcomS export formats |
 | [Proj](../src/file-io/Proj.md) | 3 | 51 | 0 | Compatibility wrapper that includes the appropriate PROJ header for the detected library version |
 | [PropertyMapper](../src/file-io/PropertyMapper.md) | 2 | 125 | 343 | Abstract interface for mapping shapefile attribute fields onto GPlates model properties |
-| [ReconstructionGeometryExportImpl](../src/file-io/ReconstructionGeometryExportImpl.md) | 1 | 624 | 205 | (pending) |
+| [ReconstructionGeometryExportImpl](../src/file-io/ReconstructionGeometryExportImpl.md) | 1 | 624 | 205 | shared regrouping of flat reconstruction-geometry sequences into file-and-feature hierarchies for export |
 | [ResolvedTopologicalGeometryExport](../src/file-io/ResolvedTopologicalGeometryExport.md) | 3 | 604 | 5 | Exports resolved topological geometries and sections (plate boundary-respecting geometries) to GMT, Shapefile, OGR GMT and GeoJSON formats |
 | [RgbaRasterReader](../src/file-io/RgbaRasterReader.md) | 3 | 1248 | 1 | Loads RGBA raster images with caching for spatial locality |
 | [RgbaRasterWriter](../src/file-io/RgbaRasterWriter.md) | 3 | 326 | 2 | Writes RGBA rasters to image files |
@@ -234,7 +234,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [TemporaryFileRegistry](../src/file-io/TemporaryFileRegistry.md) | 3 | 157 | 6 | Tracks temporary files for deletion at application exit |
 | [TerraFormatVelocityVectorFieldExport](../src/file-io/TerraFormatVelocityVectorFieldExport.md) | 3 | 299 | 1 | Exports velocity vector fields to Terra text format |
 | [XmlOutputInterface](../src/file-io/XmlOutputInterface.md) | 2 | 751 | 137 | Hand-rolled indenting XML writer used by the deprecated GPML 1.5 output path |
-| [XmlWriter](../src/file-io/XmlWriter.md) | 1 | 634 | 479 | (pending) |
+| [XmlWriter](../src/file-io/XmlWriter.md) | 1 | 634 | 479 | QXmlStreamWriter façade that preserves the originating document's namespace prefixes when writing GPML |
 
 ### `src/file-io/deprecated`
 

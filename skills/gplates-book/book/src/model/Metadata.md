@@ -9,9 +9,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/Metadata tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header holds the two unrelated halves of GPlates' rotation-file metadata
+support. `Metadata` is the small half: a name/content string pair, and
+`MetadataContainer` is a vector of shared pointers to them. That is what an
+individual `gpml:meta` element inside a `gpml:TotalReconstructionPole` becomes,
+and it is what `GpmlFiniteRotation` and `GpmlIrregularSampling` carry alongside
+the rotation itself. `create_metadata_from_gpml` performs that conversion, and
+`find_first_of` / `find_all` are the lookup helpers, because the container is a
+list with duplicate names allowed rather than a map.
+
+`FeatureCollectionMetadata` is the large half: the structured, per-file header
+that a `.rot` rotation file carries — Dublin Core title, creators, contributors,
+rights, dates, coverage, citation and description, plus GPlates-specific
+`BIBINFO`, `GPML:namespace`, `GEOTIMESCALE` entries and a revision history. It
+is both a parser and a writer. Construction from an `XmlElementNode` re-serialises
+that node to a buffer and walks it with a `QXmlStreamReader`, dispatching on
+element name through `d_xml_func_map` to a member function pointer; the flat
+`gpml:meta name="..."` entries dispatch a second time on the name attribute
+through `d_meta_func`. Those same two maps, built in `init()`, define the whole
+vocabulary the class understands, and `is_fc_metadata` is just a membership test
+against `d_meta_func`.
+
+Three output shapes exist because three consumers need different ones.
+`serialize(XmlWriter&)` writes the `gpml:GpmlMetadata` element back into a GPML
+file; `serialize(QString&)` writes the `@name"value"` attribute lines of the
+PLATES4 `.rot` text header, which `PlatesRotationFileProxy` and
+`PlatesRotationFormatWriter` emit; and `get_metadata_as_map` flattens everything
+into a `std::multimap` for `MetadataDialog`, which is by a wide margin the
+heaviest user of this header. The `to_string()` methods on `Creator`,
+`Contributor` and `GeoTimeScale` reconstruct the pipe-separated field syntax
+these values use inside a single metadata string.
 
 ## Declared types
 
@@ -181,9 +208,53 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/Metadata tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Parsing never throws and never reports failure to the caller. Every malformed or
+unrecognised construct — a wrong root element, an unknown `gpml:meta` name, a
+`DC:creator` that does not split into exactly four pipe-separated fields — logs a
+`qWarning` and either returns early or skips the element. A
+`FeatureCollectionMetadata` built from bad XML is therefore silently partial.
+Round-tripping is lossy for the same reason: a field that failed to
+parse is simply absent when you serialise, and `set_dc_creator`,
+`set_dc_contributor` and `set_geotimescale` discard the whole entry rather than
+storing a partial one.
+
+`replace_field_string` is the merge rule behind every `to_string()`, and it is
+not a plain join. It splits `original_text` on `|` and, for each segment,
+overwrites the trimmed text in place while keeping the surrounding whitespace,
+then appends any extra fields the original text did not have. The intent is that
+editing a creator preserves the original file's spacing; the consequence is that
+`to_string()` output depends on `original_text`, so an entry constructed by
+hand with an empty `original_text` serialises differently from one that was
+parsed. Note also that `QString::replace` here operates on all occurrences of
+the trimmed segment, so a field value that repeats inside its own segment is
+substituted more than once.
+
+The two static sentinel strings on `Metadata` are in-band signalling, not data.
+`DISABLED_SEQUENCE_FLAG` is written into the first pole's metadata by
+`GpmlIrregularSampling::set_disabled` and read back by
+`contain_disabled_sequence_flag`, so "this rotation sequence is disabled" is
+stored as a metadata entry rather than as a field on the property value.
+`DELETE_MARK` is a tombstone: `MetadataDialog` sets an entry's content to that
+string to mark it deleted and filters those entries out on the way back, so any
+new code that walks a `MetadataContainer` must skip them too.
+
+`MetadataContainer` holds `boost::shared_ptr<Metadata>`, and the elements are
+shared, not copied — `find_all` returns a new vector of the *same* pointers, and
+`GpmlIrregularSampling::set_disabled` rebuilds the vector while reusing the
+existing entries. Use `Metadata::clone()` when you need an independent copy.
+`is_same_meta` compares names only, ignoring content, which is what makes it
+usable as a "same key" predicate but wrong as an equality test —
+`operator==` is the one that compares both.
+
+`HellData` is declared here with two constructors and no definition anywhere in
+the tree, and nothing references it. It is dead code left over from the
+Hellinger fitting work; do not build on it.
+
+`FeatureCollectionMetadata` populates `d_meta_func` and `d_xml_func_map` with
+pointers-to-member in `init()`, called from both constructors. Adding a new
+metadata field means touching four places that must stay in step: the map entry
+in `init()`, the setter, `get_metadata_as_map`, and both `serialize` overloads.
+`d_recurring_data` is populated but never read.
 
 ## Used by
 

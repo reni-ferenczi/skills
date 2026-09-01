@@ -9,9 +9,40 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/DateLineWrapper tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the bridge from spherical geometry to the flat lat/lon world, and it
+exists because that conversion is not a per-point operation. A polygon straddling
+±180° converts point-by-point into something that draws as a horizontal smear
+across a rectangular projection, so the geometry has to be *clipped* at the
+dateline and reassembled into separate pieces before any point is emitted. The
+two consumers are the 2D map views (`GPlatesGui::MapRenderedGeometryLayerPainter`)
+and OGR/shapefile export (`GPlatesFileIO::OgrFeatureCollectionWriter` and
+`OgrWriter`) — the header names ArcGIS as the original motivation.
+
+The central idea, taken from Greiner and Hormann's polygon-clipping paper, is to
+treat the dateline itself as an infinitesimally thin *polygon*: four corner
+vertices at (±90, ±180) held in their own doubly-linked list, so that clipping a
+geometry against the dateline is ordinary polygon-polygon clipping. Each
+intersection is materialised as two `Vertex` copies — one spliced into the
+geometry's vertex list, one sorted into the dateline list — cross-linked by
+`intersection_neighbour`, and flagged as entering or exiting. Output then walks
+the graph, hopping lists at every intersection and reversing direction as the
+entry/exit flags demand, emitting one output polygon per unused exit vertex.
+Polylines reuse the same `IntersectionGraph` but never build the dateline list:
+they only need to be cut at intersections, not routed around the frame edge.
+
+Three further things shape the interface. A non-zero central meridian is not a
+special case in the algorithm — the geometry is rotated into a frame where that
+meridian is longitude zero (`CentralMeridian` holds the rotation and its
+inverse), wrapped there, and each output point rotated back and longitude-shifted.
+Second, `possibly_wraps` is a cheap bounding-small-circle rejection that lets
+callers skip the whole path, and it is worth using: it rotates only the small
+circle's centre rather than the geometry. Third, the output is not just points.
+Every emitted point carries flags saying whether it is original, tessellated, on
+the dateline or on an original segment, plus an `InterpolateOriginalSegment`
+giving the original segment index and an interpolation ratio along it — which is
+what lets a caller carry per-vertex scalars through wrapping and tessellation.
+Optional tessellation is folded into `LatLonLineGeometry::add_point` so that it
+happens in the same pass.
 
 ## Declared types
 
@@ -74,9 +105,60 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/DateLineWrapper tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **A polygon covering both poles gets an arbitrary answer.** Entry/exit flags
+  are seeded by a point-in-polygon test at the north pole, falling back to the
+  south pole. If the input polygon intersects *both* poles neither test is usable
+  and `generate_entry_exit_flags_for_dateline_polygon` just picks `true`, with a
+  comment conceding the inside and outside may come out swapped. That choice also
+  produces consecutive north/south pole vertices, which is why
+  `add_tessellated_points` carries a special antipodal branch — `GreatCircleArc`
+  cannot be built from antipodal endpoints.
+- **Output polygon rings are not closed.** The header says so explicitly: the
+  first and last points are generally different, and a renderer that treats the
+  ring as a line string must append the first point itself.
+- **The epsilons here are far coarser than the rest of `maths`.**
+  `EPSILON_THICK_PLANE_COSINE` is `1 - 1e-9`, an angular tolerance around
+  4.5e-5 radians — hundreds of metres on the Earth — versus
+  `GPlatesMaths::EPSILON` at 1e-12. Most comparisons deliberately call `.dval()`
+  to bypass `Real`'s own epsilon and use this larger one instead. Anything within
+  that band of the dateline plane, or of either pole, is treated as *on* it.
+- **Intersection vertices are snapped, not computed.** Their longitude is
+  overwritten with exactly ±180 (or, at a pole, the latitude with ±90) and the
+  `Vertex` is then constructed with no 3-D point, so its `PointOnSphere` is
+  rebuilt from the snapped lat/lon. The snapping is the point — it is what makes
+  the two halves meet the frame edge exactly — but it means the emitted position
+  is not the exact intersection.
+- **A geometry lying entirely along the dateline is a special output path.** The
+  dateline "polygon" effectively excludes an epsilon-thin strip, so such a
+  geometry is *outside* it and gets consumed by the clip, leaving an empty vertex
+  list (`ENTIRELY_ON_DATELINE`). The original geometry is then emitted directly
+  with every point forced to longitude `central_meridian - 180`, so it degenerates
+  to a vertical line rather than a horizontal smear.
+- **`group_interior_with_exterior_rings` is a cost/quality trade, not a
+  formatting flag.** With it on, each non-intersecting ring is tested against
+  every output exterior ring so far using `minimum_distance` over constructed
+  `PolygonOnSphere`s — quadratic in the number of rings, and it builds a polygon
+  per ring. Turn it off only for consumers that treat all rings alike, such as
+  the stencil-buffer filled-polygon path named in the header.
+- **Self-intersecting input is not handled.** A standing FIXME notes that
+  polygons are not cleaned to the shapefile convention first, so an interior ring
+  that meets both wrapped halves of the exterior ring cannot be assigned
+  correctly.
+- **Lifetime.** All vertex nodes come from a `boost::object_pool` owned by the
+  `IntersectionGraph` and are freed only when the graph dies; `intersection_neighbour`
+  is a raw `void *` into that pool (a `void *` to break a cyclic type dependency),
+  valid only for the graph's lifetime. `LatLonPolygon` and `LatLonPolyline`, by
+  contrast, are copyable handles over `boost::shared_ptr<LatLonLineGeometry>`, so
+  they outlive the graph and copies share their points.
+- **Threading.** A `DateLineWrapper` instance holds only the central meridian and
+  all wrap methods are `const`, building a fresh graph per call, so instances are
+  cheap to share. The unsafe part is the *input*: `possibly_wraps` calls
+  `get_bounding_small_circle()`, which lazily populates a mutable cache inside the
+  geometry, so wrapping the same geometry from two threads is not safe.
+- `possibly_wraps` returning true does not mean the geometry wraps; false does
+  mean it does not.
+- The constructor silently wraps a central meridian outside [-180, 180] back into
+  range, so output longitudes stay within `LatLonPoint`'s valid [-360, 360].
 
 ## Used by
 

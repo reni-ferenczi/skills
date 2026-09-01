@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/GPlatesException tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The root of every GPlates exception. Its single job beyond being a common catch target is to capture *where* the throw happened, at the moment it happens: the constructor pushes the caller-supplied `GPlatesUtils::CallStack::Trace` onto the `GPlatesUtils::CallStack` singleton, renders the whole stack to a string, and stores it. That snapshot is essential rather than convenient — by the time a handler runs, the stack has unwound and the singleton no longer describes the throw site. Callers supply the location with the `GPLATES_EXCEPTION_SOURCE` macro, so `throw SomeError(GPLATES_EXCEPTION_SOURCE, ...)` is the universal form.
+
+Message formatting is a small template-method pair. `write` prints `exception_name()`, then delegates to the derived class's `write_message`, then appends the stored trace; both parts are switchable by its two flags, and `operator<<` is just `write` with the defaults. `exception_name` is pure virtual, which is what makes `Exception` abstract and forces every one of its subclasses to name itself. Deriving from `GPlatesUtils::QtStreamable<Exception>` (the Barton–Nackman trick) pulls the `std::ostream` operator through to `qDebug`, `qWarning` and `QTextStream`, so the same object can be logged by Qt without a second formatting path.
+
+The consumer that shapes the design is `GPlatesGui::GPlatesQApplication::notify`, whose `try_catch` helper catches `GPlatesGlobal::Exception` at the outermost frame of every Qt event, formats it into a `QMessageBox`, logs the message and the separately retrieved `get_call_stack_trace_string`, then calls `qFatal`. The messages are explicitly not user-facing text and are not internationalised. `NeedExitException`, declared alongside, is the one exception that is caught and handled rather than reported: `try_catch` treats it as an orderly shutdown request in every build configuration, which is why it lives here next to the base class instead of in its own header.
 
 ## Declared types
 
@@ -56,9 +58,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/GPlatesException tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`what()` is private.** Given `catch (GPlatesGlobal::Exception &e)` you cannot call `e.what()`; use `operator<<`, `write()`, or a `std::exception &` reference. This is why the top-level handler streams the object rather than calling `what`.
+- **`what()` can terminate.** It is declared `throw()` yet builds an `std::ostringstream`, runs the derived `write_message`, and assigns to a `std::string` member. Anything that throws in there — including a `write_message` override that allocates — hits the `noexcept` boundary and calls `std::terminate`. Keep `write_message` overrides trivial.
+- The pointer `what()` returns is owned by the mutable `d_std_exception_what_message` member and is overwritten by the next `what()` call on the same object. Do not hold it across calls. Note also that its output includes the full call-stack trace, since `write` defaults to appending it.
+- **Construction is not cheap.** Every `Exception` constructed — including one that is caught and ignored — walks the tracked call stack and formats it into a `std::string`. These are for genuine errors, not for control flow in inner loops.
+- **Not thread-safe.** `GPlatesUtils::CallStack` is a process-wide singleton wrapping a bare `std::vector<Trace>` with no locking, and both the constructor and `TRACK_CALL_STACK()` push and pop it. Constructing an exception on a worker thread concurrently with any other tracked call is a data race.
+- The recorded trace only contains frames that were explicitly marked with `TRACK_CALL_STACK()` plus the throw site itself, so it is a hand-maintained breadcrumb trail rather than a real backtrace, and it will usually be short.
+- **Derived-class contract:** first constructor parameter must be `const GPlatesUtils::CallStack::Trace &` (`GPlatesGlobal::Assert` relies on this), `exception_name()` must be overridden since it is pure virtual, and the destructor needs a `throw()` exception specification to match the base. Subclasses that only carry a message string should call `write_string_message` from `write_message` so `<ostream>` stays out of their headers.
+- `exception_name()` and `write_message()` are protected, so a handler cannot ask a caught exception for its type name directly — it only sees the name through `write()`.
+- Add new exception types by deriving from `PreconditionViolationError` for bad arguments and from `AssertionFailureException` for broken internal state, rather than directly from `Exception`; only reach for `Exception` when neither category fits.
 
 ## Used by
 

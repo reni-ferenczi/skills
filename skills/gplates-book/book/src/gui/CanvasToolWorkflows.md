@@ -9,9 +9,42 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/CanvasToolWorkflows tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the registry and switchboard for every interactive tool on the globe and
+map. A *workflow* is one tab of the canvas tool bar — View, Feature Inspection,
+Digitisation, Topology, Pole Manipulation, Small Circle, Hellinger — and the
+central design decision is that each workflow keeps its own *selected* tool
+independently, while only one of them is *active* at a time. That is what lets a
+user leave a half-digitised polyline selected in the digitisation tab, switch to
+feature inspection to look something up, and come back to the tool they were
+using. `get_selected_canvas_tool_in_workflow()` answers the per-workflow
+question; `get_active_canvas_tool()` answers the global one, and it is defined as
+the selected tool of the active workflow.
+
+The class itself is deliberately thin: it holds `NUM_WORKFLOWS`
+`CanvasToolWorkflow` objects indexed directly by `WorkflowType`, plus the single
+`d_active_workflow` index. Every query — `is_canvas_tool_enabled`,
+`does_workflow_contain_tool`, `get_selected_canvas_tool_in_workflow` — forwards
+straight to the workflow at that index, and `choose_canvas_tool` is the only
+place any state changes: it deactivates the outgoing workflow, updates
+`d_active_workflow`, and calls `activate(tool)` on the incoming one. All the real
+per-tool behaviour lives in the seven `CanvasToolWorkflow` subclasses
+(`ViewCanvasToolWorkflow`, `FeatureInspectionCanvasToolWorkflow`,
+`DigitisationCanvasToolWorkflow`, `TopologyCanvasToolWorkflow`,
+`PoleManipulationCanvasToolWorkflow`, `SmallCircleCanvasToolWorkflow`,
+`HellingerCanvasToolWorkflow`), each of which owns the globe/map canvas-tool pair
+for its tools and decides which of them are enabled.
+
+`ViewportWindow` owns the single instance and is the reason the fan-in on this
+page is so wide: `WorkflowType`/`ToolType` are the vocabulary the whole UI uses
+to talk about tools, so dozens of dialogs and layer-option widgets include this
+header just for the enums, and several — `CreateFeatureDialog`, `TopologyTools`,
+`ModifyReconstructionPoleWidget` — call `choose_canvas_tool()` to move the user
+to the right tool after an operation. In the other direction the two signals are
+the notification channel: `canvas_tool_activated` is what makes
+`ViewportWindow` swap the task-panel tab and what
+`CanvasToolBarDockWidget` uses to keep its buttons in sync, and
+`canvas_tool_enabled` is simply re-emitted from the individual workflows so
+clients can connect to one object instead of seven.
 
 ## Declared types
 
@@ -52,9 +85,59 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/CanvasToolWorkflows tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Three-phase construction, and the order is load-bearing.** The constructor does
+almost nothing (it only sets `d_active_workflow` to `WORKFLOW_VIEW`);
+`initialise()` builds the seven workflows, wires their `canvas_tool_enabled`
+signals and calls `initialise()` on each; `activate()` then activates the default
+workflow and emits the first `canvas_tool_activated`. `ViewportWindow` splits
+these deliberately — `initialise()` runs only after the tool bar dock and task
+panel exist (the workflows construct canvas tools that reference them), and
+`activate()` runs only after the main window is visible, with a comment noting
+that otherwise the default tool does not get activated because the globe canvas
+is not yet shown. Every public accessor asserts `!d_canvas_tool_workflows.empty()`,
+so calling anything before `initialise()` is an assertion failure rather than
+undefined behaviour.
+
+**`d_canvas_tool_workflows` is indexed by the enum, not searched.**
+`create_canvas_tool_workflows` does `resize(NUM_WORKFLOWS)` and then assigns each
+slot by name, so `WorkflowType` values are array indices. Adding a workflow means
+adding the enumerator *before* `NUM_WORKFLOWS` and adding the matching `reset()`
+— miss the second and you get a null `shared_ptr` that `initialise()` asserts on.
+No index is range-checked in the accessors; passing `NUM_WORKFLOWS` walks off the
+end.
+
+**`ToolType` is not partitioned by workflow.** The same tool can appear in more
+than one workflow (`TOOL_DRAG_GLOBE` and `TOOL_ZOOM_GLOBE` are in most of them),
+and no workflow contains every tool. This is why there are two
+`choose_canvas_tool` overloads. The single-argument one scans all workflows and
+throws `GPlatesGlobal::PreconditionViolationError` if the tool is found in more
+than one — so it is only safe for tools you know are unique, and code that wants
+a shared tool must name the workflow explicitly. Passing a workflow/tool pair
+where `does_workflow_contain_tool()` is false also ends in an exception, not a
+silent no-op.
+
+**`choose_canvas_tool` is a no-op when nothing changes, including the signal.**
+The early return when the requested workflow and tool already match means
+`canvas_tool_activated` is *not* re-emitted for a redundant selection. Anything
+that relies on the signal to resynchronise its own state — a task-panel tab, a
+tool-bar button — will not be corrected by re-choosing the current tool.
+Conversely, when only the tool changes within the active workflow, the workflow
+is not deactivated and reactivated; `CanvasToolWorkflow::activate()` deactivates
+just the outgoing tool.
+
+Smaller points:
+
+- `TOOL_CHANGE_LIGHTING` sits inside an `#if 0` in the middle of the `ToolType`
+  enum, with a comment about deferring the lighting tool until volume
+  visualisation ships. Enabling it renumbers every subsequent enumerator — fine
+  here because nothing persists these values, but worth knowing before you assume
+  the numbering is stable.
+- `handle_canvas_tool_enabled` asserts that `sender()` really is the workflow
+  registered at the `workflow` index it was told about, i.e. it does not trust
+  the signal's own arguments. Keep that check if you re-wire the connections.
+- Everything is single-threaded Qt GUI code; `initialise()` also takes a
+  `status_bar_callback_type` (a `boost::function` bound to `ViewportWindow`) that
+  it merely forwards to each workflow, so the callback must outlive them.
 
 ## Used by
 

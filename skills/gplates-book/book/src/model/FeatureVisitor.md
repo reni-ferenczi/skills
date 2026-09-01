@@ -9,9 +9,48 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureVisitor tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Property values in GPlates are a large open-ended class hierarchy —
+`GpmlPlateId`, `GmlTimePeriod`, `GpmlConstantValue` and forty-odd others — and
+almost every consumer of the model (the file writers, the geometry finders, the
+edit widgets, the Python bindings) needs to do something different for each of
+them. This header is the single Visitor interface that makes that dispatch
+possible: `PropertyValue::accept_visitor` calls back into the matching
+`visit_<type>` member here, so the type switch lives in the property-value class
+rather than in every consumer. Every `visit_` function has an empty default body,
+so a derived visitor overrides only what it cares about, and each carries the
+target type in its name because overriding any one member named `visit` would
+hide all the others in the base.
+
+Traversal is a template method, not something the visitor drives itself.
+`visit_feature()` checks the weak-ref or iterator is still valid, then
+`visit_feature_handle` runs `initialise_pre_feature_properties` (returning false
+skips the rest of the feature, and suppresses `finalise_post_feature_properties`),
+walks the top-level properties, and finishes with
+`finalise_post_feature_properties`; each `TopLevelPropertyInline` repeats the
+pattern one level down with `initialise_pre_property_values` and
+`finalise_post_property_values`. While a property is being visited,
+`current_top_level_propiter()` and `current_top_level_propname()` tell the visitor
+which property it is inside — this is how visitors that only care about, say,
+`gpml:reconstructionPlateId` filter without overriding the traversal. Both are
+reset to `boost::none` between properties. Derived classes are meant to hook the
+initialise/finalise pair, not override `visit_feature_handle` or the non-virtual
+`visit_feature_properties`.
+
+The one template parameter, const or non-const `FeatureHandle`, produces the two
+typedefs `FeatureVisitor` and `ConstFeatureVisitor`, with
+`FeatureVisitorInternals::Traits` and `GPlatesUtils::CopyConst` propagating the
+constness to every iterator and property-value parameter. The difference between
+them is not cosmetic. Because properties inside the model are immutable, the
+non-const specialisation of `visit_feature_property` in `FeatureVisitor.cc` cannot
+hand out a mutable property: it takes a `deep_clone()` of the property, visits the
+clone, and assigns it back through the iterator — which routes through
+`FeatureHandle::set` and deep-clones a second time. Every property of every
+feature a non-const visitor touches therefore costs two deep copies and a
+modification notification, whether or not the visitor changed anything, which is
+why the header urges you to derive from `ConstFeatureVisitor` unless you really
+are editing. `FeatureVisitorThatGuaranteesNotToModify` is the acknowledged hack in
+between: it `const_cast`s the property instead of cloning it, and its correctness
+rests entirely on subclasses honouring the promise in its name.
 
 ## Declared types
 
@@ -184,9 +223,45 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureVisitor tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**References taken during a non-const `FeatureVisitor` visit dangle afterwards.**
+The `visit_` methods receive a reference into the temporary clone, and once
+`visit_feature_property` assigns that clone back into the feature, the model makes
+its own copy and the clone is destroyed. Anything you stashed during visitation
+points at freed memory by the time `visit_feature()` returns. `ConstFeatureVisitor`
+does not have this problem — it visits the property in place — but its references
+are still only as good as the feature's lifetime.
+
+**A non-const visit is a model write even when nothing changes.** It bumps
+revision IDs, sets the enclosing collection's unsaved-changes flag and emits
+modification notifications for every property visited. Do not reach for
+`FeatureVisitor` merely because you have a non-const handle.
+
+**Adding a property-value type means editing this header in three places** — the
+forward declaration, the `CopyConst` typedef, and the `visit_` member — and the
+lists are maintained in alphabetical order by convention. Note that
+`GpmlTopologicalInterior` is forward-declared here but has no `visit_` member; the
+forward-declaration block and the member list are not automatically in step.
+
+**A missing override is silent, and nesting is not traversed for you.** The
+default `visit_` bodies are empty, so a visitor that forgets a type simply does
+nothing for it. `PropertyValue::accept_visitor` only calls the one matching
+`visit_` member — it does not descend — so a wrapper such as `GpmlConstantValue`
+is a dead end unless your override calls
+`gpml_constant_value.value()->accept_visitor(*this)` itself, as `GeometryFinder`
+does. Since most geometry in real `.gpml` files is wrapped in a
+`gpml:ConstantValue`, forgetting that one override is the classic way to write a
+visitor that finds nothing.
+
+**Validity is checked once, at entry.** `visit_feature()` tests the weak-ref or
+the iterator and returns false if it is stale, but nothing revalidates during
+traversal, so a visitor that mutates the feature it is walking — removing
+properties, for instance — is outside what the traversal loop in
+`visit_feature_properties` guarantees.
+
+**`visit_top_level_property_inline` and all the `visit_` members are public
+only** because `TopLevelProperty` and `PropertyValue` subclasses call them from
+their `accept_visitor` implementations. They are not an invitation to drive the
+visitor by hand.
 
 ## Used by
 

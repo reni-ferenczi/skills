@@ -9,9 +9,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructContext tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The workhorse behind `ReconstructLayerProxy`: give it a set of features once, and
+it will reconstruct them into `ReconstructedFeatureGeometry` objects at any time,
+or over any time range, as often as you like. Its reason to exist is caching of
+the parts that do not depend on the reconstruction time. `set_features` asks
+`ReconstructMethodRegistry` which `ReconstructMethod::Type` can handle each
+feature and remembers that mapping, so the (non-trivial) method detection is not
+repeated on every frame; features that no method claims are dropped, which is how
+topological features are kept out of this framework.
+
+The second thing it caches is the *geometry property handle*, a plain index that
+identifies one reconstructable geometry property of one feature, stable across all
+reconstruction times as long as the feature set is unchanged.
+`get_present_day_feature_geometries` returns a vector indexed by exactly that
+handle, so a client can build something expensive per present-day geometry — an
+OpenGL polygon mesh in `GLReconstructedStaticPolygonMeshes`, a co-registration
+row in `data-mining` — and then, at any time, use the handle on each
+`Reconstruction` to find it again in O(1). That is what distinguishes
+`get_reconstructions` and `get_reconstructed_features` from the plain
+`get_reconstructed_feature_geometries`.
+
+The third piece is `ContextState`, and the split it enforces is the design idea
+worth understanding. A feature's own properties are *intrinsic* state; the
+`ReconstructMethodInterface::Context` — reconstruct params, a
+`ReconstructionTreeCreator`, and optionally a `TopologyReconstruct` for deformation
+— is *extrinsic*. Keeping the extrinsic state in a separately created
+`ContextState` lets one `ReconstructContext` serve several simultaneous
+reconstruction scenarios (different anchored plates, with and without deformation)
+while sharing the single feature-to-method mapping between them. Each context
+state owns its own `ReconstructMethodInterface` instances precisely because those
+objects accumulate state specific to their context. Every `get_*` method here
+takes a context-state reference and returns a fresh `ReconstructHandle`, stamped
+into every geometry it produced, so a later search over a feature's weak observers
+can tell which reconstruction run a given RFG came from.
 
 ## Declared types
 
@@ -81,9 +111,65 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructContext tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Call `set_features` again whenever the features change.** It is not just an
+optimisation gate: it clears the cached present-day geometries, re-detects the
+reconstruct method for every feature, and — via `initialise_context_states` —
+re-creates the `ReconstructMethodInterface` instances inside every live context
+state, because their accumulated internal state is no longer applicable. Skipping
+it leaves stale reconstruct methods and stale geometry property handles.
+
+**Geometry property handles are only stable between calls to `set_features`.**
+They are assigned lazily by `assign_geometry_property_handles` as running indices
+into `d_cached_present_day_geometries`, in feature order, so adding or removing a
+feature renumbers everything. The reference returned by
+`get_present_day_feature_geometries` is likewise valid only until the next
+`set_features`. `get_reconstructed_feature_geometries`,
+`get_reconstructed_topological_sections` and `reconstruct_feature_velocities` do
+*not* need the handles and deliberately skip assigning them — the handle-based
+methods force the assignment themselves.
+
+**Handle assignment can construct a throwaway context state.** If no live context
+state exists, `assign_geometry_property_handles` creates one on the spot using an
+`IdentityReconstructionTreeCreatorImpl` — a `ReconstructionTreeCreator` backed by
+an empty `ReconstructionGraph`, so every rotation is the identity and the anchored
+plate is 0. That is sound only because present-day geometry does not depend on the
+rotation model; do not reuse that impl anywhere the rotations matter.
+
+**Context state ownership is inverted from the usual pattern.** The client owns
+the `shared_ptr` returned by `create_context_state`; `ReconstructContext` keeps
+only `weak_ptr`s, reclaiming expired slots on the next `create_context_state` or
+`set_features`. Drop your reference and the context state is destroyed even though
+the `ReconstructContext` is still alive. Conversely, the
+`ReconstructMethodRegistry` passed to the constructor is held by reference and
+must outlive the `ReconstructContext`.
+
+**Every handle-based method asserts** that the context state's reconstruct-method
+count equals the feature count. A mismatch means the state was created against a
+different feature set and raises `AssertionFailureException`.
+
+**Matching RFGs back to handles is a linear scan.** `get_feature_reconstructions`
+and `build_feature_reconstruction_time_spans` compare
+`FeatureHandle::iterator`s in a nested loop over the feature's geometry properties;
+an RFG whose property iterator matches nothing is silently dropped rather than
+reported. This is per-feature, so it is cheap for the common one-geometry feature
+and quadratic for a feature with many geometry properties.
+
+**Empty results are meaningful and differ per method.**
+`get_reconstructed_features` returns an entry for *every* feature, including ones
+inactive at that time (with an empty reconstruction sequence) — co-registration
+depends on that, since it correlates by feature across frames.
+`get_topology_reconstructed_feature_time_spans`, by contrast, omits features that
+are not topology-reconstructed entirely.
+
+**Reconstruct handles are process-global and not thread-safe.**
+`ReconstructHandle::get_next_reconstruct_handle` increments a function-local
+static, flagged in its own source as needing protection if GPlates ever becomes
+multi-threaded. Treat every method on this class as single-threaded.
+
+Feature references throughout are `weak_ref`s and are re-checked with `is_valid()`
+before each use, so a feature deleted after `set_features` is skipped rather than
+crashing — but it still occupies a slot in the internal sequence, and its geometry
+property handles remain allocated.
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/RawRaster tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header is the in-memory representation of raster pixel data — what a raster file has been read into, before anything turns it into textures. Like `Georeferencing`, `RawRaster` is not a `PropertyValue`; it derives from `GPlatesUtils::ReferenceCount` and is held *by* property values rather than being one — `GmlFile` keeps a `std::vector<RawRaster::non_null_ptr_type>`, one proxied raster per band of the file it names. `RawRaster` itself declares almost nothing: a virtual destructor and `accept_visitor`. Everything real is in `RawRasterImpl`, a policy-based template with three orthogonal axes — how the data is held (`WithData` owns a `boost::scoped_array<T>`, `WithProxiedData` holds a `GPlatesFileIO::RasterBandReaderHandle` instead, `WithoutData` holds nothing), whether `RasterStatistics` is carried, and how "no data" is expressed (`WithNoDataValue` stores an optional sentinel, `NanNoDataValue` fixes it at NaN, `WithoutNoDataValue` has none). The named typedefs are the only combinations the design supports, and every one of them is enumerated by hand.
+
+Two decisions shape the whole file. First, **the type set is closed**. There is no generic `RawRasterImpl<T,...>` dispatch: `RawRasterVisitor` has one `visit` overload per typedef, with an empty default body, so the enumerated instantiations *are* the type system. `RawRasterUtils::try_raster_cast` is a downcast implemented by overriding exactly one of those overloads, and `RawRasterUtils::get_raster_type` is how a visitor recovers a `RasterType::Type` tag. `TemplatedRawRasterVisitor` exists to make writing such visitors bearable: it forwards every overload to a single `ImplType::do_visit` member template, so the visitor author writes one function template instead of twenty overrides, and the constructor overloads up to nine arguments exist only to pass arguments through to `ImplType` in the absence of variadic templates.
+
+Second, **the policy choices are baked into the type, not into a flag**. Whether a raster has data, statistics or a no-data value is a compile-time `enum { has_data = ... }` on the policy, which is what lets `RawRasterUtils` select behaviour with `boost::enable_if_c` and partial specialisation (`CreateCoverageRawRaster`, `AddNoDataValue`, `DoesRasterContainANoDataValue`). The parallel `Proxied*` typedefs are the same element type and same statistics/no-data policies with the data policy swapped, which is what makes `RawRasterUtils::RawRasterTraits` able to mechanically derive the unproxied type from a proxied one. Proxied rasters exist so a raster larger than memory can be described, mipmapped and rendered region by region — `ProxiedRasterResolver` is the class that turns one into pixels, and it is declared a friend of `WithProxiedData` so it can reach the otherwise-private band reader handle.
 
 ## Declared types
 
@@ -323,9 +325,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/RawRaster tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Adding a raster element type means editing this file in six places** — the `RawRasterImpl` typedef, the `Proxied*` twin, a `RawRasterVisitor::visit` overload, the matching `TemplatedRawRasterVisitor::visit` forwarder, plus the enum and both maps in `RasterType.h`. Miss the `RawRasterVisitor` overload and the new type binds to no `visit` at all, which is a compile error; miss the `TemplatedRawRasterVisitor` forwarder and it silently inherits the empty base implementation instead of reaching `do_visit`.
+
+**Every `visit` in `RawRasterVisitor` has an empty default body.** A visitor that only overrides the cases it cares about gets silence, not an error, for everything else — which is exactly what `RawRasterCastVisitor` relies on, and exactly the trap if you forget a case. Note also that `RawRasterCastVisitor` needs `using RawRasterVisitor::visit;` because overriding one overload otherwise hides the rest.
+
+**`create(width, height, T *data)` takes ownership.** The pointer is adopted into `boost::scoped_array<T>`, so it must come from array `new[]`, not `malloc` and not a single-object `new`, and the caller must not free or reuse it. The no-argument `create(width, height)` allocates `width * height` elements itself, deliberately computing the size through `std::size_t` so that large rasters do not overflow a 32-bit multiply.
+
+**`WithData::at(x, y)` and `data()` do no bounds checking** and there is no bounds check anywhere in the class — the layout is a plain row-major `y * width + x` array. `data()` is also absent from the proxied and dataless policies, so any code that calls it is statically committed to a `WithData` raster; that is the point of the `has_data` compile-time flag.
+
+**The policy destructors are all protected and non-virtual,** and `RawRasterImpl` inherits from the policies non-virtually. Objects must be destroyed through `RawRaster*`, whose destructor is virtual — which is what `non_null_intrusive_ptr` does. Never hold or delete a raster through a policy base pointer.
+
+**`NanNoDataValue` ignores whatever the file said the no-data value was.** For `FloatRawRaster` and `DoubleRawRaster` the sentinel is unconditionally NaN and there is no setter; `RawRasterUtils::add_no_data_value` handles this by rewriting matching pixels to NaN rather than storing the value. Consequently `no_data_value()` on a floating-point raster always returns NaN, and comparing against it with `==` is always false — use `is_no_data_value`, which goes through `GPlatesMaths::is_nan`.
+
+**`Rgba8RawRaster` and `CoverageRawRaster` have no no-data value at all,** by design: RGBA carries transparency in its alpha channel and coverage is already a 0-to-1 float. `RawRasterUtils::create_coverage_raster` therefore returns `boost::none` for them rather than an all-ones raster.
+
+**`WithStatistics` and `WithNoDataValue` have implicit converting constructors,** marked "intentionally not explicit", so a bare `RasterStatistics` or `boost::optional<T>` can be passed straight to the `create` overloads that take a `statistics_policy_base_type` or `no_data_value_policy_base_type`. That is also why a raster can be sliced into a policy by value to copy just that policy, as `RawRasterUtils::RawRasterTraits::convert_proxied_raster_to_unproxied_raster` does when it passes `*proxied_raster` twice.
+
+**Reference counting is atomic; the pixel data is not protected.** A `RawRaster` can be shared across threads safely as a pointer, but nothing serialises concurrent writes to `data()`, and a proxied raster's `RasterBandReaderHandle` reads from disk on demand.
 
 ## Used by
 

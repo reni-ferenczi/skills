@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/Georeferencing tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Georeferencing` holds the six-coefficient affine transform that maps raster pixel coordinates to geographic coordinates. It is not a `PropertyValue` — it derives only from `GPlatesUtils::ReferenceCount` and is passed around as `non_null_ptr_to_const_type`. The property value that actually lives in a feature is `GmlRectifiedGrid`, whose `convert_to_georeferencing()` builds a `Georeferencing` from the GML origin and offset vectors and caches it in a `mutable boost::optional`. From there the same object is handed to `GPlatesFileIO::RasterReader` / `RasterWriter` (the GDAL back end copies `parameters_type::components` straight into and out of GDAL's geotransform array), to `GPlatesAppLogic::RasterLayerProxy` and `RasterLayerParams`, to `GPlatesOpenGL::GLMultiResolutionRaster` for rendering, and to `GPlatesQtWidgets::EditAffineTransformGeoreferencingWidget` for editing. So it is the one neutral currency for "where is this raster on the globe", sitting between the GML model representation and everything that consumes rasters.
+
+The parameter order is GDAL's, not ESRI's, and both `parameters_type` and `lat_lon_extents_type` are POD aggregates whose named fields overlay a `components[]` array through an anonymous union — that is what lets the GDAL reader and writer loop over them by index. The class stores *only* the affine form; the header discusses control-point georeferencing as the other general approach but a comment on the class states it is not implemented.
+
+The design decision that drives most of the API is that the stored transform always uses **pixel registration**, with `top_left_x/y_coordinate` naming the top-left *corner of the top-left pixel box*, exactly as GDAL stores it. Grid-line registered data (NetCDF grids, where the data points sit *on* the grid lines and the extents describe pixel *centres*) is converted at the boundary: every `create`, `set_parameters`, `set_lat_lon_extents`, `reset_to_global_extents`, `get_parameters` and `get_lat_lon_extents` takes a `convert_from_/to_grid_line_registration` flag, and the private `convert_to_pixel_registration` overloads do the half-pixel shift. The `.cc` carries the algebra showing that only the origin coefficients C and F change under that conversion — the pixel width and height components are unaffected — and it is worth reading before touching any of it.
 
 ## Declared types
 
@@ -59,9 +61,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/Georeferencing tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The registration *flags* and the registration *methods* do different things.** `convert_from_/to_grid_line_registration` reinterprets the same set of data points — the transform's A, B, D and E coefficients are unchanged and only the origin moves by half a pixel. `contract_grid_line_to_pixel_registration` and `expand_pixel_to_grid_line_registration` genuinely rescale: they multiply the pixel width and height components by `(N-1)/N` (or its inverse) as well as shifting the origin, because they move the data points themselves. They are not the inverse of the flags, and mixing them up silently stretches the raster by one pixel.
+
+**`expand_pixel_to_grid_line_registration` divides by `raster_width - 1`.** Neither it nor `contract_grid_line_to_pixel_registration` asserts on its dimensions, so a raster of width or height 1 (or 0) produces infinities or NaNs rather than an error. The `create` / `set_lat_lon_extents` / `reset_to_global_extents` path *does* assert, through `GPlatesGlobal::Assert<PreconditionViolationError>`: dimensions must be non-zero for pixel registration and at least 2 for grid-line registration, because grid-line spacing is computed over `N-1` intervals.
+
+**`get_lat_lon_extents` is partial, in two ways.** It returns `boost::none` if the transform rotates or shears (the B and D components are not almost-exactly zero), because extents cannot represent that; and it returns `boost::none` if the top or bottom *pixel centre* latitude falls outside `[-90, 90]`. Note the invariant it is testing: pixel *boxes* are allowed outside that range — global grid-line-registered extents necessarily put the top box edge above 90 — but centres are not. The check uses a deliberately loose `LATITUDE_EPISLON` of 1e-4 (spelt that way in the source) so that a round trip through grid-line registration does not push a legitimate raster out of range. `set_lat_lon_extents` does *not* validate this, so it is possible to store extents that a later `get_lat_lon_extents` cannot give back.
+
+**Extents are signed, not ordered.** `top < bottom` or `left > right` is legal and means the raster is drawn flipped vertically or horizontally; equal values give a zero-height or zero-width raster. Do not normalise the ordering when you touch this data.
+
+**Ownership.** The constructors and copy constructor are private and there is no assignment operator, so instances only ever exist behind `non_null_intrusive_ptr` from a `create` overload. Most consumers hold `non_null_ptr_to_const_type` and treat the object as immutable and shared; the mutators are for the editing widgets, which work on their own instance. `GPlatesUtils::ReferenceCount` uses `boost::detail::atomic_count`, so sharing a pointer across threads is safe; the object's *contents* are not protected, and since the whole state is one POD struct there is nothing stopping a concurrent `set_parameters` from tearing.
+
+**`create()` with no arguments gives all-zero parameters,** which is a degenerate transform mapping every pixel to the origin — it is a placeholder to be filled in by `set_parameters`, not a usable default.
 
 ## Used by
 

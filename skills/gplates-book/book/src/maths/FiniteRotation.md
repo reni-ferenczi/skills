@@ -9,9 +9,45 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/FiniteRotation tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the value type that carries plate motion through the whole application:
+a rotation about an Euler pole by an angle, stored as a `UnitQuaternion3D`. Every
+total reconstruction pole read from a `.rot` file becomes one of these, every
+edge of `GPlatesAppLogic::ReconstructionTree` caches one as its composed absolute
+rotation, and `GPlatesPropertyValues::GpmlFiniteRotation` wraps one for the
+model. It is a small, copyable, immutable value with no default constructor —
+you go through the `create*` factories or `create_identity_rotation` — and all
+of its interesting operations are non-member functions in `GPlatesMaths`, so
+`compose`, `get_reverse` and `interpolate` read like the algebra they implement.
+
+Two decisions in the header are worth understanding before you touch anything.
+First, the quaternion is the representation and the pole/angle pair is not
+stored, because composition and interpolation are cheap and numerically stable
+on quaternions; `compose` is a single quaternion multiply, and `interpolate` is
+SLERP over the unit quaternions. `compose(r1, r2)` is premultiplication —
+`ReconstructionTree` relies on the documented plate-circuit reading of this
+(`r1` one branch root-ward of `r2`), and reversing the arguments silently
+produces a different, wrong plate circuit.
+
+Second, `d_axis_hint` exists because the quaternion representation is
+*lossy about presentation*: `(axis, angle)` and `(-axis, -angle)` map onto the
+identical quaternion, so `UnitQuaternion3D::get_rotation_params` cannot recover
+which one the user wrote and always returns the positive-angle variant unless
+handed a hint. Carrying the originally supplied axis alongside the quaternion is
+what makes a pole displayed in the GUI, or written back to a rotation file, match
+what was read in. `compose` propagates whichever operand has a hint (preferring
+`r1`), and composing a `Rotation` — the interactive drag case — deliberately
+keeps only the `FiniteRotation`'s hint.
+
+Applying a rotation is spread over a family of `operator*` overloads covering
+unit vectors, `Vector3D`, `PointOnSphere`, each concrete geometry, and
+`GreatCircleArc`, `GreatCircle` and `SmallCircle`. The type-erased overload on
+`GeometryOnSphere` is implemented by the file-local visitor
+`RotateGeometryOnSphere`, which dispatches to the concrete overload and asserts
+that some `visit_*` fired. The vector overload is an expanded quaternion sandwich
+written out in the comment block rather than a literal `q v q*`, avoiding the
+conjugate multiply; the geometry overloads simply rebuild the geometry
+point-by-point, with a standing TODO noting that converting the quaternion to a
+3×3 matrix would be cheaper past some number of points.
 
 ## Declared types
 
@@ -82,9 +118,49 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/FiniteRotation tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`operator==` is not "same rotation".** It compares the quaternions
+  component-wise (via `UnitQuaternion3D::operator==`) *and* compares the axis
+  hints with `opt_eq`. Since `q` and `-q` effect the identical rotation but
+  differ component-wise, and since two rotations can agree while one carries a
+  hint and the other does not, unequal here does not mean geometrically
+  different. Do not use it as a "has the reconstruction changed" test.
+- **`compose` is not commutative and the argument order encodes the plate
+  circuit.** See the extended comment on the declaration: if `r1` is M1 relative
+  to F1 and `r2` is M2 relative to F2, the result is M2 relative to F1, and M1 is
+  expected to be F2. Nothing enforces that.
+- **Reading back the pole and angle of an identity rotation throws.**
+  `UnitQuaternion3D::get_rotation_params` raises
+  `GPlatesGlobal::IndeterminateResultException` for an identity quaternion,
+  because the axis is genuinely indeterminate. Guard with
+  `represents_identity_rotation`, as `operator<<` does.
+- **`interpolate` with `t1 == t2` throws `IndeterminateResultException`**; the
+  three-rotation barycentric overload asserts (`PreconditionViolationError`) that
+  the weights sum to 1, under `Real`'s epsilon-tolerant equality. Its nested
+  SLERPs would divide by zero when `w2 + w3` is zero, but that case is absorbed
+  by the `cos_theta >= 1.0` early-out in the file-local `slerp`, which returns
+  before touching the interpolation parameter. Preserve that early-out.
+- **The SLERP takes the shorter path.** It negates an interpolation coefficient
+  (not a quaternion) when the dot product is negative, so interpolating between
+  poles more than 180° apart will not travel the long way round.
+- **`operator*(const UnitVector3D &)` skips the unit-vector validity check on
+  purpose.** It renormalises the result itself when the squared magnitude is not
+  within the stricter tolerance and then constructs `UnitVector3D` with
+  `check_validity = false`; the comment records that the check otherwise dwarfed
+  the quaternion multiply. If you change this path, keep the renormalisation.
+- **Rotating a geometry can, in principle, still throw.** The polyline and
+  polygon overloads call `create` with `check_distinct_points` left at its
+  default of `false` precisely so that rotating a very small geometry does not
+  raise `InvalidPointsFor…ConstructionError` on points that collapse together
+  numerically. Insufficient *total* points is still an error.
+- **`RotateGeometryOnSphere` asserts rather than silently ignoring a new geometry
+  type.** Because `ConstGeometryOnSphereVisitor`'s `visit_*` functions have empty
+  default bodies, a fifth `GeometryOnSphere` subclass would leave
+  `d_rotated_geometry` unset; the `GPlatesGlobal::Assert` in `rotate` turns that
+  into an `AssertionFailureException` instead of a wrong answer.
+- Instances are plain values with no reference counting and no shared state, so
+  they are safe to copy between threads; note that `RotateGeometryOnSphere` holds
+  the `FiniteRotation` **by reference**, so it must not outlive the rotation it
+  was constructed from.
 
 ## Used by
 

@@ -35,7 +35,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [PythonInterpreterLocker](../src/api/PythonInterpreterLocker.md) | 2 | 176 | 85 | RAII guard around PyGILState\_Ensure/Release for calling into Python from non-Python threads |
 | [PythonInterpreterUnlocker](../src/api/PythonInterpreterUnlocker.md) | 2 | 159 | 14 | RAII guard around PyEval\_SaveThread/RestoreThread to release the GIL during non-Python work |
 | [PythonRunner](../src/api/PythonRunner.md) | 3 | 658 | 3 | Executes Python code with GIL management and interactive console support |
-| [PythonUtils](../src/api/PythonUtils.md) | 1 | 416 | 574 | (pending) |
+| [PythonUtils](../src/api/PythonUtils.md) | 1 | 416 | 574 | GIL-aware helpers bridging the embedded interpreter to the Qt main thread, plus string and error conversion |
 | [Sleeper](../src/api/Sleeper.md) | 3 | 137 | 0 | Makes Python time.sleep interruptible by replacing it with incremental micro-sleeps |
 
 ## Other files

@@ -8,9 +8,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/CubeQuadTree tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The generic container behind every "subdivide the globe recursively" structure in
+GPlates: six quad trees, one per cube face of `CubeCoordinateFrame`, plus a
+single element at the root of the cube itself, with an arbitrary `ElementType`
+stored in each node. It is deliberately only structure — it knows nothing about
+geometry, bounding circles or which node a point belongs in. Callers decide where
+to descend and this class hands out, creates and removes nodes. That is why it is
+instantiated on wildly different payloads: reconstructed polygon meshes
+(`GLReconstructedStaticPolygonMeshes`), raster tiles
+(`GLMultiResolutionCubeRaster`), filled-polygon draw lists
+(`GLFilledPolygonsGlobeView`), rendered geometries
+(`RenderedGeometryLayer`). The related `CubeQuadTreePartition` is the *spatial*
+structure built on the same idea; this one is the plain tree.
+
+Two construction styles are offered and they are not interchangeable in feel.
+The `get_or_create_*` family walks down from a face root creating
+default-constructed elements as it goes, which is the natural top-down build; the
+`create_node()` / `set_child_node(..., ptr_type)` family lets a caller build a
+subtree in isolation and graft it on afterwards, which is what the raster and
+mesh generators do when a subtree is produced by a recursive helper that returns
+a node. The root element is separate from all six quad trees and exists for
+things that belong to no face at all — `CubeQuadTreePartition` uses it for
+geometries too large to fit inside any one face's loose bounds.
+
+Traversal comes in two forms. Ordinary structural recursion goes through
+`Node::get_child_node()`, which returns `NULL` for an absent child, so a "tree"
+here is really a sparse tree — most nodes have fewer than four children.
+`Iterator` is the flat alternative for when order does not matter: it holds an
+explicit stack of `NodeLocation` records, visits the cube root element first and
+then each face in enum order, and reports a `CubeQuadTreeLocation` alongside each
+element so that the caller can still tell where in the cube it is. Storage is a
+`GPlatesUtils::ObjectPool<Node>`, chosen for its O(1) individual `release()`;
+the class is `ReferenceCount`-derived and handed around as
+`non_null_ptr_type`.
 
 ## Declared types
 
@@ -67,9 +97,47 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/CubeQuadTree tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The pool owns every node; nothing else does.** `Node::ptr_type` is
+`ObjectPool<Node>::object_ptr_type`, a raw pool handle with no reference counting
+— removing a node from the tree and releasing it to the pool are the same act,
+and the pool may hand the same storage back on the next `create_node()`. So any
+`Node *` or `Node &` a caller is holding is invalidated by
+`remove_child_node()`, `remove_quad_tree_root_node()`, `clear()`, and by the
+`set_*_node(..., const ElementType &)` overloads, which silently remove the
+existing subtree before attaching the new one. Destroying the `CubeQuadTree`
+destroys the pool and hence every node, attached or not.
+
+**`create_node()` without an attach is a leak until destruction.** The header is
+explicit about this: a node created and never attached is not reclaimed until the
+tree is destroyed, unless `release_node()` is called. The mirror-image mistake is
+worse — calling `release_node()` on a node that *is* in the tree returns live
+storage to the free list and corrupts the tree, with the parent still pointing at
+it. There is no check for either case.
+
+**Element requirements are implicit and split across methods.** The class comment
+requires `ElementType` to be copy-constructible and copy-assignable. On top of
+that, every `get_or_create_*` method default-constructs an element, so
+instantiating the template with a type lacking a default constructor still
+compiles until one of those methods is used — an easy trap when only the
+`create_node()` / `set_*_node(ptr_type)` path is exercised in one translation
+unit.
+
+**`size()` and `empty()` count pool occupancy.** They are `d_quad_tree_node_pool`
+plus the presence of the root element, so a node created with `create_node()` and
+not yet attached is already counted. They are not a count of reachable elements.
+
+**Indices are unchecked and the location is not validated against the tree.**
+Child offsets index a `[2][2]` array directly and `cube_face` indexes a
+six-element array directly; there are no assertions. Separately, the
+`CubeQuadTreeLocation` an `Iterator` reports is a pure coordinate — it is not a
+node reference and does not keep the node alive.
+
+**Iterators are invalidated by any structural change.** The traversal stack holds
+raw node pointers and a `std::vector` of `NodeLocation`; adding or removing nodes
+during iteration leaves both stale. `reset()` restarts a used iterator, but it
+does not make one safe across mutations. Nothing here is thread-safe for
+concurrent mutation — the pool allocates on `add()` — though concurrent
+read-only traversal with independent iterators touches no shared mutable state.
 
 ## Used by
 

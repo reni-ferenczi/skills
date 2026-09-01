@@ -9,9 +9,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/AbstractEditWidget tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the contract that lets one piece of generic property-editing UI drive
+sixteen unrelated Qt Designer forms. Each subclass pairs with a `Ui_Edit*Widget`
+form and knows exactly one family of `GPlatesPropertyValues` types; the base
+class defines the four operations the surrounding machinery needs from all of
+them — reset to defaults, optionally reconfigure for a named
+`GPlatesPropertyValues::StructuralType`, mint a fresh
+`GPlatesModel::PropertyValue` from the current fields, and push the fields back
+into the property value the widget was last loaded from. Everything the base
+class implements itself is the small amount of shared state that goes with those
+operations: the dirty flag, the Enter-key policy, and an optional pointer to the
+form's "default" label.
+
+The two callers that matter are `EditWidgetGroupBox`, which pre-allocates one
+instance of every subclass and shows exactly one at a time, and
+`EditWidgetChooser`, a property-value visitor that picks which one by dispatching
+on the concrete property value type. That split is why the base class carries
+`configure_for_property_value_type()` with a do-nothing default: most widgets
+serve a single structural type and never override it, while `EditGeometryWidget`
+and `EditEnumerationWidget` cover several and use the call to reshape themselves
+(and to reject types they cannot handle, by throwing
+`PropertyValueNotSupportedException`). The header's own comment is the
+authoritative checklist for adding a new widget — it lists the five places in
+`EditWidgetGroupBox` and the two in `EditWidgetChooser` that must be touched,
+because none of that wiring is automatic.
+
+There is an asymmetry between the two write paths that is easy to miss.
+`create_property_value_from_widget()` is `const` and builds a brand-new value —
+the path used by `AddPropertyDialog` and `CreateFeatureDialog`, where no model
+object exists yet. `update_property_value_from_widget()` mutates the property
+value the subclass stashed during its own `update_widget_from_xxxx()` call (see
+`EditPlateIdWidget::update_widget_from_plate_id`, which caches a pointer to the
+`GpmlPlateId`), which is the path `EditFeaturePropertiesWidget` uses for
+in-place editing of a focused feature.
 
 ## Declared types
 
@@ -54,9 +84,41 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/AbstractEditWidget tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`set_handle_enter_key(false)` does not do what its documentation says. In
+`keyPressEvent()` the `d_handle_enter_key` test calls `ev->ignore()` but does not
+return, so control falls straight into the `Key_Enter` / `Key_Return` branches,
+which emit `enter_pressed()` and `commit_me()` and then `accept()` the event
+regardless. If you need a widget that genuinely lets Enter propagate to a dialog's
+default button, fix the fall-through rather than relying on the flag.
+
+`keyPressEvent()` also swallows the base-class implementation entirely: every
+other key is merely `ignore()`d, `QWidget::keyPressEvent()` is never called. That
+is harmless for the current subclasses because the real input focus lives in a
+child spinbox or line edit (constructors typically call `setFocusProxy()`), so
+ordinary typing never reaches this handler.
+
+The dirty flag is a convention, not an enforced invariant. Nothing in the base
+class sets it; each subclass must connect its own editing controls to the
+`set_dirty()` slot, and only user-driven changes should do so — a
+`update_widget_from_xxxx()` call is expected to end with `set_clean()`. Get this
+wrong and `EditWidgetGroupBox::update_property_value_from_widget()` either
+silently drops the user's edit or, because it returns "the model was altered",
+feeds an unnecessary `FeatureFocus` modification notification back into the
+widget and risks a signal loop.
+
+`update_property_value_from_widget()` has a precondition that the base class
+cannot check: a preceding `update_widget_from_xxxx()` call. Subclasses signal the
+violation by throwing `UninitialisedEditWidgetException` (a
+`GPlatesGlobal::PreconditionViolationError`), and `reset_widget_to_default_values()`
+is specified to put the widget back into that uninitialised state — it must clear
+the cached property-value pointer, not merely blank the fields.
+
+Ownership follows Qt's parent/child rule: `EditWidgetGroupBox` constructs one of
+each subclass with itself as parent and never deletes them, so instances outlive
+any individual property being edited and must be fully re-initialised on each
+activation. The `QLabel *` handed to `declare_default_label()` is a non-owning
+pointer to a child of the widget's own form; `label()` returns NULL for widgets
+that never declared one, so callers must check.
 
 ## Used by
 

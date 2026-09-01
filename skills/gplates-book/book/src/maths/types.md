@@ -8,9 +8,21 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/types tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Two unrelated aliases in a header that contains no code of its own. The one
+that matters is `real_t`, the name by which the whole of `GPlatesMaths` refers
+to `GPlatesMaths::Real` — the wrapper around `double` whose comparison
+operators are tolerant to within `GPlatesMaths::EPSILON` (1.0e-12) rather than
+exact. Every scalar stored by a geometry class in this module is a `real_t`:
+the components of `Vector3D` and `UnitVector3D`, the scalar part of
+`UnitQuaternion3D`, the cosine and sine cached by `AngularExtent`. This header
+is the reason those files can write `#include "types.h"  /* real_t */` and pull
+in `Real.h` and nothing else; the comment appears verbatim at almost every
+include site.
+
+`rot_id_t` is a leftover. Nothing in the tree uses it except
+`FiniteRotationSnapshotTable.h`, and its own comment says it was meant to
+replace `GPlatesGlobal::rid_t` and to become `std::size_t`. Plate IDs in
+current code are `GPlatesModel::integer_plate_id_type`, not this.
 
 ## Declared types
 
@@ -37,9 +49,20 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/types tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`real_t` is not a transparent alias for `double`, and treating it as one is the
+standard way to get subtly wrong results here. `Real::operator<` is defined as
+`r2 - r1 > EPSILON`, and Boost's `equivalent` derives `==` from it, so equality
+means "within 1.0e-12 absolute" — which is *not transitive*, and is an absolute
+tolerance that does not scale with magnitude. Sorting or using `real_t` as a
+map key is therefore unsound. Code that wants plain IEEE semantics calls
+`.dval()` explicitly, as the arithmetic in `Vector3D` and `GenericVectorOps3D`
+does throughout (their comments record that this also generates markedly better
+assembly than operating on `Real`).
+
+Changing this typedef would silently change the comparison semantics of every
+geometry class in `maths`, including the invariant checks in `UnitVector3D` and
+`UnitQuaternion3D`, which are written as `mag_sqrd != 1.0` and depend on the
+tolerance being there.
 
 ## Used by
 

@@ -8,9 +8,17 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/types tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A three-declaration header that exists to be included from anywhere. Its own comments
+give the reason twice: `container_size_type` and `INVALID_INDEX` are defined here
+rather than taken from the `size_type` of whichever container is actually involved
+"to avoid circular header includes and to simplify code in general". The model's
+containers, their iterators and the handles that index into them all need to name the
+same index type, but they cannot include each other, so they all include this instead.
+`integer_plate_id_type` is here for the same reason on a much wider scale — it is the
+spelling of a plate ID everywhere in GPlates, from `PlatesRotationFormatReader`
+parsing a `.rot` line, through `ReconstructionTree` and `ReconstructionTreeCreator`
+building the plate circuit, out to `SpecifyAnchoredPlateIdDialog` in the GUI. The fan-in
+is the point of the file; there is no behaviour in it to understand.
 
 ## Declared types
 
@@ -38,9 +46,24 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/types tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `INVALID_INDEX` is initialised from `-1` and `container_size_type` is `size_t`, so
+  its value is `SIZE_MAX`, not a negative number. It is only ever compared, never
+  arithmetic — `BasicHandle` and `RevisionAwareIterator` initialise their index
+  members with it and `TopLevelPropertyRef` tests against it. An index that is
+  incremented past the end silently becomes a plausible-looking large index, not
+  `INVALID_INDEX`.
+- Being a namespace-scope `static const` in a header, `INVALID_INDEX` has internal
+  linkage: every translation unit gets its own copy. Comparing values is fine;
+  taking its address, binding it to a reference across a translation-unit boundary, or
+  expecting one definition is not.
+- `integer_plate_id_type` is `unsigned long`, whose width is platform-dependent
+  (32-bit under MSVC, 64-bit under LP64). It is fine as an in-memory type, but do not
+  assume a fixed byte width when writing binary formats, and pick printf-style format
+  specifiers accordingly.
+- The header has no `#include` directives at all, yet uses `size_t`. It compiles only
+  because every current include site has already pulled in a header that declares it.
+  Adding a first, direct include of this file from a translation unit that has not may
+  fail to build.
 
 ## Used by
 

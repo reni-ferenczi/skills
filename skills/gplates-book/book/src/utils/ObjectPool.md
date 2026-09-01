@@ -8,9 +8,35 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/ObjectPool tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A header-only wrapper around `boost::object_pool` that exists for one reason:
+`boost::object_pool::destroy()` is O(N), because boost keeps its free list ordered
+by address so the pool destructor can tell which slots the client already freed.
+That makes `boost::object_pool` a fine bump allocator but a poor one to return
+objects to individually. `ObjectPool` keeps boost's fast allocation and adds an
+O(1) `release()`. The class comment carries the profiling that drove the design —
+the older hand-written implementation allocated at 60 cycles versus boost's 20,
+which is why this is a wrapper today rather than a from-scratch allocator.
+
+The trick is that `release()` never gives memory back to `boost::object_pool` at
+all. Each slot is an `ObjectWrapper`, which is nothing but a
+`boost::optional<ObjectType>`; releasing sets that optional to `boost::none` —
+running the object's destructor — and pushes the still-allocated slot onto an
+intrusive free list, where the next `add()` will reuse it. The `boost::optional`
+is also what lets `ObjectType` be neither copy-constructible nor
+copy-assignable: `add(boost::in_place(a, b, c))` forwards constructor arguments
+straight into the slot, on both the fresh-allocation path (placement new under a
+`Loki::ScopeGuard`) and the reuse path (`optional`'s in-place-factory
+assignment). `ObjectPtr` exists purely to hide that optional; it is the size of a
+raw pointer, non-owning, and `SafeBool`-testable.
+
+The heaviest consumer is `GPlatesOpenGL::GLStateSetStore`, which holds one
+`ObjectPool` per `GLStateSet` subclass — roughly seventy of them — and
+`GPlatesOpenGL::GLState` allocates from them via `add_with_auto_release` on the
+per-draw-call path, which is exactly the workload the O(1) release was written
+for. `GPlatesUtils::ObjectCache` is a good illustration of the boundary: it uses
+`ObjectPool` for its volatile-object handles, which are released individually,
+but drops to `boost::object_pool` directly for its list nodes with a comment
+saying so, since those are only ever freed en masse.
 
 ## Declared types
 
@@ -56,9 +82,47 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/ObjectPool tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`ObjectPtr` does not own anything.** It dangles the moment the pool is
+  destroyed, `clear()` is called, or the object is `release()`d. The pool must
+  outlive every pointer handed out — and for `add_with_auto_release`, every
+  `shared_ptr`, since `ReturnObjectToPoolDeleter` stores a raw `ObjectPool *` and
+  will call `release()` on a dead pool otherwise. `clear()` is worse than the
+  destructor here: it leaves the pool alive and reusable while silently
+  invalidating every outstanding pointer.
+- **`release()` validates almost nothing.** The only check is that
+  `d_num_objects != 0`. It does not verify that the pointer came from this pool,
+  nor that it has not already been released. A double release pushes the same
+  slot onto the free list twice, and two later `add()` calls then hand out
+  pointers to the same object.
+- **That check is a `GPlatesGlobal::Assert`, which aborts in debug builds and
+  throws `PreconditionViolationError` otherwise** — from a path reachable inside
+  a `shared_ptr` deleter, and therefore potentially inside a destructor.
+- **Allocation failure in `release()` is swallowed on purpose.** If the free-list
+  node cannot be allocated, the comment explains that the release request is
+  silently ignored rather than throwing from a possible destructor. The object is
+  destroyed and `d_num_objects` decremented, but the slot never returns to the
+  free list.
+- **The reuse path in `add()` is not exception-safe.** The fresh-allocation path
+  is guarded by `Loki::ScopeGuard`, but on the reuse path the node is popped off
+  `d_object_free_list` (and pushed to `d_free_list_node_free_list`) *before*
+  `free_list_object->object = in_place_factory`. If `ObjectType`'s constructor
+  throws there, the slot is off both lists and unreachable until the pool is
+  cleared or destroyed.
+- **The two free lists share the same `next` pointers**, since `FreeListNode`
+  inherits `IntrusiveSinglyLinkedList<FreeListNode>::Node`. That is why `add()`
+  must pop from one list before pushing to the other; reordering those two lines
+  corrupts both lists. The in-line comment says as much.
+- **`size()` counts live objects, not memory.** Released slots stay allocated and
+  are not reflected in `size()` or `empty()`, so a pool that reports empty may
+  still be holding every slot it ever allocated. Only `clear()` or destruction
+  returns memory.
+- **Not thread safe.** No synchronisation, and `boost::object_pool` provides
+  none either. A pool must belong to one thread.
+- **Space cost:** 4 bytes per object for the `boost::optional` flag, plus a
+  `FreeListNode` per released slot — the "up to an extra 8 bytes" in the class
+  comment.
+- `ObjectPtr::operator*`, `operator->` and `get()` dereference without a null
+  check; only `get_ptr()` tolerates a default-constructed pointer.
 
 ## Used by
 

@@ -10,9 +10,47 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ViewportWindow tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The GPlates main window, and the third tier of the application's state trio:
+`GPlatesPresentation::Application` is a singleton holding an
+`GPlatesAppLogic::ApplicationState`, a `GPlatesPresentation::ViewState` and one
+`ViewportWindow`, in that dependency order — app-logic knows nothing of the view,
+the view knows nothing of the widgets, and this class sits on top of both. Its
+constructor takes references to the other two and it stores them; it does not own
+them, and it outlives nothing.
+
+Its actual job is narrower than its size suggests. `ViewportWindowUi.ui` supplies
+the menu bar and the whole `QAction` inventory; this class supplies the wiring,
+which is why more than half the `.cc` is the `connect_*_menu_actions()` family —
+one function per menu, deliberately kept in menu order. Almost every action's
+receiver is somewhere else: `GPlatesGui::Dialogs` (which owns every major dialog
+so they do not clutter this class), `GPlatesGui::FileIOFeedback` (all file and
+project opening and saving), `GPlatesGui::UnsavedChangesTracker`,
+`GPlatesGui::SessionMenu`, `GPlatesGui::ImportMenu`, `GPlatesGui::UtilitiesMenu`,
+`GPlatesGui::DockState`, `GPlatesGui::FullScreenMode`, `GPlatesGui::TrinketArea`.
+The visible canvas is `ReconstructionViewWidget`, set as the central widget;
+`globe_canvas()` and `map_view()` are plain forwarders to it. So if you are here
+because a menu item does the wrong thing, this file usually tells you where the
+work happens rather than doing it.
+
+What it genuinely owns is the state the canvas tools and the task panel share:
+`GPlatesCanvasTools::GeometryOperationState`,
+`GPlatesCanvasTools::ModifyGeometryState`,
+`GPlatesCanvasTools::MeasureDistanceState`, the
+`GPlatesGui::CanvasToolWorkflows` registry, and the
+`GPlatesViewOperations::CloneOperation` / `DeleteFeatureOperation` pair that back
+the Edit menu. These are held by `boost::scoped_ptr` rather than `QPointer`
+precisely because they are not `QObject`s parented to the window; the header spells
+out that convention. The class also mediates between tools and the UI in both
+directions — `handle_canvas_tool_activated()` switches the `TaskPanel` to the tab
+matching the newly active tool, and the `canvas_tool_status_message()` callback
+handed to `CanvasToolWorkflows::initialise()` lets a tool write to the status bar
+with a globe-or-map-appropriate suffix.
+
+Two recipes are maintained as comments in the code and are the intended starting
+point for the most common changes here: the numbered list at the top of
+`connect_menu_actions()` for adding a menu action, and the one in
+`set_up_task_panel_actions()` for putting that action on the Feature tab's button
+box.
 
 ## Declared types
 
@@ -150,9 +188,76 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ViewportWindow tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Construction order is fragile and partly undocumented by the type system.**
+The member initialiser list can only build things that do not need the Designer
+form, because `setupUi(this)` runs in the constructor body. That is why
+`d_import_menu_ptr`, `d_utilities_menu_ptr`, the two dock widgets and
+`d_task_panel_ptr` start as `NULL` and are assigned later. Within the body the
+code comments call the ordering "precarious" and pin it down: canvas tools dock,
+then task panel, then `CanvasToolWorkflows::initialise()` — because each reaches
+back through `*this` for the previous one. `d_dialogs_ptr` is built first among
+the members for the same reason, its constructor being the one that touches
+nothing else.
+
+**`ViewState` holds a back-pointer to this window that is null until mid-way
+through this constructor.** `get_view_state().set_other_view_state(*this)` is the
+first statement after `setupUi()`; `ViewState::get_other_view_state()`
+dereferences the pointer with no null check. Anything that runs earlier — during
+`ViewState` construction, or in a member of this class constructed before that
+line — must not call it. The header comment marks the whole mechanism as a
+temporary hack pending the migration of non-widget state into `ViewState`.
+
+**Use `display()`, not `show()`.** `display()` calls `show()` and then does the
+work that needs a visible window: repositioning the visual layers dialog relative
+to its now-laid-out parent, and `CanvasToolWorkflows::activate()`, which will not
+activate the default tool while the canvas is invisible. `showEvent()` similarly
+defers `update_tools_and_status_message()` until visibility, because
+`ReconstructionViewWidget::globe_is_active()` is only meaningful then. Note that
+`showEvent()` does not chain to `QMainWindow::showEvent()`.
+
+**`closeEvent()` is the application's entire shutdown sequence, not just a window
+close.** It runs the unsaved-changes prompt (and aborts the close if the user
+declines), records the session unless changes are being discarded, closes all
+dialogs, and calls `QCoreApplication::quit()` explicitly because stray non-Qt
+windows such as PyQt consoles would otherwise keep the process alive. It then
+calls `RenderedGeometryCollection::begin_update_all_registered_collections()` and
+deliberately never balances it — this suppresses rendered-geometry update
+signalling for the rest of the process lifetime and is documented as reducing
+shutdown from minutes to seconds on large files. Do not "fix" the missing
+`end_update` call, and do not expect rendered-geometry updates to work after a
+close event. Because the sequence lives in an event handler, programmatic
+termination must go through `ViewportWindow::close()` rather than quitting
+directly.
+
+**The undo/redo actions are not from the form.** They are created by the global
+`GPlatesViewOperations::UndoRedo` singleton's `QUndoGroup` and spliced into the
+Edit menu in place of `action_Undo_Placeholder` / `action_Redo_Placeholder`,
+inheriting the placeholders' shortcut and icon. The
+`d_inside_update_undo_action_tooltip` flags exist because the tooltip updater
+calls `QAction::setToolTip()`, which re-emits `QAction::changed()`, which is the
+signal that invoked it. Anything you add to those slots must stay inside the
+guard.
+
+**One-shot and order-sensitive connections.** `handle_visual_layer_added()`
+disconnects itself after firing, so the layers dialog auto-opens only for the
+first layer of a session. `populate_gmenu_from_menubar()` copies the top-level
+menu actions into the full-screen "GMenu" once, by `findChild` on the object name;
+menus created after that call will not appear in full-screen mode.
+
+**Ownership convention.** The header states the rule the members follow:
+`QPointer` where the object is a `QObject` parented to this window and Qt will
+delete it, `boost::scoped_ptr` where nothing else owns it. `QPointer` is also
+being used for its guarded-pointer behaviour, but the comment is explicit that
+Qt's detection of premature deletion is a safety net and not to be relied on. The
+empty destructor exists only so the `scoped_ptr` members see complete types.
+
+**Smaller surprises.** `dialogs()` is declared `const` yet hands out a non-const
+reference. `open_new_window()` does not create a second `ViewportWindow` — it
+launches a whole new GPlates process via `QProcess::startDetached`.
+`status_message()` rewrites the substring "ctrl" to the command glyph on macOS, so
+messages containing that word incidentally will be mangled there.
+`install_gui_debug_menu()` is triggered only by the `--debug-gui` command-line
+switch and leaks its `GuiDebug` deliberately into Qt's ownership.
 
 ## Used by
 

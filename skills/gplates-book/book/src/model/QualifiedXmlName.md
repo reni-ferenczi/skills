@@ -8,9 +8,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/QualifiedXmlName tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Every name that GPlates reads out of a GPML, GML or GPGIM document — feature types,
+property names, structural types, XML element and attribute names — is one of these. A
+`QualifiedXmlName` is three `GPlatesUtils::StringSet::SharedIterator`s: the namespace URI,
+the namespace alias, and the local name. The strings themselves live once each in
+process-wide `StringSet` pools, so a document with a hundred thousand
+`gpml:reconstructionPlateId` properties holds one copy of that text and a hundred thousand
+iterator triples. Comparing two names for equality is then a pair of iterator comparisons
+rather than a character-by-character string compare, which is what makes it cheap to key
+`std::map`s and to switch on property names in the visitors and readers.
+
+The `SingletonType` template parameter is a tag class whose only job is a static
+`instance()` returning the `StringSet` that this kind of name is interned in. There are
+seven instantiations in the tree — `PropertyName`, `FeatureType`, `XmlAttributeName`,
+`XmlElementName` in `model`, and `StructuralType`, `EnumerationType`, `ValueObjectType` in
+`property-values` — each with its own pool, so names of different kinds cannot be confused
+even when their text is identical. The namespace and alias pools, by contrast, are shared
+by all instantiations (`StringSetSingletons::xml_namespace_instance()` and
+`xml_namespace_alias_instance()`), which is why namespace iterators can be handed straight
+from one instantiation to another.
+
+The named constructors bind the four namespaces that `GPlatesUtils::XmlNamespaces` knows
+about; the constructors that take only a URI derive the alias from it with
+`XmlNamespaces::get_standard_alias_for_namespace`. The `GPlatesUtils::Parse`
+specialisation at the bottom of the header lets generic string-to-value code (widget
+input, command-line arguments) produce these names, and the two `transcribe` members hook
+them into `GPlatesScribe` for session and project files — deliberately declared here and
+defined in `TranscribeQualifiedXmlName.h` so that this very widely included header does
+not drag in `Scribe.h`.
 
 ## Declared types
 
@@ -68,9 +93,35 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/QualifiedXmlName tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **The alias is not part of identity.** `is_equal_to` compares the local name and the
+  namespace URI only, so two names that differ purely in their alias are equal. `operator<`
+  orders on (namespace URI, local name) to match, and takes the fast iterator-comparison
+  path only when both namespace iterators are already identical; when they are not it
+  falls back to a full ICU comparison of the two URI strings. The header explains why the
+  short alias cannot be substituted there.
+- **Construction is the expensive operation.** Every constructor inserts into a
+  `std::set`, at O(L log N) in the length of the string. Equality afterwards is O(1). The
+  idiomatic response, used throughout `property-values` in `get_structural_type()`, is to
+  hoist a repeatedly used name into a function-scope `static`.
+- **The cross-type constructor re-interns.** `QualifiedXmlName(const QualifiedXmlName<U>&)`
+  is `explicit` and calls `SingletonType::instance().insert(other.get_name())`; only the
+  namespace and alias iterators are shared. It is a conversion with a set insertion in it,
+  not a reinterpretation.
+- **`build_aliased_name()` throws away the benefit.** It, and
+  `convert_qualified_xml_name_to_qstring()`, materialise a new string on every call. Do not
+  put them inside a loop over features or properties, and never use them to compare names.
+- **`convert_qstring_to_qualified_xml_name()` almost never fails.** It returns
+  `boost::none` only when the string does not split into one or two colon-separated
+  tokens. An unrecognised prefix is not an error: `XmlNamespaces::get_namespace_for_standard_alias`
+  falls back to the gpml namespace, so a typo'd or unknown prefix silently yields a gpml
+  name. Only the `GPlatesUtils::Parse` specialisation turns the `boost::none` case into a
+  `ParseError`.
+- **Lifetime and threading.** A pool entry survives exactly as long as some
+  `SharedIterator` references it, so the three iterators a name holds keep its strings
+  alive; a name is safe to copy and store anywhere. The pools themselves are
+  `GPlatesUtils::Singleton`s, and that template compiles its mutex only when
+  `GPLATES_SINGLETON_THREADSAFE` is defined, which nothing in this tree does — constructing
+  qualified names concurrently on several threads is a data race on the shared `std::set`.
 
 ## Used by
 

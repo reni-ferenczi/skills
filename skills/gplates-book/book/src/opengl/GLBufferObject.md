@@ -9,9 +9,42 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLBufferObject tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLBufferObject` is the real implementation behind `GLBuffer` — the one chosen
+whenever `GLCapabilities` reports `GL_ARB_vertex_buffer_object` (and, for pixel
+targets, `GL_ARB_pixel_buffer_object`). Its second base, `GLObject`, marks it as
+an object that owns a GL name: the name comes from `GLObjectResource` with the
+nested `Allocator` policy supplying `glGenBuffersARB`/`glDeleteBuffersARB`, and
+the resource manager it allocates from belongs to the shared state of the
+`GLContext` (`get_buffer_object_resource_manager`). That indirection is what
+makes destruction safe from anywhere: the resource is only *queued* for
+deallocation, and `GLContext` drains the queue at a point where the right
+context is current — or, if the context is already gone, drops the handle
+silently because the driver destroyed it along with the context.
+
+No method here assumes anything about the current GL binding, and none leaves a
+binding behind. Every entry point opens with a
+`GLRenderer::BindBufferObjectAndApply` scope, which records the renderer's
+current binding for the target, applies this buffer's binding to real OpenGL
+immediately (rather than deferring it as the renderer normally would), and
+restores the previous one on exit. The direct `glBufferDataARB`,
+`glMapBufferARB` and friends inside then operate on a binding the renderer knows
+about, so the shadowed state in `GLState` never diverges from the driver's.
+
+The substance of the file is `d_uninitialised_offset` and the streaming path
+built on it. The offset is the first byte of the current allocation that the
+client has not yet written since the buffer was last orphaned, and therefore the
+first byte the GPU cannot still be reading. `gl_map_buffer_stream` rounds it up
+to the requested alignment, then either maps just that tail without
+synchronisation, or — if the tail can no longer satisfy `minimum_bytes_to_stream`
+— orphans the whole allocation, resets the offset to zero and maps from the
+start. Each of the three capability paths implements that same policy with a
+different mechanism: `GL_ARB_map_buffer_range` with explicit range flags,
+`GL_APPLE_flush_buffer_range` with `glBufferParameteriAPPLE` plus a full-buffer
+map, and, with neither extension, a re-`gl_buffer_data` of the same size and a
+NULL pointer, which is the classic orphaning idiom. `GLStreamPrimitives`
+(`begin_vertex_array_streaming`) is the client this exists for: it maps the
+vertex and vertex-element buffers this way so painters can keep appending
+geometry and issuing draw calls without waiting on the GPU.
 
 ## Declared types
 
@@ -64,9 +97,49 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLBufferObject tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The GL name in `d_resource` is allocated once in the constructor and never
+replaced; orphaning swaps the *storage* behind that name, not the name itself.
+Deallocation is queued on the context's resource manager, so a `GLBufferObject`
+may be destroyed on a path where no context is current, but the queue must
+eventually be drained by `GLContext` for the driver-side names to be freed.
+
+`d_uninitialised_offset` is the invariant to keep straight when editing
+anything here. It is set to zero by `gl_buffer_data` with a NULL data pointer
+and to the full size when data is supplied; advanced by `gl_buffer_sub_data`,
+`gl_flush_buffer_dynamic` and `gl_flush_buffer_stream` to the end of the range
+touched; and forced to the full size by `gl_map_buffer_static`, which has to
+assume the whole buffer was written. The practical consequence is that mixing a
+static map, or a sub-data write near the end, into a streaming buffer costs a
+full orphan on the very next `gl_map_buffer_stream`. Note also that the offset
+only ever moves forward past written ranges — uninitialised gaps *before* a
+flushed range are deliberately counted as initialised.
+
+The two streaming flush paths use different offset conventions and it is easy to
+get wrong: the `GL_ARB_map_buffer_range` path flushes from offset zero because
+it mapped only the tail, while the `GL_APPLE_flush_buffer_range` path flushes
+from `d_uninitialised_offset` because it had to map the whole buffer. The ARB
+streaming path also deliberately does **not** combine
+`GL_MAP_UNSYNCHRONIZED_BIT` with `GL_MAP_INVALIDATE_BUFFER_BIT`: the in-code
+comment records that doing so made an nVidia 780Ti (driver 364.96) hand back the
+same allocation, overwriting data the GPU had not consumed, which showed up as
+flickering cross-sections and surface masks in the 3D scalar field rendering.
+
+A stream discard calls `allocated_buffer()` even though no `glBufferData`
+happened, so that `GLStateSets` re-submits vertex attribute pointers — the same
+ATI workaround that motivates the observer on the base class. If you add another
+path that orphans, it needs the same notification.
+
+Every entry point asserts `is_target_type_supported`, so using a buffer with a
+target outside the `buffers_type` set passed to `create` is a
+`PreconditionViolationError`, not a GL error; an unrecognised target aborts
+outright. The constructor and `Allocator::allocate` both assert
+`gl_ARB_vertex_buffer_object`, which is the contract that only
+`GLBuffer::create` may decide to instantiate this class. Mapping failures call
+`GLUtils::check_gl_errors` (which throws on any pending GL error) and then, in
+debug builds, abort; in release builds they throw `OpenGLException`, so a
+mapping call never returns NULL. `gl_unmap_buffer` is the exception: a GL_FALSE
+result means the contents were lost rather than that the call was misused, so it
+is warned about and returned to the caller.
 
 ## Used by
 

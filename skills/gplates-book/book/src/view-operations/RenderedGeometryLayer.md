@@ -9,9 +9,44 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryLayer tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The leaf container of the rendered-geometry system: one drawable ordering unit,
+held either as a main layer's embedded default or as an explicitly created child
+of one, and drawn into its own depth layer so its contents never interleave with
+another layer's. Its whole outward job is to accumulate `RenderedGeometry` handles
+and to shout `layer_was_updated` whenever it changes, carrying back the
+`user_data` `boost::any` it was constructed with — which `RenderedGeometryCollection`
+uses to stash the owning `MainLayerType` so it can decode which main layer moved.
+That `user_data` has no other intended user.
+
+Internally the contents are stored twice, and the reason is that the two consumers
+want opposite orderings. A painter that draws the whole layer wants insertion
+order, so there is a plain `std::vector<RenderedGeometry>`, exposed through
+`get_rendered_geometry` and the forward `RenderedGeometryIterator`. Anything that
+wants to cull — view-frustum rejection, proximity picking — wants spatial
+locality, so the same handles also go into a
+`GPlatesMaths::CubeQuadTreePartition`, and because that partition is sorted
+spatially rather than by draw order, each entry is wrapped in a
+`PartitionedRenderedGeometry` that remembers its `render_order`. A spatial
+traversal can therefore be sorted back into correct draw order, which is exactly
+what `copy_rendered_geometries_in_render_order` does. Callers of
+`add_rendered_geometry` who already know where their geometry sits in the cube quad
+tree pass a `CubeQuadTreeLocation`; everyone else's geometry lands in the
+partition's unpartitioned root and gets no spatial acceleration.
+
+The class itself is a thin `QObject` shell over a swappable
+`RenderedGeometryLayerImpl`, and the two implementations are the point of the
+design. `ZoomIndependentLayerImpl` is the plain append-to-a-vector case.
+`ZoomDependentLayerImpl` exists so that a layer full of velocity arrows or sampled
+points does not become an unreadable smear when zoomed out: it routes each added
+geometry through the `IsZoomDependent` visitor, and anything with a single point
+position — currently `RenderedPointOnSphere`, `RenderedRadialArrow` and
+`RenderedTangentialArrow` — goes into a `GPlatesUtils::LatLonAreaSampling` that
+keeps only the geometry nearest each bin centre, while multipoints, polylines and
+polygons take the ordinary path. Bin spacing is recomputed from the ratio and the
+viewport zoom factor, so decimation density stays constant on screen as the user
+zooms. `set_ratio_zoom_dependent_bin_dimension_to_globe_radius` switches a live
+layer between the two implementations by building the new one and copying the
+contents across in render order; zero means zoom-independent.
 
 ## Declared types
 
@@ -147,9 +182,51 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryLayer tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **A new layer is inactive.** `d_is_active` starts false in both constructors,
+  so a freshly created child layer draws nothing until `set_active(true)` — and
+  even then only while its main layer is active too.
+- **`get_rendered_geometries()` is not a getter on a zoom-dependent layer.** If
+  the zoom-dependent sequence is non-empty it builds a *new* spatial partition on
+  every call: merges the whole zoom-independent partition into it and then appends
+  every sampled geometry. Calling it per frame, or once per candidate during
+  picking, is a real cost. The zoom-independent implementation, by contrast,
+  returns its live partition — which later `add`/`clear` calls will mutate under
+  a caller still holding it.
+- **The insertion-order guarantee does not survive zoom dependence.** In a
+  zoom-dependent layer all zoom-independent geometries are indexed first and keep
+  their relative order; the zoom-dependent ones follow, have lost their relative
+  order, and some were never stored at all because another geometry already
+  occupied their bin. Index-based `get_rendered_geometry` and the iterators
+  reflect that. Zoom-dependent geometries also always end up in the *root* of the
+  returned partition, so they are never spatially culled.
+- **Every mutation signals, including no-ops.** `add_rendered_geometry` and
+  `clear_rendered_geometries` emit `layer_was_updated` unconditionally — the
+  emptiness check around `clear` was deliberately removed (it is still in the
+  source, `#if 0`-ed) so that clearing an already-empty layer still forces a
+  canvas refresh. `set_active` is the exception: it only emits on an actual
+  change. Batch bulk edits inside a `RenderedGeometryCollection::UpdateGuard`.
+- **Some mutations signal nothing.** Neither `set_viewport_zoom_factor` nor
+  `set_ratio_zoom_dependent_bin_dimension_to_globe_radius` emits, even though both
+  can change what is visible on a zoom-dependent layer and the latter replaces the
+  implementation object wholesale. Whoever drives the zoom is expected to trigger
+  the redraw.
+- **Iterators are index-and-impl pairs, not real iterators.** `operator*`
+  dereferences into the implementation's vector, so adding geometries invalidates
+  outstanding iterators, and clearing them makes dereference out-of-range.
+  `operator==` compares the implementation *pointer* as well as the index, so a
+  begin/end pair that straddles an implementation swap will never compare equal.
+  They hold an `intrusive_ptr` to the implementation, which keeps the old one
+  alive after a swap rather than dangling — an iterator obtained before a swap
+  silently keeps walking the discarded contents.
+- **Sample spacing is clamped.** `get_zoom_dependent_sample_spacing` floors the
+  bin spacing at 0.25 degrees, explicitly to stop the bin count exploding at
+  extreme zoom. Past that point the decimation stops tracking zoom.
+- **Threading.** `QObject` with direct connections to the owning collection:
+  `add_rendered_geometry` runs the collection's slot synchronously inside the call.
+  Not thread-safe; GUI thread only.
+- The spatial partition depth is fixed at `DEFAULT_SPATIAL_PARTITION_DEPTH` (7)
+  for every layer, and the destructor and iterator copy/destroy bodies exist only
+  because `boost::intrusive_ptr` needs the complete implementation type.
 
 ## Used by
 

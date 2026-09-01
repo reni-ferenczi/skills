@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/File tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the binding between a `GPlatesModel::FeatureCollectionHandle` and the file it came from or will be written to. It carries no I/O of its own; what it holds is the `FileInfo` (path, format) and an optional `FeatureCollectionFileFormat::Configuration` giving the read/write options for that particular file. Almost everything in the application that talks about "a loaded file" — `GPlatesAppLogic::FeatureCollectionFileState`, the readers and writers in `file-io`, the exporters, the CLI, the Python bindings — passes one of these two types around rather than a bare feature collection, which is why the fan-in is so wide.
+
+The unit exists to solve a lifetime problem in two phases, and the split between `File` and the nested `File::Reference` is that solution rather than an interface/implementation split. A feature collection read off disk is not yet in the model, so someone must own it; `File` is that owner, holding a strong `FeatureCollectionHandle::non_null_ptr_type`. `Reference` holds only a `weak_ref` to the collection alongside the `FileInfo` and configuration, and it is what every consumer actually wants. Calling `add_feature_collection_to_model` pushes the handle onto `model->root()` and drops the internal `boost::optional`, so the model becomes the owner and the `File` wrapper has nothing left to do — the `Reference` it returns is the same object `get_reference()` was already handing out, and it stays valid after the `File` is destroyed. `FeatureCollectionFileState::add_file` follows exactly this shape: it takes a `File::non_null_ptr_type`, immediately calls `add_feature_collection_to_model`, and keeps only the `Reference`.
+
+`create_file_reference` is the entry point for the other direction — a feature collection that is already in the model and just needs a filename and format attached, for instance when exporting. Both classes have private constructors and are created only through the static factories; `Reference` names `File` as a friend so `File`'s constructor can build the inner object.
 
 ## Declared types
 
@@ -42,9 +44,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/File tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`File` and `File::Reference` are separately reference-counted, and the `Reference` does *not* keep the feature collection alive — it stores only a `weak_ref`. Between `File::create_file` and `add_feature_collection_to_model` the owning `File` is the sole thing standing between the collection and destruction, so a caller that constructs a `File`, hands the `Reference` to a reader, and then lets the `File` go out of scope leaves the reader holding a dangling weak reference. After the transfer to the model, the collection's lifetime is the model's, and the `Reference`'s `weak_ref` goes invalid if the collection is later removed; callers must check the weak reference rather than assume it resolves. `FeatureCollectionFileState::FileSlotExtra` keeps a second `const_weak_ref` of its own purely to hang a model callback off, not to extend any lifetime.
+
+`add_feature_collection_to_model` is idempotent: on a second call `d_feature_collection_handle` is already `boost::none` and it simply returns the existing `Reference`. Note that `create_file`'s defaults construct a fresh empty `FeatureCollectionHandle` and an empty `FileInfo`, which is the documented way to make an empty file for a reader to populate afterwards.
+
+`set_file_info` on the `Reference` rewrites both the `FileInfo` and the file configuration in place — an existing `Reference` held elsewhere sees the change, which is the intended mechanism for "save as" but means the path is not an invariant of the object. A `file_configuration` of `boost::none` is not an error: it means "use whatever configuration is registered for this file's format", resolved by `FeatureCollectionFileFormatRegistry` at read or write time.
+
+Neither class does any locking; adding to the model must happen on whatever thread owns the model.
 
 ## Used by
 

@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionGeometryUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the type-dispatch toolkit for the `ReconstructionGeometry` hierarchy, and in practice it is how most of the application interacts with reconstruction output. A client that has been handed a `ReconstructionGeometry::non_null_ptr_to_const_type` almost always wants one of two things: a downcast to a particular derived type, or one attribute — the feature, the geometry property iterator, the plate ID, the time of formation, the reconstruction tree or its creator, a boundary polygon — that only some of the derived types possess. Neither is done with RTTI. Each attribute is a small `ConstReconstructionGeometryVisitor` that parks its answer in a `boost::optional`, wrapped in a one-line function template that constructs the visitor, calls `accept_visitor` and returns the optional. That is why so much of this unit lives in the header: the templates must see the visitor classes, so only the visitors' `visit` bodies and the three non-template search functions are in the `.cc`.
+
+The downcast is `get_reconstruction_geometry_derived_type` and its sequence form, built on `ReconstructionGeometryDerivedTypeFinder`, which overrides exactly one `visit` — the one for the requested type. Two useful behaviours fall out of the visitor base's delegating defaults rather than from any code here: asking for `ReconstructedFeatureGeometry` also matches flowlines, motion paths, small circles, virtual geomagnetic poles and topology-reconstructed geometries, and asking for `ResolvedTopologicalGeometry` also matches resolved boundaries and lines. The `Implementation::GetPointeeType` metafunction is what lets the same template take a raw pointer or a `GPlatesUtils::non_null_intrusive_ptr`, const or not, independently on the input and on the requested output; it is deliberately written so that a `boost::shared_ptr` will not compile, since that would take ownership of a reference-counted object.
+
+The attribute visitors also encode which derived types genuinely lack which attribute, and the gaps are intentional rather than defensive: `MultiPointVectorField` corresponds to no single plate and so yields no plate ID, no time of formation and no reconstruction tree; `ResolvedTopologicalNetwork` supports neither tree nor tree creator; `ReconstructedScalarCoverage` forwards nearly everything to the `ReconstructedFeatureGeometry` it wraps. Separately, the three `find_reconstruction_geometries_observing_feature` overloads are the feature-to-geometry direction: they run a `ReconstructionGeometryFinder` over the weak-observer chain of a `GPlatesModel::FeatureHandle`, optionally narrowed to one geometry property and to a set of reconstruct handles, then intersect the result with a caller-supplied subset. This is how the GUI keeps hold of a focused geometry when the reconstruction time changes and every reconstruction geometry has been rebuilt — including the case where the old geometry no longer exists because the new time fell outside the feature's valid time range.
 
 ## Declared types
 
@@ -217,9 +219,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionGeometryUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Every visitor here opens with `using ConstReconstructionGeometryVisitor::visit;`.** That is not decoration. Declaring any `visit` override hides the whole inherited overload set, which would silently disable the base visitor's delegating defaults and stop derived reconstruction-geometry types from resolving to their base's handler.
+
+**A new `ReconstructionGeometry` subclass will silently return `boost::none` here.** Unless it derives from a type one of these visitors already handles, adding a subclass means adding an overload to each of `GetFeatureRef`, `GetGeometryProperty`, `GetPlateId`, `GetTimeOfFormation`, `GetReconstructionTree`, `GetReconstructionTreeCreator` and the polygon visitors. Nothing in the type system flags the omission.
+
+**`none` means two different things, and only sometimes the same one.** `get_feature_ref` and `get_geometry_property_iterator` return `none` both when the derived type carries no such thing and when the stored reference has gone stale — they explicitly test `is_valid()` and `is_still_valid()`. `get_plate_id` and `get_time_of_formation` do no such filtering and report only absence.
+
+**`get_boundary_polygon` is not free on a lazily reconstructed RFG.** Its `ReconstructedFeatureGeometry` overload calls `reconstructed_geometry()`, which forces the deferred finite-rotation transform (and caches it). The resolved-topology paths just return the polygon the topology resolver already built. It also returns `none` for a reconstructed geometry that is a polyline or multipoint rather than a polygon, which is not an error.
+
+**Constness does not propagate to the model.** These are `Const`ReconstructionGeometryVisitor subclasses, yet `get_feature_ref` hands back a non-const `GPlatesModel::FeatureHandle::weak_ref` and `get_geometry_property_iterator` a non-const `iterator`. A const reconstruction geometry gives you write access to its feature.
+
+**The subset intersection is quadratic.** `find_reconstruction_geometries_observing_feature` does a linear `std::find` through `reconstruction_geometries_subset` for each geometry the finder returns. That is fine for one focused feature against a layer's output, and a trap if you loop it over many features.
+
+**`get_reconstruction_geometry_derived_type` yields at most one result** — a single `accept_visitor` can push at most one entry into the finder — whereas the sequence form reuses one finder across the whole input range and appends, so the output container is added to, not cleared.
 
 ## Used by
 

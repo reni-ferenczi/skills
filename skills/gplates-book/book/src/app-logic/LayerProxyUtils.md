@@ -9,9 +9,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LayerProxyUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Two quite different toolkits share this header, both filling gaps that
+`LayerProxy` deliberately leaves open.
+
+The first is the downcast machinery. Because the base `LayerProxy` interface is
+nearly empty, every consumer must recover the derived proxy type, and
+`get_layer_proxy_derived_type` / `get_layer_proxy_derived_type_sequence` do it by
+running a one-shot `LayerProxyDerivedTypeFinder` visitor over the proxy rather
+than by `dynamic_cast` — the type test goes through `LayerProxyVisitorBase`, so
+adding a proxy type means adding a `visit()` overload, not touching this file.
+`GPlatesUtils::CopyConst` keeps constness flowing from the requested derived type
+to the visitor base, so the same template serves const and non-const callers.
+This is the mechanism behind `Layer::get_layer_output<Derived>()` and
+`Reconstruction::get_active_layer_outputs<Derived>()`, and hence behind almost
+every "give me all the reconstruct layers" query in the codebase.
+
+The second is `InputLayerProxy` and its two containers, which are what a layer
+proxy uses to observe *its own* inputs. Each wraps a
+`GPlatesUtils::ObserverToken` against a subject token obtained by calling a
+member-function pointer on the input proxy — defaulting to `get_subject_token`,
+but parameterised so that one proxy can watch a *specific aspect* of an input
+rather than any change to it at all. A concrete proxy's `get_*` method therefore
+begins by asking each input whether it `is_up_to_date()`, recomputes only if some
+input has moved, then calls `set_up_to_date()`. `OptionalInputLayerProxy` handles
+the case of an input channel that may be unconnected, and
+`InputLayerProxySequence` the multi-connection case.
+
+The free functions at the top are cross-layer queries used by code that must
+reach past a single layer: `get_reconstructed_feature_geometries` and
+`get_resolved_topological_lines` gather from *every* active layer of a kind in a
+`Reconstruction`, because a topological feature may reference sections that live
+in any layer. They all go through `Reconstruction::get_active_layer_outputs`,
+which itself runs the visitor-based filter above, and they append to caller-owned
+vectors alongside the `ReconstructHandle` values that identify each batch.
 
 ## Declared types
 
@@ -96,9 +126,50 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LayerProxyUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`InputLayerProxySequence::set_input_layer_proxies` preserves tokens on
+  purpose.** It diffs against the current set instead of clearing and refilling,
+  precisely so that a proxy that is still connected does not have its
+  `ObserverToken` reset — a reset would cascade a spurious "out of date" through
+  every dependent layer. Its return value is that diff (true if the membership
+  changed), and callers use it to decide whether to invalidate their own subject
+  token. Order in the input vector is irrelevant; the container is a `std::map`
+  keyed on the proxy pointer, so duplicates collapse silently.
+- **Changing the subject token method counts as a different input.** In the same
+  method, an input that is present in both old and new sets is still erased and
+  re-added if `subject_token_method` differs, deliberately forcing a refresh.
+- **`OptionalInputLayerProxy` needs `d_is_none_and_up_to_date` because "no
+  input" is itself a state that can change.** Disconnecting an input must make
+  the client out-of-date, but there is no token left to ask; that flag carries
+  the pending invalidation until `set_up_to_date()` is called. Note the
+  asymmetry in `set_input_layer_proxy`: going from unset to set constructs a
+  fresh `InputLayerProxy` (out-of-date by construction, which is correct), while
+  going from set to unset sets the flag.
+- **`get_layer_proxy_derived_type` assumes at most one match and returns
+  `front()`.** With the visitor dispatch this holds, but it means a malformed
+  `accept_visitor` that dispatches twice would be silently tolerated.
+- **The cross-layer getters are cheap only when nothing has changed.** The header
+  says each layer caches per reconstruction time, so calling them repeatedly at
+  one time is fine — but they will happily trigger a full reconstruct across
+  every active layer if the time has moved. `get_reconstructed_feature_geometries`
+  has an explicit escape hatch: passing false for
+  `include_topology_reconstructed_feature_geometries` skips layers whose
+  `using_topologies_to_reconstruct()` is true, which the header flags as a
+  significant win when you do not need them.
+- **`find_reconstructed_feature_geometries_of_feature` has a real lifetime
+  trap.** It searches a feature's weak observers for RFGs, so it must first force
+  those RFGs into existence *and keep them alive* — that is the only reason the
+  local `candidate_rfgs` vector exists. The results are matched by
+  `ReconstructHandle` so that RFGs produced by other reconstructions of the same
+  feature are excluded. Do not "simplify" that vector away.
+- **Output parameters accumulate, except where they do not.**
+  `get_reconstructed_feature_geometries`, `get_resolved_topological_lines` and
+  the `find_reconstruct_layer_outputs_*` pair append to the caller's vector,
+  while `find_dependent_topological_sections` and
+  `find_resolved_topological_sections` call `clear()` first. Check before reusing
+  a container.
+- `ReconstructHandle::get_next_reconstruct_handle` uses a plain function-local
+  static counter with no synchronisation, and says so; everything here is
+  single-threaded.
 
 ## Used by
 

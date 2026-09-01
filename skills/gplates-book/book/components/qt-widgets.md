@@ -131,7 +131,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [HellingerConfigurationWidget](../src/qt-widgets/HellingerConfigurationWidget.md) | 2 | 497 | 60 | Settings widget for Hellinger tool colours, ellipse thickness and pole arrow size |
 | [HellingerDialog](../src/qt-widgets/HellingerDialog.md) | 2 | 3272 | 224 | Main window for the Hellinger three-plate fitting tool, hosting picks/fit tabs and canvas layers |
 | [HellingerFitWidget](../src/qt-widgets/HellingerFitWidget.md) | 2 | 2114 | 25 | Fit tab of HellingerDialog exposing fitting parameters and pole estimates |
-| [HellingerModel](../src/qt-widgets/HellingerModel.md) | 1 | 1198 | 614 | (pending) |
+| [HellingerModel](../src/qt-widgets/HellingerModel.md) | 1 | 1198 | 614 | passive data model for the Hellinger pole fit: picks by segment, .com-file parameters and fit results |
 | [HellingerNewSegmentWarning](../src/qt-widgets/HellingerNewSegmentWarning.md) | 3 | 364 | 10 | Dialog prompting user choice when creating a segment with an existing segment number |
 | [HellingerPickWidget](../src/qt-widgets/HellingerPickWidget.md) | 3 | 1540 | 8 | Tree widget for displaying and managing Hellinger picks organized by segments |
 | [HellingerPointDialog](../src/qt-widgets/HellingerPointDialog.md) | 3 | 646 | 11 | Modal dialog for creating or editing a single Hellinger pick with coordinates and metadata |
@@ -257,7 +257,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [AboutDialog](../src/qt-widgets/AboutDialog.md) | 3 | 375 | 1 | Modal dialog displaying application version and copyright information |
 | [AbstractCustomPropertiesWidget](../src/qt-widgets/AbstractCustomPropertiesWidget.md) | 3 | 71 | 7 | Abstract base class for feature-specific property widget behavior |
-| [AbstractEditWidget](../src/qt-widgets/AbstractEditWidget.md) | 1 | 387 | 346 | (pending) |
+| [AbstractEditWidget](../src/qt-widgets/AbstractEditWidget.md) | 1 | 387 | 346 | contract every property Edit\*Widget implements, plus the shared dirty flag and Enter-key handling |
 | [ActionButtonBox](../src/qt-widgets/ActionButtonBox.md) | 2 | 195 | 22 | Grid of QToolButtons, one per QAction, laid out automatically |
 | [AddNewLayerDialog](../src/qt-widgets/AddNewLayerDialog.md) | 3 | 275 | 5 | Modal dialog for selecting and creating new visual layers |
 | [AddPropertyDialog](../src/qt-widgets/AddPropertyDialog.md) | 2 | 908 | 16 | Modal dialog for adding a new property to the focused feature |
@@ -274,7 +274,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [ColourScaleWidget](../src/qt-widgets/ColourScaleWidget.md) | 3 | 379 | 16 | Renders annotated colour scale bar with optional logarithmic scaling |
 | [ColouringDialog](../src/qt-widgets/ColouringDialog.md) | 3 | 1839 | 0 | Dialog for managing colour schemes applied to features or globally |
 | [ConfigValueEditorWidget](../src/qt-widgets/ConfigValueEditorWidget.md) | 3 | 164 | 9 | Composite editor widget combining text input with reset-to-default button |
-| [ConnectWFSDialog](../src/qt-widgets/ConnectWFSDialog.md) | 1 | 853 | 366 | (pending) |
+| [ConnectWFSDialog](../src/qt-widgets/ConnectWFSDialog.md) | 1 | 853 | 366 | downloads GeoSciML over HTTP from a bespoke polygon-and-age query and loads it as a feature collection |
 | [DatelineWrapOptionsWidget](../src/qt-widgets/DatelineWrapOptionsWidget.md) | 2 | 249 | 27 | Reusable checkbox-plus-help panel for enabling dateline-wrap clipping on export |
 | [DigitisationWidget](../src/qt-widgets/DigitisationWidget.md) | 3 | 713 | 3 | Task panel widget for digitizing geometric features on the map |
 | [DockWidget](../src/qt-widgets/DockWidget.md) | 2 | 372 | 15 | QDockWidget subclass adding shared dock/tabify context-menu bookkeeping via DockState |
@@ -348,7 +348,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [VelocityFieldCalculatorLayerOptionsWidget](../src/qt-widgets/VelocityFieldCalculatorLayerOptionsWidget.md) | 3 | 1371 | 1 | Options panel for configuring velocity field calculator layers |
 | [VelocityMethodWidget](../src/qt-widgets/VelocityMethodWidget.md) | 2 | 475 | 20 | Reusable form for choosing the velocity finite-difference method, dt and colour thresholds |
 | [ViewFeatureGeometriesWidget](../src/qt-widgets/ViewFeatureGeometriesWidget.md) | 3 | 398 | 2 | Displays feature geometries including reconstructed form at current time |
-| [ViewportWindow](../src/qt-widgets/ViewportWindow.md) | 1 | 3971 | 196 | (pending) |
+| [ViewportWindow](../src/qt-widgets/ViewportWindow.md) | 1 | 3971 | 196 | the GPlates main window: menu-action wiring, canvas-tool state ownership and the shutdown sequence |
 | [ZoomControlWidget](../src/qt-widgets/ZoomControlWidget.md) | 3 | 342 | 0 | Compact zoom control with spinbox and buttons for zoom in/out/reset |
 | [ZoomSliderWidget](../src/qt-widgets/ZoomSliderWidget.md) | 3 | 311 | 2 | Vertical slider widget for controlling viewport zoom with add/subtract icon buttons |
 

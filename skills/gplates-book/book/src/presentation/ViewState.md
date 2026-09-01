@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/ViewState tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ViewState` is the presentation tier's state hub: the collection of everything that describes *how* the model is displayed, for all the display state that is not itself a Qt widget. It sits in the middle of a three-object stack owned by `GPlatesPresentation::Application`, which declares `ApplicationState`, `ViewState` and `ViewportWindow` as direct members in that order — so `ViewState` is constructed after app-logic state and before any widget exists, holds `ApplicationState` by reference and owns everything else outright. The dividing line the design is trying to hold is stated in `Application.h`: app-logic knows nothing of view state, and view state supports the widget tier without knowing about it. In practice that means `RenderedGeometryCollection`, `VisualLayers`, `FeatureFocus`, `ViewportZoom`, `ViewportProjection`, the colour-scheme machinery, `RenderSettings` and the various overlay settings belong here, while anything that needs a `QWidget` belongs in `ViewportWindow`.
+
+Almost all of the work is in the constructor, which is a fixed dependency graph written out as a member-initialiser list: `FeatureFocus` and `FeatureTableModel` are handed `*d_rendered_geometry_collection`, `MapTransform` is handed `*d_viewport_zoom`, and `SessionManagement`, `FocusedFeatureGeometryManipulator`, `VisualLayers` and `FileIODirectoryConfigurations` are handed `*this` while `ViewState` is still only partly built. Because the graph is expressed through initialisers, **member declaration order in the header is load-bearing** — the header says so explicitly for `d_rendered_geometry_parameters`, which must precede `d_visual_layers`. Nearly every member is a `boost::scoped_ptr` for a deliberate reason spelled out at the top of the header: this file is included across most of the tree, so the members are forward-declared rather than `#include`d, and the pointer is the price of that. Adding a real include here is a measurable build-time cost.
+
+After construction it does three things: overrides a couple of defaults from `UserPreferences`, makes the two connections that tie the presentation tier back to app-logic and to the renderer (focused-feature modification triggers `ApplicationState::reconstruct()`; a zoom change pushes the new factor into `RenderedGeometryCollection`), and populates the `VisualLayerRegistry` and `ExportAnimationRegistry` with their default entries. `get_other_view_state()` is the acknowledged leak in the layering — it hands back the `ViewportWindow` and is marked in the header as a temporary hack to be removed once the state it is reached for has migrated into this class; a handful of call sites in `gui` and `presentation` still use it.
 
 ## Declared types
 
@@ -107,9 +109,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/ViewState tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Lifetime.** Nobody `new`s a `ViewState`; the only instance is the `d_view_state` member of the `GPlatesPresentation::Application` singleton. The `ApplicationState` it references is the preceding member of the same object, so it always outlives this one. `ViewState` is a `QObject` with no Qt parent, and `~ViewState()` is defined out-of-line with an empty body purely so `boost::scoped_ptr` sees complete types at the destruction site.
+
+**Accessors return references to owned objects, permanently.** Callers routinely store `GPlatesGui::ViewportZoom &` and friends as members for their whole lifetime. Consequently none of the owned sub-objects may be replaced or reseated after construction — they are constructed once and live as long as the `ViewState`.
+
+**`d_other_view_state` is null until the main window exists.** It is initialised to `NULL` and only set by `ViewportWindow`'s constructor calling `set_other_view_state(*this)`. Any code that runs during `ViewState` construction — including the constructors of `SessionManagement`, `VisualLayers` and `FileIODirectoryConfigurations`, which are all handed `*this` — must not call `get_other_view_state()`, and for the same reason must not reach for `ViewState` members declared after their own.
+
+**Preference persistence is deliberately asymmetric.** `initialise_from_user_preferences()` reads exactly two keys at construction (`view/show_stars` and `view/geometry_visibility/show_topological_sections`), and `set_show_stars()` is the only setter that writes back to `UserPreferences`. Everything else that survives a restart — background colour, graticule settings, the feature-type symbol map, render settings, rendered geometry parameters, animation controller state — is saved and restored by `TranscribeSession` as part of a session or project file. A new setting has to be routed through one of those two paths explicitly; adding a member here persists nothing on its own.
+
+**`get_colour_scheme()` and `get_colour_scheme_delegator()` return the same object.** There is a single `ColourSchemeDelegator` in `d_colour_scheme`; the former just returns it upcast to `ColourScheme`. That is why a cached colour-scheme pointer keeps giving current results after the user switches schemes — the switch happens inside the delegator, not by swapping the pointer.
+
+`d_python_manager_ptr` is `GPlatesGui::PythonManager::instance()` — a raw pointer to a singleton that this class does not own. `d_feature_table_model_ptr` is noted in the header as not being parented by Qt, so its lifetime is the `scoped_ptr`'s alone.
 
 ## Used by
 

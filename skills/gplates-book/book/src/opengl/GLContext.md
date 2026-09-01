@@ -9,9 +9,43 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLContext tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLContext` is GPlates' mirror of a real OpenGL context and the central registry
+for every long-lived low-level GL object built on it. It never touches Qt
+directly: the `Impl` interface delegates "make current", the format and the
+framebuffer dimensions to whatever the context really is, and
+`GLContextImpl::QGLWidgetImpl` and `QGLPixelBufferImpl` are the two
+implementations in the tree. `GlobeCanvas` and `MapView` each construct one
+around their widget, `GLOffScreenContext` wraps one for rendering without a
+window, and `create_renderer` is where each frame's `GLRenderer` comes from.
+
+The design turns on splitting that registry in two along the line OpenGL itself
+draws. `SharedState` holds what a driver lets contexts share — texture, buffer,
+shader and program object resource managers, and the `GPlatesUtils::ObjectCache`
+pools behind `acquire_texture`, `acquire_pixel_buffer`, `acquire_vertex_array`,
+`acquire_render_buffer_object` and `acquire_render_target` — while
+`NonSharedState` holds what they cannot: framebuffer objects, screen render
+targets, and the resource manager for native vertex array objects. The two-arg
+`create` overload hands the new context the existing one's `SharedState`, which
+is how `GlobeCanvas` mirrors Qt's own `isSharing()` result into this layer; two
+`GLContext`s are sharing exactly when their `get_shared_state()` pointers
+compare equal. `GLVertexArrayObject` is the instructive exception, and the
+comments explain it: the *wrapper* is cacheable in `SharedState` because it
+creates a native VAO per context it meets, but its resource manager sits in
+`NonSharedState` so each native name is released while the context that created
+it is active.
+
+Everything about resource lifetime here is deferred rather than immediate.
+Objects handed out by the `acquire_*` methods come back as `shared_ptr`s with a
+custom deleter that returns them to their cache instead of destroying them, and
+each cache is keyed by the exact creation parameters so a recycled object always
+matches what the next caller asked for. Destruction of the underlying GL names is
+deferred too: resources are queued by `GLObjectResource` and only actually
+deleted when `begin_render` and `end_render` — called by `GLRenderer` around a
+frame — drain all four resource managers, which is the one place the correct
+context is known to be current. `GLContext` is also where GLEW is initialised,
+where `disable_opengl_extensions` then clears the GLEW flags GPlates does not
+want, and only afterwards where `GLCapabilities` is populated — so what the rest
+of the program can see has already been filtered by the time anyone asks.
 
 ## Declared types
 
@@ -64,9 +98,47 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLContext tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`initialise` must be called with a context current, and despite being an
+instance method it does its important work only once per *application*: the GLEW
+flag and the `GLCapabilities` it fills are both static. The comment gives the
+reason — per-context GLEW state needs a `GLEW_MX` build that is not packaged
+everywhere — and the consequence is that capabilities are process-wide, so
+contexts with genuinely different capabilities are not something this design
+supports. If `glewInit` fails, initialisation continues anyway on the assumption
+that every extension flag reads false and the code falls back to OpenGL 1.1.
+
+The format returned by `get_qgl_format_to_create_context_with` is load-bearing
+and its choices are all deliberate: a stencil buffer (needed to fill polygons),
+an alpha channel (needed when render targets fall back to the main framebuffer),
+multisampling explicitly *off* because lines look better without it, the
+compatibility profile with deprecated functions enabled, and the version pinned
+to 1.1 — GPlates works through extensions rather than a core version, 1.1 is all
+the Microsoft software renderer offers, and asking for 3.x can make
+`GL_EXT_framebuffer_object` stop being advertised. `initialise` warns when the
+alpha or stencil request was not honoured. Note also that `d_qgl_format` is
+captured once at construction, while `get_width`/`get_height` delegate live to
+the `Impl` and are in device pixels, not the device-independent pixels Qt uses
+for widget sizes.
+
+Nothing about sharing is verified here. `GLContext` shares a `SharedState`
+because the caller asked it to; it is the caller's job (as `GlobeCanvas` does
+via `isSharing()`) to ensure the underlying Qt contexts really do share, and
+nothing detects a mismatch.
+
+Objects borrowed from the `acquire_*` caches must be returned unchanged. The
+methods hand back non-const pointers, so their dimensions or format *can* be
+altered, and the guard against it is only an assertion in the next borrower —
+which surfaces as an `OpenGLException` from a completely unrelated part of the
+frame. `acquire_vertex_array` and `acquire_frame_buffer_object` reset the state
+they can (`clear()`, `gl_detach_all()` plus default draw/read buffers) precisely
+because the previous borrower's settings are unknowable.
+
+None of this is synchronised — the caches, the maps and the static
+initialisation flags carry no locking — so every use has to stay on the thread
+that makes the context current. Finally, `check_framebuffer_object_completeness`
+memoises `glCheckFramebufferStatus` per framebuffer classification because a
+single check was once profiled at 142 ms; if you change what a classification
+means, that cache has to change with it.
 
 ## Used by
 

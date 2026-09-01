@@ -9,9 +9,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/TopLevelPropertyInline tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the only concrete `TopLevelProperty` in the tree — the abstract base anticipates a
+`TopLevelPropertyXlink` that would reference a property remotely through a GML XLink, but
+it was never written, so in practice every property of every feature is one of these. Its
+job is to pair the `PropertyName` and XML attribute map it inherits from
+`TopLevelProperty` with the property's values, held inline in a `std::vector` of
+`PropertyValue::non_null_ptr_type`. The GPML reader (`GpmlFeatureReaderImpl`) always builds
+single-valued properties, but the container is a vector and
+`FeatureVisitorBase::visit_property_values` walks all of the elements, so code that assumes
+exactly one value is making an assumption the type does not enforce.
+
+Construction goes exclusively through the static `create` overloads: the constructors are
+protected and return the object already wrapped in a `non_null_intrusive_ptr`, matching the
+`ReferenceCount` ownership used everywhere in `model`. The property name is fixed at
+construction and `TopLevelProperty` deliberately provides no setter for it — renaming a
+property means building a new one. `accept_visitor` dispatches to
+`FeatureVisitorBase::visit_top_level_property_inline`, which is the single hook every
+feature visitor and every writer in `file-io` goes through to reach a feature's values.
+
+The const/non-const iterator asymmetry is intentional. `const_iterator` is a
+`boost::transform_iterator` that converts each stored pointer into a
+`non_null_ptr_to_const_type`, so const access cannot hand out a mutable value; the
+non-const `begin()`/`end()` expose the vector's own iterators and can. That second path is
+a hole in the change-tracking machinery — see the notes.
 
 ## Declared types
 
@@ -63,9 +83,34 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/TopLevelPropertyInline tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`clone()` is shallow and usually wrong.** It copies the vector of pointers, so the copy
+  and the original share their `PropertyValue` objects; mutating a value through one is
+  visible through the other. `deep_clone()` calls `deep_clone_as_prop_val()` on every
+  element and is what you want when duplicating a feature or preparing an edit — it is also
+  what `FeatureHandle::set` calls on the incoming property before storing it, precisely so
+  that the caller cannot keep a back door into the model.
+- **`operator==` inherits `PropertyValue`'s clone-identity semantics.** The name and the
+  XML attributes are compared normally, but the values are compared with
+  `PropertyValue::operator==`, which is an instance-id test rather than a data comparison.
+  Two properties built independently from identical inputs compare unequal; an unmodified
+  deep clone compares equal. `FeatureHandle::set` uses exactly this to decide whether an
+  edit is a no-op, so a derived property value that forgets `update_instance_id()` in a
+  setter will make edits vanish here. Comparison against any other `TopLevelProperty`
+  subclass returns `false` through the caught `std::bad_cast`.
+- **The non-const `begin()`/`end()` bypass change tracking.** They yield the vector's own
+  iterators over `non_null_ptr_type`, so a caller who reaches a property through
+  `FeatureHandle` and mutates a value in place produces no modification notification, no
+  unsaved-changes flag on the feature collection and no `ChangesetHandle` entry. This is
+  the reason `RevisionAwareIterator<FeatureHandle>` dereferences to a
+  `TopLevelPropertyRef` proxy instead of a raw pointer. Edit by cloning and assigning
+  through that proxy, not by writing through these iterators.
+- **Ownership.** Copy-assignment is declared and never defined; instances are shared by
+  intrusive pointer. As with `PropertyValue`, the copy constructor leaves the new object's
+  reference count at zero, so a clone must go straight into a `non_null_intrusive_ptr` —
+  which the `create` and `clone` functions already do.
+- The `.cc` file pushes and pops MSVC warning 4181 around a Boost 1.35 header; leave the
+  `PUSH_MSVC_WARNINGS` / `POP_MSVC_WARNINGS` pair alone when editing near the top or bottom
+  of that file.
 
 ## Used by
 

@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLStreamPrimitives tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header gives the painters a `glBegin`/`glEnd`-shaped interface that actually writes into vertex-buffer memory. GPlates generates its geometry per frame from reconstructed features, so the painters in `gui` — `GlobeRenderedGeometryLayerPainter`, `MapRenderedGeometryLayerPainter`, `LayerPainter` and the decorations like `Stars`, `MapGrid` and `SphericalGrid` — cannot pre-build static meshes; they need to emit vertices one at a time into a mapped buffer and draw when it fills. `GLStreamPrimitives` is that machine, and it is header-only and templated on the vertex type, the index type (`GLuint`, `GLushort` or `GLubyte`) and a stream-writer policy, so each painter streams its own vertex layout without a virtual call per vertex.
+
+The pieces divide cleanly. `GLStreamPrimitives` itself holds the two output streams — vertices and indices — and exposes the primitive assembly only through nested adapter classes, each of which turns a primitive topology into indexed output. That output is always `GL_POINTS`, `GL_LINES` or `GL_TRIANGLES`: strips, fans, loops and quads are unrolled at stream time, so the topology is a property of the adapter you used, not of the draw call. `StreamTarget` is the RAII pairing that binds a stream to concrete buffers, and it is deliberately separate from the adapters so that a single logical primitive can span more than one buffer: when an `add_vertex` returns `false` the caller stops streaming, draws, remaps, restarts streaming, and re-submits only the vertex that failed — the adapter's own state (the strip's shared vertices, the loop's start vertex) survives the interruption. `Primitives` is the escape hatch for hot loops: it checks capacity once per primitive via `begin_primitive` and then writes vertices and explicit indices with no per-vertex bounds check at all.
+
+The free functions at the bottom package the common case of streaming into real GL buffers. `begin_vertex_array_streaming` maps a vertex buffer and a vertex element buffer through `GLBuffer::MapBufferScope::gl_map_buffer_stream`, converts the byte offsets the mapping returns into vertex and index counts, and seeds the stream writers with those as their initial counts so the emitted indices are already correct for the buffer region. `end_vertex_array_streaming` flushes and unmaps, `render_vertex_array_stream` issues one `gl_draw_range_elements` over exactly what was streamed, and `suspend_render_resume_vertex_array_streaming` is the three composed — which is what a painter calls when a buffer fills mid-geometry.
 
 ## Declared types
 
@@ -83,9 +85,23 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLStreamPrimitives tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Never draw with the mode you streamed with.** `Quads` streams quads but emits `GL_TRIANGLES`; the strip and fan adapters likewise emit `GL_TRIANGLES`, and `Lines`, `LineStrips` and `LineLoops` all emit `GL_LINES`. Passing `GL_QUADS` or `GL_TRIANGLE_STRIP` to the draw call because that is what you fed the stream produces garbage.
+
+**A `false` return is not an error, it is backpressure.** `add_vertex` returning `false` means the vertex or index stream is full and *nothing was written* for that call — capacity is checked before any write. The recovery is fixed: `stop_streaming`, draw, remap, `start_streaming`, then re-submit the same vertex. Treating `false` as fatal, or forgetting to re-submit, silently drops geometry. `LineLoops::end_line_loop` can also return `false` and must be called again after the same recovery.
+
+**Incomplete primitives are dropped silently.** An odd number of vertices in a `Lines` block loses the trailing one; a one-vertex line strip or loop produces nothing. These are documented behaviours, not assertion failures.
+
+**Streaming must be inside a `start_streaming`/`stop_streaming` pair.** Every `add_*` asserts on `d_vertex_stream` and `d_vertex_element_stream` being valid and throws `PreconditionViolationError` otherwise. The reverse ordering is fine and expected: an adapter's `begin_*`/`end_*` pair may span several streaming pairs.
+
+**Adapters hold a reference to the stream, not ownership.** `Points` stores a pointer and the rest store references to the `GLStreamPrimitives`, and `StreamTarget` does too; all of them must not outlive it. Adapters are cheap and are normally constructed on the stack per drawing pass.
+
+**`Primitives` does not bounds-check.** After `begin_primitive` returns `true` you must not exceed the vertex and index counts you asked for — `add_vertex` and `add_vertex_element` write unconditionally. Its indices are also relative to the primitive's base, added to `d_base_vertex_element` on write, whereas the other adapters emit absolute indices.
+
+**Index reuse is deliberately shallow.** Only the sharing inherent in strips, fans and loops is exploited. The header is explicit that a complex mesh is better served by hand-built vertex and index buffers, since the post-transform vertex cache can only help when reuse is close together in the index stream.
+
+**Interaction with the renderer's queueing.** These streams write into a buffer that is reused across draws, which is exactly the situation `GLRenderer::begin_render_queue_block` warns about: if the draw calls are queued rather than issued, they all end up reading the buffer's final contents. Stream and draw in the same immediate pass.
+
+**Unmap failure is a warning, not an exception.** `end_vertex_array_streaming` checks both `gl_unmap_buffer` results and emits a `qWarning` if the mapped data was corrupted; the frame carries on regardless, so a corrupted stream shows up as visual garbage plus a log line.
 
 ## Used by
 

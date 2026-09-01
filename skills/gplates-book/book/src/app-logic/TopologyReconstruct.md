@@ -9,9 +9,49 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyReconstruct tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the deformation engine. Ordinary reconstruction rotates a whole geometry by
+one finite rotation; topological reconstruction advances it one time step at a time,
+letting every point follow whichever rigid plate or deforming network it happens to
+be sitting inside at that moment. `TopologyReconstruct` itself is only the context —
+a `TimeRange` plus the already-resolved boundaries and networks for each time slot,
+plus a fallback `ReconstructionTreeCreator`. `ReconstructLayerProxy` builds it, filling
+the two `TimeSampleSpan`s from `TopologyGeometryResolverLayerProxy` and
+`TopologyNetworkResolverLayerProxy`; `ReconstructMethodByPlateId` then calls
+`create_geometry_time_span` once per feature geometry, and the resulting
+`GeometryTimeSpan` is what `TopologyReconstructedFeatureGeometry` and
+`ScalarCoverageTimeSpan` read from. Everything interesting lives in that nested class.
+
+Construction does all the work. The geometry is flattened to points — every geometry
+type becomes a multi-point, with polylines and polygons optionally tessellated first,
+`InterpolateOriginalPoints` recording which original segment each tessellated point
+came from so scalar coverages can be interpolated onto the new points. The import
+time is snapped to a time slot, the present-day geometry is rigidly rotated there, and
+`reconstruct_time_steps` then marches outward in *both* directions from that slot,
+which is why paleo-geometries work: a fracture zone imported at 50 Ma is masked by
+mid-ocean ridges going backward and by subduction zones going forward. Each step, each
+point is tried against the resolved networks first and the resolved boundaries second
+— networks win deliberately, since a network may overlap a boundary — deforming
+through `ResolvedTriangulation::Network::calculate_deformed_point` or rotating by the
+containing boundary's plate stage rotation. Points that land in neither get one shared
+rigid stage rotation from the feature's own `d_reconstruction_plate_id`, and if *no*
+point intersects anything the whole sample is rigidly rotated in one go. Two
+optimisations matter for large geometries: the active points' bounding small circle
+culls topologies that cannot possibly contain them, and a hit moves that
+boundary/network to the front of the list, since the next point is usually in the same
+one.
+
+Between steps, an optional `DeactivatePoint` decides whether a point has been
+subducted going forward or consumed by a ridge going backward.
+`DefaultDeactivatePoint` fires only on a *transition* — network to rigid plate, rigid
+plate to network, or rigid plate to a different plate ID — and then only if the
+velocity difference across that transition exceeds a threshold *and* the point's
+previous position was close enough to the previous topology's boundary to have reached
+it. Measuring from the previous position rather than the current one is the crux: a
+boundary that appears next to a point (a plate splitting) must not swallow it, while a
+boundary that disappears (a merge) should. Deactivated points become null entries in
+the sample; when the last one goes, the span records a time slot of appearance or
+disappearance and `is_valid` reports the geometry as gone from there on — which is
+distinct from, and narrower than, the feature's own valid time.
 
 ## Declared types
 
@@ -74,9 +114,58 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyReconstruct tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Point index is the identity, and it is invariant across every sample.** Deactivated
+points are set to `NULL` in place; the vector is never shortened, and the code asserts
+that adjacent samples have equal size. `get_all_geometry_data` and
+`get_points_are_active` preserve that indexing (inactive points come back as
+`boost::none` / `false`), while `get_geometry`, `get_geometry_data` and
+`get_velocities` compact the output down to active points only. Mixing the two views
+and pairing them up by index is the easy mistake here. Likewise `NULL` in
+`GeometryPoint::strain_rate` or `strain` means *zero* strain rate / identity strain,
+not missing data.
+
+**The present-day sample is rewritten during construction.** Unless the geometry
+import time is younger than the end of the time range, `initialise_time_windows`
+replaces the present-day sample with the end-of-range sample rigidly rotated back to
+present day, so the points topologies produced — not the points you passed in — are
+what the span reports at 0 Ma. The import time itself is also mutated: it is snapped to
+the nearest time slot, so `get_geometry_import_time` can differ from the argument, by
+up to half a time increment.
+
+**Two pool-allocator regimes, and the distinction is load-bearing.** Samples stored in
+the time span share the span's `PoolAllocator`, so their `GeometryPoint` and strain
+objects can be shared by pointer and live as long as the span. Samples manufactured on
+demand for an arbitrary time — the `create_rigid_geometry_sample` and
+`interpolate_geometry_sample` callbacks handed to the `TimeWindowSpan` — each get a
+*fresh* allocator, which is why those paths deep-copy strains instead of sharing them;
+without that, repeated queries at arbitrary times would grow the span's pool without
+bound. Any new code that stores a computed sample into the span must pass
+`d_pool_allocator`, and any code that does not must not.
+
+**Lazy state under `const`, so one `GeometryTimeSpan` is single-threaded.** Strain
+rates are computed per sample on first access and total strains in a single forward
+pass over the whole span; both are driven by the `mutable` `d_accessing_strain_rates` /
+`d_accessing_strains` counters that the `AccessingStrainRates` and `AccessingStrains`
+RAII scopes bump, and `get_geometry_sample` is the single funnel that triggers
+`initialise_deformation_total_strains`. Reach around it — calling
+`GeometrySample::get_geometry_points` directly, or fetching strains without entering
+the scope — and you get zeros rather than an error. Concurrent calls on one span race
+on all of it.
+
+**Velocities between time slots are not evaluated at the requested time.**
+`get_velocities` computes them at the nearest bounding slot *towards the geometry
+import time*, deliberately mirroring `interpolate_geometry_sample`, so that the active
+point count matches the interpolated domain points; only the returned domain positions
+are interpolated. There is an assert on that size match, and it is the reason the
+choice cannot be simplified.
+
+**`DefaultDeactivatePoint`'s stage-rotation cache does not work as its comment
+claims.** `d_velocity_stage_rotation_time` is never assigned anywhere in the unit, so
+`get_or_create_velocity_stage_rotation` clears the map on every call whose
+reconstruction time is not 0.0, and the by-plate-ID reuse it is meant to provide never
+materialises. Also note that the `create` doc comment refers to a `time_increment`
+parameter that the function does not have — the time increment is derived from the
+previous and current times passed to `deactivate`.
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedMultiPointOnSphere tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A concrete `RenderedGeometryImpl` that wraps a `MultiPointOnSphere` for rendering. Stores the underlying geometry, its display color, and a size hint for point rendering. Implements the visitor pattern via `accept_visitor()` to allow traversal by rendering engines, and delegates proximity testing to the contained `MultiPointOnSphere` to support point selection operations.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedMultiPointOnSphere tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

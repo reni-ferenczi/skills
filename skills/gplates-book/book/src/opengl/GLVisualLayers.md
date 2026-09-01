@@ -9,9 +9,46 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVisualLayers tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the bridge between app-logic layer identity and GPU-resident state, and
+the place where the rendering backend keeps everything that must survive from one
+frame to the next. Rasters, cube-mapped rasters, age grids, normal maps, 3D
+scalar fields and reconstructed polygon meshes are all far too expensive to
+rebuild per frame, so they are cached here, keyed by the
+`GPlatesAppLogic::LayerProxy` that produced them. The public surface is
+deliberately tiny — three render entry points and a slot — and it is the only way
+the painters reach these objects: `GPlatesGui::LayerPainter`,
+`GPlatesGui::Globe` and `GPlatesGui::MapRenderedGeometryLayerPainter` call in,
+while `GPlatesQtWidgets::GlobeCanvas` and `GPlatesQtWidgets::MapView` own the
+instances.
+
+Internally there are two indexing levels. `GLLayers` maps each layer proxy to a
+`GLLayer`, and each `GLLayer` holds one lazily created slot per
+`LayerUsage::Type`. A "layer usage" is one *way* of consuming a layer's output,
+and each subclass is a self-rebuilding pipeline stage: it keeps
+`GPlatesUtils::ObserverToken`s against the layer proxy's subject tokens, and each
+`get_*` call first asks whether it is still up to date, then tries the cheap
+in-place update (`GLVisualRasterSource::change_raster`,
+`GLScalarField3D::change_scalar_field`) and only falls back to discarding and
+rebuilding the expensive object when that fails. The usages chain within a
+layer — `RasterLayerUsage` feeds `CubeRasterLayerUsage` feeds
+`StaticPolygonReconstructedRasterLayerUsage` feeds `MapRasterLayerUsage` — but
+the age grid, normal map and reconstructed-polygon usages come from *other*
+layers, which the user can rewire at any moment. That is why they are not wired
+at construction: `render_raster` re-pushes them through
+`set_reconstructing_layer_inputs` or `set_non_reconstructing_layer_inputs` on
+every single call, and those methods compare the incoming usages against the
+stored ones and invalidate the reconstructed raster when they differ.
+
+The `NonListObjects` / `ListObjects` split exists because two OpenGL contexts may
+or may not share "list" objects — textures, display lists, vertex buffer objects.
+Non-list objects are always shared between `GLVisualLayers` instances; the
+second `create` overload shares `ListObjects` only when both contexts report the
+same `GLContext::SharedState`, and otherwise builds a second set. `ListObjects`
+is also where the expensive-but-layer-independent singletons live: the
+`GLMultiResolutionCubeMesh` (roughly 50 MB), the `GLMultiResolutionMapCubeMesh`,
+the `GLFilledPolygonsGlobeView` and `GLFilledPolygonsMapView` renderers, and the
+`GLLight`. All are created on first use and shared across every layer, because
+none of them carries state specific to what a layer draws with them.
 
 ## Declared types
 
@@ -63,9 +100,69 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVisualLayers tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- `cache_handle_type` is `boost::shared_ptr<void>`: an opaque keep-alive token,
+  not a value to inspect. The contract is that the caller holds the previous
+  frame's handle *while* rendering the current frame and only then drops it — see
+  `GlobeCanvas::d_gl_frame_cache_handle`. Dropping it immediately silently
+  defeats frame-to-frame caching; never dropping it pins texture memory
+  indefinitely.
+- Invalidation is by pointer identity, not by value. Every downstream stage stores
+  the upstream object it last saw and compares
+  (`d_multi_resolution_cube_raster != multi_resolution_cube_raster`) to decide
+  whether to rebuild. If you ever add a path that mutates one of these objects in
+  place instead of replacing it, every downstream stage will keep using stale
+  results without noticing.
+- The layer-removal path is the whole reason this class is a `QObject`. Layer
+  usages hold strong references to layer proxies, including proxies belonging to
+  *other* layers, so without `handle_layer_about_to_be_removed` (connected to
+  `ReconstructGraph::layer_about_to_be_removed`) a removed layer would stay alive
+  along with its GPU memory. The two-tier response matters: if
+  `is_required_direct_or_indirect_dependency` is true the whole usage slot is
+  dropped, otherwise `removing_layer` gives the usage a chance to drop just that
+  optional input and rebuild. A new layer usage with a new optional dependency
+  must override `removing_layer` or it will hold a dangling-in-spirit reference.
+- Declaration order in this class is load-bearing twice over, and both places
+  carry a comment. `d_non_list_objects` must precede `d_list_objects` because
+  `ListObjects` stores a `const NonListObjects &`; inside `ListObjects`,
+  `d_filled_polygons_globe_view` must follow `d_multi_resolution_cube_mesh`
+  because it is built from it.
+- `GLLayer::d_layer_usages` is a flat vector indexed directly by
+  `LayerUsage::Type` and sized by `NUM_TYPES`, so the enumerator order is part of
+  the data structure. Adding a usage means adding an enumerator before
+  `NUM_TYPES` and a matching `get_*` accessor.
+- The `get_*_layer_usage` accessors `dynamic_pointer_cast` the layer proxy to the
+  concrete proxy type and will throw (abort in debug builds) if it does not
+  match. That is intentional — asking a non-raster layer for its raster usage is
+  a programming error, not a user error.
+- Almost every other failure is silent. Unsupported hardware
+  (`GLScalarField3D::is_supported`,
+  `GLMultiResolutionStaticPolygonReconstructedRaster::is_supported`,
+  `GLLight::is_supported`) and missing data (no georeferencing, no colour
+  palette, no proxied raster) all return `boost::none`, and `render_raster` then
+  falls through reconstructed-globe to unreconstructed-globe and renders nothing
+  at all if neither is available. Only failure to obtain an age grid or normal
+  map logs a `qWarning`.
+- `get_static_polygon_reconstructed_raster` deliberately returns `boost::none`
+  when there are no reconstructed polygons, no age grid, no normal map and raster
+  lighting is disabled, so that callers fall back to the cheaper plain
+  `GLMultiResolutionRaster`. Conversely all raster lighting is routed through the
+  "reconstructed" path even when nothing is being reconstructed, specifically to
+  avoid applying lighting twice.
+- `NormalMapLayerUsage` keys its `NormalRaster` objects by height-field scale
+  factor in a map of `boost::weak_ptr`, pruning expired entries on every
+  `get_normal_map` call. So one normal map is shared by all consumers using the
+  same scale factor and is destroyed when the last of them lets go; a UI control
+  that varies the scale factor continuously will churn these.
+- `RasterLayerUsage` builds its `GLMultiResolutionRaster` with
+  `CACHE_TILE_TEXTURES_NONE` on purpose, because `GLVisualRasterSource` already
+  insulates it from the file system. Re-enabling that cache would multiply
+  texture memory use for no gain.
+- The map view builds its own cube raster rather than sharing the globe's,
+  because the map's world transform depends on the map projection's central
+  meridian and would re-orient a shared object.
+- Every entry point here, including the `ListObjects` getters, requires an active
+  OpenGL context and takes a `GLRenderer &`. None of this is safe to touch
+  outside rendering.
 
 ## Used by
 

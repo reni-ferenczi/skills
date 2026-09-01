@@ -9,9 +9,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/CallStackTracker tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A hand-rolled, opt-in call stack. `CallStack` is a Meyers singleton wrapping a
+`std::vector<Trace>`, where a `Trace` is nothing but the `const char *` from
+`__FILE__` and the `int` from `__LINE__`; `CallStackTracker` is the RAII wrapper
+that pushes a `Trace` in its constructor and pops it in its destructor. There is
+no platform stack walking here — a frame appears in the trace only because some
+code explicitly created a tracker for it.
+
+The reason this exists is that GPlates catches its exceptions at the very top of
+the program, in `GPlatesGui::GPlatesQApplication`, by which time the real machine
+stack between the throw site and the handler is gone. So
+`GPlatesGlobal::Exception`'s constructor instantiates a `CallStackTracker` for
+its own throw location and then immediately calls
+`CallStack::instance().write_call_stack_trace()` into an `ostringstream`,
+freezing the trace as a `std::string` member that the handler can print much
+later. `GPlatesGlobal::Abort` in `src/global/GPlatesAssert.cc` does the same
+thing before aborting. That is the whole design: capture at construction,
+because capture at catch would be too late.
+
+This also explains the size of the fan-in list below, which is misleading if you
+read it as "these units track their call stack". `CallStack::Trace` is the type
+of the first constructor argument of *every* exception derived from
+`GPlatesGlobal::Exception`, and both `GPLATES_EXCEPTION_SOURCE`
+(`src/global/GPlatesException.h`) and `GPLATES_ASSERTION_SOURCE`
+(`src/global/GPlatesAssert.h`) expand to `CallStack::Trace(__FILE__, __LINE__)`.
+Nearly all of those 185 units are simply throwing an exception or calling
+`GPlatesGlobal::Assert`. Actual stack tracking — the `TRACK_CALL_STACK()` macro —
+has exactly one live call site in the tree, `src/model/XmlNode.cc`. The comment
+in `GPlatesQApplication.cc` is candid about why: this trace is far less
+informative than a native debugger's, so debug builds deliberately do not catch
+`GPlatesGlobal::Exception` at all and let the debugger keep the real stack.
 
 ## Declared types
 
@@ -55,9 +82,32 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/CallStackTracker tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Not thread safe.** The singleton is one process-wide `std::vector` with no
+  mutex anywhere in the header or the `.cc`. Every `push`/`pop` from every thread
+  hits the same vector, and a trace captured on one thread will contain frames
+  pushed by another. Anything that constructs a `GPlatesGlobal::Exception` off
+  the main thread is touching this shared state.
+- **`pop()` is unchecked.** It calls `d_call_stack.pop_back()` with no emptiness
+  test, so an unmatched pop is undefined behaviour. Never call `CallStack::push`
+  or `pop` directly — go through `CallStackTracker` or `TRACK_CALL_STACK()` so
+  the pairing is enforced by scope.
+- **`CallStackTracker` is copyable.** It has no `boost::noncopyable` base and no
+  deleted copy constructor, but the copy does not push. Copying one, or storing
+  one anywhere other than a local variable, pops more times than it pushed. Stack
+  locals only.
+- **`Trace` stores the pointer, not the string.** It keeps the `const char *`
+  verbatim with no copy, which is correct for `__FILE__` (a string literal with
+  static storage) and a dangling pointer for anything else. Do not build a
+  `Trace` from a temporary buffer or a `QString`'s data.
+- **Iterators are invalidated by `push`.** The Doxygen warning against calling
+  `push`/`pop` between `call_stack_begin()` and `call_stack_end()` is a real
+  reallocation hazard, not a style rule.
+- The destructor swallows every exception from `pop()`, so a corrupted stack
+  fails silently rather than terminating.
+- The capture cost is paid on *construction* of every GPlates exception, not on
+  printing: `generate_call_stack_trace_string()` formats and allocates a string
+  even for exceptions that are caught and discarded without their message ever
+  being read.
 
 ## Used by
 

@@ -8,9 +8,43 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/CubeQuadTreePartition tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The spatial index for geometries on the globe. Structurally it is a
+`CubeQuadTree<ElementList>` — the same six-faces-of-a-cube subdivision — but each
+face's quad tree is *loose*: a node's bounding square is twice the node's own
+size, in the sense of Thatcher Ulrich's loose octrees. That one change is the
+whole design. In a strict quad tree a small object straddling the root's
+splitting line has to be stored at the root, and enough such objects destroy the
+index; with doubled bounds an object is stored at the level determined by its
+*size* alone, and its position only picks which node at that level. Insertion
+therefore has an O(1) target depth (a log2 of the bounding radius, implemented as
+a descent loop because the interior nodes have to be created anyway), which
+matters because this index is rebuilt for every geometry on the globe at every
+reconstruction time.
+
+The public surface is dominated by `add()` overloads, but they are three
+mechanisms wearing many hats. The primitive ones take a `UnitVector3D` point, or
+a bounding small circle as centre plus `AngularExtent`. Everything else funnels
+into them: the `PolylineOnSphere` / `PolygonOnSphere` / `MultiPointOnSphere`
+overloads pull `get_bounding_small_circle()` off the geometry, the
+`GeometryOnSphere` overloads dispatch through `ConstGeometryOnSphereVisitor`
+subclasses (`AddGeometryOnSphere` and friends) to reach those, and the
+region-of-interest variants simply add the extent to the bounding circle before
+inserting — which is what makes a proximity query into an overlap test. The
+`FiniteRotation` variants exist purely so that reconstructing a geometry does not
+mean re-deriving its bounds: only the bounding circle *centre* is rotated, since
+a rigid rotation cannot change the radius.
+
+The other half of the interface is for building a partition top-down rather than
+spatially: `get_or_create_quad_tree_root_node()` / `get_or_create_child_node()`
+hand back a `NodeReference`, and `add(element, node_reference_type)` drops an
+element straight in. `add(element, const location_type &)` does the same from a
+`CubeQuadTreeLocation`. Both exist for mirroring one partition into another —
+`CubeQuadTreePartitionUtils` builds derived partitions this way, and
+`GLRasterCoRegistration` and `GLFilledPolygonsGlobeView` walk a partition
+alongside a cube-quad-tree raster of the same shape. Elements too large to fit
+inside any face's loose root bound are not rejected: they go into the cube's own
+root element, reachable through `begin_root_elements()` and `end_root_elements()`,
+and every traversal has to remember to look there.
 
 ## Declared types
 
@@ -104,9 +138,62 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/CubeQuadTreePartition tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**This is an insert-only structure.** There is no way to remove an element or a
+node — only `clear()`, which throws away the whole thing. That is a deliberate
+choice, stated in the comments on both pools: because nothing is ever returned,
+element list nodes use `boost::object_pool` directly rather than
+`GPlatesUtils::ObjectPool`, and the underlying `CubeQuadTree` never needs its
+release path. The intended lifecycle is build-once-per-reconstruction-time,
+traverse, discard.
+
+**Elements are copied in, and iteration order within a node is reverse
+insertion.** `add()` copies the element into a pool-allocated `ElementListNode`
+and `push_front`s it, so `ElementType` must be copy-constructible and the
+elements of one node come back last-added-first. Nothing preserves insertion
+order.
+
+**The cube root is not a quad tree node and is easy to miss.** Elements whose
+bounding circle will not fit inside the loose root bound of any cube face are
+placed at the root of the cube instead, via three separate escape hatches in the
+bounding-circle `add()`: an extent at or beyond a hemisphere, a circle whose
+projection onto its nearest cube face is not well defined, and a projected radius
+exceeding the face half-width. `add_unpartitioned()` puts an element there
+explicitly. Traversal code that walks only the six quad trees silently drops
+these, and a partition can be non-`empty()` while every quad tree root is null.
+
+**`maximum_quad_tree_depth` bounds only the spatial `add()` path.** The top-down
+`get_or_create_child_node()` path can descend past it — the `create()` comment
+says so — while `add(element, const location_type &)` clamps a too-deep location
+by right-shifting its offsets. Two partitions built by different routes can
+therefore disagree about their real depth. Note also that memory is
+`6 * 4^depth`-ish in the worst case, so raising the depth is not free.
+
+**`NodeReference` is a bare pointer with no ownership and no provenance check.**
+It is pointer-sized and cheap to copy, tests as a boolean via
+`GPlatesUtils::SafeBool`, and is null when the node does not exist — the header
+warns to check it after `get_quad_tree_root_node()` and `get_child_node()`, while
+the `get_or_create_*` results are always valid. It does not keep the partition
+alive, and it is invalidated by `clear()`. `add(element, node_reference_type)`
+documents that passing a node from a *different* partition is undefined
+behaviour, and nothing detects it.
+
+**`NodeReference::operator!=` is written as `return lhs != rhs;`** — it calls
+itself and will recurse until the stack is exhausted. Use `!(a == b)`.
+`operator==` is correct.
+
+**Everything is unsynchronised.** `add()` allocates from a `boost::object_pool`
+and creates quad tree nodes on the fly, so concurrent insertion into one
+partition is a race; concurrent read-only traversal is fine. Any `add()` also
+invalidates outstanding iterators — they hold raw list and node pointers.
+
+**Numerical fudge factors are load-bearing.** The insertion path is peppered with
+tolerances (`0.5 - 1e-6` on the node offsets, `1 - 1e-6` on the node half-width,
+`1e-4` and `1e-6` on the projection tests) whose job is to keep computed offsets
+inside `[0, 2^depth)` and to reject projections that are near-degenerate. They
+are not cosmetic — removing one produces out-of-range child offsets that index
+the `[2][2]` child array out of bounds. The comments also record deliberate
+micro-optimisations (hand-coded `fabs`, `int` rather than `unsigned int` casts
+for Visual Studio) because this code runs once per geometry per reconstruction.
 
 ## Used by
 

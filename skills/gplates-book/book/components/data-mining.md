@@ -17,7 +17,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [CheckAttrTypeVisitor](../src/data-mining/CheckAttrTypeVisitor.md) | 2 | 294 | 58 | Feature visitor that classifies a property value's type as numeric or string for co-registration config |
-| [CoRegConfigurationTable](../src/data-mining/CoRegConfigurationTable.md) | 1 | 526 | 420 | (pending) |
+| [CoRegConfigurationTable](../src/data-mining/CoRegConfigurationTable.md) | 1 | 526 | 420 | declarative schema of a co-registration run, reordered widest-filter-first to feed the filter cache |
 | [CoRegFilter](../src/data-mining/CoRegFilter.md) | 2 | 218 | 65 | Abstract base and Config for filters that narrow reconstructed features before co-registration |
 | [CoRegFilterCache](../src/data-mining/CoRegFilterCache.md) | 3 | 170 | 7 | Cache for reconstructed feature vectors keyed by co-registration filter configuration |
 | [CoRegFilterMapReduceFactory](../src/data-mining/CoRegFilterMapReduceFactory.md) | 3 | 215 | 4 | Static factories for filter, mapper, and reducer components of co-registration data mining |

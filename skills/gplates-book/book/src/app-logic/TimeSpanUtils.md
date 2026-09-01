@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TimeSpanUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Anything in GPlates that steps through geological time rather than evaluating a
+single instant needs the same two things: a discretisation of a time interval into
+numbered slots, and a table of per-slot results. `TimeRange` is the discretisation and
+`TimeSpan<T>` is the table. Slot 0 is the begin time — the *oldest* time — and slot
+`n-1` is the end time, with `get_time(slot) = begin_time - slot * time_increment`, so
+the slot index runs forward in time while the time value decreases. Everything
+downstream inherits that orientation: `TopologyReconstruct::GeometryTimeSpan` keeps a
+`TimeWindowSpan<GeometrySample::non_null_ptr_type>` and its resolved boundary and
+network tables are `TimeSampleSpan`s, `ReconstructContext` keeps a
+`TimeSampleSpan<ReconstructedFeatureGeometry::non_null_ptr_type>`, and
+`ScalarCoverageEvolution` keeps a `TimeWindowSpan<EvolvedScalarCoverage::non_null_ptr_type>`.
+
+The two `TimeSpan<T>` implementations trade memory against lookup cost, and the
+choice between them is the reason this header exists in two halves.
+`TimeSampleSpan` is a dense `std::vector<boost::optional<T>>` sized to the whole
+range: constant-time lookup, but one slot allocated per time step whether or not the
+feature exists then. `TimeWindowSpan` stores only the initialised slots, as a
+`std::list` of `TimeWindow` runs of contiguous slots, each run a `std::deque`; setting
+a slot extends a window at either end, merges two windows that become adjacent, or
+starts a new one. That matters for deformation, where a feature may be active over a
+small part of a range that is sampled at every million years.
+
+`TimeWindowSpan` also carries the two `boost::function` callbacks that let it answer
+for times it has no sample for. `get_or_create_sample` — the only method that uses
+them — resolves a time to bounding slots via `TimeRange::get_bounding_time_slots`;
+if the time lands between two initialised slots it calls the interpolator, and
+otherwise it calls the creator with the requested time plus a *source* sample and the
+source's time: the first sample of the next window forward in time if there is one,
+and the present-day sample (with source time 0) if there is not. That is how a
+geometry can be asked for at any non-negative time, including present day and times
+outside the range entirely, without the span having to store a sample there.
 
 ## Declared types
 
@@ -106,9 +134,46 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TimeSpanUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The `Adjust` constructor moves one of the values you passed it.** It rounds the
+slot count *up* — `calc_num_time_slots` adds `1 - 1e-6` before truncating — and then
+rewrites begin time, end time or the increment so that
+`begin_time = end_time + (num_time_slots - 1) * time_increment` holds exactly. The
+header's own example: begin 12.1, end 10.0, increment 1.0 with `ADJUST_BEGIN_TIME`
+gives four slots at 13.0, 12.0, 11.0 and 10.0, so the begin time you get back is
+older than the one you asked for. Read the accessors back rather than assuming your
+inputs survived. Both constructors assert `begin_time > end_time`, and the range is
+never degenerate: at least two slots, at least one interval.
+
+**Three different "not found" answers.** `get_bounding_time_slots` returns none only
+for a time outside `[end_time, begin_time]`, and signals "exactly on a slot" by
+returning the same slot twice with `interpolate_position == 0`; snapping to a slot
+uses `GPlatesMaths::GEO_TIMES_EPSILON`, at both ends of the interval, so a position
+just under 1 is reported as slot `first + 1` rather than an interpolation.
+`get_time_slot` narrows that to none for a time that is inside the range but between
+slots. `get_sample_in_time_slot` returns none for an *uninitialised* slot but
+**throws** `PreconditionViolationError` for an out-of-range slot index — an assert,
+not a return value, on both implementations and on `set_sample_in_time_slot`.
+
+**References into a `TimeWindowSpan` do not survive a merge.** `TimeWindow` uses a
+`deque` deliberately, so pushing at either end keeps existing element references
+valid, and the code relies on that when it returns a reference to a just-inserted
+front sample. But the merge path copies the previous window's samples into the
+current window's deque and then erases the previous window: every reference
+previously handed out for a slot in that erased window dangles. Hold slot indices,
+not references, across further `set_sample_in_time_slot` calls. Lookup on
+`TimeWindowSpan` is also a linear walk of the window list, unlike the vector indexing
+in `TimeSampleSpan`; a span that fragments into many windows pays for it on every
+access.
+
+**Ownership and lifetime.** `TimeSpan<T>` derives from `ReferenceCount<TimeSpan<T>>`
+and has a virtual destructor, so instances are shared through
+`non_null_intrusive_ptr` and deleting through the base pointer is safe; note that each
+subclass redeclares `non_null_ptr_type` for its own type over the same count. `T` is
+copied into and out of the tables (`get_or_create_sample` returns by value), which is
+why the real instantiations all use `non_null_ptr_type` element types rather than the
+objects themselves. `empty()` on `TimeSampleSpan` is a latch — `d_is_empty` is only
+ever cleared, never restored — so it means "nothing was ever set", not "nothing is
+set now".
 
 ## Used by
 

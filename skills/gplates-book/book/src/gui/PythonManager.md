@@ -9,9 +9,53 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/PythonManager tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PythonManager` owns the embedded CPython interpreter inside the GPlates GUI.
+It exists because embedding Python is a process-wide, once-only act with a fixed
+order that no other class is in a position to perform: register the `pygplates`
+module with `PyImport_AppendInittab` so that `import pygplates` resolves to the
+statically linked bindings rather than to a site-packages copy, set the program
+name from `argv[0]`, set `Py_IgnoreEnvironmentFlag` when
+`GPlatesFileIO::StandaloneBundle` reports a bundled standard library (so a
+stray `PYTHONHOME`/`PYTHONPATH` on the user's machine cannot point the
+interpreter at a Python of the wrong version), call `Py_Initialize()`, and then
+immediately give up the GIL with `PyEval_SaveThread()` so that from that moment
+on every access goes through `GPlatesApi::PythonInterpreterLocker`.
+`initialize()` runs that sequence and then builds the rest of the Python
+subsystem on it: it caches `__main__` and its `__dict__` as the single execution
+namespace shared by all runners, creates the `GPlatesApi::PythonRunner` that
+executes on the main thread and the `GPlatesApi::PythonExecutionThread` that
+executes off it, smoke-tests the interpreter in `check_python_capability()` by
+importing `sys`, `code`, `math`, `platform` and `pygplates`, and creates the
+`GPlatesQtWidgets::PythonConsoleDialog`.
+
+It is a deliberately leaked singleton. `src/gplates_main.cc` constructs
+`GPlatesPresentation::Application` first (Python code refers back to it), calls
+`initialize()` from `initialise_python()`, and deletes the singleton from
+`clean_up()` after the Qt event loop returns but while `Application` is still in
+scope. Failure is a normal outcome rather than a fatal one: `PythonInitFailed`
+propagates out to `initialise_python()`, which offers
+`GPlatesQtWidgets::PythonInitFailedDialog` and then disables
+`ComponentManager::Component::python()`, so everything downstream is written to
+work with Python absent. `GPlatesPresentation::ViewState` caches the pointer
+behind `get_python_manager()`, and `GPlatesApi::PythonUtils::python_manager()`
+reaches the singleton directly — that free function is how code deep inside
+`src/api` calls back into the manager without a dependency on view state.
+
+The second responsibility is discovering and registering the user-facing
+scripts, and the two paths differ. Internal scripts are the `.py` files
+compiled into the binary under the Qt resource path `:/python/scripts`; they are
+compiled with `Py_CompileString` and injected as modules with
+`PyImport_ExecCodeModule`, never appearing on `sys.path`. External scripts are
+searched for, in descending priority, in a `scripts/` subdirectory of the
+current working directory, the `paths/python_system_script_dir` and
+`paths/python_user_script_dir` preferences, and the built-in default of the
+former; their directories are appended to `sys.path` by `add_sys_path()` and the
+modules are then imported by name. Both sets are deduplicated on module base
+name, internal modules outranking every external one. The contract a script
+must satisfy is the same either way: expose a top-level `register()` function,
+which the manager calls and which typically registers a draw style with
+`GPlatesGui::DrawStyleManager` or an entry on `GPlatesGui::UtilitiesMenu`
+through the `pygplates.Application` bindings.
 
 ## Declared types
 
@@ -101,9 +145,66 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/PythonManager tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Initialisation order.** The constructor runs before `Py_Initialize()`, so it
+is restricted to the handful of pre-initialisation Python calls — it uses
+`Py_GetVersion()` to extract the `major.minor` string — and it builds a local
+`GPlatesAppLogic::UserPreferences(NULL)` rather than using the application-wide
+one, which does not exist yet. Every preference access in this file repeats
+that throwaway-with-`NULL` pattern for the same reason. `check_init()` throws
+`PyManagerNotReady` from `get_python_execution_thread()` if `initialize()` has
+not run, and `initialize()` is idempotent only in the weak sense that a second
+call warns and returns.
+
+**GIL.** After `PyEval_SaveThread()` no thread holds the GIL by default, so
+every Python touch — including the ones inside this class — must be bracketed by
+a `GPlatesApi::PythonInterpreterLocker`. Note that `set_python_prefix()` and the
+`bp::import` in `check_python_capability()` are called from `initialize()` while
+the locker created there is still alive; if you add code to `initialize()`,
+check which locker covers it.
+
+**The event blackout is two nested mechanisms, and the nesting is fragile.**
+`GPlatesGui::EventBlackout` freezes the UI while a script runs.
+`python_runner_started()`/`python_runner_finished()` are called by
+`GPlatesApi::PythonRunner` around execution on the Python thread; they start and
+stop the blackout and exempt the console's cancel widget. Separately,
+`exec_function_slot` is invoked on the main thread via
+`Qt::BlockingQueuedConnection` from `GPlatesApi::PythonUtils::run_in_main_thread`
+and its `PythonExecGuard` calls `python_started()`/`python_finished()`, which
+*suspend* the blackout for the duration — deliberately, because main-thread work
+is usually PyQt code that needs its events, and the UI is unresponsive anyway
+while Python owns the main thread. The suspend/restore state is the single
+boolean `d_stopped_event_blackout_for_python_runner`, so it does not nest: if an
+`exec_function_slot` call ever re-enters, the inner call restores the blackout
+while the outer main-thread call is still running.
+
+**Shutdown.** The destructor asks the execution thread to `quit_event_loop()`
+and waits one second; if the thread has not stopped it calls `terminate()`, so a
+long-running script can be killed mid-execution at exit. The console dialog is
+parented to the main window but is also `delete`d here, which is safe only
+because `clean_up()` runs while `Application` is still alive — moving the
+teardown later would double-delete it. `Py_Finalize()` is intentionally never
+called (a Boost.Python restriction, noted at the end of `internal_main`). The
+destructor also clears the `python/prefix` preference unconditionally
+(`d_clear_python_prefix_flag` is initialised true and never set false), so the
+value `set_python_prefix()` writes at startup only survives while GPlates runs.
+
+**Script registration swallows errors on purpose.** Both
+`register_internal_script` and `register_external_script` catch
+`bp::error_already_set` and call `GPlatesApi::PythonUtils::get_error_message()`
+purely for its side effect of clearing the Python error indicator; without that
+call a single bad script would leave the interpreter in an error state for the
+next importer. A script that fails to register therefore disappears silently —
+`register_external_script` only logs on success.
+
+**Vestigial members.** Several declarations here have no live implementation.
+`find_python()` is declared but defined nowhere in the tree, so it cannot be
+called. `d_sleeper` is set to `NULL` in the constructor, `delete`d in the
+destructor and never assigned in between, despite the `GPlatesApi::Sleeper`
+comment. `validate_python_home()` and `get_python_prefix_from_preferences()`
+have no callers. The `system_exit_exception_raised` signal is connected by
+`GPlatesQtWidgets::PythonConsoleDialog` but is never emitted by this class; the
+identically named signals on `GPlatesApi::PythonRunner` and
+`GPlatesApi::PythonExecutionThread` are the ones that actually fire.
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedEllipse tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered representation of an ellipse on the sphere, defined by a centre point, semi-major and semi-minor axes (in radians), and a `GreatCircle` that orients the ellipse. The class stores colour and rendering width hint. It implements the visitor pattern and provides proximity testing (not yet implemented).
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedEllipse tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Proximity testing is not yet implemented (returns NULL). The semi-major axis is oriented along the `GreatCircle` axis.
 
 ## Used by
 

@@ -9,9 +9,41 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Profile tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+GPlates' own instrumenting CPU profiler — a hand-written gprof, compiled in only
+when `GPLATES_PROFILE_CODE` is defined. That comes either from the CMake option
+in `cmake/modules/ConfigDefault.cmake` or from the dedicated `ProfileGPlates`
+build configuration in `CustomBuildConfigs.cmake`, which is release flags plus
+that define. In any ordinary build every macro expands to nothing (`PROFILE_CODE`
+expands to its code argument, so the program still works), which is why over a
+hundred units can include this header for free. The header itself pulls in only
+`<iosfwd>`, `<string>` and `global/config.h`.
+
+What it records is a *call graph*, not a flat timer table. A profiled section is
+identified by its name string, so every `PROFILE_BLOCK("foo")` anywhere in the
+tree accumulates into one `ProfileNode`; a `ProfileLink` is created per
+caller/callee pair, which is what lets the report attribute a node's cost
+separately to each of its callers. The live state is a `std::stack<ProfileRun>`
+in the `ProfileManager` singleton mirroring the real call stack, with each run
+tracking self ticks and children ticks separately — time in a nested profile is
+subtracted from its parent, as the long worked example at the top of the header
+explains. A permanent `<root>` run sits at the bottom of that stack purely so
+mismatched begin/end calls can be detected.
+
+Note the shape of the boundary. Only `ProfileBlockEnd` and five free functions
+are in `GPlatesUtils`; `ProfileNode`, `ProfileGraph`, `ProfileManager` and the
+rest live in an anonymous namespace inside `Profile.cc` and are unreachable from
+anywhere else — which is why the tables above show them as `(anonymous)::`. The
+`void *` in `profile_get_cache`/`profile_begin` is a deliberately opaque
+`ProfileNode *`, kept opaque so the header need not declare the type.
+`PROFILE_BEGIN` stashes that pointer in a function-local `static`, so the
+string-to-node map lookup happens once per call site rather than once per hit.
+Overhead is engineered throughout: `g_ticks_taken_in_get_ticks_call` is
+calibrated at static-initialisation time and subtracted from every measurement,
+and `profile_begin`/`profile_end` deliberately call `get_ticks()` only once each,
+because the file's own measurements attribute about 90% of profiling cost to
+`QueryPerformanceCounter` alone. `PROFILE_EXCLUDE_NEW_DELETE` optionally goes
+further and replaces global `operator new`/`delete` so allocation time is
+suspended out of the enclosing run.
 
 ## Declared types
 
@@ -200,9 +232,50 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Profile tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Single-threaded by construction.** One global `ProfileManager` with one
+  `std::stack<ProfileRun>` models one call stack. Profiling code that runs on
+  more than one thread interleaves runs from different threads into the same
+  stack and produces nonsense. The `operator new` override carries an explicit
+  FIXME saying it is not thread-safe either, and that a mutex was rejected as
+  costing more than the feature is worth.
+- **Begin/end must balance exactly.** An extra `PROFILE_END` empties the stack
+  past the `<root>` sentinel and throws `AssertionFailureException` after writing
+  to `std::cerr`; a missing one is caught later, when `profile_report_to_ostream`
+  finds runs still open and throws for the same reason. `ProfileBlockEnd` covers
+  the normal escapes — an exception or an early `return` between `PROFILE_BEGIN`
+  and `PROFILE_END` still ends the run, because `PROFILE_END` merely `dismiss()`es
+  a scope guard the begin macro already declared.
+- **`profile_tag` must be unique within a scope.** `PROFILE_BLOCK` and
+  `PROFILE_FUNC` use `__LINE__` as the tag *and* `__LINE__` to suffix the cache
+  variable, so two of them on the same source line collide at compile time.
+- **Ticks are platform-defined and not comparable.** Windows returns raw
+  `QueryPerformanceCounter` counts; elsewhere a tick is fixed at 0.1 microseconds
+  derived from `gettimeofday`. Only seconds, via `convert_ticks_to_seconds`, mean
+  anything across platforms.
+- **Calibration runs at static-init time.** `g_ticks_taken_in_get_ticks_call` is
+  a namespace-scope constant whose initialiser times up to ten loops of a
+  thousand `get_ticks()` calls, retrying if a context switch makes a loop look
+  too slow. In a profile build that cost is paid at startup whether or not
+  anything is ever profiled.
+- **`s_does_profile_manager_exist` guards shutdown.** The `new`/`delete` hooks
+  are global and outlive the singleton, so they check that flag before touching
+  `ProfileManager::instance()`.
+- **Measurement floor.** The file comment is blunt: each begin/end pair costs
+  roughly 1.2 microseconds, so a section of that order is unmeasurable and
+  profiling it can halve the program's speed. And any other CPU-consuming process
+  on the machine is charged to whatever section was running.
+- **A backwards or equal clock silently drops the sample.** `ProfileRun::stop_profile`
+  only accumulates when `d_last_ticks < stop_ticks`, avoiding unsigned underflow
+  at the cost of losing the measurement.
+- `ProfileLink` objects come from a file-static `GPlatesUtils::ObjectPool` and are
+  held by `shared_ptr` from *both* the parent's and the child's link map, so an
+  edge lives as long as either endpoint's map entry.
+- `ProfileNode::get_parent_link` caches the most recent parent to skip the
+  `std::map` lookup, which is the case that matters for a profiled tight loop.
+- **`PROFILE_EXCLUDE_NEW_DELETE` needs linker help on Windows** — the header notes
+  that `/FORCE:MULTIPLE` is required to get past duplicate `operator new`/`delete`
+  symbols. Only the four basic forms are overridden; the file flags the rest as a
+  FIXME.
 
 ## Used by
 

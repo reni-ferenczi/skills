@@ -9,9 +9,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/UnitQuaternion3D tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The rotation representation that everything in the reconstruction engine
+ultimately composes. `FiniteRotation` is little more than a `UnitQuaternion3D`
+plus an optional axis hint, and rotation composition along a plate circuit — the
+operation `ReconstructionTree` performs for every plate at every reconstruction
+time — is quaternion multiplication here. The class stores its four components
+as a `real_t` scalar and a `Vector3D`, which is what lets the multiplication in
+`operator*` be written directly as the `s1*s2 - dot(v1,v2)` /
+`s1*v2 + s2*v1 + cross(v1,v2)` identity rather than as sixteen scalar products.
+
+Construction is funnelled: every route in — `create_rotation`,
+`create_identity_rotation`, `create`, `get_conjugate`, `operator-`, `operator*` —
+goes through one protected `(real_t, Vector3D)` constructor, and the free
+`operator-` and `operator*` are `friend`s specifically so they can reach it. That
+constructor calls `renormalise_if_necessary()`, so the unit-norm invariant is
+maintained by silent correction rather than by assertion. `assert_invariant()`
+exists and would throw `ViolatedClassInvariantException`, but nothing calls it;
+its own comment records that invoking it from the constructor is future work.
+
+The `NonUnitQuaternion` nested struct, the scalar `operator*` overloads and the
+`operator+` on non-unit quaternions exist for exactly one caller: the
+`slerp` helper in `FiniteRotation.cc`, which forms `c1*q1 + c2*q2` as an
+explicitly non-unit quaternion and then hands it to `create()` to be normalised
+back into the type. Keeping the intermediate in a distinct type is what stops
+that half-finished value from being mistaken for a valid rotation.
+`get_rotation_params()` is the reverse direction, used by the pole dialogs, the
+rotation-file writers and the CLI rotation commands to recover an axis and angle
+for display or export.
 
 ## Declared types
 
@@ -60,9 +84,42 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/UnitQuaternion3D tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Equality is not rotation equivalence.** `q` and `-q` denote the same rotation,
+and `operator==` compares components, so it will report them unequal. Use
+`represent_equiv_rotations()` whenever the question is "same rotation" rather
+than "same quaternion" — the header flags this on both operators, and both carry
+an open `FIXME` asking whether they should become dot-product comparisons the way
+the vector types did. The comparison is componentwise under `real_t`'s
+tolerance, so it is an `EPSILON` box, not an angular test.
+
+**The invariant is repaired, not asserted.** `renormalise_if_necessary()` acts
+only when the actual norm-squared deviates from 1 by more than 2.0e-14. That
+threshold is empirical: the comment records that beyond it, rotating a unit
+vector yields one whose magnitude-squared is off by 5.0e-14 — enough to matter
+to `UnitVector3D`'s own checks. Composing long plate circuits is exactly the
+drift source it exists for. `create()` is separately defensive: its strict
+norm check is `#if 0`-ed out ("until precision suckiness is fixed"), so in
+practice it renormalises whenever `norm != 1.0` under the tolerance, and throws
+`IndeterminateResultException` when the norm compares equal to zero.
+
+**`get_rotation_params()` throws for the identity rotation** — the axis is
+genuinely indeterminate there, and the caller must either check
+`represents_identity_rotation()` first or be prepared for
+`IndeterminateResultException`. Note also that the returned angle is always
+non-negative: `acos` yields `[0, PI]`, so `(angle, axis)` and `(-angle, -axis)`
+map to the same quaternion and cannot be told apart afterwards. That is the
+entire reason `axis_hint` exists as a parameter, and the reason `FiniteRotation`
+carries a `boost::optional<UnitVector3D>` axis hint alongside its quaternion and
+propagates it through `compose()`. If you drop the hint, exported poles can come
+back with the axis flipped and the angle negated relative to what the user
+entered.
+
+**Ordering.** Quaternion multiplication is associative but not commutative;
+`compose(r1, r2)` is `r1.unit_quat() * r2.unit_quat()`. The inverse is the
+conjugate, so `get_inverse()` is free — no division involved.
+
+Instances are plain values with no shared or lazily cached state; const use is
+thread-safe.
 
 ## Used by
 

@@ -8,9 +8,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/WeakObserver tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`WeakObserver<T>` is the intrusive back-pointer that lets an object outside the model
+hold on to a model handle without owning it. It is the common base of
+`WeakReference` — the model's own handle-to-a-handle — and of every reconstruction
+geometry that remembers which `FeatureHandle` it was produced from
+(`ReconstructedFeatureGeometry`, `ResolvedTopologicalGeometry`,
+`MultiPointVectorField` and the rest). It neither increments nor decrements the
+publisher's reference count. Instead each observer *is* a link in a doubly-linked
+list whose head and tail live in the publisher, so the publisher can find every
+outstanding observer and detach them all when it dies; that is what makes a stale
+`ReconstructedFeatureGeometry` report `is_valid() == false` instead of dereferencing
+freed memory. The publisher half of the arrangement is `WeakObserverPublisher<H>`,
+a base of `BasicHandle<HandleType>`, which keeps two independent chains — one for
+`WeakObserver<H>` and one for `WeakObserver<const H>`.
+
+The two halves are deliberately not coupled through a base class. `WeakObserver<T>`
+reaches the publisher's head and tail pointers through two free functions,
+`weak_observer_get_first` and `weak_observer_get_last`, resolved by
+argument-dependent lookup in the publisher's own namespace, in the same style as
+Boost's `intrusive_ptr_add_ref`. Any type can therefore become a publisher without
+deriving from anything, as long as it supplies those two overloads;
+`WeakObserverPublisher` is simply the implementation the model handles use. The
+unused second parameter on both functions exists only to make the `WeakObserver<T>`
+and `WeakObserver<const T>` overloads distinct, since the publisher keeps the two
+chains separately.
+
+Walking the chain is the publisher's job, not the observer's: `WeakObserverPublisher`
+iterates with `next_link_ptr()` and calls the pure-virtual
+`accept_weak_observer_visitor`, and that is the channel through which `BasicHandle`
+delivers its modification, addition, deactivation, reactivation and
+about-to-be-destroyed notifications (the visitors are in `WeakReferenceVisitors.h`).
+You would touch this header only when adding a new kind of publisher or a new
+observer — the latter means overriding `accept_weak_observer_visitor` and adding a
+`visit_*` function to `WeakObserverVisitor`.
 
 ## Declared types
 
@@ -55,9 +85,40 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/WeakObserver tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Nothrow is a hard requirement, not a nicety.** Every mutating operation here is
+  pure pointer-splicing on built-in types: no allocation, no user code, nothing that
+  can throw. The observers are the list nodes precisely so that subscribing and
+  unsubscribing need no memory. `swap` is implemented naively as copy-construct plus
+  two copy-assignments, which is only safe *because* all three are nothrow. If you
+  add a member that allocates or a call that can throw, that reasoning collapses and
+  a publisher's destructor can leave a half-spliced chain.
+- **Never write your own loop over the chain.** Unsubscribing a link NULLs its own
+  `next` and `prev` pointers, so a loop that reads `next_link_ptr()` *after*
+  unsubscribing stops at the first element. Use `weak_observer_unsubscribe_forward`,
+  which grabs the next pointer first; its Doxygen records that it was added after the
+  same bug was found in several hand-rolled loops.
+- **Ordering is not guaranteed.** New observers are appended at the tail, but
+  copy-assignment and `swap` move links around, so notification order is arbitrary.
+  Do not build behaviour on which observer is told first.
+- `unsubscribe()` clears `d_publisher_ptr`; the destructor and the private
+  `remove_from_subscriber_list_of_publisher` do not. That asymmetry is intentional
+  (the destroyed object's pointer is never read again) but it means
+  `is_subscribed()` is only meaningful on a live object.
+- **Lifetime.** An observer never keeps its publisher alive. `WeakObserverPublisher`'s
+  destructor unsubscribes both chains, so surviving observers see a NULL publisher
+  afterwards. Note the ordering in `BasicHandle::~BasicHandle`: the
+  about-to-be-destroyed notification is sent *first*, while `publisher_ptr()` is
+  still non-NULL and the derived handle is already partway through destruction —
+  a callback that dereferences the handle at that moment is on thin ice.
+- The publisher's chain pointers are `mutable` and `first_const_weak_observer()` is
+  a const member, so a const handle can still be observed; that is how
+  `WeakObserver<const H>` works at all.
+- The `std::swap` specialisation listed above is wrapped in `#if 0` in the header and
+  is not compiled. The comment says it would be more useful on derived classes.
+- `accept_weak_observer_visitor` is pure virtual, so `WeakObserver` itself is
+  abstract, and the destructor is virtual only because of it.
+- No synchronisation anywhere. Subscription, unsubscription and traversal must all
+  happen on the same thread as the model mutation that triggers them.
 
 ## Used by
 

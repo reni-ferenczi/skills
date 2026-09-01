@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/RasterType tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RasterType` is a namespace, not a class: an enumeration of raster element types plus the two compile-time maps that connect that enumeration to real C++ types. It exists because raster handling in GPlates is statically typed — `RawRasterImpl<T, ...>` is a template and `RawRasterVisitor` has one `visit` overload per instantiation — while the outside world (GDAL band types, the import wizard's combo boxes, saved layer parameters) deals in a runtime tag. `RasterType::Type` is that tag, and it is the value the rest of the code stores, compares and serialises.
+
+The two maps are exact mirrors of each other. `GetEnumAsType<E>::type` goes enum → C++ type and is used where an enumerator is a template argument; `get_type_as_enum<T>()` goes C++ type → enum and is what `RawRasterUtils::get_raster_type` uses, via a visitor over `RawRaster`, to recover the tag from a concrete raster. Both are declared in the header and only the `get_type_as_enum` specialisations live in the `.cc`, so adding a raster element type means touching the enum, both maps, `get_type_as_string`, the `RawRasterImpl` typedefs and the `RawRasterVisitor` overloads in `RawRaster.h`, and the GDAL translation tables in `GPlatesFileIO::GDALRasterReader` / `GDALRasterWriter`.
+
+The element types are deliberately Qt's fixed-width integers (`qint8` … `quint32`) rather than the `boost::int*_t` family — `RawRaster.h` records that this was done so raster data could be streamed through `QDataStream` without the type ambiguities the boost typedefs caused on some platforms. `FLOAT` and `DOUBLE`, by contrast, map to plain `float` and `double` with no width guarantee, on the same assumption GDAL makes. `RGBA8` maps to `GPlatesGui::rgba8_t`, which is why the `is_*` predicates classify it as neither integer nor floating point.
 
 ## Declared types
 
@@ -121,9 +123,15 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/RasterType tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Both maps fail silently rather than at compile time.** The primary `GetEnumAsType` template yields `void`, and the primary `get_type_as_enum<T>()` returns `UNKNOWN`. An element type nobody specialised therefore compiles cleanly and produces a nonsense answer at run time. If you add a raster element type and forget one half of the pair, nothing will tell you.
+
+**The round trip is not a bijection.** `UNINITIALISED` and `UNKNOWN` both map to `void`, and `get_type_as_enum<void>()` returns `UNINITIALISED` — so `UNKNOWN` cannot survive a trip through `GetEnumAsType`. `UNINITIALISED` is a real, reachable state (it is the tag of `UninitialisedRawRaster`, the `RawRasterImpl<void, WithoutData, ...>` typedef); `UNKNOWN` is the "we could not classify this" answer.
+
+**The enumerators are unnumbered.** `Type` has no explicit values, so its numeric encoding depends on declaration order. Anything that persists a `RasterType::Type` as an integer — layer parameters written into a project file, cached raster metadata — is coupled to that order; inserting an enumerator anywhere but at the end changes the meaning of existing data.
+
+**`is_integer` excludes `RGBA8`,** even though `rgba8_t` is four unsigned bytes, and `is_floating_point` excludes it too. The RGBA case is meant to be distinguished separately — `RawRasterUtils::does_raster_contain_numerical_data` is the predicate that actually splits colour rasters from data rasters, and it is defined as the complement of the colour case rather than in terms of these helpers. `UNINITIALISED` and `UNKNOWN` answer false to all four predicates.
+
+**`get_type_as_string` returns the enumerator's spelling,** not a display string; it is the fallback for `UNKNOWN` via `default:`, so an out-of-range integer cast to `Type` stringifies as `UNKNOWN` rather than asserting.
 
 ## Used by
 

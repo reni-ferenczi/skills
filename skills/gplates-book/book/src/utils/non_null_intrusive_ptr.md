@@ -8,9 +8,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/non_null_intrusive_ptr tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The ownership primitive of the whole codebase, and — with 321 units referencing
+it and around 750 files declaring a `non_null_ptr_type` — the single most widely
+depended-on type in `utils`. It is a verbatim fork of Boost's
+`intrusive_ptr.hpp` (Peter Dimov's, under the Boost licence, which is why the
+brace style and the ancient compiler workarounds in this file look nothing like
+the rest of GPlates) with one change: the pointer can never be null. There is no
+default constructor, no `reset()`, and every constructor either takes an
+existing `non_null_intrusive_ptr` or a raw `T *` that it checks. Everything else
+— the intrusive counting, the comparison operators, the pointer casts, the
+`get_pointer()` hook for `boost::mem_fn` — is unmodified upstream code.
+
+The point of the "non-null" part is that it moves a null check from every
+dereference to a single point of construction. Because the invariant holds by
+construction, `operator*` and `operator->` need no test, and a function taking a
+`non_null_ptr_type` needs no precondition. Where a pointer is genuinely optional
+the codebase wraps it in `boost::optional` rather than reaching for a nullable
+pointer. The counterpart to `boost::intrusive_ptr` is kept live in both
+directions: this header defines mixed `operator==` / `operator!=` against
+`boost::intrusive_ptr`, and `get_intrusive_ptr()` converts one way.
+
+Counting itself is not implemented here. The class relies on unqualified
+`intrusive_ptr_add_ref(T *)` and `intrusive_ptr_release(T *)` found by ADL, and
+in practice those come from `GPlatesUtils::ReferenceCount`, the CRTP base almost
+every managed class derives from. That base holds a `boost::detail::atomic_count`
+and, on the count reaching zero, `boost::checked_delete`s the pointer
+`static_cast` back to the `Derived` template argument — which is precisely why
+`ReferenceCount` needs no virtual destructor and costs no vtable pointer. The
+companion `NullIntrusivePointerHandler` is the default `H` policy: its
+`operator()` aborts in a `GPLATES_DEBUG` build so the offending stack is visible
+in a debugger, and throws `NullNonNullIntrusivePointerException` otherwise. Read
+those two headers alongside this one; none of the three makes sense alone.
 
 ## Declared types
 
@@ -68,9 +96,52 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/non_null_intrusive_ptr tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`dynamic_pointer_cast` cannot fail gracefully.** `dynamic_cast` returns null
+  on a failed downcast, and that null goes straight into the raw-pointer
+  constructor — which aborts in a debug build and throws
+  `NullNonNullIntrusivePointerException` in a release build. It is not the
+  optional-returning cast its name suggests. Test the type first, or go through
+  `boost::intrusive_ptr` / a visitor.
+- **The raw-pointer constructor is not `explicit`,** and both its other
+  parameters are defaulted. Any `T *` in scope converts silently to an owning
+  pointer, which is what makes `return non_null_ptr_type(new Foo(...))` read so
+  cleanly but also means an accidental conversion compiles. Passing
+  `add_ref = false` adopts the pointer *without* incrementing — correct only when
+  you are transferring a count you already hold, and a leak or double-free
+  otherwise.
+- **The null-handling path is two-stage and the second stage is nearly dead
+  code.** The constructor calls `handle_null()` and only throws
+  `UnhandledNullPointerException` if that returns. The default
+  `NullIntrusivePointerHandler` never returns, so in practice you see an abort
+  (debug) or `NullNonNullIntrusivePointerException` (release);
+  `UnhandledNullPointerException` is an empty `struct` outside the
+  `GPlatesGlobal::Exception` hierarchy and is only reachable via a custom `H`.
+- **The null tests inherited from Boost are vestigial.** `operator!`, the
+  `unspecified_bool_type` conversion and the `p_ == 0` checks survive verbatim
+  from `intrusive_ptr.hpp`, but the class invariant makes them constant. Code
+  that tests a `non_null_intrusive_ptr` for truth is testing nothing; use
+  `boost::optional<non_null_ptr_type>` where absence is a real state.
+- **Reference cycles leak.** Intrusive counting has no weak-pointer counterpart
+  here, and `boost::weak_ptr` does not work with it. The bridge, when you need
+  one, is `GPlatesUtils::make_shared_from_intrusive()` in `ReferenceCount.h`,
+  which yields a `boost::shared_ptr` sharing the same ownership.
+- **You cannot make one of these to an unmanaged object.** Taking a pointer to
+  `this` inside a constructor, or to a stack object, breaks the counting;
+  `GPlatesUtils::get_non_null_pointer()` exists for the safe case and asserts
+  `get_reference_count() != 0`, throwing
+  `GPlatesGlobal::IntrusivePointerZeroRefCountException` otherwise.
+- **Thread safety is exactly the counter's, no more.** `ReferenceCount` uses
+  `boost::detail::atomic_count`, so copying and destroying pointers on different
+  threads is safe; assigning to or swapping *the same pointer object* from two
+  threads is not, and neither is the pointed-to object.
+- **Ordering is by address.** `operator<` is `std::less<T *>`, which makes these
+  usable as `std::map` keys but gives an order that varies between runs — never
+  serialise or iterate in it expecting stability.
+- **Treat the file as vendored.** It is a lightly patched copy of upstream Boost
+  with its own header guard style, its own formatting and workarounds for
+  compilers no longer in use. Keep edits surgical rather than modernising it; the
+  policy-shaped behaviour belongs in `NullIntrusivePointerHandler` or
+  `ReferenceCount` instead.
 
 ## Used by
 

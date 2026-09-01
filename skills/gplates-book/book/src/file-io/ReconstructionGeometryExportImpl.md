@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReconstructionGeometryExportImpl tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exporting reconstruction results is where two mismatched shapes have to be reconciled. App-logic hands the exporters a flat `std::vector` of `ReconstructionGeometry` pointers, in whatever order the reconstruction happened to produce them; the output formats want a *file*-shaped, *feature*-shaped hierarchy, because a shapefile or GMT file corresponds to one input feature collection and its records correspond to features. This header is the shared machinery that performs that regrouping, factored out of the roughly two dozen `*Export` units listed below so that every export format and every geometry type does it identically. It declares no exporter of its own — it is a private implementation namespace that the real exporters (`ReconstructedFeatureGeometryExport`, `ResolvedTopologicalGeometryExport`, `ReconstructedFlowlineExport`, `MultiPointVectorFieldExport` and the rest) include and call in a fixed sequence.
+
+Everything is templated on `ReconstructionGeometryType` rather than written against the `ReconstructionGeometry` base, because the exporters need the concrete type — a `ReconstructedFeatureGeometry`, a `ResolvedTopologicalLine`, a `MultiPointVectorField` — all the way through to the format writer. The only thing this code needs from that type is the ability to recover its feature, which it gets through `GPlatesAppLogic::ReconstructionGeometryUtils::get_feature_handle_ptr` and `get_feature_ref`, so the templates work for any reconstruction-geometry class those utilities understand. `File::Reference` is the identity of an input file throughout; groups and referenced-file lists hold raw `const File::Reference *` and compare them by pointer.
+
+The pipeline a caller runs is fixed and each step feeds the next. `get_files_referenced_by_geometries` builds the `feature_handle_to_collection_map_type` — the index from every feature handle in the active reconstructable files to its file plus a global ordinal — and from it derives the deduplicated list of files the exported geometries actually came from, which exporters write into the output as provenance. `group_reconstruction_geometries_with_their_feature` then uses that map's ordinals to sort, so the export order reproduces the order features appear in their collections rather than the order the reconstruction produced them; `group_feature_geom_groups_with_their_collection` regroups those per-feature groups under their file. `get_output_filenames` finally turns each group into an output path, either flat (`<collection>_<export>`) or one directory per input collection, which is what the export dialogs' "separate directory per input file" option selects.
 
 ## Declared types
 
@@ -84,9 +86,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReconstructionGeometryExportImpl tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Nothing here owns anything. The groups, the map and the referenced-file list all hold raw `const File::Reference *` and raw `const ReconstructionGeometryType *`, and `SortByFeatureOrderInCollections` holds a *reference* to the map. All of it is valid only for the duration of one export call, while the caller's files and reconstruction stay alive; none of these structures may outlive the export or be cached across reconstruction times. `feature_handle_to_collection_map_type` is keyed on raw `FeatureHandle *`, so it is likewise invalidated by anything that destroys features.
+
+The map is also the only definition of export order, and it is built by walking `reconstructable_files` in the order given and assigning a single monotonically increasing `feature_order` *across* all files. Pass the files in a different order and the export order changes. Features whose collection weak-ref is invalid are skipped entirely, so they get no ordinal and no entry.
+
+Silent drops are the norm on the read side too, and this is the behaviour most likely to surprise. `get_unique_list_of_referenced_files` and `group_reconstruction_geometries_with_their_feature` both `continue` past a geometry whose feature cannot be recovered or is absent from the map, and `group_feature_geom_groups_with_their_collection` skips any feature group not found in the map. A geometry reconstructed from a feature that is not in one of the `reconstructable_files` passed in therefore vanishes from the export with no error and no warning.
+
+`SortByFeatureOrderInCollections` is used with `std::stable_sort`, deliberately — the comment says so — so that the relative order of several geometries belonging to the *same* feature is preserved. Do not switch it to `std::sort`. Its comparator has an ordering quirk worth knowing: geometries with no recoverable feature are compared by the `boost::optional` values themselves, and geometries missing from the map sort before those present, so unmapped entries cluster at the front of the sorted vector even though they are then skipped during grouping. The grouping loop relies on the sort having put same-feature geometries adjacent — it starts a new `FeatureGeometryGroup` only when the feature ref differs from the previous one, so a non-adjacent repeat of a feature would produce two groups for it.
+
+`group_feature_geom_groups_with_their_collection` finds a collection's group with `std::find_if` over a `std::list`, which is linear per feature group; that is fine for a handful of loaded files but is quadratic in the number of *distinct* collections. It appends to `grouped_features_seq` without clearing it, as do the other output parameters here, so pass in empty containers.
+
+`build_folder_structure_filename` has a side effect its sibling does not: it creates the `<export_path>/<collection>/` directory if missing and throws `ErrorOpeningFileForWritingException` when that fails. So `get_output_filenames` is not a pure name computation when `export_separate_output_directory_per_input_file` is true — calling it creates directories on disk and can throw. Collection names come from `QFileInfo::completeBaseName()` of the input file, so two input files with the same base name in different directories collide onto the same output path.
+
+The MSVC pragmas at the top are load-bearing for the Windows build rather than incidental: warning 4503 (decorated name length exceeded) is disabled because of the deeply nested template instantiations these `std::list< FeatureGeometryGroup<...> >` types produce, and 4181 is suppressed around the Boost.Lambda includes used by the sort in `get_unique_list_of_referenced_files`.
 
 ## Used by
 

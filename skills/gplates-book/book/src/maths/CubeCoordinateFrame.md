@@ -9,9 +9,44 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/CubeCoordinateFrame tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+GPlates covers the globe by inscribing the unit sphere in a cube and attaching a
+quad tree to each of the six faces. This namespace is the single definition of
+what that cube *is*: which face is which, which way its local x and y axes point,
+where its eight corners and twelve edges are, and how a node in one face's quad
+tree is addressed from a neighbouring face's frame. It is a convention rather
+than an algorithm, and it exists precisely so there is only one of it — raster
+tiling (`GLCubeSubdivision`, `GLMultiResolutionCubeMesh`, `GLCubeMeshGenerator`)
+and geometry partitioning (`CubeQuadTreePartition`, `CubeQuadTreeLocation`) must
+agree face-for-face and axis-for-axis, or a query such as "which reconstructed
+polygons cover this raster tile" silently indexes into the wrong part of the
+globe. The axis directions are the ones 3D graphics APIs use for cube map
+textures, so the same frame serves both the CPU-side partition and the GPU-side
+cube map.
+
+Everything is implemented as constant lookup tables in an anonymous namespace in
+the `.cc`, behind free functions that do nothing but index them. The three
+structs listed above are those tables' element types — they are file-local, not
+API. `transform_into_cube_face_coordinate_frame()` is a permutation of the three
+components with a sign flip, driven by `CUBE_FACE_COORDINATE_TRANSFORMS`, rather
+than a 3x3 matrix multiply, and `get_cube_face_and_transformed_position()` goes
+further: it picks the face from the largest absolute component and then writes
+the permutation out by hand in each of the eight branches, because that beat
+going through the table when profiled. Because a signed permutation preserves
+length, the result is fed into `UnitVector3D` with the validity check disabled.
+
+The corner and edge tables give every corner and every edge one global index
+shared by all the faces that touch it, so code walking a face boundary
+(mesh generation, loose-node intersection) can identify the *same* corner from
+either side. Note that the corners are on the cube — side length two, so it
+bounds the unit sphere — not on the sphere; `get_projected_cube_corner()` is the
+normalised version. `get_cube_quad_tree_node_location_relative_to_cube_face()`
+sits at the other end of the file and is a different kind of thing: a 2x3 integer
+affine transform per ordered face pair (36 of them) that re-expresses a quad tree
+node offset in a neighbouring face's frame, which is what lets a spatial
+partition test loose nodes for intersection across a cube edge. It works on node
+*centres* — offsets are doubled and incremented to `2n+1` before the transform
+and arithmetic-shifted back afterwards — which is why the result is signed and
+may legitimately be negative or beyond the face's own node range.
 
 ## Declared types
 
@@ -115,9 +150,47 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/CubeCoordinateFrame tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The tables are mutually redundant and nothing checks them.** Almost every array
+in the `.cc` carries a comment saying it must be kept in sync with another one.
+`CUBE_FACE_COORDINATES_FRAMES` (the axis vectors) and
+`CUBE_FACE_COORDINATE_TRANSFORMS` (the same information as a component index plus
+a sign) encode the same six frames twice; `CUBE_CORNER_INDICES`,
+`CUBE_EDGE_INDICES` and `CUBE_QUAD_TREE_NODE_LOCATIONS_TRANSFORMS` are all
+derived from that choice of frames, and `PROJECTED_CUBE_CORNERS` from
+`CUBE_CORNERS`. There is no assertion, no unit test in this file and no
+compile-time link between them: changing one axis direction and not the other
+four tables produces code that runs and gives wrong answers only at cube face
+boundaries. Treat the whole `.cc` as one artefact.
+
+**The local z-axis is the negative of the face normal.** It points from the face
+centre back towards the origin, so that the frame stays right-handed and matches
+the OpenGL convention of looking down negative z. This is why
+`get_cube_face_normal()` is implemented as the `Z_AXIS` of the *opposite* face,
+and it is the single easiest thing to get wrong when reading this code.
+
+**No bounds checking anywhere.** Every accessor indexes a fixed-size array
+directly with its argument. `NUM_FACES`, `NUM_AXES`, `NUM_CUBE_CORNERS` and
+`NUM_CUBE_EDGES` are counts, not valid values — passing `NUM_FACES` as a
+`CubeFaceType`, or an index computed from untrusted data, reads out of bounds
+without complaint.
+
+**Inputs must genuinely be unit vectors.**
+`transform_into_cube_face_coordinate_frame()` constructs its result with
+`check_validity` false, on the grounds that permuting and negating components
+cannot change the magnitude. A non-normalised input therefore propagates into a
+`UnitVector3D` that violates its own invariant.
+
+**Face selection on a boundary is arbitrary but deterministic.**
+`get_cube_face_and_transformed_position()` compares absolute components with
+strict `>`, so a position exactly on a cube edge or corner resolves to whichever
+branch the tie falls through to. Callers that partition data by face must accept
+that a point may sit on a face boundary and still land in exactly one face; they
+must not assume the choice matches any other geometric test.
+
+The tables are `const` and the functions are pure, so everything here is safe to
+call from multiple threads. `PROJECTED_CUBE_CORNERS` is dynamically initialised
+(it calls `Vector3D::get_normalisation()`), so as with any namespace-scope object
+do not read it from another translation unit's static initialiser.
 
 ## Used by
 

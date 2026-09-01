@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/AssertionFailureException tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the default exception type for `GPlatesGlobal::Assert`, and that is essentially all it is: a two-line subclass of `Exception` whose `write_message` writes the fixed text `"Assertion failure"`. The information that makes an assertion failure useful does not live in the class — it is the `GPlatesUtils::CallStack::Trace` that the caller passes through `GPLATES_ASSERTION_SOURCE`, which `Exception`'s constructor turns into a stored call-stack trace string. The class exists so that `Assert<AssertionFailureException>(condition, GPLATES_ASSERTION_SOURCE)` has something to instantiate, and so that the thrown object is distinguishable by type from an ordinary error.
+
+It sits at the "the program is broken" end of the `global` exception hierarchy, opposite `PreconditionViolationError` ("the caller passed something wrong") and alongside `AbortException` (thrown by `GPlatesGlobal::Abort`). None of these are meant to be caught by name: on release builds they propagate to the `try_catch` wrapper in `GPlatesGui::GPlatesQApplication`, which catches `GPlatesGlobal::Exception`, shows the message and the recorded trace in a `QMessageBox`, logs it, and calls `qFatal`. On debug builds `Assert` never constructs this type at all — it calls `Abort`, which fires `qFatal` directly so the native debugger keeps the real stack.
+
+You would touch this file only to change the wording of the message or to add state to assertion failures; in practice new exception types derive from `Exception` or `PreconditionViolationError` instead, and this one is used unmodified from several hundred call sites.
 
 ## Declared types
 
@@ -37,9 +39,10 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/AssertionFailureException tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The constructor signature is not free to change. `GPlatesGlobal::Assert` forwards `assert_location` as the first constructor argument of whatever exception type it is given, so every class in this hierarchy must take `const GPlatesUtils::CallStack::Trace &` first and any extra arguments after it.
+- The huge fan-in shown below is misleading as a coupling measure. Almost all of it is `#include "global/AssertionFailureException.h"` plus repeated `Assert<AssertionFailureException>(...)` calls; nothing depends on the class's interface beyond that one constructor.
+- On a `GPLATES_DEBUG` build (CMake `DEBUG` and `RELWITHDEBINFO` configurations) no instance is ever created, so anything you add here — extra state, a richer message — is invisible in exactly the builds a developer debugs with.
+- `write_message` is deliberately defined in the `.cc` rather than inline, which keeps `<ostream>` out of the header; `Exception::write_string_message` exists for the same reason.
 
 ## Used by
 

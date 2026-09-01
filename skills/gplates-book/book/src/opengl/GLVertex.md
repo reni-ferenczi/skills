@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertex tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit is the backend's catalogue of interleaved vertex layouts, together with
+the mechanism that teaches `GLVertexArray` how to read each of them. The pattern
+is one struct plus one full specialisation of the function template
+`bind_vertex_buffer_to_vertex_array<VertexType>`: the struct declares the layout
+in C++, and the specialisation in `GLVertex.cc` declares the same layout to
+OpenGL by calling `GLVertexArray::set_vertex_pointer`, `set_color_pointer` and
+`set_tex_coord_pointer` with `sizeof(VertexType)` as the stride and hand-computed
+byte offsets for each field. The primary template is declared but intentionally
+never defined, so using a vertex type that has no specialisation is a link error
+rather than a silently wrong binding.
+
+That indirection is what makes the rest of the backend's vertex plumbing
+generic. `GLVertexArray::set_vertex_array_data` and
+`compile_vertex_array_draw_state` are templated on `VertexType`: a caller hands
+over a `std::vector<VertexType>` and a vector of indices, and the buffers, the
+attribute bindings and the compiled `GLCompiledDrawState` all follow from the one
+type argument. Consequently almost nothing in the backend writes attribute
+bindings by hand — it typedefs one of these structs instead, as
+`GPlatesGui::LayerPainter`, `GPlatesGui::Stars`, `GLFilledPolygonsGlobeView`,
+`GLFilledPolygonsMapView` and `GLMultiResolutionRaster` all do.
+
+The bindings use the fixed-function client-state arrays (`GL_VERTEX_ARRAY`,
+`GL_COLOR_ARRAY`, and per-texture-unit coordinate arrays), not generic vertex
+attribute slots, which is why the shader-based paths see this data as
+`gl_Vertex`, `gl_Color` and `gl_TexCoord[n]`. `GLTextureTangentSpaceVertex` is
+the clearest consequence of that choice: having no generic attributes available,
+it ships a per-vertex tangent frame as three 3-component texture coordinate sets
+on units 1, 2 and 3, which `render_raster_fragment_shader.glsl` reads back as
+`gl_TexCoord[1..3]` to rotate a normal-map sample out of tangent space.
+`GLMultiResolutionRaster` uses it for both its normal-map and its scalar-field
+depth-layer meshes.
 
 ## Declared types
 
@@ -128,9 +156,34 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertex tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- The layout is duplicated in two places that nothing checks against each other:
+  the field order in the header, and the literal `offset + N * sizeof(GLfloat)`
+  arithmetic in the specialisation in `GLVertex.cc`. Adding, removing or
+  reordering a field means updating every offset after it by hand. Get it wrong
+  and you get garbled geometry at runtime, not a compile error.
+- Those offsets assume the compiler inserts no padding, and in particular that
+  `GPlatesGui::rgba8_t` is exactly four bytes — the colour is bound as four
+  `GL_UNSIGNED_BYTE` components immediately after the floats. `rgba8_t` carries a
+  comment warning against multiple inheritance for exactly this reason; keep it
+  a four-byte union.
+- None of these structs initialise anything in their default constructor, by
+  design, because they are bulk-filled into `std::vector` and uploaded. A
+  default-constructed vertex that is never assigned uploads garbage. `rgba8_t`'s
+  default constructor behaves the same way.
+- The `UnitVector3D` and `Vector3D` constructors call `.dval()` and store the
+  result in `GLfloat`, so the `maths` module's double-precision positions are
+  truncated to single precision here. This is the boundary at which that
+  happens; do not expect exact geometry to survive a round trip through a vertex
+  buffer.
+- `bind_vertex_buffer_to_vertex_array` records into the vertex array through
+  `GLRenderer`, so it needs an active renderer, and the `offset` argument must
+  satisfy the alignment requirements of the vertex type. Multiple buffers can be
+  bound to one vertex array when attributes are split across streams, in which
+  case each `VertexType` describes only that stream's subset. The vertex buffer's
+  contents may be filled before or after the binding call.
+- To add a vertex type you need both halves: a `template <>` declaration next to
+  the struct in the header and the matching definition in the `.cc`. Only
+  declaring the struct compiles fine and fails at link time.
 
 ## Used by
 

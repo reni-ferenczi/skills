@@ -8,9 +8,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/WeakReferenceCallback tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header defines the model's change-notification interface — the one place where
+code outside `GPlatesModel` learns that a feature or a feature collection was edited,
+deleted, undeleted or destroyed, without polling and without Qt signals. You
+subclass `WeakReferenceCallback<H>` for `H` = `FeatureHandle` or
+`FeatureCollectionHandle` (or their `const` forms), override only the events you care
+about, and hand an instance to `WeakReference<H>::attach_callback`. Every override
+has an empty default body, so a subclass that only wants deactivation ignores the
+rest. The concrete subclasses are small local classes that forward into a larger
+object: `FeatureFocus` unfocuses a feature that was deactivated,
+`UnsavedChangesTracker` marks the document dirty on modification, and
+`ApplicationState`, `ReconstructGraph` and `FeatureCollectionFileState` each keep a
+nested callback that reacts to feature-collection changes.
+
+The delivery path runs the other way round from the registration. `BasicHandle`
+raises an event by constructing one of the `WeakReferencePublisher*Visitor` classes
+in `WeakReferenceVisitors.h` and passing it to
+`WeakObserverPublisher::apply_weak_observer_visitor`, which walks the intrusive chain
+of `WeakObserver` links. Each `WeakReference` in that chain is visited, and only then
+does it check whether it carries a callback and, if so, build the matching event
+object and invoke the virtual. So a callback is reached through *its* weak reference:
+if the weak reference goes out of scope, the callback is never called again, and the
+`reference` argument passed to every override is the weak reference through which the
+notification arrived.
+
+The five event types are almost entirely empty — they exist to give each virtual a
+distinct, extensible parameter type rather than to carry data. Only two say
+anything. `WeakReferencePublisherModifiedEvent` carries a bit-pair distinguishing a
+change to the publisher itself from a change to one of its children, and
+`WeakReferencePublisherAddedEvent` carries the iterators of the newly added children,
+using its private `Traits` specialisation to pick `const_iterator` when `H` is const.
+Note the vocabulary difference the model relies on: *deactivated* means conceptually
+deleted but still present for undo, while *about to be destroyed* means the C++
+object is going away, typically because the undo stack was purged.
 
 ## Declared types
 
@@ -82,9 +112,40 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/WeakReferenceCallback tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Ownership.** `WeakReferenceCallback` derives from
+  `GPlatesUtils::ReferenceCount` and is held by `WeakReference` through a
+  `boost::intrusive_ptr`, so the weak reference co-owns the callback and a callback
+  outlives the scope it was created in. The callbacks in the tree are typically
+  file-local classes holding a raw pointer or reference to a long-lived owner
+  (`FeatureFocus`, `UnsavedChangesTracker`); nothing stops that owner from dying
+  first, so the weak reference and its owner must have the same lifetime.
+- **The callback is shared, not cloned, on copy.** `WeakReference::operator=` copies
+  the `intrusive_ptr`, so two weak references end up invoking the same callback
+  object — usually harmless, occasionally a surprise if the callback assumes it has
+  one subscriber. The `WeakReference<H>` to `WeakReference<const H>` conversion
+  operator, by contrast, deliberately drops the callback.
+- **Do not store the event objects.** They are stack temporaries built inside
+  `WeakReference::publisher_*` and passed by const reference; worse,
+  `WeakReferencePublisherAddedEvent` holds `d_new_children` as a *reference* to a
+  container owned by the caller. Copy what you need out of the event before
+  returning.
+- **`NotificationGuard` changes what you receive, not just when.** While a guard is
+  held, `BasicHandle` accumulates notifications and `flush_pending_notifications`
+  replays a coalesced version: separate publisher and child modifications arrive as a
+  single `PUBLISHER_AND_CHILD_MODIFIED`, additions arrive as one batch, and a
+  deactivation followed by a reactivation cancels out entirely. A callback that
+  counts events, or that expects `publisher_added` once per child, will be wrong
+  under a guard. `publisher_about_to_be_destroyed` is the exception — it is always
+  sent immediately, guard or not.
+- **State during destruction.** `BasicHandle::~BasicHandle` sends
+  `publisher_about_to_be_destroyed` as its first act, so `reference.handle_ptr()` is
+  still non-NULL while the derived handle is already partly destroyed. Treat that
+  callback as "let go of this handle now", not as a chance to read it.
+- Overrides must match the base signatures exactly, including the `const`s; because
+  the bases are non-pure with empty bodies, a mistyped override compiles cleanly and
+  simply never fires.
+- No synchronisation: callbacks run synchronously, on the thread that performed the
+  model edit, inside the mutating call.
 
 ## Used by
 

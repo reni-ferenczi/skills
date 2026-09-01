@@ -9,9 +9,45 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLBuffer tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLBuffer` is the rendering backend's abstraction of an OpenGL buffer object — a
+block of storage the GPU reads vertices, vertex indices or pixel data out of, or
+writes pixel data into. The interface deliberately mirrors the ARB
+buffer-object entry points (`glBufferData`, `glBufferSubData`,
+`glGetBufferSubData`, `glMapBuffer`, `glUnmapBuffer`) so that client code reads
+like OpenGL code, with one difference: every call takes a `GLRenderer &` rather
+than depending on whatever is currently bound. The renderer owns binding state,
+and the buffer-object implementation binds itself and restores the previous
+binding around each direct GL call it makes.
+
+The class exists because GPlates still supports drivers without
+`GL_ARB_vertex_buffer_object` or `GL_ARB_pixel_buffer_object`, and `create` is
+the single place that decision is made. It asks `GLCapabilities` (through
+`GLRenderer::get_capabilities`) about each buffer type the caller named in the
+`buffers_type` bitset, and returns a `GLBufferObject` only if every requested
+type is supported; otherwise it returns a `GLBufferImpl`, which simulates the
+buffer in client-side memory. This is why callers must declare their intended
+buffer types up front instead of at first use: a buffer meant to be filled by a
+pixel read and then drawn as vertices has to fall back if either extension is
+missing, and by then it is too late to change representation. Everything layered
+on top — `GLVertexBuffer`, `GLVertexElementBuffer`, `GLPixelBuffer` and their
+`*Impl`/`*Object` pairs, and through them `GLRenderer` and the painters — is
+written against this interface and never against the choice.
+
+The three mapping families are the substance of the design, and they differ in
+how they avoid stalling on the GPU rather than in what they write.
+`gl_map_buffer_static` is always available and may block if the GPU is still
+reading the buffer; `gl_map_buffer_dynamic` maps for write and lets the caller
+declare, through `gl_flush_buffer_dynamic`, exactly which sub-ranges it touched;
+`gl_map_buffer_stream` hands back only the still-unwritten tail of the buffer so
+the caller can append and draw repeatedly, orphaning the whole allocation only
+when the tail runs out. The two `asynchronous_*_supported` predicates report
+whether the underlying extensions can actually deliver that behaviour — they
+never gate the calls, they only tell the caller whether the fast path exists.
+The buffer-allocation observer at the end of the header is render-framework
+plumbing rather than a client feature: `Implementation::GLVertexAttributeBuffer`
+in `GLStateSets` uses it to notice that `gl_buffer_data` has been called since
+vertex attribute pointers were last submitted, because ATI drivers were observed
+to need those pointers rebound after every `glBufferData`.
 
 ## Declared types
 
@@ -103,9 +139,36 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLBuffer tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Ownership is `boost::shared_ptr` rather than the `non_null_intrusive_ptr` used
+almost everywhere else in the tree, purely so buffers can be held by
+`GPlatesUtils::ObjectCache`. The base also derives from
+`boost::enable_shared_from_this`, and `GLBufferObject` calls `shared_from_this()`
+on every data-path method in order to bind itself through the renderer — so an
+instance must genuinely be owned by a `shared_ptr` before any of those methods
+run. `create_as_unique_ptr` exists so the factory chain can compose without an
+intermediate shared count; in this tree every one of those unique pointers is
+immediately `release()`d into a `shared_ptr` by the matching `create`.
+
+The size is zero until the first `gl_buffer_data`, and every sub-data, flush and
+stream call asserts that its range fits within it — a violation is a
+`PreconditionViolationError`, not a GL error. `gl_buffer_data` with a NULL data
+pointer is meaningful: it allocates uninitialised storage, and it is the
+orphaning idiom the mapping documentation refers to. `gl_buffer_data` is also
+the only operation that counts as an allocation for
+`has_buffer_been_allocated_since`; sub-data and mapping do not.
+
+`MapBufferScope` does not map in its constructor — it only guarantees the
+unmap. Its map and unmap calls must be matched and non-nested (it asserts that
+no map is outstanding when you map, and that one is when you flush or unmap),
+and its destructor unmaps only if one is still outstanding, swallowing any
+exception and discarding the `GLboolean` result. If the "contents were
+corrupted" return value matters to you — it reports events such as a video
+memory loss across an ALT+TAB — call `gl_unmap_buffer` explicitly rather than
+letting the scope do it.
+
+Unlike `glMapBuffer`, the mapping methods throw on failure instead of returning
+NULL, so callers must not test the returned pointer; they must be prepared for
+an exception instead.
 
 ## Used by
 

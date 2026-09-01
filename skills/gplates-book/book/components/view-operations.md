@@ -20,7 +20,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [DeleteFeatureOperation](../src/view-operations/DeleteFeatureOperation.md) | 3 | 130 | 0 | Removes the currently focused feature from its parent collection |
 | [DeleteVertexGeometryOperation](../src/view-operations/DeleteVertexGeometryOperation.md) | 3 | 692 | 7 | Responds to user clicks on vertices to delete them |
 | [FocusedFeatureGeometryManipulator](../src/view-operations/FocusedFeatureGeometryManipulator.md) | 3 | 728 | 0 | Bridges geometry editing in GeometryBuilder back to the feature model |
-| [GeometryBuilder](../src/view-operations/GeometryBuilder.md) | 1 | 1901 | 555 | (pending) |
+| [GeometryBuilder](../src/view-operations/GeometryBuilder.md) | 1 | 1901 | 555 | mutable, observable point-sequence model behind geometry digitisation and vertex editing, with memento undo |
 | [GeometryBuilderUndoCommands](../src/view-operations/GeometryBuilderUndoCommands.md) | 2 | 473 | 5 | QUndoCommand wrappers around GeometryBuilder point/type edits for the digitisation undo stack |
 | [GeometryOperation](../src/view-operations/GeometryOperation.md) | 2 | 209 | 19 | Abstract base and highlight-signal plumbing shared by the canvas-tool geometry-editing operations |
 | [GeometryOperationUndo](../src/view-operations/GeometryOperationUndo.md) | 3 | 225 | 5 | Coordinates undo/redo for geometry operations and canvas tool state |
@@ -32,24 +32,24 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [RenderedArrowedPolyline](../src/view-operations/RenderedArrowedPolyline.md) | 3 | 111 | 7 | Renders a polyline with arrows for globe and map display |
 | [RenderedCircleSymbol](../src/view-operations/RenderedCircleSymbol.md) | 2 | 119 | 79 | Circle-symbol RenderedGeometry whose hit-testing is delegated entirely to its centre point |
 | [RenderedColouredEdgeSurfaceMesh](../src/view-operations/RenderedColouredEdgeSurfaceMesh.md) | 2 | 230 | 95 | A wireframe globe mesh with per-vertex or per-edge deferred colouring |
-| [RenderedColouredMultiPointOnSphere](../src/view-operations/RenderedColouredMultiPointOnSphere.md) | 3 | 114 | 9 | (pending) |
-| [RenderedColouredPolygonOnSphere](../src/view-operations/RenderedColouredPolygonOnSphere.md) | 3 | 117 | 3 | (pending) |
-| [RenderedColouredPolylineOnSphere](../src/view-operations/RenderedColouredPolylineOnSphere.md) | 3 | 116 | 3 | (pending) |
+| [RenderedColouredMultiPointOnSphere](../src/view-operations/RenderedColouredMultiPointOnSphere.md) | 3 | 114 | 9 | Rendered multi-point geometry where each point carries its own colour |
+| [RenderedColouredPolygonOnSphere](../src/view-operations/RenderedColouredPolygonOnSphere.md) | 3 | 117 | 3 | Rendered polygon outline where exterior-ring points carry individual colours |
+| [RenderedColouredPolylineOnSphere](../src/view-operations/RenderedColouredPolylineOnSphere.md) | 3 | 116 | 3 | Rendered polyline where each point carries its own colour |
 | [RenderedColouredTriangleSurfaceMesh](../src/view-operations/RenderedColouredTriangleSurfaceMesh.md) | 2 | 272 | 39 | The filled, coloured triangle-mesh counterpart to the coloured edge mesh |
-| [RenderedCrossSymbol](../src/view-operations/RenderedCrossSymbol.md) | 3 | 111 | 5 | (pending) |
-| [RenderedEllipse](../src/view-operations/RenderedEllipse.md) | 3 | 132 | 4 | (pending) |
+| [RenderedCrossSymbol](../src/view-operations/RenderedCrossSymbol.md) | 3 | 111 | 5 | Rendered north-south oriented cross symbol at a point on the sphere |
+| [RenderedEllipse](../src/view-operations/RenderedEllipse.md) | 3 | 132 | 4 | Rendered ellipse on the sphere with orientation, axes and colour |
 | [RenderedGeometry](../src/view-operations/RenderedGeometry.md) | 2 | 177 | 358 | Copyable pimpl handle to a RenderedGeometryImpl, the value type passed around rendering |
-| [RenderedGeometryCollection](../src/view-operations/RenderedGeometryCollection.md) | 1 | 1660 | 694 | (pending) |
-| [RenderedGeometryCollectionVisitor](../src/view-operations/RenderedGeometryCollectionVisitor.md) | 3 | 150 | 0 | (pending) |
-| [RenderedGeometryFactory](../src/view-operations/RenderedGeometryFactory.md) | 1 | 1342 | 244 | (pending) |
+| [RenderedGeometryCollection](../src/view-operations/RenderedGeometryCollection.md) | 1 | 1660 | 694 | the scene graph joining app-logic and canvas-tool output to the globe and map painters |
+| [RenderedGeometryCollectionVisitor](../src/view-operations/RenderedGeometryCollectionVisitor.md) | 3 | 150 | 0 | Visitor pattern for traversing a rendered geometry collection and its layers |
+| [RenderedGeometryFactory](../src/view-operations/RenderedGeometryFactory.md) | 1 | 1342 | 244 | the only place naming the concrete RenderedGeometry implementation types |
 | [RenderedGeometryImpl](../src/view-operations/RenderedGeometryImpl.md) | 2 | 88 | 53 | Abstract interface every concrete rendered-geometry implementation derives from |
-| [RenderedGeometryLayer](../src/view-operations/RenderedGeometryLayer.md) | 1 | 1281 | 186 | (pending) |
-| [RenderedGeometryLayerVisitor](../src/view-operations/RenderedGeometryLayerVisitor.md) | 3 | 99 | 0 | (pending) |
+| [RenderedGeometryLayer](../src/view-operations/RenderedGeometryLayer.md) | 1 | 1281 | 186 | one drawable ordering unit, storing rendered geometries in both draw order and a spatial partition |
+| [RenderedGeometryLayerVisitor](../src/view-operations/RenderedGeometryLayerVisitor.md) | 3 | 99 | 0 | Visitor interface for traversing RenderedGeometryLayer and child RenderedGeometry objects |
 | [RenderedGeometryParameters](../src/view-operations/RenderedGeometryParameters.md) | 2 | 481 | 199 | Live, signal-emitting drawing parameters for canvas tools plus fixed geometry-operation constants |
 | [RenderedGeometryProximity](../src/view-operations/RenderedGeometryProximity.md) | 2 | 391 | 40 | Free functions doing hit-testing over rendered-geometry layers and collections |
 | [RenderedGeometryUtils](../src/view-operations/RenderedGeometryUtils.md) | 2 | 832 | 46 | Helper functions for bulk layer activation, reconstruction-geometry extraction and layer visiting |
 | [RenderedGeometryVisitor](../src/view-operations/RenderedGeometryVisitor.md) | 2 | 247 | 133 | The visitor interface RenderedGeometry dispatches to, one method per concrete geometry kind |
-| [RenderedMultiPointOnSphere](../src/view-operations/RenderedMultiPointOnSphere.md) | 3 | 99 | 4 | (pending) |
+| [RenderedMultiPointOnSphere](../src/view-operations/RenderedMultiPointOnSphere.md) | 3 | 99 | 4 | Rendered geometry wrapper for MultiPointOnSphere with color and point size properties |
 | [RenderedMultiReconstructionGeometry](../src/view-operations/RenderedMultiReconstructionGeometry.md) | 3 | 84 | 0 | Wrapper combining multiple ReconstructionGeometry objects with a rendered representation |
 | [RenderedPointOnSphere](../src/view-operations/RenderedPointOnSphere.md) | 3 | 99 | 0 | Rendered geometry wrapper for a point on a sphere |
 | [RenderedPolygonOnSphere](../src/view-operations/RenderedPolygonOnSphere.md) | 3 | 149 | 0 | Rendered geometry wrapper for a polygon on a sphere with fill support |
@@ -66,7 +66,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [RenderedSubductionTeethPolyline](../src/view-operations/RenderedSubductionTeethPolyline.md) | 2 | 139 | 16 | Rendered polyline decorated with subduction teeth on one side |
 | [RenderedTangentialArrow](../src/view-operations/RenderedTangentialArrow.md) | 3 | 192 | 4 | Rendered geometry wrapper for directional arrows with constant projected size |
 | [RenderedTriangleSymbol](../src/view-operations/RenderedTriangleSymbol.md) | 3 | 122 | 0 | Rendered geometry wrapper for equilateral triangle symbols at a point |
-| [ScalarField3DRenderParameters](../src/view-operations/ScalarField3DRenderParameters.md) | 1 | 938 | 663 | (pending) |
+| [ScalarField3DRenderParameters](../src/view-operations/ScalarField3DRenderParameters.md) | 1 | 938 | 663 | shared parameter bundle for 3D scalar field visualisation, from options widget to GLSL uniforms |
 | [SplitFeatureGeometryOperation](../src/view-operations/SplitFeatureGeometryOperation.md) | 2 | 975 | 13 | Canvas-tool GeometryOperation that splits a feature's geometry at a clicked vertex |
 | [SplitFeatureUndoCommand](../src/view-operations/SplitFeatureUndoCommand.md) | 3 | 448 | 1 | Undo command that splits a polyline feature into two at a specified point |
 | [UndoRedo](../src/view-operations/UndoRedo.md) | 2 | 717 | 42 | Singleton owning the shared QUndoGroup/stacks and cross-command undo merging |

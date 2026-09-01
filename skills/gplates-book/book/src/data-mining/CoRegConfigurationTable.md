@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/CoRegConfigurationTable tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the declarative description of a co-registration run: what to co-register against what, and how to collapse the result. One `ConfigurationTableRow` is one association — a target `GPlatesAppLogic::Layer` to sample, a spatial filter described by a `CoRegFilter::Config` (in practice `RegionOfInterestFilter::Config`, carrying a range in km), the name and `AttributeType` of the attribute to extract, and a `ReducerType` that reduces the many matched target features down to one value. `DataSelector` copies the table, then for each reconstructed seed feature walks it row by row and writes one cell per row into the output `DataTable`; the table therefore doubles as the column schema of the result, which is why `DataSelector::populate_table_header()` derives every column heading from `assoc_name`, `attr_name` and `reducer_type`.
+
+The reason this is a class and not a `std::vector<ConfigurationTableRow>` is `optimize()`. `group_and_sort()` first stamps each row with its original position in `index`, then reorders the rows: grouped by target layer, within that grouped by `filter_cfg->filter_name()`, and within that sorted by the filter config itself — note that `compare_filter` passes its arguments to `CoRegFilter::Config::operator<` reversed, so each group ends up widest-first. That ordering exists to feed `CoRegFilterCache`, whose `find()` only reuses a cached result set when the requested config compares *less than* a cached one, i.e. when the new region of interest is contained in an already-computed one. Visiting the widest region first means every narrower row on the same layer re-filters the previous, smaller result instead of the full set of reconstructed target features. The `index` stamped before the sort is what keeps the user's column order intact despite the reordering: results and headers are written at `row.index + DataTable::data_index()`, never at the row's position in the table.
+
+Around the unit, `GPlatesAppLogic::CoRegistrationLayerParams` holds the authoritative table for a co-registration layer, `GPlatesQtWidgets::CoRegistrationLayerConfigurationDialog` rebuilds it from the widgets and optimises it before setting it back, and `GPlatesAppLogic::CoRegistrationLayerProxy::set_current_coregistration_configuration_table()` compares the incoming table with `operator==` to decide whether to drop its cached results and invalidate its subject token — so table equality is the change-detection mechanism for the whole layer. The `GPlatesScribe::TranscribeContext` specialisation is the hook that makes rows storable in a project or session: a `GPlatesAppLogic::Layer` is a weak handle with no serialisable identity, so `GPlatesPresentation::TranscribeSession` installs a context holding the session's layer sequence and the row transcribes an index into it.
 
 ## Declared types
 
@@ -91,9 +93,19 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/CoRegConfigurationTable tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Optimised means frozen, but only partly enforced.** Once `optimize()` has set `d_optimized`, the non-`const` `begin()`, `end()`, `clear()` and `push_back()` throw `CoRegCfgTableOptimized`. `group_and_sort()` can still use the non-`const` iterators because `optimize()` sets the flag only after it returns. The `const` overloads and *both* `operator[]` overloads are unguarded, so the non-`const` `operator[]` is an open hole through which an optimised table can still be mutated — including its `index`, on which the result-column mapping depends. `d_optimized` is copied by the implicit copy constructor, so a copy of an optimised table is frozen too; the dialog and `CoRegistrationLayerTask` both build a *fresh* table and re-optimise rather than editing an existing one. `DataSelector`'s constructor calls `optimize()` on its private copy if the caller had not, so anything reaching `DataSelector` is grouped and indexed.
+
+**`CoRegCfgTableOptimized` cannot be caught as a `GPlatesGlobal::Exception`.** The class declaration omits `public:` on its base, so the inheritance is private. Nothing in the tree catches this type, and a `catch (GPlatesGlobal::Exception &)` will not intercept it either — a stray write to an optimised table escapes to the top level.
+
+**Row equality can throw, and can dereference null.** `ConfigurationTableRow::operator==` dereferences `filter_cfg` unconditionally, and the default constructor leaves that `shared_ptr` null. Worse, `CoRegFilter::Config::operator==` and `operator<` are implemented (in `RegionOfInterestFilter::Config`, for example) to throw `GPlatesGlobal::LogException` when the other config is of a different concrete type — so comparing two tables whose rows use different filter types raises rather than returning `false`. `group_and_sort()` sidesteps this by only applying `compare_filter` within an `equal_range` of identical `filter_name()`.
+
+**`index` participates in equality.** Because `operator==` compares the row vectors elementwise and `index` is only assigned by `group_and_sort()`, a table that has not been optimised will not compare equal to an otherwise identical one that has. Every path that hands a table to a client — the dialog, the layer task and the load-side `transcribe()` — calls `optimize()` for exactly that reason. The grouping key `compare_layer` uses `GPlatesAppLogic::Layer::operator<`, which compares `boost::weak_ptr` addresses; that is fine as a grouping key within one process but means the resulting row order is arbitrary and not reproducible across runs, so equality is only meaningful between tables built in the same session.
+
+**Transcription is lenient on load and silent on a bad save.** `CoRegConfigurationTable::transcribe()` skips rows that fail to load and carries on, so a project can come back with fewer associations than were saved — for instance when a row's target layer failed to load, which the row's own `transcribe()` reports as `TRANSCRIBE_INCOMPATIBLE`. `index` is deliberately not transcribed; it is re-derived by the `optimize()` at the end of the load. A row also requires a `TranscribeContext<ConfigurationTableRow>` to be in scope, and on the save side, if `target_layer` is not found in that context's layer list, nothing is written for it at all and the row will fail to load back.
+
+**Enum string ids are part of the file format.** The `transcribe()` overloads for `AttributeType` and `ReducerType` in `Types.h` map each enumerator to a literal string; the header warns that changing those strings breaks backward and forward compatibility of projects and sessions, even if the C++ enumerator is renamed. New enumerators must be added there as well as to the enum.
+
+**Raster rows take a different path.** `raster_level_of_detail` and `raster_fill_polygons` only apply when `attr_type` is `CO_REGISTRATION_RASTER_ATTRIBUTE`, and `DataSelector` skips those rows in its per-seed loop entirely — it batches them per raster layer in a separate code path, so they never touch `CoRegFilterCache` and gain nothing from the widest-first ordering.
 
 ## Used by
 

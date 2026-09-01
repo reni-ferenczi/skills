@@ -16,7 +16,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [AdjustFittedPoleEstimate](../src/canvas-tools/AdjustFittedPoleEstimate.md) | 2 | 1284 | 18 | Canvas tool for dragging the Hellinger tool's initial 1-2 and 1-3 pole estimates |
 | [BuildTopology](../src/canvas-tools/BuildTopology.md) | 2 | 401 | 38 | Canvas tool for picking features to add as sections of a topological line/boundary/network |
-| [CanvasTool](../src/canvas-tools/CanvasTool.md) | 1 | 281 | 534 | (pending) |
+| [CanvasTool](../src/canvas-tools/CanvasTool.md) | 1 | 281 | 534 | view-agnostic base for interactive canvas tools, adapted onto the globe and map canvases |
 | [CanvasToolAdapterForGlobe](../src/canvas-tools/CanvasToolAdapterForGlobe.md) | 2 | 622 | 59 | Adapts a widget-agnostic CanvasTool to the GlobeCanvasTool globe event interface |
 | [CanvasToolAdapterForMap](../src/canvas-tools/CanvasToolAdapterForMap.md) | 2 | 662 | 23 | Adapts a widget-agnostic CanvasTool to the MapCanvasTool map event interface |
 | [ChangeLightDirectionGlobe](../src/canvas-tools/ChangeLightDirectionGlobe.md) | 2 | 460 | 11 | Globe canvas tool for dragging the light-direction arrow |

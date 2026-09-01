@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/ScalarField3DRenderParameters tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A plain value object holding every user-adjustable knob for 3D scalar field
+visualisation, and the shared vocabulary between four subsystems that otherwise
+have no business knowing about each other. `GPlatesQtWidgets::ScalarField3DLayerOptionsWidget`
+writes it, `GPlatesPresentation::ScalarField3DVisualLayerParams` stores it by
+value as the visual layer's persistent state,
+`RenderedGeometryFactory::create_rendered_resolved_scalar_field_3d` copies it into
+a `RenderedResolvedScalarField3D`, and `GPlatesOpenGL::GLScalarField3D` finally
+turns the individual fields into GLSL uniforms for the ray-casting shaders. It
+lives in `view-operations` rather than in `gui` or `opengl` because it is the one
+piece all of them must agree on and none of them may depend on another for.
+
+The nesting is not decoration — the nested structs are the units the renderer
+actually consumes. `GLScalarField3D::render_isosurface` takes
+`IsovalueParameters`, `DeviationWindowRenderOptions`, `DepthRestriction` and
+`QualityPerformance` as separate arguments rather than the aggregate, so each
+group corresponds to a coherent block of shader state. The four enums select
+which of those blocks are live: `RenderMode` chooses isosurface versus cross
+sections, and the two colour-mode enums decide whether the scalar palette, the
+gradient palette or plain depth drives colouring — which is why both
+`RemappedColourPaletteParameters` members are always present even though at most
+one is in use at a time.
+
+The other half of this file exists for session and project persistence. Every
+nested struct is a `GPlatesScribe::Access` friend with its own `transcribe`, and
+the four free `transcribe` overloads map the enums onto stable string ids through
+`transcribe_enum_protocol`. The deliberate design here is graceful degradation:
+each field is transcribed independently and, on failure, silently reset from a
+static default-constructed instance, so a project written by a different GPlates
+version loads with whatever it understood and defaults for the rest instead of
+failing outright. `d_shader_test_variables` is not part of any of this — it is an
+acknowledged development hook for poking arbitrary floats at the scalar field
+shader.
 
 ## Declared types
 
@@ -79,9 +108,42 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/ScalarField3DRenderParameters tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Value semantics, no observers.** Copyable, no signals, no identity, no
+  ownership of anything. Mutating a copy changes nothing;
+  `ScalarField3DVisualLayerParams` is what actually notifies and triggers a
+  redraw, so a setter called on a temporary is a silent no-op.
+- **Adding an enumerator without updating `transcribe` breaks sessions.** The
+  header says so at each enum, and it is enforced only by that comment: the
+  `EnumValue` tables in the `.cc` are the complete wire vocabulary, and a value
+  missing from a table cannot be written or read. The string ids are the format —
+  renaming an *enumerator* is safe, changing its **string** is not, and neither is
+  reordering, since the ids are matched by name. The trailing `NUM_*` sentinels
+  are deliberately absent from the tables and must never be persisted.
+- **Transcription never fails, which cuts both ways.** Every nested `transcribe`
+  returns `TRANSCRIBE_SUCCESS` unconditionally and substitutes a value from a
+  function-local `static const` default-constructed instance for any field it
+  could not read. That is what makes old and new project files interoperate, but
+  it also means a corrupt or renamed field is indistinguishable from an absent one
+  and silently becomes the default. If you rename a transcribe key you will not
+  get an error, you will get defaults.
+- **Nothing here is validated.** The setters and the twelve-argument constructor
+  assign straight through. No check that `min_depth_radius_restriction <=
+  max_depth_radius_restriction`, that the opacities lie in [0,1], that
+  `sampling_rate` or `bisection_iterations` are non-zero, or that `isovalue2`
+  relates sensibly to `isovalue1`. Range enforcement lives entirely in the layer
+  options widget; anything constructing these values programmatically inherits
+  that responsibility.
+- **`symmetric_deviation` is advisory.** The struct stores lower and upper
+  deviations for both isovalues independently whatever the flag says; keeping them
+  in step is the caller's job.
+- **Default construction is not cheap.** The default constructor builds both
+  colour palettes through `create_default_scalar_colour_palette_parameters` and
+  `create_default_gradient_colour_palette_parameters`, each of which constructs a
+  built-in palette and wraps it in a `RemappedColourPaletteParameters`. The nested
+  structs' `transcribe` methods each hold a function-local static default instance
+  for the same reason — do not default-construct one of these per frame.
+- The header deliberately includes only `scribe/Transcribe.h`, not `Scribe.h`;
+  keep the heavyweight include confined to the `.cc`.
 
 ## Used by
 

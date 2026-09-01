@@ -9,9 +9,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportAnimationType tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the vocabulary the whole export subsystem is keyed on — a namespace of free
+functions rather than a class. It answers three separate questions. What kinds of
+export exist and in what file formats (`Type` and `Format`). How to name one exporter
+with a single scalar (`ExportID`, a `Type` and a `Format` packed into a `uint32_t`).
+And what to call any of these on screen (the four string accessors).
+
+The packing is the reason this unit is load-bearing.
+`ExportAnimationRegistry` keys its exporter table by `ExportID`, and
+`ExportAnimationContext` keys its multimap of live strategies by the same value, so a
+single integer identifies "resolved topologies, as OGR GMT" throughout the feature —
+easy to store in a `QTableWidget` item's user data, cheap to compare, and no
+composite key type needed. `get_export_id()` shifts the type into the high 16 bits
+and ors the format into the low 16; `get_export_type()` and `get_export_format()`
+unpack it and assert the result is in range.
+
+Not every `Type`/`Format` pair is meaningful, and this header does not say which are —
+the registry does, by registering only the combinations that have an exporter. That
+is what `get_export_types()` and `get_export_formats()` are for: given the vector of
+IDs that `ExportAnimationRegistry::get_registered_exporters()` returns,
+`ConfigureExportParametersDialog` derives the list of types to offer, and then, for
+whichever type the user picks, the formats available for it. The dialog therefore never
+enumerates the raw enums. The string accessors feed the same dialog: the type and
+format descriptions are HTML fragments, so the dialog can show a formatted explanation
+of a selection. `get_export_format_filename_extension()` is used differently: the
+registry appends it to each exporter's default filename template as it registers, and
+`ExportFileNameTemplateWidget` uses it to split a template into an editable basename
+and a fixed, non-editable extension label.
 
 ## Declared types
 
@@ -105,9 +129,40 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportAnimationType tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both enums carry an explicit contract, stated in the header: the enumerators must be
+sequential from zero, `NUM_TYPES` / `NUM_FORMATS` must be the count, and
+`INVALID_TYPE` / `INVALID_FORMAT` must come *after* the count so they never collide
+with a real value. A `BOOST_STATIC_ASSERT` in `get_export_id()` additionally pins both
+counts below 65536, since each occupies half of the packed ID. Inserting a new
+enumerator anywhere other than immediately before the count changes the numeric value
+of everything after it, and therefore changes every `ExportID`.
+
+`get_export_type()` and `get_export_format()` are asserting, not tolerant. Each
+extracts its 16-bit field and asserts it is below the corresponding count, throwing
+`PreconditionViolationError` otherwise. So an `ExportID` built from `INVALID_TYPE` or
+`INVALID_FORMAT` is not a representable sentinel — it detonates on unpacking. Callers
+that can hold "nothing selected" must keep the `Type` and `Format` separately and
+check for the invalid values before packing, which is what
+`ConfigureExportParametersDialog` does.
+
+The four string accessors are the sharpest trap here. Each builds a function-local
+static `std::map` on first call and then looks up with `operator[]` — which inserts a
+default-constructed empty `QString` for a key that has no entry, rather than failing.
+So an enumerator added to `Type` or `Format` without a matching line in the
+corresponding `initialise_*_map()` produces a silently blank label or description in
+the export dialogs, with no warning and no assertion. An empty extension cannot be
+used to detect the omission either, because `CITCOMS_GLOBAL` and `TERRA_TEXT`
+legitimately have none. Adding one enumerator means editing the enum plus up to four
+map initialisers.
+
+Two consequences of that `operator[]` follow. These functions look like pure getters
+but mutate a shared static map, so they are not safe to call concurrently — in
+practice everything here runs on the GUI thread. And because the maps are built inside
+a function-local static, the `QObject::tr()` calls run once, at first use, and the
+translated strings are cached for the life of the process; a language change after the
+first export dialog has been opened will not be reflected. The returned
+`const QString &` itself is stable — `std::map` does not invalidate references on
+insertion.
 
 ## Used by
 

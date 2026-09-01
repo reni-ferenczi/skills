@@ -9,9 +9,51 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructLayerProxy tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the output end of a reconstruct layer and, in practice, the busiest
+producer in the engine — velocity layers, both topology resolver layers, the
+scalar coverage layer, the 3D scalar field layer and the raster path all pull
+from it. Its job is to turn the layer's non-topological feature collections into
+`ReconstructedFeatureGeometry` objects at a requested time. It does not do the
+reconstruction maths itself: `ReconstructContext` does, driven by the
+`ReconstructMethodInterface` implementations that `ReconstructMethodRegistry`
+associates with each feature. What this class owns is *how the results are
+shaped, cached and invalidated*.
+
+The API breadth is mostly one computation offered in several shapes. Every
+public getter comes in four overloads — current-or-specified reconstruct params
+crossed with current-or-specified reconstruction time — that funnel into one
+real implementation, and the results are offered as flat `ReconstructedFeatureGeometry`
+sequences, as `ReconstructContext::Reconstruction` objects (which additionally
+carry a geometry property handle indexing into `get_present_day_geometries()`),
+as `ReconstructContext::ReconstructedFeature` groups, and as
+`CubeQuadTreePartition` spatial partitions of either. Internally
+`ReconstructedFeature` is the canonical form: even a caller who wants only bare
+RFGs causes the grouped form to be computed and cached first, because the
+comment notes the extra cost is slight and the reverse derivation is impossible.
+The spatial partitions are similarly layered — the reconstructions partition is
+built first, and the RFG partition is derived from it with
+`CubeQuadTreePartitionUtils::mirror`. When a reconstruction is a plain finite
+rotation the partition is fed the *unreconstructed* geometry plus the rotation,
+so only the centroid needs rotating to find an insertion point and the full
+geometry may never be transformed at all; deformed geometries have no such
+shortcut and are inserted reconstructed.
+
+The caching is two-tier. `d_cached_reconstructions` is a `KeyValueCache` keyed on
+(reconstruction time, `ReconstructParams`) holding a `ReconstructionInfo` of
+lazily-filled `boost::optional` members, which lets several clients ask for
+different times or params in one frame without thrashing each other's results.
+Underneath it, `d_reconstruct_context_state_map` maps `ReconstructParams` alone
+to a `ReconstructContext` context state, held *weakly* so it lives exactly as
+long as some cached `ReconstructionInfo` still references it. That split exists
+because context state is the expensive part — for topology-based reconstruction
+it holds a whole time span of resolved boundaries and networks — and it is valid
+across reconstruction times, so stepping through an animation reuses it. The
+same class also has a topology-reconstruction (deformation) mode selected by
+`ReconstructParams::get_reconstruct_using_topologies()`, in which
+`get_reconstruct_method_context` merges the resolved boundary and network time
+spans from *every* connected `TopologyGeometryResolverLayerProxy` and
+`TopologyNetworkResolverLayerProxy` into one `TopologyReconstruct` and sizes the
+`ReconstructionTreeCreator` cache to the time range.
 
 ## Declared types
 
@@ -135,9 +177,67 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructLayerProxy tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Getters append, they do not assign.** Every sequence-returning getter inserts
+at the end of the caller's vector. Reuse an un-cleared vector and results
+accumulate silently.
+
+**Change notification is pull, not push.** Input layer proxies are polled, not
+signalled: nearly every public entry point starts with
+`check_input_layer_proxies()`, and `get_subject_token()` does the same before
+handing the token out. If you add a public getter, start it the same way or it
+will serve stale results. That polling is also why
+`check_input_layer_proxies()` skips the topology inputs unless
+`using_topologies_to_reconstruct()` — topology layers poll this proxy in turn,
+and checking unconditionally would recurse without end.
+
+**Reconstruction time is deliberately not an invalidation.**
+`set_current_reconstruction_time` changes the default time but does *not*
+invalidate `d_subject_token` (the code that would is left in an `#if 0`). The
+reasoning is that observers can read the time themselves, and telling them "we
+changed" would force them to flush caches they hold across times. What *does*
+invalidate the whole reconstruction cache: a new reconstruction layer proxy,
+added / removed / modified feature collections, a change in the
+using-topologies flag, and any input layer proxy that has moved on.
+`set_current_reconstruct_params` invalidates the subject token but keeps the
+cache, since differing params simply key a different cache entry.
+
+**Mixing topology and non-topology params in one call is not supported.**
+`create_reconstruction_info` asserts (`NotYetImplementedException`) that the
+requested `ReconstructParams::get_reconstruct_using_topologies()` matches the
+proxy's current value. Since every params value reaches the cache through that
+function, passing an explicitly-constructed `ReconstructParams` that disagrees
+with the layer's current mode throws. The one sanctioned variation is
+`get_reconstructed_static_polygon_meshes`, which copies the current params and
+flips only `set_reconstruct_by_plate_id_outside_active_time_period` for the
+age-grid case.
+
+**Memory.** `MAX_NUM_RECONSTRUCTIONS_IN_CACHE` is 4 and the header warns it
+directly drives GPlates' memory use. While reconstructing with topologies the
+cache is squeezed to a single entry, because each entry pins a resolved-topology
+time span; leaving topology mode restores
+`d_cached_reconstructions_default_maximum_size`. Each spatial partition builds
+`DEFAULT_SPATIAL_PARTITION_DEPTH` (7) levels of quad tree per cube face.
+
+**`reset_reconstruction_cache()` is public for one specific reason.** The
+comment above it explains: `ReconstructLayerTask` must flush the RFGs when the
+layer is deactivated, because topology layers look up topological sections by a
+global feature-ID search over weak observers rather than only through their
+input channels, and would otherwise keep finding RFGs from a layer they are no
+longer connected to.
+
+**Handles pair with results, not with the layer.** The `ReconstructHandle::type`
+returned identifies the specific cached group being returned. Note that
+`get_reconstructed_topological_sections` deliberately does not populate the
+cache: if nothing suitable is already cached it computes just the requested
+feature IDs and returns a fresh handle each call.
+
+**Present-day caches have their own token.** `get_present_day_geometries`,
+`get_present_day_polygon_meshes` and the present-day spatial partition are
+invalidated only by feature-collection changes and are tracked by
+`get_reconstructable_feature_collections_subject_token()`, not the main subject
+token. A `PolygonMesh` entry is `boost::none` where none could be built (for
+example a geometry with too few vertices), so the sequence stays index-aligned
+with the geometries and must be checked before use.
 
 ## Used by
 

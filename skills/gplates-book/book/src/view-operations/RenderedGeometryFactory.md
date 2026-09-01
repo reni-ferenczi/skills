@@ -9,9 +9,45 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryFactory tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RenderedGeometry` is a pimpl: a `boost::intrusive_ptr<RenderedGeometryImpl>` and
+nothing else, with no public way to reach the implementation except by visiting it
+with a `ConstRenderedGeometryVisitor`. The concrete implementation classes —
+`RenderedPointOnSphere`, `RenderedPolygonOnSphere`, `RenderedTangentialArrow`,
+`RenderedResolvedRaster`, `RenderedSubductionTeethPolyline` and the rest — are
+therefore not part of anyone's interface. This namespace of free functions is the
+one place that names them. Producers say what they want drawn and get an opaque
+handle back; the globe and map painters recover the type by double dispatch. Add a
+new kind of drawable and you touch exactly three places: a new
+`RenderedGeometryImpl` subclass, a `create_rendered_*` function here, and a new
+visit method on the visitor interface — never any of the producers.
+
+Two anonymous `ConstGeometryOnSphereVisitor` subclasses in the `.cc` cover the
+common case where the caller holds a `GPlatesMaths::GeometryOnSphere` and does not
+know its derived type; `create_rendered_geometry_on_sphere` and
+`create_rendered_coloured_geometry_on_sphere` run one of them and forward to the
+type-specific function. That is why those two take both a point size and a line
+width hint — only one will end up being used, and the caller cannot tell which.
+Colour is taken as a `GPlatesGui::ColourProxy` rather than a
+`GPlatesGui::Colour` throughout, so a rendered geometry created from
+reconstruction output can carry an unresolved colour that the active
+`ColourScheme` supplies at paint time, while UI decorations pass a fixed colour
+through the implicit conversion.
+
+Sizes are hints, not measurements: `DEFAULT_POINT_SIZE_HINT` and
+`DEFAULT_LINE_WIDTH_HINT` are deliberately the integer 1 — roughly one
+device-independent pixel — and anything that needs to look bigger is expected to
+scale that in its painter, not to pass a large number here. The arrow and
+subduction-teeth parameters are view-dependent scalars expressed either as a
+fraction of globe radius when the globe fills the viewport, or in
+device-independent pixels; in both cases the painters keep the *projected* size
+constant across zoom. `create_rendered_reconstruction_geometry` and
+`create_rendered_multi_reconstruction_geometry` are the odd ones out: they are
+decorators that wrap an already-built `RenderedGeometry` together with the
+`GPlatesAppLogic::ReconstructionGeometry` it came from, which is how a proximity
+hit on the canvas is traced back to the app-logic object behind it and how feature
+focus works at all. `GPlatesPresentation::ReconstructionGeometryRenderer` is the
+heaviest client, converting each frame's reconstruction output into rendered
+geometries.
 
 ## Declared types
 
@@ -111,9 +147,44 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryFactory tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **What comes back is shareable and effectively immutable.** The returned
+  `RenderedGeometry` is a reference-counted handle whose implementation is only
+  ever exposed through const visitor methods, so copies can be dropped into
+  several `RenderedGeometryLayer`s without cloning and without aliasing hazards.
+  The underlying geometries are `non_null_ptr_to_const_type`, so nothing is
+  copied on creation either.
+- **A default-constructed `RenderedGeometry` is legal and silent.** It has no
+  implementation and `accept_visitor` on it does nothing. Both dispatch visitors
+  start with one and return it unchanged if the geometry type has no case, and
+  `create_rendered_symbol` returns one after `GPlatesGlobal::Abort` on an
+  unrecognised `Symbol` type. A drawable that quietly fails to appear is the
+  symptom.
+- **The dispatch visitors hold references, not copies.** Both store
+  `const GPlatesGui::ColourProxy &` and `const boost::optional<GPlatesGui::Symbol> &`
+  members. They are safe only because they are constructed, used and destroyed
+  within one factory call; do not store one, return one, or extend its lifetime.
+- **Per-point colour counts are a caller obligation.** The `*_coloured_*`
+  functions require the colour vector to match the point count — for a polygon,
+  the *exterior ring* vertex count. Only the single-point case actually asserts
+  (`PreconditionViolationError`); mismatches elsewhere are the painter's problem.
+- **`symbol` only affects points.** Passing a symbol to
+  `create_rendered_geometry_on_sphere` changes nothing unless the geometry turns
+  out to be a `PointGeometryOnSphere`; for a multipoint, polyline or polygon it is
+  silently ignored.
+- **Fill flags cross type boundaries.** `create_rendered_polyline_on_sphere` takes
+  a `filled` flag that makes a polyline fill like a polygon, and the generic
+  entry point carries separate `fill_polygon` and `fill_polyline` flags for
+  exactly that reason.
+- **Arrow parameters are not symmetrical between the two arrow kinds.**
+  `create_rendered_tangential_arrow` pre-multiplies the direction by
+  `ratio_unit_vector_direction_to_globe_radius` and passes the arrowhead ratio
+  through, with a hard-coded cap of 0.5 on arrowhead-to-arrowline length that is
+  not exposed as a parameter; `create_rendered_radial_arrow` instead converts its
+  width *ratio* into an absolute width before constructing `RenderedRadialArrow`.
+- **The defaults are header-scope const objects.** `DEFAULT_COLOUR` in particular
+  is a `GPlatesGui::Colour` with a dynamic initialiser defined in the header, so
+  every translation unit that includes it gets its own copy constructed at static
+  initialisation time. Adding more non-trivial constants here compounds that.
 
 ## Used by
 

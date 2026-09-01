@@ -8,9 +8,33 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/GeometryOnSphere tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header is the root of the geometry hierarchy that the rest of GPlates passes
+around. Its four subclasses cover every shape the application can hold on the
+globe, and almost all code outside `src/maths` deals with them through
+`GeometryOnSphere::non_null_ptr_to_const_type` rather than the concrete types —
+that is why the fan-in below is so wide. The design commitment visible in this
+file is that geometries are *immutable, heap-allocated and shared*: the only
+pointer typedefs declared here are to `const`, the reference-count base is
+`boost::noncopyable`, and there is no mutating operation anywhere in the base.
+Reconstructing a feature therefore never edits a geometry in place; it builds a
+new one and hands out a new pointer.
+
+Because the base is deliberately thin, recovering the concrete type is done by
+double dispatch through `ConstGeometryOnSphereVisitor` (`accept_visitor`), not
+by `dynamic_cast`. That visitor is the extension point almost everything uses —
+`GPlatesFeatureVisitors::GeometryTypeFinder`, the exporters in `file-io`, the
+renderers — so a new geometry kind is a change to two files, not to every
+consumer.
+
+The two proximity entry points are the other half of the interface, and they sit
+on the geometry rather than in a free function because only the geometry knows
+its own vertices and great-circle-arc segments. A hit returns a
+`ProximityHitDetail` subclass carrying the closeness value and, for vertex
+tests, the index of the vertex that was hit, which is what the canvas tools need
+in order to know *what* the user clicked, not merely *that* they clicked
+something. The header's own class comment claims the class declares pure
+virtuals "for cloning"; it does not, and given the immutability above it does
+not need to.
 
 ## Declared types
 
@@ -40,9 +64,29 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/GeometryOnSphere tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`get_non_null_pointer()` throws on an unowned instance.** It forwards to
+  `GPlatesUtils::get_non_null_pointer`, which asserts that the reference count is
+  already non-zero and otherwise throws
+  `GPlatesGlobal::IntrusivePointerZeroRefCountException`. Calling it from inside
+  a constructor, or on a geometry that no intrusive pointer owns yet, is a
+  run-time failure rather than a compile error.
+- **The virtual destructor is load-bearing.** `ReferenceCount` is used through
+  the curiously recurring template pattern with `GeometryOnSphere` as the
+  `Derived` parameter, so `intrusive_ptr_release` `checked_delete`s the object
+  through a `const GeometryOnSphere *`. Without the virtual destructor here, the
+  concrete subclass destructors would never run.
+- **Reference counting is thread-safe; the geometries are not "thread-safe" in
+  any wider sense.** `ReferenceCount` stores a `boost::detail::atomic_count`, so
+  copying pointers across threads is fine. Since the objects are immutable and
+  only ever handed out as `const`, concurrent readers are safe too.
+- **Adding a geometry type fails silently in existing visitors.** The `visit_*`
+  functions on `ConstGeometryOnSphereVisitor` have empty bodies rather than being
+  pure virtual, so a new subclass plus a new `visit_*` will compile everywhere
+  and simply be ignored by every visitor that was not updated. If you add a fifth
+  geometry, audit the `ConstGeometryOnSphereVisitor` subclasses by hand.
+- `test_proximity` and `test_vertex_proximity` signal "no hit" by returning a
+  null `ProximityHitDetail::maybe_null_ptr_type` (`ProximityHitDetail::null`),
+  not by throwing — callers must check.
 
 ## Used by
 

@@ -9,9 +9,35 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/SmallCircleBounds tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The spherical equivalent of a bounding sphere, and the first line of rejection
+for nearly every geometric query in GPlates. A `BoundingSmallCircle` is a centre
+`UnitVector3D` plus a radius held as an `AngularExtent`; a geometry is bounded by
+it when every part of the geometry lies within that angle of the centre.
+`InnerOuterBoundingSmallCircle` adds a second, concentric inner radius, which
+buys a strictly stronger statement: not only is the geometry inside the outer
+circle, it is entirely *outside* the inner one. That extra fact is what makes
+"could this geometry possibly touch that polygon's outline?" answerable without
+touching a single arc — the case the header calls out for polygon clipping and
+point-in-polygon work.
+
+The design decision that pervades the file is that no angles are ever computed.
+`AngularExtent` stores cosine and sine, sums and differences of extents go
+through trigonometric angle-sum identities, and the cosine of the angle between
+two centres is just their dot product — so a bounds test is a handful of
+multiplies and no `acos`. The one function that breaks this is
+`create_optimal_bounding_small_circle`, which needs real angles for its half-angle
+construction and says so; its comment also explains why not caching those `acos`
+results is acceptable (it is only called while building a bounding tree
+bottom-up, once per node). The two builder classes are the intended construction
+path: they take a fixed centre, accumulate the running minimum and maximum
+`AngularDistance` as primitives are added, and bake the result out on demand.
+
+`PolygonOnSphere`, `PolylineOnSphere` and `MultiPointOnSphere` each cache one of
+these on first request, centred on their boundary centroid;
+`PolyGreatCircleArcBoundingTree` builds a hierarchy of them over a geometry's
+arcs. From there the consumers are `PointInPolygon`, `DateLineWrapper`,
+`GeneratePoints`, `CubeQuadTreePartition` and the OpenGL raster and mesh
+classes.
 
 ## Declared types
 
@@ -152,9 +178,60 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/SmallCircleBounds tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The iterator `test()` overloads require a *connected* arc sequence.** This is
+the sharpest trap in the file. Both templates classify the first arc, and if it
+is wholly outside (or wholly inside) they scan the remainder only for a state
+change, returning `INTERSECTING_BOUNDS` at the first one. That shortcut is valid
+only because each arc begins where the last ended, as in a polyline or one
+polygon ring. Hand these a disconnected set of arcs and they return a confident
+wrong answer with no diagnostic. The polygon overloads honour this by testing the
+exterior ring and each interior ring as separate sequences.
+
+**Bounds are deliberately loose, in one direction.** Both builders apply a
+default expansion (and, for the inner bound, contraction) equal to
+`GeometryIntersect::Intersection::get_on_segment_start_threshold_cosine()`, so a
+bound covers the "touching" region around its geometry. The header states the
+intent: false positives are acceptable because a later exact test will reject
+them, whereas a false negative discards a real intersection irrecoverably. Do
+not pass `AngularExtent::ZERO` to tighten a bound unless you are certain no
+downstream code depends on that margin.
+
+**Centres are chosen by the caller, not the builder.** Both builders fix the
+centre at construction and never move it. A poorly chosen centre yields a bound
+that is correct but useless — the geometry classes pass their boundary centroid.
+Relatedly, `InnerOuterBoundingSmallCircle`'s inner circle is *not* the polygon
+interior: the centroid may fall outside the polygon entirely, and
+`PolygonOnSphere`'s own documentation says so explicitly.
+
+**`AngularExtent` caches lazily through `mutable` members.** Its sine and angle
+are `mutable boost::optional<real_t>`, filled in on first request. So a `const`
+call on a shared `BoundingSmallCircle` can write to it, and these objects are not
+safe to use concurrently from multiple threads without external synchronisation —
+including the instances cached inside `PolygonOnSphere` and friends. This is also
+why `operator*(FiniteRotation, ...)` copies the bound and mutates the centre
+through `set_centre` instead of building a fresh one: it preserves whatever the
+original had already computed. Rotating only the centre is exact, since a rigid
+rotation leaves the radius unchanged.
+
+**Degenerate and edge cases.**
+
+- `test()` on a point (or `PointOnSphere`) never returns `INTERSECTING_BOUNDS` —
+  a point is inside or outside, nothing else.
+- An empty arc range returns `OUTSIDE_BOUNDS` / `OUTSIDE_OUTER_BOUNDS`.
+- The `MultiPointOnSphere` overloads dereference `begin()` without an emptiness
+  check; this is safe only because `MultiPointOnSphere` guarantees at least one
+  point.
+- `InnerOuterBoundingSmallCircleBuilder::get_inner_outer_bounding_small_circle()`
+  detects that nothing was ever added by comparing the untouched sentinel
+  cosines, then emits a `qWarning` and returns zero-radius bounds rather than
+  throwing. Easy to miss in a log.
+- `create_optimal_bounding_small_circle` special-cases coincident and antipodal
+  centres before it can divide by a zero-length cross product, falling back to
+  `generate_perpendicular` in the antipodal case; it also clamps the resulting
+  radius at PI, since `(A + R1 + R2)/2` can reach 1.5·PI.
+- `test_filled_polygon` differs from `test(polygon)` only for the surrounding
+  case, and pays for it with a real `is_point_in_polygon` call — use the plain
+  overload when outline intersection is all you need.
 
 ## Used by
 

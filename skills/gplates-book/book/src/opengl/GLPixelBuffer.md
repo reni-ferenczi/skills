@@ -9,9 +9,38 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLPixelBuffer tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The pixel-transfer end of the buffer abstraction: an interface for moving image
+data between a `GLBuffer` and the framebuffer or a texture. It is pure
+interface — `create_as_unique_ptr` is a factory that `dynamic_pointer_cast`s the
+`GLBuffer` it is handed and returns a `GLPixelBufferObject` if that buffer is a
+real `GLBufferObject`, or a `GLPixelBufferImpl` if it is the client-memory
+`GLBufferImpl`. The choice was already made upstream by `GLBuffer::create`,
+which consults `GLCapabilities::buffer::gl_ARB_pixel_buffer_object` and falls
+back to client memory when the extension is missing; `GLPixelBuffer` just
+follows it. This mirroring is what lets the rest of `src/opengl` — the raster
+sources, `GLScalarField3D`, `GLRasterCoRegistration`, `GLSaveRestoreFrameBuffer`
+— be written once against one interface and still run on hardware with no pixel
+buffer objects.
+
+The point of going through a pixel buffer rather than a client array is
+asynchrony, and the header spells out the contract. On the
+`GLPixelBufferObject` path, `gl_draw_pixels` and `gl_read_pixels` start a DMA
+transfer and return without blocking; the stall is deferred until something
+actually touches the buffer's memory through `get_buffer()`. So the intended
+pattern is to issue the transfer, do unrelated work, and only then read or
+write — or double-buffer with two alternating pixel buffers, which is exactly
+what the heavy clients do. On the `GLPixelBufferImpl` path there is no
+asynchrony at all, only source compatibility.
+
+The public surface is deliberately small — bind as pack or unpack, draw pixels,
+read pixels. The `glTexImage*` and `glTexSubImage*` equivalents are private with
+`GLTexture` as the sole friend, so uploading a texture from a pixel buffer is
+always phrased as an operation on the texture. One further thing the header
+points out: nothing stops the same `GLBuffer` being wrapped by both a
+`GLPixelBuffer` and a `GLVertexBuffer`, or bound to both the pack and unpack
+targets at once, which is how a shader can render to the framebuffer, have the
+result read back into a buffer, and then have that buffer drawn as vertex data
+without a CPU round trip.
 
 ## Declared types
 
@@ -52,9 +81,32 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLPixelBuffer tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **The two public transfer calls do not bind for you.** `gl_read_pixels`
+  requires a prior `gl_bind_pack`, `gl_draw_pixels` a prior `gl_bind_unpack`;
+  the private `gl_tex_*` family, by contrast, binds both the buffer and the
+  texture internally. Getting this wrong on the `GLPixelBufferObject` path
+  silently transfers against whatever buffer happened to be bound.
+- **Buffer size is never checked here.** The caller must have allocated enough
+  through `GLBuffer::gl_buffer_data` for the whole rectangle being read or
+  written; every `offset` parameter is a *byte* offset into the buffer, not a
+  pixel index.
+- **`gl_draw_pixels` moves the raster position.** `glDrawPixels` takes no x/y, so
+  the implementation issues `glWindowPos2i(x, y)` first to make the signature
+  match `gl_read_pixels`. That is a real state change to the current raster
+  position, not just a convenience.
+- **Must be owned by a `shared_ptr`.** `GLPixelBufferObject::gl_bind_unpack` and
+  `gl_bind_pack` call `shared_from_this()` to hand themselves to the renderer,
+  so a stack or `unique_ptr`-owned instance throws on bind.
+  `create_as_unique_ptr` exists to feed `GPlatesUtils::ObjectCache`, which is
+  also why the class uses `boost::shared_ptr` rather than the
+  `non_null_intrusive_ptr` used elsewhere in GPlates.
+- **Recycled buffers keep their size.** `GLContext::SharedState::acquire_pixel_buffer`
+  pools pixel buffers keyed on size and usage and warns if a recycled buffer's
+  size was changed underneath it — resizing a pooled buffer defeats the pooling.
+- Asynchronous behaviour is a property of the *derived* type. Code that reasons
+  about latency has to know whether it got a `GLPixelBufferObject` or a
+  `GLPixelBufferImpl`; against the `GLPixelBuffer` interface alone the transfer
+  may or may not have completed on return.
 
 ## Used by
 

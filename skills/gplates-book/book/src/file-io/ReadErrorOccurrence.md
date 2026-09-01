@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReadErrorOccurrence tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the single record type that every GPlates file reader emits into a `ReadErrorAccumulation`, and its shape is dictated by two requirements that pull against each other. The reporting has to be uniform enough that one dialog can render errors from a PLATES rotation file, a shapefile, a GMT colour palette and an in-memory XML byte array side by side; but the readers themselves have wildly different notions of "where" a problem occurred and "what" the source even is. The answer here is to split an occurrence into four independent pieces — a `DataSource`, a `LocationInDataSource`, and two enum codes — and to keep the first two abstract.
+
+`DataSource` and `LocationInDataSource` are pure-virtual stream-writers, deliberately minimal: a source can render itself as a short name, a full name and a format label, and a location can render itself, and that is the whole contract. `LocalFileDataSource` is the normal implementation, holding the filename and a `QFileInfo` so the short name is the basename and the full name the path; `GenericDataSource` covers sources that are not files at all — data received over the wire by `CommandServer`, or an in-memory buffer handed to `ArbitraryXmlReader` — by simply carrying the two strings it should print. `LineNumber` is the only location implementation in the tree, but the indirection means a reader for a format without line numbers (a raster band, a binary cache) can supply its own without touching the accumulation or the dialog. The `DataFormats::DataFormat` enum and its `data_format_to_str` mapping exist so that the format label is spelled consistently — the user sees "PLATES \"rotation\" format", not whatever each reader felt like writing.
+
+The two enum codes are the other half of the design. `ReadErrorOccurrence` stores a `ReadErrors::Description` and a `ReadErrors::Result` — what went wrong and what GPlates did about it — and *never* a formatted message. Text is looked up at display time by `ReadErrorMessages`, from a table that pairs each code with a short and a full `QT_TR_NOOP` string, which is what keeps read-error text translatable and keeps the wording in one place instead of scattered through twenty readers. Adding a new failure mode therefore means adding an enumerator in `ReadErrors.h` *and* a row in `ReadErrorMessages.cc`; the header says so, and a missing row degrades to a placeholder string rather than a build error. The two `make_read_error_occurrence` overloads are the shorthand most readers actually call, wrapping the filename-plus-line-number and data-source-plus-line-number cases so a reader does not have to allocate the two `shared_ptr`s by hand.
 
 ## Declared types
 
@@ -113,9 +115,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReadErrorOccurrence tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Neither `d_data_source` nor `d_location` may be null — the constructor's Doxygen says so and nothing checks it, so a null slips through construction and crashes later in `write_short_name`, `write_full_name`, or in `ReadErrorUtils::group_read_errors_by_file`, which dereferences the data source. Both are `boost::shared_ptr`, so occurrences are cheap to copy and copies share one source object; a `LocalFileDataSource` created for one error is typically shared by every error from that file. That sharing is also why the source objects must be immutable in practice: they are captured at report time and read much later, potentially after the file has been closed or deleted.
+
+The two `write_*` methods on `ReadErrorOccurrence` and the identically named ones on `DataSource` are not interchangeable, and the difference is load-bearing. `ReadErrorOccurrence::write_full_name` composes source, `":"`, location and format — the per-error line the dialog shows. `group_read_errors_by_file` deliberately calls `d_data_source->write_full_name` *alone*, without the location, and uses the resulting string as the map key; that is what makes all errors from one file group together instead of one group per line number. Any change to `LocalFileDataSource::write_full_name` therefore changes the grouping key, not just the displayed text.
+
+`data_format_to_str` switches over `DataFormats::DataFormat` with no `default` and initialises its result to `NULL`. Adding an enumerator without adding a case returns a null `const char *` that is then streamed, so rely on the compiler's unhandled-enumerator warning here rather than on a runtime fallback. Note also that `GenericDataSource` copies its strings into `std::string` members while `LocalFileDataSource` keeps a `QString` plus a `QFileInfo`; the `QFileInfo` is constructed once at report time, so the short name reflects the path as it was when the error was recorded.
+
+`ReadErrors::Severity` is not stored on an occurrence at all. Severity comes solely from which `ReadErrorAccumulation` vector the reader pushed into, so the same `Description`/`Result` pair can legitimately appear as a warning in one reader and a recoverable error in another.
 
 ## Used by
 

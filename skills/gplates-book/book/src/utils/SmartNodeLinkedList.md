@@ -8,9 +8,34 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/SmartNodeLinkedList tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An intrusive, circular, doubly-linked list. Unlike `std::list`, the list does not
+allocate its nodes: a `Node` is embedded directly in whatever object wants to be
+a list member, and the node's destructor calls `splice_self_out()`, so an object
+leaves every list it is in simply by being destroyed. That single property is
+what the rest of the tree buys this header for — a container whose membership is
+maintained by the members themselves, with no removal bookkeeping at the owner's
+end and no risk of a stale entry outliving the thing it points at. The sentinel
+is a by-value member of the list, so an empty list costs no heap allocation at
+all, and a `Node` is fully usable on its own without a `SmartNodeLinkedList`
+around it — the class only adds the sentinel, `begin()`/`end()` and `append()`.
+
+The second reason it exists is splice semantics. An iterator here is nothing but
+a `Node *`, so moving a node between lists neither invalidates iterators to other
+nodes nor detaches an iterator from the node it names — it follows the node into
+its new list. `GPlatesUtils::ObjectCache` says so explicitly at its
+`object_seq_type` typedef: it uses this list rather than `std::list` because the
+effect of `std::list::splice` on iterators is not agreed between the SGI
+documentation and the standard. The two free `splice()` overloads exploit the
+same property: they move a node from one list to another given only iterators or
+a node reference, never the list objects, because a node does not know or need
+which list it is in.
+
+The users divide along those two lines. `GPlatesUtils::ObjectCache` and
+`GPlatesUtils::IdStringSet` (whose back-reference list assumes the same owner
+manages both the `Node` and the back-ref it holds) want the splice behaviour;
+`GPlatesScribe::Scribe` and `GPlatesMaths::DateLineWrapper` keep lists of object
+ids and polygon vertices that are cheaply re-ordered and re-spliced; the OpenGL
+classes that dominate the fan-in reach it indirectly through `ObjectCache`.
 
 ## Declared types
 
@@ -47,9 +72,36 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/SmartNodeLinkedList tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **The list owns nothing but its sentinel.** Nodes are owned by whoever embeds
+  or allocates them; the list neither creates nor destroys them. Destroying a
+  `SmartNodeLinkedList` destroys only `d_sentinel`, which splices the sentinel
+  out and leaves the member nodes linked to each other in a headless ring.
+- **`clear()` is not "empty and forget".** It splices the sentinel out and does
+  nothing else, so afterwards the former members are still chained together,
+  merely unreachable from this list. It is a detach, not a destruction, and the
+  nodes must still be disposed of by their owners.
+- **A node is never in two lists.** `splice_self_before()` unlinks first if
+  `has_neighbours()`, so appending a node that is already elsewhere silently
+  removes it from that other list. There is no way to ask a node which list it
+  belongs to.
+- **Invariant: an unlinked node points at itself.** Both `d_prev_ptr` and
+  `d_next_ptr` equal `this` when the node is out of a list, which is what makes
+  `splice_self_out()` a safe no-op and what `empty()` tests via the sentinel.
+- **Iteration is circular, with no bounds check.** `end()` is the sentinel;
+  incrementing it wraps to `begin()` and decrementing `begin()` reaches the
+  sentinel again, so a loop that misses its termination condition spins forever
+  rather than walking off the end.
+- **Copying is deliberately partial.** The list itself is non-copyable; `Node`'s
+  copy-constructor copies only the element and gives the new node no neighbours,
+  and copy-assignment is declared private and left undefined. Take care with
+  containers that copy their elements — the copy will not be in any list.
+- **No `size()`, no thread safety.** Counting means walking, and every mutation
+  is a plain pointer write with no synchronisation; two threads splicing nodes
+  in the same list will corrupt it.
+- **Superseded in principle.** The header's own note says that since the boost
+  minimum was raised to 1.35 this should be `boost::intrusive::list` with
+  `auto_unlink` hooks, which is exactly the `splice_self_out()`-in-the-destructor
+  behaviour. Prefer that for new code rather than extending this class.
 
 ## Used by
 

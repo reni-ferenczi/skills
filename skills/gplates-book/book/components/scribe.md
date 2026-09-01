@@ -14,15 +14,15 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [Scribe](../src/scribe/Scribe.md) | 1 | 7428 | 2179 | (pending) |
-| [ScribeAccess](../src/scribe/ScribeAccess.md) | 1 | 460 | 175 | (pending) |
+| [Scribe](../src/scribe/Scribe.md) | 1 | 7428 | 2179 | the transcribing engine: moves a live object graph into a Transcription and back, tracking object identity |
+| [ScribeAccess](../src/scribe/ScribeAccess.md) | 1 | 460 | 175 | the single class a client type befriends so the scribe can reach its private transcribe hooks |
 | [ScribeArchiveCommon](../src/scribe/ScribeArchiveCommon.md) | 2 | 351 | 260 | Shared signature strings, format-version numbers and element names for the three archive formats |
 | [ScribeArchiveReader](../src/scribe/ScribeArchiveReader.md) | 2 | 87 | 103 | Abstract base for reading a Transcription out of a text, binary or XML archive |
 | [ScribeArchiveWriter](../src/scribe/ScribeArchiveWriter.md) | 2 | 82 | 28 | Abstract base for writing a Transcription to a text, binary or XML archive |
 | [ScribeBinaryArchiveReader](../src/scribe/ScribeBinaryArchiveReader.md) | 2 | 490 | 48 | Decodes a Transcription from a QDataStream using the binary archive's varint layout |
 | [ScribeBinaryArchiveWriter](../src/scribe/ScribeBinaryArchiveWriter.md) | 2 | 518 | 8 | Encodes a Transcription onto a QDataStream using the binary archive's varint layout |
 | [ScribeConstructObject](../src/scribe/ScribeConstructObject.md) | 2 | 260 | 13 | Placement-constructs a transcribed object in place when it has no default constructor |
-| [ScribeExceptions](../src/scribe/ScribeExceptions.md) | 1 | 1591 | 631 | (pending) |
+| [ScribeExceptions](../src/scribe/ScribeExceptions.md) | 1 | 1591 | 631 | every scribe failure type under one catchable base; compatibility problems are return codes, not these |
 | [ScribeExportExternal](../src/scribe/ScribeExportExternal.md) | 3 | 93 | 0 | Macro to register fundamental and external library types for Scribe serialization |
 | [ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | 3 | 235 | 4 | Macro framework for registering polymorphic classes and variant types with Scribe |
 | [ScribeExportRegistry](../src/scribe/ScribeExportRegistry.md) | 2 | 335 | 83 | Singleton registry mapping class id names and type\_info to constructible concrete types |
@@ -39,7 +39,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [ScribeVoidCastRegistry](../src/scribe/ScribeVoidCastRegistry.md) | 2 | 829 | 5 | Runtime graph of registered base/derived links used to cast void pointers between them |
 | [ScribeXmlArchiveReader](../src/scribe/ScribeXmlArchiveReader.md) | 2 | 853 | 10 | ArchiveReader that reconstructs a Transcription by parsing it back out of XML |
 | [ScribeXmlArchiveWriter](../src/scribe/ScribeXmlArchiveWriter.md) | 2 | 602 | 5 | ArchiveWriter that serialises a Transcription to XML, the write side of XmlArchiveReader |
-| [Transcribe](../src/scribe/Transcribe.md) | 1 | 486 | 250 | (pending) |
+| [Transcribe](../src/scribe/Transcribe.md) | 1 | 486 | 250 | declares the three customisation points a type must satisfy to be transcribable |
 | [TranscribeArray](../src/scribe/TranscribeArray.md) | 3 | 265 | 0 | Serialization support for static C++ arrays including multidimensional arrays |
 | [TranscribeBoost](../src/scribe/TranscribeBoost.md) | 3 | 753 | 0 | Serialization support for Boost library types: smart pointers and variants |
 | [TranscribeContext](../src/scribe/TranscribeContext.md) | 2 | 48 | 19 | Per-type extra state a transcribe() implementation needs but the archive doesn't carry |
@@ -55,7 +55,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [TranscribeSmartPointerProtocol](../src/scribe/TranscribeSmartPointerProtocol.md) | 3 | 67 | 0 | Unified protocol for transcribing heterogeneous smart pointer types without breaking backward compatibility |
 | [TranscribeStd](../src/scribe/TranscribeStd.md) | 3 | 900 | 0 | Transcription support for standard library containers |
 | [TranscribeUtils](../src/scribe/TranscribeUtils.md) | 2 | 1192 | 46 | File-path transcription helpers plus raw/smart-pointer archive-compatibility bridges |
-| [Transcription](../src/scribe/Transcription.md) | 1 | 1672 | 1150 | (pending) |
+| [Transcription](../src/scribe/Transcription.md) | 1 | 1672 | 1150 | in-memory random-access form of transcribed state, shared by Scribe and the archive readers and writers |
 | [TranscriptionScribeContext](../src/scribe/TranscriptionScribeContext.md) | 2 | 1967 | 6 | Bridges Scribe's object-graph calls to the tagged composite/primitive Transcription tree |
 
 ## Other files

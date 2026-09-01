@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/ModelUtils tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the namespace where the revisioned model meets the GPGIM. `FeatureHandle`
+will let you `add` any `TopLevelProperty` at all; it knows nothing about which
+properties a feature type may hold or how their values must be shaped. The
+functions here are the layer that consults `Gpgim` first, and they are what
+almost everything outside the model calls when it needs to build or change a
+feature: `add_property`, `set_property`, `set_properties`,
+`create_top_level_property`, `rename_feature_properties`. If you write directly
+to a `FeatureHandle` instead, you bypass every schema check the application
+relies on.
+
+The central piece of that work is the time-dependent wrapper.
+`add_remove_or_convert_time_dependent_wrapper` compares the actual structural
+type of a `PropertyValue` against the `GpgimProperty`'s time-dependent flags and
+adds, removes or converts a `gpml:ConstantValue`, `gpml:PiecewiseAggregation` or
+`gpml:IrregularSampling` wrapper so the stored value matches what the GPGIM
+mandates. Every creation path funnels through it, which is why callers can hand
+in a bare `GmlPoint` or an already-wrapped value and get back something the
+schema accepts. `get_non_time_dependent_property_structural_type` is the
+complement: it looks *through* a wrapper to the value type inside, so type
+checking compares like with like.
+
+Around that core sit three smaller groups. A handful of `create_gml_*` factories
+attach the boilerplate XML attributes (the `gml:frame` of
+`http://gplates.org/TRS/flat`, the `gml:orientation` sign) that GPML expects, so
+those literals live in one place. A rotation-file group —
+`TotalReconstructionPole`, `create_total_reconstruction_pole`,
+`create_total_recon_seq`, `create_gml_time_sample`, `get_mprs_attributes` —
+assembles `gpml:TotalReconstructionSequence` features out of five-tuples, and
+carries a comment saying it would be better placed on a Handle class. Finally
+`find_feature` resolves a `FeatureId` back to a live `FeatureHandle::weak_ref`
+through the feature-ID back-reference registry.
 
 ## Declared types
 
@@ -118,9 +146,73 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/ModelUtils tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `error_code` out-parameter is written only on failure and is never cleared on
+success, so it is meaningless unless the function returned `boost::none` or
+`false`. It also defaults to `NULL` everywhere, and every site guards with
+`if (error_code)` — except one: in
+`get_non_time_dependent_gpgim_structural_type`, the
+`PROPERTY_VALUE_TYPE_NOT_RECOGNISED` assignment is unguarded, so calling it with
+the default argument on a property value the GPGIM does not recognise
+dereferences a null pointer. Pass an `error_code` if you call that function
+directly.
+
+The three `check_*` boolean parameters default to `true` and each one turns off a
+distinct GPGIM check: the property name against the feature type, the property
+multiplicity, and the property value's structural type. Passing `false` is how
+the file readers load pre-existing data that does not conform — turning one off
+is a deliberate loosening, not a performance tweak. Note the asymmetry of the
+`GpgimProperty` overloads: when you supply the GPGIM property yourself, no
+feature-type check happens at all, and the header states that the caller is then
+responsible for the property being legal on that feature type.
+
+Wrapper conversion is deliberately not symmetric.
+A `gpml:IrregularSampling` can neither be unwrapped nor converted to another
+wrapper, and nothing can be wrapped *into* one — an irregular sampling has to be
+built directly. A `gpml:PiecewiseAggregation` can only be reduced to a constant
+value (or unwrapped) when it holds exactly one time window that spans distant
+past to distant future and whose value is a `gpml:ConstantValue`; otherwise the
+conversion fails rather than discarding data. When a bare value must be wrapped
+and the GPGIM allows both, constant-value wins over piecewise aggregation.
+
+Ownership: these functions never mutate the property value you hand them. Each
+returns a new `PropertyValue` when a wrapper is added or removed, and the
+original is returned unchanged when nothing is needed. `rename_property` deep
+clones the value before rebuilding the property, so the renamed property shares
+nothing with the original — but it does carry the original's XML attributes over.
+
+`rename_feature_properties` is two-phase on purpose: it builds every renamed
+property first and only touches the feature once all of them have succeeded, so a
+failure leaves the feature untouched. Because a top-level property's name cannot
+be changed in place, the rename is a remove-then-add, which means renamed
+properties move to the end of the feature's property list and any iterator you
+held to the old property is stale afterwards. The same applies to `set_property`
+and `set_properties`, which mutate the feature *while* iterating it —
+`FeatureHandle::remove` nulls a slot without shortening the sequence, so the
+iterators stay usable, but existing iterators held elsewhere do not survive the
+revisioning.
+
+`add_property`, `set_property` and `set_properties` dereference the
+`FeatureHandle::weak_ref` without checking `is_valid()`, unlike
+`get_top_level_properties` and `get_top_level_geometry_properties`, which check.
+Validate the weak reference before calling the mutating functions.
+
+Two smaller traps. `get_mprs_attributes` takes a `const_weak_ref` and returns a
+*non-const* pointer obtained with `const_cast`, and it throws
+`GPlatesGlobal::LogException` when the `gpml:mprsAttributes` property is absent
+rather than returning an optional — it is the one function here that reports
+failure by exception. And `create_total_recon_seq` takes a `ModelInterface &`
+that its body never uses; the feature is created through
+`FeatureHandle::create` on the target collection.
+
+`create_gml_time_period` defaults `check_begin_end_times` to `false` because,
+as the header says, a lot of real data has a begin time later than its end time.
+Turning the check on makes it throw `BeginTimeLaterThanEndTimeException`.
+
+Both `get_error_message` overloads index a static array with the enum value and
+assert its length against `NUM_ERRORS` at compile time, so the message array and
+the enumerator order must be kept in step and `NUM_ERRORS` must stay last.
+`GetGpgimTemplateStructuralTypeVisitor` lives in an anonymous namespace in the
+`.cc` and is not part of the interface.
 
 ## Used by
 

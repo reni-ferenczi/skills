@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryCollectionVisitor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Visitor pattern interfaces for traversing a `RenderedGeometryCollection` and its nested layers and geometries. Both const and non-const versions are provided. The visitors control which main layers are visited (filtering to active layers by default) and allow customization of child-layer traversal order through subclass specialization. Subclasses also inherit from `RenderedGeometryLayerVisitor` to visit individual layer and geometry contents.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryCollectionVisitor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

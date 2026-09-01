@@ -9,9 +9,43 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedGeometryCollection tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the scene graph of GPlates, and the seam between everything that
+*computes* and everything that *draws*. App-logic results, canvas-tool feedback,
+measurement overlays and highlight decorations all end up here as
+`RenderedGeometry` objects; the globe and map painters
+(`GPlatesGui::GlobeRenderedGeometryCollectionPainter` and its map counterpart)
+read them back by walking the collection with a
+`RenderedGeometryCollectionVisitor`. Nothing else connects the two halves: a
+producer never calls the canvas, it drops geometry into a layer and the
+collection's `collection_was_updated` signal tells the canvas to redraw.
+
+The structure is deliberately two-level. There is one fixed main layer per
+`MainLayerType` — one for reconstruction output, one per canvas-tool workflow —
+each with an embedded default `RenderedGeometryLayer` that needs no creation, and
+each able to hold explicitly created child layers. The nesting exists purely to
+pin down draw order without a depth buffer: main layers are visited in enum
+declaration order, a main layer's own geometries before its children, and children
+in creation order (unless the visitor overrides it via
+`get_custom_child_layers_order`). That is why the move-vertex tool puts base
+geometry in one child layer and the grabbable vertex highlights in another — it is
+the only guarantee the highlights land on top. Activation is likewise two-level
+and conjunctive: a `RenderedGeometryLayer` is drawn only if both it and its main
+layer are active. `set_orthogonal_main_layers` turns a chosen set of main layers
+into a radio group, which is how switching canvas-tool workflow deactivates the
+previous workflow's whole subtree in one call rather than layer by layer.
+
+The one instance lives in `GPlatesPresentation::ViewState` as a `scoped_ptr`.
+Child layers, by contrast, are handed out as bare `child_layer_index_type`
+indices into a private `RenderedGeometryLayerManager` slot table; the
+`transfer_ownership_of_child_rendered_layer` family wraps that index in a
+`boost::shared_ptr<RenderedGeometryLayer>` whose deleter calls
+`destroy_child_rendered_layer`, so almost every client holds a
+`child_layer_owner_ptr_type` and never destroys anything by hand. Update
+notification is aggregated rather than immediate: each `RenderedGeometryLayer`
+carries the `MainLayerType` of its owning main layer as opaque `user_data`, hands
+it back in `layer_was_updated`, and the collection ORs that bit into
+`d_main_layers_updated` so a single `collection_was_updated` can tell observers
+exactly which main layers changed.
 
 ## Declared types
 
@@ -103,9 +137,54 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedGeometryCollection tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`UpdateGuard` is global, not per-collection.** Its constructor calls
+  `begin_update_all_registered_collections()`, so it suppresses update signals on
+  *every* `RenderedGeometryCollection` that exists, via the file-local
+  `RenderedGeometryCollectionManager` singleton every collection registers with in
+  its constructor. Guards nest and only the outermost exit emits. Omitting a guard
+  is never a correctness bug — it just means more redraws — but placing one around
+  a long-running loop that also touches another collection will silently freeze
+  that collection's updates too.
+- **The update signal is a coalesced summary, not an event log.** `signal_update`
+  accumulates into `d_main_layers_updated` and `send_update_signal` clears it
+  after emitting. An observer that misses or ignores one `collection_was_updated`
+  has no way to recover what changed; the intended usage is to re-traverse.
+- **Active state is not a property of the collection as far as traversal is
+  concerned.** `accept_visitor` does *not* skip inactive layers. The visitor is
+  handed the main layer and the `RenderedGeometryLayer` and decides for itself, by
+  returning false from `visit_main_rendered_layer` / `visit_rendered_geometry_layer`
+  — deliberately, so exporters can render everything regardless of what the user
+  currently sees. A new visitor that forgets to test active status will draw
+  hidden layers.
+- **`restore_main_layer_active_state` reports nothing as changed.** It assigns
+  `d_main_layer_active_state` before computing the XOR against it, so the bitset
+  passed to `signal_update` is always empty. The signal still fires (through the
+  enclosing guard), but the "which main layers changed" bits are lost;
+  `set_main_layer_active` gets this right by snapshotting first.
+- **Child layer indices are recycled.** `RenderedGeometryLayerManager` pushes
+  freed slots onto a reuse stack, so an index held past
+  `destroy_child_rendered_layer` will later refer to a *different* layer rather
+  than fail. This is the main reason to take ownership through
+  `child_layer_owner_ptr_type` instead of passing raw indices around. The manager's
+  create and destroy paths are explicitly marked as not exception-safe.
+- **Threading.** `d_update_collection_depth_mutex` guards only the increment and
+  decrement of the nesting counter; the depth is then re-read outside the lock,
+  and everything else — layer mutation, visitor traversal, signal emission — is
+  unsynchronised. Treat the whole class as GUI-thread-only; the mutex does not
+  make it shareable.
+- **Enum ordering is load-bearing.** `MainLayerType` doubles as the visit order
+  and as the index into `d_main_layer_seq`, and `NUM_LAYERS` sizes both that
+  vector and every `std::bitset` typedef. Reordering the enumerators changes draw
+  order; inserting one anywhere but before `NUM_LAYERS` breaks it. Traversal casts
+  a loop counter straight back to `MainLayerType`.
+- **Zoom-dependent child layers need feeding.** A layer created with a
+  `ratio_zoom_dependent_bin_dimension_to_globe_radius` decimates points per sample
+  bin, and the bin size is derived from the zoom factor pushed down by
+  `set_viewport_zoom_factor`. If the zoom changes and that call is not made, the
+  decimation silently uses a stale scale.
+- `UpdateGuard::~UpdateGuard` swallows all exceptions, and the destructor
+  unregisters from the singleton, so a collection must not outlive the singleton's
+  teardown.
 
 ## Used by
 

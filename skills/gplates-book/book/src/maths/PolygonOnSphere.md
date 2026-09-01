@@ -9,9 +9,46 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolygonOnSphere tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PolygonOnSphere` is the closed-region member of the `GeometryOnSphere` family, alongside
+`PointGeometryOnSphere`, `MultiPointOnSphere` and `PolylineOnSphere`. It does not store points:
+it stores one exterior ring plus zero or more interior rings, each ring a
+`std::vector<GreatCircleArc>` whose final arc closes back onto the ring's first vertex. Interior
+rings turn the polygon into a "donut" with holes. Because the closing arc is part of the
+representation, a ring has exactly as many segments as vertices — the structural difference from
+`PolylineOnSphere`, and the reason three separate iteration schemes exist rather than one: straight
+per-ring iteration over the arc vector (`ring_const_iterator`); whole-polygon iteration over every
+arc of every ring (`ConstIterator`, a `boost::iterator_facade` that hops from the exterior ring into
+each interior ring in turn, tagged random-access so `std::advance` can index into it); and
+"treat this ring as a polyline" iteration, which reuses `PolylineOnSphere::VertexConstIterator` and
+emits the ring's first vertex a second time at the end. Exporters and renderers that need an
+explicitly closed vertex list want the third.
+
+Instances are immutable, heap-allocated and intrusively reference-counted through
+`GPlatesUtils::ReferenceCount`; `create` is the only way in, and it hands back
+`non_null_ptr_to_const_type`, so nothing outside the class ever holds a mutable polygon. `create`
+allocates an empty polygon through the private constructor and then calls
+`generate_rings_and_swap`, which validates, builds the rings into temporaries and swaps them in —
+that is where the "strongly exception-safe" guarantee in the Doxygen comes from. Validation rejects
+two things: a ring with fewer than `s_min_num_ring_points` (three) points, and adjacent points that
+are antipodal, which `GreatCircleArc::evaluate_construction_parameter_validity` refuses because the
+arc between them is not unique. Either failure throws
+`InvalidPointsForPolygonConstructionError`, carrying the `ConstructionParameterValidity` value so
+the message can name the cause. The `check_distinct_points` flag exists to make the point count
+lenient by default: rotating a small polygon can collapse two points to within epsilon, and the
+comment on `create` is explicit that a polygon good enough to load should stay good enough after
+rotation.
+
+Everything derived from the ring data is computed lazily and cached in
+`PolygonOnSphereImpl::CachedCalculations`, an intrusively counted struct hanging off a `mutable`
+pointer that stays null until the first derived quantity is asked for. The polygon itself owns no
+algorithms — it delegates to `SphericalArea` for signed area, `PolygonOrientation`, `Centroid` for
+the outline and interior centroids, `InnerOuterBoundingSmallCircleBuilder` from `SmallCircleBounds`,
+`PolyGreatCircleArcBoundingTree` for the per-ring and whole-polygon bounding trees, and
+`PointInPolygon` for containment — and its job is to make those results shared and reusable across
+every caller that holds the same geometry. `is_point_in_polygon` goes further and escalates the
+acceleration structure with use: `ADAPTIVE` builds a medium-speed `PointInPolygon::Polygon` after
+four calls and a high-speed (O(log N)) one after two hundred, and the speed setting only ever
+ratchets upward, since dropping back would throw away the setup already paid for.
 
 ## Declared types
 
@@ -168,9 +205,56 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolygonOnSphere tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Index preconditions abort in debug builds.** The bounds checks on every indexed accessor go
+through `GPlatesGlobal::Assert<PreconditionViolationError>`, which throws only when `GPLATES_DEBUG`
+is undefined; in a debug build it calls `GPlatesGlobal::Abort`. A bad ring or vertex index is a
+crash during development and an exception in release, so do not write a debug-build test that
+expects to catch it.
+
+**Ring invariants.** Every ring holds at least three arcs, and segment count equals vertex count.
+`generate_ring` appends the wrap-around arc only if the last supplied point differs from the first
+(or if exactly three points were supplied), so an already-closed input `[A,B,C,D,A]` produces four
+segments, not five. Validation with the default `check_distinct_points = false` only counts points,
+so a ring like `[A,B,A]` passes and yields a zero-length closing arc; if your code cannot cope with
+degenerate segments, pass `true`.
+
+**Const is not thread-safe.** The geometry data is immutable, but `d_cached_calculations` is
+`mutable` and *every* derived-value accessor — arc length, area, orientation, centroids, bounding
+circles, bounding trees, `is_point_in_polygon` — allocates or writes to it, with no locking. The
+reference count in `GPlatesUtils::ReferenceCount` is atomic, so sharing the pointer across threads
+is fine, but two threads calling apparently read-only members on the same `const PolygonOnSphere`
+concurrently is a data race. `is_point_in_polygon` also increments a call counter on every call, so
+it mutates even when it does no setup.
+
+**No back-references from the cache.** The cached `PointInPolygon::Polygon` and every
+`PolyGreatCircleArcBoundingTree` are deliberately constructed *without* a shared reference to the
+polygon — the comments say so at each site — because the cache is owned by the polygon and a shared
+reference would close a cycle and leak. Anything new you add to `CachedCalculations` must follow
+the same rule.
+
+**Proximity and containment are different questions.** `is_close_to` (and therefore
+`test_proximity`, which merely delegates to it — see the FIXME) measures distance to the polygon
+*outline*, exterior and interior rings alike, and says nothing about being inside. Conversely
+`is_point_in_polygon` counts edge crossings from the antipodal centroid, so if an interior ring
+crosses the exterior ring a point outside the exterior but inside the interior ring tests as
+inside; the header notes this matches how filled polygons are rendered. `test_vertex_proximity`
+only walks the *exterior* ring, and the index it reports in the `PolygonProximityHitDetail` is an
+exterior-ring vertex index.
+
+**Iterator lifetime and default construction.** `ConstIterator` keeps raw pointers to the polygon
+and to the current ring vector, so it is invalidated by the polygon's destruction and must not
+outlive it. A default-constructed iterator throws `UninitialisedIteratorException` on dereference
+or comparison, but `increment`, `decrement` and `advance` silently no-op on it. Note also that
+`end()` is defined as the end of the *last* ring with ring id equal to the interior ring count, so
+comparisons rely on both the ring id and the within-ring iterator matching.
+
+**Cost.** `number_of_segments()` and `number_of_vertices()` loop over the interior rings on every
+call, and the indexed accessors (`get_segment`, `segment_iterator`, `vertex_iterator`, …) call them
+for their precondition assert and then `std::advance` ring by ring — cheap for the common
+single-ring polygon, but not free in an inner loop over a many-holed polygon. `get_orientation`
+reuses a cached signed area if one is already present and otherwise runs
+`PolygonOrientation::calculate_polygon_orientation` without producing a signed area, so the two
+values are not always computed together.
 
 ## Used by
 

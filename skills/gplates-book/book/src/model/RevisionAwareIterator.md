@@ -9,9 +9,31 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/RevisionAwareIterator tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+One iterator template serves all three levels of the feature store:
+`FeatureStoreRootHandle` over its feature collections, `FeatureCollectionHandle` over its
+features, and `FeatureHandle` over its top-level properties. `HandleTraits` supplies the
+per-level revision type, weak-ref type and dereference type, and the
+`RevisionAwareIteratorInternals::Traits` pair selects the const or non-const flavour, so
+`RevisionAwareIterator<const FeatureHandle>` *is* `FeatureHandle::const_iterator` and a
+non-const iterator converts implicitly to it. `BasicHandle::begin()` and `end()` hand these
+out; nothing else constructs them directly.
+
+The design point is what the iterator does *not* hold. It stores a `WeakReference` to the
+handle and an integer index — never a pointer into the container — and re-reads
+`handle->current_revision()` on every dereference, increment and decrement. That is the
+"revision awareness": an iterator can never be left addressing a superseded revision, and
+the index stays meaningful across edits because `BasicRevision::remove()` sets the child
+slot to NULL instead of erasing it, so no other element ever shifts. The constructor and
+`operator++` step over those NULL slots, so ordinary forward iteration never yields a hole
+even in a container that has had children deleted.
+
+Dereferencing a `FeatureHandle` iterator is the one special case, and it is why the `.cc`
+file exists: a template specialisation of `current_element()` returns a
+`TopLevelPropertyRef` proxy instead of a pointer. Assigning through that proxy routes into
+`FeatureHandle::set`, which deep-clones the incoming property, bumps the revision id and
+fires the modification notifications and `ChangesetHandle` bookkeeping. Without the proxy,
+`*iter = property` would silently bypass all of it. The other two levels dereference to
+plain `non_null_intrusive_ptr`s, as do const `FeatureHandle` iterators.
 
 ## Declared types
 
@@ -77,9 +99,39 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/RevisionAwareIterator tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Nothing is checked for you.** `operator*`, `operator++`, `operator--` and the
+  constructor all dereference `d_handle_weak_ref` unguarded. If the handle has been
+  destroyed or deactivated you get undefined behaviour, not an exception. `is_still_valid()`
+  is the explicit guard, checking both the weak-ref and that the child at the index still
+  exists — call it when you have *held* an iterator across model edits. The header's advice
+  not to call it during a plain iteration is about cost, not safety: forward iteration
+  already skips NULL slots.
+- **A default-constructed iterator is inert, not empty.** Its weak-ref is null and
+  `d_index` is `INVALID_INDEX`, which is `container_size_type(-1)` — an unsigned `size_t`,
+  so `SIZE_MAX`, not a negative number. It is not comparable to a real `end()` and must not
+  be dereferenced or incremented.
+- **Do not decrement `begin()`.** `operator--` pre-decrements before testing and only
+  special-cases *arriving* at index 0. Decrementing from index 0 wraps the unsigned index to
+  `SIZE_MAX` and then spins downwards; it does not terminate in any useful time.
+- **`end()` is `container_size()`, not `size()`.** The revision keeps NULLed slots, so the
+  number of slots exceeds the number of live children whenever anything has been removed.
+  Do not compute an end iterator from `size()`, and do not treat the index as a position in
+  a dense sequence.
+- **Out-of-range construction is silently clamped.** The constructor caps `index_` at
+  `container_size()`, so an oversized index yields `end()` rather than an error.
+- **Ordering is only meaningful within one container.** `operator<` compares indices when
+  both iterators reference the same handle and otherwise compares the weak-refs, i.e. the
+  raw handle addresses. `boost::equivalent` then derives `operator==` from that ordering,
+  so equality carries the same caveat.
+- **The revision is never actually swapped in this version.**
+  `BasicHandle::d_current_revision` is assigned only in the constructor and nowhere else;
+  edits mutate the current revision in place and call `FeatureRevision::update_revision_id()`,
+  whose declaration carries the FIXME "Remove this function once we actually create a new
+  revision object when we modify a feature." So the per-operation re-read of
+  `current_revision()` costs an indirection today without ever observing a change, and an
+  iterator does **not** pin the state it was created against. Treat the revision-awareness
+  as the scaffolding for the unfinished transaction/bubble-up scheme, and rely instead on
+  the NULL-slot invariant for index stability.
 
 ## Used by
 

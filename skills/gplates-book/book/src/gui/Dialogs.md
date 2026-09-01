@@ -9,9 +9,46 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Dialogs tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Dialogs` is the single owner and lazy factory for GPlates' thirty-five top-level
+dialog windows. Every one of them is a `GPlatesQtWidgets::GPlatesDialog` — a
+`QDialog` subclass that adds `pop_up()` — and every one is parented to
+`ViewportWindow`, so Qt owns them and arranges the window hierarchy. What this class
+adds is the *access path*: instead of `ViewportWindow` holding thirty-five members
+and including thirty-five headers, it holds one `QPointer<Dialogs>` and exposes it
+as `viewport_window().dialogs()`. `Dialogs.cc` is then the only translation unit in
+the program that includes every dialog header; `Dialogs.h` forward-declares them all
+in `GPlatesQtWidgets`. That containment of include cost is the point, and the class
+comment says so, along with the caveat that the intended end state — wiring menu
+actions without `ViewportWindow.cc` seeing the dialog headers at all — is not
+reached yet.
+
+Each accessor is deliberately identical boilerplate: bind a `DialogType` constant
+and a `dialog_typename` typedef at the top, test whether the `QPointer` at that slot
+in `d_dialogs` is null, construct on first call with `&viewport_window()` as parent,
+and `dynamic_cast` the stored base pointer back to the concrete reference. The
+constructor arguments are where the variety lives — most take `view_state()` or
+`application_state()`, some reach further (`ColouringDialog` is handed
+`viewport_window().reconstruction_view_widget().globe_and_map_widget()` and the
+read-error dialog, `AboutDialog` is handed `*this`). This shape is what makes the
+laziness real: a dialog is not built at startup, or even at window construction, but
+the first time something asks for it.
+
+The `pop_up_*` slots exist so a `QAction::triggered` signal can be connected
+straight to `Dialogs` and defer construction until the user first triggers the menu
+item. They are not uniform wrappers — they are where per-dialog behaviour that used
+to sit in `ViewportWindow` now lives. `pop_up_read_error_accumulation_dialog()` also
+clears the read-errors trinket in `TrinketArea`;
+`pop_up_set_camera_viewpoint_dialog()` seeds the dialog from the current camera
+position and pushes the accepted result back through `SceneView`;
+`pop_up_set_projection_dialog()` writes the result into
+`GPlatesGui::ViewportProjection` and lets the view state propagate it;
+`pop_up_configure_graticules_dialog()` and its text-overlay twin run the dialog
+modally over a settings object and repaint only on `QDialog::Accepted`;
+`pop_up_specify_anchored_plate_id_dialog()` populates from `ApplicationState` and the
+current `FeatureFocus`. The header's own warning is worth heeding: dialogs with tight
+integration into the rest of the application can misbehave when their construction is
+deferred this way — it names the Configure Animation Dialog's slider as a case where
+behaviour differed depending on whether the dialog had yet been shown once.
 
 ## Declared types
 
@@ -116,9 +153,53 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Dialogs tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`Dialogs` owns nothing. `d_dialogs` is a vector of `QPointer`, which is
+non-owning and self-nulling; the dialogs are owned by `ViewportWindow` through Qt
+parenting, and `Dialogs` itself is a `QObject` parented to `ViewportWindow` too.
+The consequence is that if a dialog is destroyed by any route other than
+`ViewportWindow` going away, its slot silently reverts to null and the next accessor
+call constructs a brand-new instance with fresh state. Conversely, the reference an
+accessor returns is only valid as long as the dialog lives; nothing hands out a
+guarded handle.
+
+The block comment above the accessors in `Dialogs.cc` is stale. It describes an
+older implementation using a static member pointer per dialog; the code now uses the
+`d_dialogs` vector indexed by `DialogType`. The invariants that actually hold are:
+`NUM_DIALOGS` must stay last in the enum, because the constructor sizes `d_dialogs`
+with it; and each accessor must pair its own `DialogType` constant with its own
+`dialog_typename`. Because these functions are written by copy-and-paste, a mismatched
+pair is the realistic failure mode — two accessors sharing a slot compile cleanly and
+fail at run time when the `dynamic_cast<dialog_typename &>` throws `std::bad_cast`
+(the cast is to a reference, so it throws rather than yielding null). Adding a dialog
+means touching the enum, the forward declaration, the include list, the accessor and
+usually a `pop_up_` slot.
+
+Accessors call other accessors. `colouring_dialog()` and `hellinger_dialog()` both
+construct `read_error_accumulation_dialog()` as a constructor argument, so asking for
+one of them materialises the other. There is no re-entrancy guard, and no cycle
+exists today, but a new dialog that took a reference to one of its own dependents
+would recurse.
+
+`application_state()`, `view_state()` and `viewport_window()` dereference their
+`QPointer`s unconditionally. The pointers are guarded — Qt nulls them if the target
+is destroyed — but nothing checks, so a `Dialogs` outliving `ViewportWindow` would
+dereference null rather than assert. In practice `ViewportWindow` is the parent, so
+this cannot happen through the normal path.
+
+`close_all_dialogs()` calls `reject()`, not `hide()` or `close()`, on every
+already-constructed dialog and skips the null slots. Any dialog that overrides
+`reject()` to discard edits will run that logic here; a dialog the user has never
+opened is untouched. Its one caller is `ViewportWindow::closeEvent()`, on the way
+out after the close has been accepted — and the comment there records that it is not
+sufficient on its own, because dialogs outside this class's registry (PyQt windows
+are the example given) can still hold the application open, hence the explicit
+`QCoreApplication::quit()` that follows.
+
+Everything here is GUI-thread only: the objects `Dialogs` manages are `QWidget`s,
+and several `pop_up_*` slots call `exec()`, which spins a nested event loop. A
+modal `exec()` inside a slot means arbitrary other slots can run before it returns,
+so anything that pops up a dialog in the middle of a state change should assume the
+world may have moved by the time it continues.
 
 ## Used by
 

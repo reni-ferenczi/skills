@@ -9,9 +9,35 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapCanvasToolAdapter tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MapCanvasToolAdapter` is the demultiplexer between raw mouse events and the map
+canvas tools. `GPlatesQtWidgets::MapView` emits five untyped mouse signals —
+pressed, clicked, dragged, released-after-drag, moved-without-drag — each carrying
+the `Qt::MouseButton` and `Qt::KeyboardModifiers` as ordinary parameters. This
+class is the only thing that inspects those two parameters: a nested switch turns
+each (button, modifier) combination into the corresponding named virtual on
+`GPlatesGui::MapCanvasTool`, so `MapCanvasTool` subclasses never see Qt event
+plumbing and never test for a Shift key. It is the exact counterpart of
+`GPlatesGui::GlobeCanvasToolAdapter` for the globe, and the two are always driven
+as a pair by `CanvasToolWorkflow::activate_selected_tool()`, which activates one
+globe tool and one map tool for whatever the user picked in the toolbar.
+
+The activation mechanism is signal connection, not a virtual dispatch table. Only
+one tool is active at a time (`d_active_map_canvas_tool`, a
+`boost::optional<MapCanvasTool &>`), and `activate_canvas_tool()` connects to the
+`MapView` signals only on the transition from no-tool to tool — reactivating while
+a tool is already active just swaps the reference, which is what keeps duplicate
+connections from accumulating. `deactivate_canvas_tool()` tears down every
+connection with a blanket `QObject::disconnect(&d_map_view, 0, this, 0)`, so
+between tools nothing is listening at all.
+
+Coordinates pass through untranslated: positions are `QPointF` in `QGraphicsScene`
+coordinates plus an `is_on_surface` flag, and it is the individual `MapCanvasTool`
+that converts to geographic coordinates through the `MapProjection` it holds. Drag
+handlers additionally get a `translation` delta. This is where the map path
+diverges from the globe path, whose adapter deals in `PointOnSphere` pairs; the
+two coordinate conventions are the reason there are two adapters and two tool base
+classes at all, with `GPlatesCanvasTools::CanvasToolAdapterForMap` bridging a
+projection-agnostic tool onto this side.
 
 ## Declared types
 
@@ -48,9 +74,38 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapCanvasToolAdapter tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Not every gesture is wired up, and the gaps are silent.** The switch statements
+fall through to `break` for anything unhandled, so the event is dropped without a
+warning. Concretely: right-button and middle-button events do nothing at all;
+`handle_press` forwards only unmodified left-press, with the Shift and Ctrl cases
+present but empty; and `handle_release_after_drag` has no Shift+Ctrl case even
+though `handle_drag` does. If a `MapCanvasTool` override never fires, check here
+before debugging the tool — the corresponding case may simply not exist.
+
+**Shift+Ctrl needs the `default` branch.** `Qt::ShiftModifier | Qt::ControlModifier`
+is not a constant expression, so it cannot be a `case` label; the combination is
+tested with an `if` inside `default:`. Adding another modifier combination means
+extending that branch, not adding a case.
+
+**Modifier matching is exact, not a mask test.** The switch compares the whole
+`Qt::KeyboardModifiers` value, so a gesture performed with an additional key held
+(Alt, or Meta) matches no case and is discarded rather than being treated as the
+plain gesture.
+
+**`get_active_map_canvas_tool()` asserts.** It throws
+`GPlatesGlobal::PreconditionViolationError` if no tool is active. In practice the
+connections only exist while a tool is active, so the slots cannot normally fire
+with an empty optional — but calling a handler directly, or leaving a stale
+connection, turns into an assertion failure rather than a null dereference.
+
+**The `MapView` reference is borrowed and unowned.** It is stored as a bare
+reference and must outlive the adapter; the adapter is also a plain `QObject` with
+no parent, owned by value by the `CanvasToolWorkflow` machinery, and the active
+tool is likewise held by reference, not by pointer ownership.
+
+**The class comment on `MapCanvasTool` is stale** in the same way as its globe
+counterpart: it refers to a `MapCanvasToolChoice` that no longer exists in this
+tree. Activation goes through this adapter.
 
 ## Used by
 

@@ -9,9 +9,50 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/GeometryBuilder tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GeometryBuilder` is the mutable, observable model that sits behind geometry
+digitisation and vertex editing. Everything downstream of it — `GeometryOnSphere`
+and its subclasses — is immutable, so there has to be somewhere to accumulate a
+half-finished polyline while the user is still clicking. That somewhere is a
+sequence of `InternalGeometryBuilder` objects, each of which is little more than a
+`std::vector<GPlatesMaths::PointOnSphere>` plus the *desired* geometry type and a
+dirty flag. The immutable `GeometryOnSphere` is manufactured lazily by
+`InternalGeometryBuilder::update()` and only when someone asks for it, which is
+why the editing tools can insert, move and delete single vertices without paying
+for a geometry rebuild on every mouse event. The distinction between the type the
+user asked for (`get_geometry_build_type`) and the type the points currently
+support (`get_actual_type_of_current_geometry`) is central: three clicks towards a
+polygon are still only a polyline, and the `changed_actual_geometry_type` signal
+is how the UI finds out when that promotion happens.
+
+Two instances exist for the whole application, both owned by
+`GPlatesPresentation::ViewState` as `boost::scoped_ptr` members: one for the
+digitisation tools building a brand-new geometry, and one holding the focused
+feature's geometry, which `FocusedFeatureGeometryManipulator` keeps synchronised
+with the model in both directions. The `GeometryOperation` subclasses
+(`AddPointGeometryOperation`, `InsertVertexGeometryOperation`,
+`MoveVertexGeometryOperation`, `DeleteVertexGeometryOperation`,
+`SplitFeatureGeometryOperation`) all mutate one of these builders and then render
+the result; `GPlatesQtWidgets::LatLonCoordinatesTable` and `DigitisationWidget`
+observe the same builder to show the vertex list.
+
+Undo is not a command stack here — it is a memento protocol. Every public mutator
+returns an opaque `UndoOperation` (a `boost::any` wrapping a
+`boost::shared_ptr<GeometryBuilderInternal::UndoImplInterface>`), and the
+`QUndoCommand` subclasses in `GeometryBuilderUndoCommands` simply hold that value
+and hand it back to `undo()`. Undoing is double dispatch: `undo` unwraps the
+memento, calls `accept_undo_visitor`, and the concrete memento calls back into the
+matching `GeometryBuilder::visit_undo_operation` overload, which performs the
+inverse *public* operation — undoing an insert is a remove, undoing a
+set-geometry-type is another set-geometry-type. `CompositeUndoImpl` chains several
+mementos and replays them in reverse, which is how the templated `set_geometry`
+composes clear + set-type + insert into a single undoable step. The
+`SecondaryGeometry` machinery is a separate concern bolted onto the same class:
+it records neighbouring `GPlatesAppLogic::ReconstructedFeatureGeometry`s whose
+vertices coincide with the vertex being dragged, so the MoveVertex tool can drag
+shared vertices of adjacent features together. `GeometryUpdater` and
+`GeometryVertexFinder` are the `ConstGeometryOnSphereVisitor`s that respectively
+rebuild an immutable geometry with one vertex replaced, and read one vertex out of
+it by index.
 
 ## Declared types
 
@@ -226,9 +267,59 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/GeometryBuilder tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Signal bracketing.** Every public mutator opens an `UpdateGuard` on entry.
+  The guard increments `d_update_geometry_depth`; `started_updating_geometry` is
+  emitted only on the transition to depth 1 and `stopped_updating_geometry` only
+  on the return to depth 0, so a nested call such as `set_geometry` (which itself
+  calls `clear_all_geometries`, `set_geometry_type_to_build` and
+  `insert_geometry`) produces exactly one begin/end pair. The dirty
+  `InternalGeometryBuilder`s are only `update()`d, and
+  `changed_actual_geometry_type` only emitted, in the outermost
+  `end_update_geometry`. Any new mutator must open an `UpdateGuard` or observers
+  will see point-level signals with no enclosing update bracket.
+- **Intermediate moves.** The `*_excluding_intermediate_moves` signal pair exists
+  purely as a volume control: `move_point_in_current_geometry` with
+  `is_intermediate_move == true` (mouse still down) suppresses them. Expensive
+  observers — table rebuilds, model writes — should connect to those, not to the
+  plain pair, or dragging a vertex will re-run them per mouse sample.
+- **Undo mementos are single-use.** `undo()` calls `reset()` on the client's
+  `shared_ptr` after replaying it, so passing the same `UndoOperation` to `undo()`
+  twice asserts. The nested `visit_undo_operation` handlers deliberately discard
+  the `UndoOperation` returned by the inverse call, so undo does not build a redo
+  memento; redo in `GeometryBuilderUndoCommands` works by re-issuing the original
+  operation, not by inverting the undo.
+- **Constructor emits nothing on purpose.** Signals are not yet connected at
+  construction time, so no state set in the constructor may go through a
+  signalling path.
+- **Single-geometry invariant.** `d_geometry_builder_seq` never holds more than
+  one entry in the current code; `get_geometry_on_sphere` asserts that.
+  `d_current_geometry_index` is held at zero even when the sequence is empty, so
+  that adding a point simply recreates geometry 0. The multi-geometry indexing in
+  the interface is anticipatory.
+- **Threading.** A `QObject` used only on the GUI thread with direct connections;
+  observers run inside the mutator that emitted the signal, so re-entrant calls
+  back into the builder from a slot land inside the same `UpdateGuard` scope.
+- **Error handling is assertion-based, and the documentation understates it.**
+  Several methods documented as throwing `PreconditionViolationError` actually
+  raise `AssertionFailureException` (`insert_point_into_current_geometry`,
+  `remove_point_from_current_geometry`, `move_point_in_current_geometry`,
+  `get_current_geometry_builder`). `UpdateGuard::~UpdateGuard` swallows every
+  exception from `end_update_geometry`, so a throwing observer slot silently
+  aborts the rest of the end-of-update processing.
+- **Known rough edges.** `get_actual_type_of_geometry` range-checks its
+  `geom_index` argument and then reads `get_current_geometry_builder()` instead of
+  that index — harmless only while there is at most one geometry.
+  `move_point_in_current_geometry` asserts `point_index <= size()` where the
+  remove path correctly asserts `<`. In the file-local
+  `move_secondary_geometry_vertices`, the `secondary_points` iterator is never
+  advanced, so with more than one secondary geometry every one is moved to the
+  same point; and `fill_secondary_points` only appends when a vertex was found,
+  so the two vectors are not guaranteed to stay index-aligned. `GeometryUpdater`
+  rebuilds polygons from the exterior ring only, discarding interior rings, and
+  its point case replaces the position regardless of the vertex index.
+- **Silent no-op.** `add_secondary_geometry` takes a
+  `ReconstructionGeometry` and does nothing at all if it does not down-cast to a
+  `ReconstructedFeatureGeometry`.
 
 ## Used by
 

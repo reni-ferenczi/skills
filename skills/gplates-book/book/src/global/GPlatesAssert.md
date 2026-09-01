@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/GPlatesAssert tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+GPlates does not use C `assert`. Every internal consistency check in the codebase goes through `GPlatesGlobal::Assert<ExceptionType>(condition, GPLATES_ASSERTION_SOURCE, ...)`, and the point of the design is that one written check has two behaviours. On a `GPLATES_DEBUG` build (CMake gives that define to the `DEBUG` and `RELWITHDEBINFO` configurations, in `src/CMakeLists.txt`) a failed check calls `Abort`, which prints the manually tracked `GPlatesUtils::CallStack` trace through `qFatal` so the process traps in the debugger with its real native stack. On a release build the same check throws `ExceptionType`, constructed with the failure location as its first argument, and that exception travels up to the `try_catch` wrapper in `GPlatesGui::GPlatesQApplication::notify`, which reports it to the user and exits. A shipped GPlates therefore fails an assertion with a dialog and a log entry rather than a silent crash, and a developer's build stops at the failure.
+
+The condition is a deduced template parameter rather than `bool` on purpose. Boost made `operator bool` explicit on `boost::optional`, `shared_ptr` and friends under C++11, which broke the implicit conversion callers had relied on; feeding the value straight into an `if` restores it, since that context permits explicit conversion. The `ExceptionType` parameter comes first and `AssertionConditionType` last precisely so callers only ever name the exception type and let the rest deduce. The five extra overloads exist because the exception being constructed may need more than a location — the trailing `arg1 … arg5` are forwarded verbatim to its constructor, which is why every class under `GPlatesGlobal::Exception` must order its constructor arguments with `CallStack::Trace` first.
+
+`Abort` is the same fork without a condition: `[[noreturn]]`, `qFatal` with the call-stack trace on debug builds, `throw AbortException(abort_location)` otherwise. `GPLATES_ASSERTION_SOURCE` expands to exactly the same `CallStack::Trace(__FILE__, __LINE__)` as `GPLATES_EXCEPTION_SOURCE` in `GPlatesException.h`; the two names are a readability convention, not a functional distinction.
 
 ## Declared types
 
@@ -37,9 +39,13 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/GPlatesAssert tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Assertions are never compiled out.** `Assert` is a function, not a macro, so the condition — and every extra argument you pass for the exception constructor — is evaluated on every call in every build configuration. Do not put an expensive check, and never put a side effect, inside the condition or the arguments on the assumption that release builds skip it. In debug builds the arguments are evaluated and then discarded with `(void)`.
+- **The exception type is ignored in debug builds.** `Assert<Foo>(...)` aborts rather than throwing when `GPLATES_DEBUG` is defined, so any code that catches `Foo` and recovers is dead in debug and live in release. This also means `RELWITHDEBINFO` behaves like debug here, not like release — a failing assertion aborts a `RELWITHDEBINFO` build.
+- **Interaction with the top-level handler.** `GPlatesQApplication`'s `try_catch` deliberately does *not* catch (apart from `NeedExitException`) under `GPLATES_DEBUG`, so the two halves line up: debug builds neither throw from `Assert` nor swallow anything else.
+- The `ExceptionType` template argument is not constrained. Anything constructible from `(CallStack::Trace, args...)` compiles, but only classes derived from `GPlatesGlobal::Exception` will be recognised by the top-level handler and carry a call-stack trace.
+- `Abort`'s Doxygen says it "calls `std::abort`"; the code calls Qt's `qFatal`, which routes through the installed message handler before terminating.
+- The debug path builds its trace from the manually maintained `GPlatesUtils::CallStack` singleton, which only contains frames explicitly marked with `TRACK_CALL_STACK()`. Expect a very sparse trace, not a real stack.
+- Header guard is `_GPLATES_GLOBAL_ASSERT_H_`, which does not match the `GPLATES_GLOBAL_*` convention used by the rest of the module.
 
 ## Used by
 

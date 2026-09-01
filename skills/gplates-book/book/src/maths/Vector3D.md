@@ -9,9 +9,29 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/Vector3D tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The unconstrained arm of the vector pair. `Vector3D` deliberately carries no
+invariant — any magnitude, any components — and exists so that operations whose
+results are not unit length have somewhere to live. That is why `cross()` on two
+`UnitVector3D` arguments returns a `Vector3D`, why scaling a `UnitVector3D`
+returns a `Vector3D`, and why `UnitQuaternion3D` holds its vector part as one.
+The single bridge back is `get_normalisation()`, which is the only sanctioned
+way to obtain a `UnitVector3D` from arbitrary components.
+
+`Vector3D.h` and `UnitVector3D.h` are mutually included on purpose. Each
+forward-declares the other class, closes its own class body, then `#include`s
+the other header and only afterwards defines the inline conversion constructor
+and the free operators — by which point both types are complete. Editing either
+header means preserving that ordering. The elementwise arithmetic itself lives
+in neither class: `dot`, `cross`, `negate`, `scale` and `perpendicular` are the
+templates in `GenericVectorOps3D`, shared by both types, and every one of them
+unwraps `real_t` to `double` via `.dval()` before doing any work. The comments
+there record the reason — on MSVC the `Real`-typed version of `dot` compiled to
+41 instructions and would not inline, against 12 for the `double` version. The
+same unwrapping is repeated by hand in `magSqrd`, `operator+` and `operator-`.
+
+Consumers are the geometry layer above: `GreatCircleArc`,
+`CartesianConvMatrix3D`, `GeometryIntersect`, `Centroid`, and the OpenGL
+intersection primitives.
 
 ## Declared types
 
@@ -58,9 +78,34 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/Vector3D tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Normalisation.** `get_normalisation()` asserts `mag_sqrd > 0.0` through
+`GPlatesGlobal::Assert` and throws `UnableToNormaliseZeroVectorException`
+otherwise. Note what is being tested: the *squared* magnitude, against exact
+zero, on the raw `double`. So the trigger is the sum of squares underflowing to
+zero, not the vector being componentwise zero. `is_zero_magnitude()` duplicates
+that same expression (the code says "mirror the code in `get_normalisation()`"),
+so it is a reliable pre-check — but the two must be kept in step by hand, since
+nothing enforces it.
+
+**Comparison semantics differ from `UnitVector3D`.** `operator==` here is
+componentwise `real_t` equality, so it means "each component within
+`EPSILON`" — an axis-aligned box, not a distance. `UnitVector3D` instead
+compares by dot product. Do not assume the two behave alike when a template is
+instantiated over both.
+
+`parallel()` and `collinear()` compare `dot` against the product of the
+magnitudes using `Real`'s tolerant `>=`; as the header states, this makes zero
+vectors parallel and collinear to everything. `perpendicular()` reduces to
+`abs(dot) <= 0.0`, i.e. `|dot| <= EPSILON` — an absolute threshold on the dot
+product that is *not* normalised by magnitude, so it becomes an
+ever-stricter angular test as the vectors grow. For anything but small vectors,
+normalise first.
+
+**Other.** The components are `protected` rather than `private`, but nothing in
+the tree derives from `Vector3D` — `UnitVector3D` is a separate class with its
+own storage, not a subclass, and the two convert explicitly. Instances are plain
+values with no shared or lazily cached state, so copies are independent and
+const use is thread-safe.
 
 ## Used by
 

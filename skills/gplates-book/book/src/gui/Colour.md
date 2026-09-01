@@ -9,9 +9,39 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Colour tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Colour` is the value type the whole application passes around wherever a colour
+is needed, and its entire design is dictated by one requirement: an array of
+`Colour` must be handable to OpenGL directly as an array of four `GLfloat`s.
+That is why the sole member is `GLfloat d_rgba[RGBA_SIZE]`, why the class
+provides implicit `operator GLfloat*` / `operator const GLfloat*` conversions,
+and why the header goes out of its way *not* to inherit from
+`GPlatesUtils::QtStreamable` — even an empty base would push `sizeof(Colour)`
+from 16 to 20 bytes, so the streaming operators are provided as free functions
+instead. The same reasoning governs `rgba8_t`, which must stay exactly 4 bytes
+and therefore also refuses multiple inheritance.
+
+The two representations here are for two different worlds. `Colour` is the
+floating-point form used by the painters (`GlobeRenderedGeometryLayerPainter`,
+`MapRenderedGeometryLayerPainter`), by every colour palette, and by
+`RenderedGeometryFactory`. `rgba8_t` is the packed 8-bit form used for raster and
+texture data — it is an anonymous union over four named `uint8_t` components, a
+`char[4]`, and both signed and unsigned 32-bit views, so the same four bytes can
+be addressed whichever way the surrounding code finds convenient.
+`convert_argb32_to_rgba8` and `convert_rgba8_to_argb32` bridge it to Qt: the
+long comments there are worth reading before touching them, because
+`QImage::Format_ARGB32` names a *32-bit integer* layout while `GL_RGBA` names a
+*memory byte* layout, so the two are only the same thing on little-endian
+machines. Both functions branch on `QSysInfo::ByteOrder` accordingly.
+
+Everything else is conversion and blending helpers: to and from `QColor`, `QRgb`,
+CMYK and HSV, plus `linearly_interpolate`, `modulate` and `pre_multiply_alpha`.
+`HSVColour` exists mainly so that `linearly_interpolate` can be done in hue
+space — its implementation is the only non-trivial arithmetic in the file,
+handling the fact that hue is cyclic (it takes the shorter way round the wheel)
+and that achromatic colours have a meaningless hue (it borrows the other
+colour's hue rather than sweeping through the spectrum). CMYK and HSV
+conversions largely delegate to `QColor`; the CMYK pair is a transcription of
+the Boost.GIL algorithm, copied rather than depended on.
 
 ## Declared types
 
@@ -121,9 +151,67 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Colour tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**`Colour::from_rgba8()` has its green and blue channels swapped.** The
+implementation passes `rgba8.blue` into the constructor's `green` parameter and
+`rgba8.green` into `blue`. There are currently no callers anywhere in the tree,
+so the bug is dormant — but it is a live trap for anyone who reaches for the
+obvious-looking inverse of `to_rgba8()`. Fix it, or convert via
+`QColor::fromRgba` / `from_qrgb` instead.
+
+**Nothing is clamped on construction.** The constructor's own comment says
+out-of-range components are left alone because OpenGL clamps for itself, so a
+`Colour` can legitimately hold negative or greater-than-one components. Clamping
+happens only at the boundaries where it must: `operator QColor` runs each
+component through the file-local `clamp_zero_one`, `to_cmyk` clamps explicitly
+(with a comment saying why), and `float_to_uint8` saturates on the way to
+`rgba8_t`. `linearly_interpolate`, `modulate` and `pre_multiply_alpha` do no
+clamping and no range checking on `position` either — passing a position outside
+`[0, 1]` extrapolates rather than clamping. In `linearly_interpolate(first,
+second, position)`, position 0 yields `first` and position 1 yields `second`;
+getting that backwards is an easy way to invert a palette by accident.
+
+**Size is a contract, not an implementation detail.** `sizeof(Colour)` must stay
+16 bytes and `sizeof(rgba8_t)` 4 bytes, because both are passed to OpenGL and to
+raw stream reads/writes as arrays. Do not add virtual functions, base classes
+(even empty ones) or members to either. Related: `output_pixels`/`input_pixels`
+`reinterpret_cast` an `rgba8_t*` to `char*` and do a single raw block transfer —
+profiling showed the per-pixel `operator<<` to be far slower — so any layout
+change silently corrupts serialised raster data. The `GPlatesUtils::Endian::swap`
+specialisation for `rgba8_t` is an intentionally empty function for the same
+reason: the four bytes are already in memory order, so byte-swapping would be
+wrong.
+
+**`rgba8_t`'s default constructor leaves the components uninitialised**, which is
+deliberate (bulk pixel buffers) and documented, but means a default-constructed
+`rgba8_t` holds garbage. Note also that `operator==`/`operator!=` are non-const
+member functions taking a non-const reference, so they will not compile against
+`const rgba8_t` operands.
+
+**Named colours are functions, not variables.** `get_black()` and friends are
+generated by the `DEFINE_COLOUR` macro and each returns a function-local static —
+explicitly to dodge the static initialisation order fiasco, since some of these
+are used to initialise other translation units' statics (`MonochromeAgeColourPalette`
+does exactly this). Keep that pattern for any colour you add. Be aware the names
+follow the HTML/X11 convention: `get_green()` is (0, 0.5, 0) and `get_lime()` is
+the pure (0, 1, 0).
+
+Smaller points:
+
+- `operator==` compares with `GPlatesMaths::are_almost_exactly_equal` on each
+  component, not bitwise; `operator!=` comes free from
+  `boost::equality_comparable`.
+- `to_hsv()` normalises Qt's convention of returning hue `-1` for achromatic
+  colours to `0`, so downstream code can assume hue is in `[0, 1]`.
+- `from_cmyk()` discards alpha entirely — the result always has the constructor
+  default of 1.0. The CMYK round trip is therefore lossy for translucent colours.
+- The free `pre_multiply_alpha(rgba8_t)` and the static
+  `Colour::pre_multiply_alpha(const Colour&)` do the same thing in different
+  arithmetic; the 8-bit one avoids float conversion and integer division by 255
+  using the `((x+1)*257)>>16` trick, which is approximate. Do not "clean it up"
+  into a division without re-checking the rounding.
+- `Colour` is transcribable for sessions and projects, and its `transcribe()`
+  writes the raw `d_rgba` array under the tag `"rgba"` — that tag and the array
+  length are part of the saved-file format.
 
 ## Used by
 

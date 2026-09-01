@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionGraph tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the in-memory form of a rotation model: every total reconstruction sequence loaded from rotation features or `.rot` files, held as a graph whose nodes are plate IDs and whose edges are fixed-plate-to-moving-plate sequences, each carrying its own list of time-sampled finite rotations. Crucially it is *time-independent*. One graph covers all reconstruction times, and a `ReconstructionTree` is produced from it by choosing an anchor plate and a time and walking outward; `ReconstructionTreeCreator` then caches trees per time over a single shared graph. This is the split that makes changing the reconstruction time cheap — the rotation data is parsed and assembled once, and only the per-time tree is rebuilt.
+
+The graph can contain cycles, and that is the reason it is a graph rather than a tree. An edge represents a whole sequence spanning a time range, so a moving plate that switches fixed plates at a crossover ends up with more than one incoming edge, and a plate can be reachable by more than one path. `ReconstructionTree::create` resolves this into an acyclic hierarchy rooted at the anchor plate by taking exactly one path through each crossover and traversing at most one edge *upwards* per plate; at a crossover time either path is available, and which one is chosen falls out of the order of the edges in the plate's list, which is the rotation file order reversed (the builder uses `push_front`). More than one edge between the same fixed/moving pair is also normal, arising when a sequence is split across files or time ranges.
+
+Nothing outside `ReconstructionGraphBuilder` can build or modify a graph: the constructor, `create()` and all of the node internals are private with the builder as the sole friend. The builder inserts sequences one at a time, optionally extends each moving plate's oldest sequence back to the distant past so that reconstructed geometry does not snap back to present-day positions beyond the end of the rotation data, and `build_graph()` hands back a `non_null_ptr_to_const_type` and starts a fresh graph for any subsequent inserts. Storage is three `boost::object_pool` allocators — one each for plates, edges and pole samples — with the connections expressed as intrusive singly-linked lists, so building the graph costs no per-node heap allocation and the whole structure is released in one go.
 
 ## Declared types
 
@@ -54,9 +56,17 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionGraph tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Everything the graph exposes is a reference into its object pools.** `get_plate` returns `boost::optional<const Plate &>`, and `Plate`, `Edge` and `PoleSample` are linked by raw pointers into the pools. None of them may outlive the `ReconstructionGraph` that owns them, and none of them is reference-counted individually — hold the graph's `non_null_ptr_to_const_type` for as long as you hold anything reached from it.
+
+**Graph identity is load-bearing.** `ReconstructionTree::created_from_same_graph_with_same_parameters` compares graph pointers, precisely because tree caches can evict and recreate an equivalent tree. Rebuilding a graph from unchanged rotation data therefore makes every previously created tree compare unequal to the new ones. Reuse the graph rather than rebuilding it.
+
+**`get_begin_time` and `get_end_time` read against list order, not with it.** Pole samples are stored youngest to oldest, matching the rotation file; so the *begin* time is `back()` (the oldest sample) and the *end* time is `front()` (the youngest). Both dereference unconditionally, which is safe only because `ReconstructionGraphBuilder::insert_total_reconstruction_sequence` discards any sequence with fewer than two samples — every edge in a finished graph has at least two.
+
+**Traversal must not assume one edge.** A plate may have several incoming edges (crossovers) and several edges to the same neighbour (a sequence split across files). Code that walks the graph has to handle both, and has to pick among them by the reconstruction time falling inside an edge's range.
+
+**The intrusive lists use `normal_link`, not the default `safe_link`.** Destroying a linked element does not assert, which the header comments justify on the grounds that the graph is always destroyed wholesale — and they recommend switching back to `safe_link` while debugging a lifetime problem here.
+
+**Immutable after `build_graph`.** The builder detaches the finished graph and allocates a new one, so a returned graph is never mutated again; combined with the atomic reference count in `GPlatesUtils::ReferenceCount`, that makes a built graph safe to share. There is no way to remove or edit a plate, edge or sample — a change to the rotation data means building a whole new graph.
 
 ## Used by
 

@@ -9,9 +9,30 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/PropertyValue tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the root of the property-value hierarchy: every concrete GPML and GML value type
+in `property-values` (`GpmlPlateId`, `GmlTimePeriod`, `GpmlConstantValue`,
+`GpmlIrregularSampling`, …) derives from it, and a feature's content is ultimately a tree
+of these hanging off `TopLevelPropertyInline`. The base fixes four things for all of them:
+intrusive reference counting through `GPlatesUtils::ReferenceCount`, so values are always
+passed as `non_null_ptr_type` and never by value; double dispatch onto
+`FeatureVisitorBase` via `accept_visitor`, which is how everything in `feature-visitors`
+and the writers in `file-io` reads a feature; a `GPlatesPropertyValues::StructuralType`
+tag that ties the C++ class back to the GPGIM type it implements; and a deep copy
+operation.
+
+Copying is deliberately awkward. Copy-assignment is declared and never defined, so the
+only way to duplicate a value is `deep_clone_as_prop_val()`, which recursively copies
+nested values as well. That function cannot live in the base — it forwards to a
+non-virtual `deep_clone()` whose return type is the derived class — so each derived class
+plants an identical definition by invoking the `DEFINE_FUNCTION_DEEP_CLONE_AS_PROP_VAL()`
+macro in its class body. The Doxygen here says a "Bubble-Up revisioning system" would make
+deep cloning redundant; that system was never finished, and in this version editing a
+feature really does mean cloning a property value, changing the clone, and handing it back
+to `FeatureHandle::set`.
+
+The `d_instance_id` counter is the mechanism that makes that clone-edit-check-in cycle
+work without a revisioning system, and it is the one piece of this class whose behaviour
+is not what its name suggests — see the notes.
 
 ## Declared types
 
@@ -65,9 +86,35 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/PropertyValue tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **`operator==` is not value equality.** The `.cc` comment is explicit: it compares
+  `d_instance_id` (plus `directly_modifiable_fields_equal`) and therefore answers "is
+  `other` an unmodified clone of `this`", not "do these hold the same data". Two values
+  built independently from identical inputs compare unequal. The copy constructor
+  deliberately propagates the instance id, so a fresh clone compares equal to its original
+  until something mutates it.
+- **Every mutator must call `update_instance_id()`.** That call is what breaks the link
+  between a clone and its original. It is the whole contract: `FeatureHandle::set` skips
+  the store — and so emits no modification notification, sets no unsaved-changes flag and
+  creates no changeset entry — when the incoming value compares equal to the one already
+  there. A setter added to a derived class that forgets `update_instance_id()` silently
+  discards the user's edit. Around 30 files in `property-values` make this call.
+- **Override `directly_modifiable_fields_equal` when you leak internals.** If a derived
+  class hands out a member by non-const reference or as a `non_null_intrusive_ptr` (an XML
+  attribute map, a nested property value), the client can mutate it without any setter
+  running, so the instance id stays stale. The override compensates by comparing those
+  fields for real — `GpmlConstantValue` compares its nested value with `*d_value ==
+  *other.d_value`, and `GmlTimePeriod`, `GpmlArray`, `GpmlKeyValueDictionary` and about a
+  dozen others do the same. The base returns `true`, which means "trust the instance id".
+- **Reference count starts at zero.** Both constructors initialise a fresh
+  `ReferenceCount`, including the copy constructor. A newly constructed or cloned value is
+  only safe once it is inside a `non_null_intrusive_ptr`; that is why `create` and
+  `clone` in every derived class wrap the `new` immediately.
+- **`s_next_instance_id` is a plain non-atomic process-wide counter**, incremented by the
+  default constructor and by `update_instance_id()`. Constructing or mutating property
+  values on more than one thread races on it, and a collision would make two unrelated
+  values compare equal.
+- `print_to` is virtual and `operator<<` is the free function that dispatches to it; the
+  `QtStreamable` base is what extends that to `qDebug()` and `QTextStream`.
 
 ## Used by
 

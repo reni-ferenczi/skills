@@ -9,9 +9,37 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/FeatureCollectionFileState tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The registry of "which files are currently loaded", sitting between
+`FeatureCollectionFileIO` (which actually reads and writes them) and everything
+that needs to enumerate them — `ReconstructGraph` to wire feature collections into
+layers, `ManageFeatureCollectionsDialog` to list them, `UnsavedChangesTracker` to
+watch them. `ApplicationState` owns the single instance and forwards its signals.
+
+The design turn that explains the whole class is that it is *not* the authority on
+whether a file is loaded — the model is. `add_file_internal` calls
+`File::add_feature_collection_to_model`, and `remove_file` removes the feature
+collection from the feature store root and then deliberately does nothing else, not
+even emit a signal. Loading and unloading are therefore ordinary model edits, and
+so they are undoable. A `FeatureCollectionUnloadCallback` attached to each file's
+feature collection turns the model's deactivated / reactivated /
+about-to-be-destroyed events into this class's state changes and signals. That is
+why undoing a file *add* produces `file_state_file_about_to_be_removed` from code
+that never called `remove_file`, and why redoing it produces
+`file_state_files_added` for a file the user did not load. Everything else here —
+the slot array, the free-handle list, the separate index array — exists to make a
+file's identity and its position survive that round trip.
+
+Two identifier spaces do that work, and keeping them apart is the point.
+`file_handle_type` is a private, stable slot index; a `FileReference` stores one
+and nothing else, so a reference stays valid while other files come and go.
+`file_index_type` is the public, dense position in load order, always contiguous
+from zero over the currently loaded files, recomputed by walking `d_file_indices`
+whenever a file deactivates or reactivates. `FileReference::get_file_index()` looks
+it up on demand rather than caching it, which is what lets the header promise that
+clients can mirror the sequence in their own vector and index it directly.
+`FileReference` itself is a two-word value template parameterised on the constness
+of the file state, with an implicit non-const to const conversion — the same
+pattern the model uses for weak references.
 
 ## Declared types
 
@@ -71,9 +99,61 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/FeatureCollectionFileState tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**`remove_file` is not synchronous.** It removes the collection from the store root
+and returns; the state change and every signal happen inside the model callback,
+which a `GPlatesModel::NotificationGuard` further up the call stack can defer
+arbitrarily. Do not assume `get_loaded_files()` has shrunk when `remove_file`
+returns.
+
+**Do not dereference the feature collection in
+`file_state_file_about_to_be_removed`.** The header says so explicitly: the signal
+also fires when a file add is undone, and in that case the collection is already
+gone. If you need a post-removal hook, listen to `file_state_changed`, which
+carries no file reference precisely because a valid one cannot be given.
+
+**File handles are recycled, so a stale `FileReference` is dangerous.** Slots stay
+occupied while a file is merely deactivated (undo can bring it back), but
+`destroying_feature_collection` pushes the handle onto `d_free_file_handles` and
+the next `add_file` reuses it. A `FileReference` kept across a genuine unload can
+therefore silently start referring to a *different* file rather than failing.
+Between deactivation and destruction the behaviour differs by accessor:
+`get_file` and `set_file_info` assert `d_is_active_in_model` and throw
+`AssertionFailureException`, while `get_file_index` does not check and returns the
+stale index.
+
+**Destruction can arrive without deactivation.** `destroying_feature_collection`
+handles the case where `d_is_active_in_model` is still true by calling
+`deactivated_feature_collection` itself, because a notification guard blocks
+deactivation events but not impending-destruction events. The disabled assertion
+left in an `#if 0` block records the assumption that used to hold. Any new code
+reacting to these callbacks has to tolerate the same ordering.
+
+**The destructor unloads everything, with signals.** It walks the slots and calls
+`remove_file` on each still-active file, so listeners can be reached while the
+object is being torn down. This is exactly why `ApplicationState`'s destructor
+calls `QObject::disconnect` on it first.
+
+**Never let the callback-carrying weak reference escape.**
+`FileSlotExtra::d_callback_feature_collection` is a second weak ref to the same
+collection, held privately, because a `WeakReference` copy also copies its
+callback — handing it out would make the unload callback fire once per copy. The
+public `File::get_feature_collection()` deliberately returns a different, unattached
+weak ref.
+
+**Costs are linear in loaded files, per operation.** Deactivate and reactivate
+each walk the tail of `d_file_indices`; destroy erases from that vector and then
+scans every slot; `get_loaded_files()` allocates a fresh vector and iterates all
+slots including dead ones. The comments accept this for hundreds of files. Note
+that `get_file_reference_containing_feature` calls `get_loaded_files()` and then
+scans it, so resolving a feature to its file is O(N) with an allocation — do not
+put it in a loop over features.
+
+**Single-threaded.** A `QObject` driven by model callbacks and direct connections
+on the GUI thread; none of the bookkeeping is synchronised.
+
+**`emit_file_reloaded` is a pass-through, not a detector.** This class never
+notices a reload itself; `FeatureCollectionFileIO` calls it after re-reading a
+file, and `TotalReconstructionSequencesDialog` is the only listener in the tree.
 
 ## Used by
 

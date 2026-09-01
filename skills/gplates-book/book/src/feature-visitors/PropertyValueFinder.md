@@ -9,9 +9,50 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/PropertyValueFinder tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the generic "give me the value of property *X* as type *T*" lookup that the
+rest of GPlates uses instead of hand-writing a visitor per query — hence the very
+wide fan-in below. A caller writes
+`get_property_value<GPlatesPropertyValues::GpmlPlateId>(feature_weak_ref, property_name)`
+and gets back a `boost::optional` handle; underneath, a
+`GPlatesModel::ConstFeatureVisitor` walks the feature's top-level properties,
+skips the ones whose `GPlatesModel::PropertyName` is not in the allowed list, and
+collects every property value whose dynamic type matches. The per-type visitor is
+not written by hand either: `Implementation::PropertyValueFinder` is declared and
+never defined, and `DECLARE_PROPERTY_VALUE_FINDER` generates one full
+specialisation of it for each property value class. That macro exists because the
+visitor's methods are named per type (`visit_gpml_plate_id`, `visit_xs_double`, …)
+rather than being overloads of a single `visit` — a deliberate choice in
+`GPlatesModel::FeatureVisitorBase` to avoid C++ name hiding in derived visitors,
+which in exchange makes it impossible for a plain template class to override "the
+right one". The macro is the workaround, and it is invoked from the top of each
+property-value header, so the finder for a type is always compiled alongside it.
+
+The second half of the unit is time-dependence, which is why every entry point
+takes a `reconstruction_time` (defaulting to present day). GPML wraps
+time-varying properties in wrapper property values, and
+`PropertyValueFinderBase` overrides the three visits that matter so the caller
+never sees the wrappers: a `GpmlConstantValue` is unwrapped and its inner value
+re-visited; a `GpmlPiecewiseAggregation` contributes only the one time window
+containing the reconstruction time; a `GpmlIrregularSampling` is resolved by
+interpolating between the two enabled `GpmlTimeSample`s that straddle the
+reconstruction time. That last step is what the file-local
+`InterpolateIrregularSamplingVisitor` does, and it is why the whole interface
+deals only in `non_null_ptr_to_const_type` — the value handed back may be a
+freshly created object that exists nowhere in the model, so allowing the caller
+to modify it would be a lie. Because the unwrapping is done by re-entering
+`accept_visitor`, nested wrappers (a piecewise aggregation of constant values,
+say) resolve recursively.
+
+Note the layering constraint that shapes the header. Every property-value header
+includes this one to get the macro, so this header must not include any
+property-values header back. That is the sole reason
+`Implementation::visit_gpml_constant_value`,
+`visit_gpml_irregular_sampling_at_reconstruction_time` and
+`visit_gpml_piecewise_aggregation_at_reconstruction_time` are ordinary
+non-template functions taking a `ConstFeatureVisitor &` instead of being members
+of the class template: they can then be defined in `PropertyValueFinder.cc`,
+where including `GpmlIrregularSampling.h` and friends is harmless. Adding a
+property-values include to the header would close the cycle.
 
 ## Declared types
 
@@ -80,9 +121,69 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/PropertyValueFinder tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+- **Const only, by construction.** `DECLARE_PROPERTY_VALUE_FINDER` applies
+  `boost::add_const` before generating the specialisation, so only
+  `PropertyValueFinder<const T>` ever exists, and every `get_property_value*`
+  entry point instantiates that. There is no non-const path and adding one would
+  mean deciding what a mutable handle to an interpolated sample means.
+- **Adding a new `GPlatesModel::PropertyValue` subclass.** The macro must be
+  invoked at global scope (it opens `namespace GPlatesFeatureVisitors` itself)
+  and it is placed *before* the class definition, which is why
+  `find_property_values` takes a `GPlatesModel::PropertyValue &` rather than the
+  derived type — the derived class is still incomplete at that point. Forget the
+  macro and `get_property_value<NewType>` fails to compile on the undefined
+  primary template; it does not silently return nothing.
+- **The declared-but-undefined primary template is load-bearing.** Do not give
+  `Implementation::PropertyValueFinder` a generic definition to "simplify" the
+  macro; that would turn the missing-macro compile error into a query that
+  quietly finds nothing.
+- **Returned ranges alias the finder.** `find_property_values` clears
+  `d_found_property_values` on entry and returns iterators into that member
+  vector, so the range dies with the finder and is invalidated by the next call
+  on the same object. The public wrappers copy out immediately, so this only
+  bites code that reaches into `Implementation::` directly.
+- **Non-interpolable types vanish from irregular samplings.** The `.cc` comment
+  claims the code "returns property value at nearest time sample" when a value is
+  not interpolable, but there is no such fallback: if
+  `InterpolateIrregularSamplingVisitor::interpolate` returns `boost::none`
+  nothing is recorded. Only `GpmlFiniteRotation` and `XsDouble` are handled, so
+  an irregularly sampled `XsString` (or any other type) yields no result at all,
+  at any reconstruction time. `GpmlMeasure` is flagged in the code as a candidate
+  that was not done.
+- **The bracket loop does not stop at the bracket.**
+  `visit_gpml_irregular_sampling_at_reconstruction_time` iterates the enabled
+  samples (ordered most-recent first) and interpolates for *every* `i` where the
+  reconstruction time is at or later than sample `i` — a condition that stays
+  true once it becomes true. The first hit is the correct straddling pair; the
+  remaining iterations extrapolate (`GPlatesMaths::interpolate` explicitly
+  accepts targets outside `[t1, t2]`) and each result is appended.
+  `get_property_value` takes the first and is unaffected, but
+  `get_property_values` on an irregularly sampled property can hand back extra
+  extrapolated values.
+- **Time-range edges are hard edges.** Disabled samples are dropped first; if all
+  are disabled, or the reconstruction time is more recent than the most-recent
+  enabled sample, the query simply finds nothing. There is no clamping to the
+  end samples.
+- **The type fast path is shallow.** The `typeid` pre-check looks only at the
+  *first* time sample's value (disabled or not) and bails if it differs from the
+  requested type, so an irregular sampling holding further time-dependent
+  wrappers is never descended into. `visit_gpml_piecewise_aggregation`
+  deliberately omits the same optimisation for exactly that reason.
+- **Name filtering is skipped on the bare-property-value overload.** An empty
+  `d_property_names_to_allow` means "allow every name"; and
+  `get_property_value(const PropertyValue &, time)` calls `accept_visitor`
+  directly, bypassing `initialise_pre_property_values`, so no name is consulted
+  on that path at all.
+- **`InterpolateIrregularSamplingVisitor` holds references, not values** —
+  including `const double &` for the three times. It is only valid as a stack
+  temporary alongside its arguments, which is how the `.cc` uses it.
+- **No caching, and this is called everywhere.** Each call constructs a visitor
+  and walks all of the feature's top-level properties; the irregular-sampling
+  path additionally copies the enabled `GpmlTimeSample`s into a fresh vector
+  every time. Pulling several properties off the same feature inside a
+  per-feature loop pays that walk once per property.
+- Unrelated despite the name: `GPlatesModel::ModelUtils::get_property_value`
+  merely unwraps a `TopLevelProperty` and does no type or time resolution.
 
 ## Used by
 

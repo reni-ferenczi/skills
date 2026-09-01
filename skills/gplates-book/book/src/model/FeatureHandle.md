@@ -9,9 +9,36 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureHandle tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The bottom handle level of the model tree, and the class most of GPlates actually
+manipulates. A feature is a `FeatureType` plus a `FeatureId` plus a list of
+`TopLevelProperty` objects; the properties are the revisioned part and live in a
+`FeatureRevision`, while the handle keeps the identity and the two attributes that
+are meant to outlive every edit. All the container machinery — iteration, the
+active flag, weak-reference notification, bubbling modifications up to the
+enclosing `FeatureCollectionHandle` — comes from `BasicHandle<FeatureHandle>`.
+What is written here is the feature-specific part: the factories, the clone
+family, and the mutators that need to touch the revision ID.
+
+Properties inside the model are treated as immutable, and that assumption is
+enforced at every entry point. `add()` inserts a `deep_clone()` of what you pass
+(the specialisation of `BasicHandle<FeatureHandle>::actual_add` in
+`BasicHandle.cc`), and `set()` likewise deep-clones the replacement, so the object
+you handed in is never the object in the model — use the returned iterator.
+Dereferencing a non-const iterator does not give you a mutable property either: it
+yields a `TopLevelPropertyRef` proxy that only exposes `const TopLevelProperty`,
+and whose `operator=` routes back through `FeatureHandle::set` so that the
+notification and revision-ID bookkeeping cannot be bypassed. This immutability is
+also why `clone()` can be shallow — the clone shares property objects with the
+original, and any later edit to either replaces the pointer rather than the
+pointee.
+
+The revision ID is bumped by `add()`, `remove()` and `set()`, but only if this
+handle is not already registered in the current `ChangesetHandle`. So the revision
+ID advances once per changeset — per user-visible edit — rather than once per
+atomic model transaction. Note also that `clone()` always mints a fresh
+`FeatureId`; to reproduce a feature with its original identity you have to go
+through `create()` with an explicit `FeatureId`, which is what the file readers
+do.
 
 ## Declared types
 
@@ -56,9 +83,51 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureHandle tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The feature type is not actually immutable.** The class comment says the handle
+holds "the properties of a feature which can never change: the feature type and
+the feature ID", but `set_feature_type()` exists and rewrites `d_feature_type` in
+place. Only the feature ID is genuinely fixed — it has no setter by design. Code
+that caches anything keyed on feature type must listen for modification events
+rather than reading the type once.
+
+**The constructor registers the feature in a global ID table.** `FeatureId` is an
+`IdTypeGenerator` over a process-wide `IdStringSet`, and the constructor calls
+`d_feature_id.set_back_ref_target(*this)` so that the ID resolves to this handle.
+That registration lasts as long as the object does, which is precisely why
+`WeakReference` must not keep features alive: a feature kept alive by a stray
+strong reference keeps its ID resolving, and re-reading the same file would then
+register the same ID against two different handles.
+
+**`add()` and `remove()` shadow the base-class members, they do not override
+them.** They are non-virtual, so calling through a `BasicHandle<FeatureHandle>&`
+skips the revision-ID update. `remove()` also narrows the base signature to return
+`void`, discarding the removed property that `BasicHandle::remove()` hands back —
+if you need it, read it through the iterator first.
+
+**`set()` silently does nothing** when the slot is empty or when the new property
+compares equal to the existing one, so no notification is emitted and the revision
+ID does not move. It also reports the change as a *child* modification, whereas
+`set_feature_type()` reports a *publisher* modification; listeners that
+distinguish the two see property edits and feature-type edits differently.
+
+**Removing while iterating is safe here.** `remove()` leaves a NULL slot rather
+than shifting the container, and `RevisionAwareIterator` skips NULL slots on
+construction and on increment, so `remove_properties_by_name()`'s
+remove-during-iteration loop is correct. The same property of the container means
+indices and `end()` are stable across removals, but `size()` and
+`container_size()` diverge.
+
+**Ownership and validity.** A feature is reference-counted and owned by the
+`FeatureCollectionRevision` holding it; a `weak_ref` neither keeps it alive nor
+stays valid across deactivation, so check `is_valid()` before every dereference.
+A feature made by the detached `create()` or `clone()` overload has no parent, so
+`model_ptr()` is NULL for it: its edits are not batched by a `NotificationGuard`
+and never bump the revision ID, because there is no changeset to consult. Deleting
+a feature through the UI deactivates it rather than destroying it, so the handle
+address — and its feature ID registration — persists until the model is flushed.
+
+**`creation_time()` is wall-clock `time(NULL)` at construction**, not a model
+timestamp, and it is per-object: a clone and a reload both get a fresh value.
 
 ## Used by
 

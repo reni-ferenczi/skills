@@ -9,9 +9,32 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/UnitVector3D tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The type that carries the sphere. A position on the globe is a direction from
+its centre, so `PointOnSphere` is a `UnitVector3D` and so are the small-circle
+centres in `SmallCircleBounds`, the rotation axes in `UnitQuaternion3D` and
+`Rotation`, and the cube-face frames in `CubeCoordinateFrame`. The class exists
+to make "this really is unit length" a type-level guarantee instead of a
+convention, so that downstream code can treat a dot product as a cosine and feed
+it straight to `acos` without checking anything.
+
+The enforcement is more forgiving than the Doxygen suggests, and the detail
+matters. `check_validity()` runs three stages: it throws
+`ViolatedUnitVectorInvariantException` if the squared magnitude differs from 1
+by more than `EPSILON` (1.0e-12, via `real_t`'s tolerant `!=`); it then clamps
+each component into `[-1, 1]`; and it then *silently renormalises* if the
+squared magnitude still deviates by more than 1.0e-13. So construction
+self-corrects inside a band and is fatal outside it, and a constructed instance
+is closer to unit length than the acceptance threshold alone would imply. The
+clamping step is what makes the components safe as arguments to `acos`/`asin`,
+whose `Real` versions throw `FunctionDomainException` outside `[-1, 1]`.
+
+Both constructors take a `check_validity_` flag that skips all of this. The
+header's own guidance is to pass `false` only where the caller can prove the
+result is unit — its worked example is negating components of an existing unit
+vector. `Vector3D::get_normalisation()` is the normal way in from unconstrained
+components; the free operators delegate to the same `GenericVectorOps3D`
+templates `Vector3D` uses, and `UnitVector3D.h` and `Vector3D.h` include each
+other in the ordering described on the `Vector3D` page.
 
 ## Declared types
 
@@ -62,9 +85,38 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/UnitVector3D tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**Equality is angular, not componentwise.** `operator==` is `dot(u1, u2) >= 1.0`
+under `real_t`'s tolerance, which unfolds to `1 - dot <= 1e-12`; since
+`1 - cos θ ≈ θ²/2`, two unit vectors compare equal out to roughly 1.4e-6
+radians of separation — around a metre on the Earth's surface, and vastly looser
+than the componentwise `EPSILON` test `Vector3D::operator==` performs. Watch for
+this when a template or an algorithm is written against both types.
+`unit_vectors_are_parallel` is literally the same expression as `operator==`,
+and `unit_vectors_are_antiparallel` is its `<= -1.0` mirror.
+
+**`operator-` is not free.** Negation routes through
+`GenericVectorOps3D::negate`, which calls the three-argument constructor and so
+takes the default `check_validity_ = true` — the full validate-clamp-renormalise
+pass runs on every negation, which is precisely the case the constructor's own
+comment offers as an example of when to skip validation. If negation shows up in
+a profile, that is why.
+
+**Assignment skips validation.** `operator=` copies the three components with no
+check and carries a standing `FIXME: Check for accumulated magnitude errs.`
+There is no drift in a plain copy, but there is also no self-correction, so an
+instance built with `check_validity_ = false` propagates unchecked.
+
+**Cross products widen.** `cross()` returns `Vector3D`, not `UnitVector3D`, for
+both unit arguments — correct, since the cross of two unit vectors is only unit
+when they are orthogonal. Callers that want a unit result must call
+`get_normalisation()`, which will throw for collinear inputs.
+`generate_perpendicular()` avoids that by choosing the basis vector with the
+smallest `|dot|` (the "most perpendicular" one) before crossing, so the result
+is never degenerate; the reasoning is spelled out at length in the `.cc`.
+
+**Other.** `xBasis()`, `yBasis()` and `zBasis()` construct function-local statics
+and return them by value, so callers get independent copies. Instances are plain
+values with no lazily cached state — const use is thread-safe.
 
 ## Used by
 

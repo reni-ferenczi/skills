@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ResolvedTriangulationDelaunay2 tier=1]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the geometric substrate of a deforming topological network: a CGAL 2D Delaunay triangulation of the network's points, built in the plane of an `AzimuthalEqualAreaProjection` centred on the network, and decorated with enough GPlates data at each vertex and face to compute deformation. `Network` (in `ResolvedTriangulationNetwork`) owns one `Delaunay_2` per resolved network per reconstruction time and is the only thing that constructs it; everything else — `TopologyReconstruct` advecting points through the deforming region, `PlateVelocityUtils`, `ReconstructionGeometryRenderer` colouring by strain rate — reads it.
+
+The decoration is done through CGAL's rebind mechanism rather than `Triangulation_vertex_base_with_info_2`, so `DelaunayVertex_2` and `DelaunayFace_2` are real base classes that a `Vertex_handle` or `Face_handle` dereferences straight into. A vertex carries its index, its 3D `PointOnSphere` and `LatLonPoint` (the un-projected originals, so nothing has to round-trip through the projection), and a shared `ResolvedVertexSourceInfo` that knows how to produce the vertex's stage rotation and velocity — which is what makes a vertex's velocity, and therefore the whole strain-rate calculation, derivable from the triangulation alone. Note the vertices carry *velocities*, not strain: strain rate is a derived quantity computed from the velocity field.
+
+That derivation is the substance of the file. A face's `DeformationInfo` is the constant velocity-gradient tensor across its triangle: the three vertex velocities in colatitude/longitude are differentiated using the analytic derivatives of the barycentric coordinates with respect to (theta, phi), then converted from a flat lat/lon gradient into the spherical velocity gradient tensor `L` (Malvern, appendix II) at the face centroid, and finally optionally clamped so the second invariant does not exceed the network's configured maximum. A vertex's `DeformationInfo` is then the face-area-weighted average of its incident faces, skipping the infinite face and any face outside the deforming region. The heavy half of the face calculation lives in `calculate_face_deformation_info()` in the `.cc` purely so that editing it does not retrigger the template recompile of everything that includes this header.
 
 ## Declared types
 
@@ -158,9 +160,21 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ResolvedTriangulationDelaunay2 tier=1]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+**The triangulation is the convex hull of the network's points, so it is bigger than the network.** Faces exist outside the network boundary and inside non-deforming interior rigid blocks. `DelaunayFace_2::is_in_deforming_region()` is the filter, and it classifies by *face centroid* only — the triangulation is not constrained, so a face may straddle a boundary or interior-block edge and still be classified wholly in or wholly out. The header flags this as a known limitation.
+
+**Vertices must be initialised; faces must not be.** Every accessor on `DelaunayVertex_2` asserts `d_vertex_info` and throws `PreconditionViolationError` otherwise, and `Network` initialises each vertex as it inserts it. Faces deliberately have no initialisation step, because incremental refinement creates faces the inserting code never sees; a face recovers the triangulation from `vertex(0)` on demand. If you add a code path that inserts vertices, it must call `initialise()` on each one. Initialising the same vertex twice is allowed and intended (a coincident insertion) — the last call wins.
+
+**Face caches self-invalidate; vertex caches do not.** `DelaunayFace_2` fingerprints its three vertex indices (`CheckFaceVertices`) and drops its cached deforming-region flag and `DeformationInfo` whenever they change, which is how it survives a vertex insertion that rewrites an existing face in place. `DelaunayVertex_2` has no such mechanism, so `calculate_deformation_info()` asserts `Delaunay_2::is_finished_modifying_triangulation()` — computed before `Network` calls `set_finished_modifying_triangulation()`, a vertex would cache an average over an intermediate triangulation. If you touch vertex strain rates, respect that gate. Note also the fingerprint's default is `{0,0,0}`, which is a real vertex index triple; it relies on no actual face having exactly those three indices.
+
+**Inexact kernel, with a documented failure mode.** The triangulation uses `Exact_predicates_inexact_constructions_kernel`. `calc_natural_neighbor_coordinates()` therefore checks for a zero normalisation factor from CGAL and silently falls back to barycentric coordinates of the containing face, returning those as three "natural neighbour" coordinates with norm 1. Callers get a usable answer, but it is not the Sibson result; do not treat the coordinate count as meaningful.
+
+**CGAL version workaround.** The `.cc` defines `CGAL_DT2_USE_RECURSIVE_PROPAGATE_CONFLICTS` for CGAL below 4.12.2 and for 4.13.0, to dodge an infinite loop in `Delaunay_triangulation_2.h`. It buys that at the cost of unbounded recursion depth in conflict propagation. The define must appear before any direct or indirect include of that CGAL header, including in the app-logic precompiled header — moving includes around in this file can silently disable it.
+
+**Units are not uniform and are converted mid-calculation.** `ResolvedVertexSourceInfo` yields velocities in cm/yr; `calculate_deformation_info()` scales them to m/s (divide by 3.1536e9) and converts degrees to radians before handing off. Strain rates are therefore in 1/s. Two divide-by-zero guards return a zero `DeformationInfo` rather than failing: a degenerate triangle (`b0` near zero) and a face centroid at a pole (`sin(theta)` near zero).
+
+**Point location.** `Delaunay_2` derives from `CGAL::Triangulation_hierarchy_2`, so `locate()` is fast, but the `start_face_hint` parameter on the query methods still matters when walking a sequence of nearby points — that is the intended use. `get_face_containing_point()` accepts `FACE`, `EDGE` and `VERTEX` locate results and rejects everything else as outside the hull.
+
+**Lifetime.** `Delaunay_2` holds a bare `const Network &`, and each vertex holds a bare `const Delaunay_2 &` inside its `VertexInfo`; the network must outlive the triangulation, which must outlive any handle you keep. All the lazy caches are `mutable` and unsynchronised, so a triangulation is not safe to query concurrently even through a `const` reference.
 
 ## Used by
 
