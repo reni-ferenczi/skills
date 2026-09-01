@@ -955,6 +955,136 @@ class GraphAbsentBehaviour(unittest.TestCase):
         self.assertEqual(rc, 2)
         self.assertIn("build_graph.py", out + err)
 
+
+# ---------------------------------------------------------------------------
+# Regressions found by the verification pass
+# ---------------------------------------------------------------------------
+
+@needs_index
+class VerificationRegressions(unittest.TestCase):
+    """Each of these reproduced a real defect before it was fixed."""
+
+    def test_case_flag_works_on_sym(self):
+        """`symbols` and `files` both have a `name` column; the sensitive path
+        used to emit a bare `name = ?` and die with `ambiguous column name`."""
+        rc, out, err = gpq("sym", "ReconstructionTree", "--case", "--limit", "5")
+        self.assertEqual(rc, 0, err)
+        self.assertTrue(hits(out))
+
+    def test_case_flag_works_on_def(self):
+        rc, out, err = gpq("def", "ReconstructionTree", "--kind", "class", "--case")
+        self.assertEqual(rc, 0, err)
+        self.assertTrue(hits(out))
+
+    def test_case_flag_is_actually_case_sensitive(self):
+        rc, _, _ = gpq("sym", "reconstructiontree", "--case", "--mode", "exact")
+        self.assertEqual(rc, 1, "lowercase should not match with --case")
+        rc, _, _ = gpq("sym", "reconstructiontree", "--mode", "exact")
+        self.assertEqual(rc, 0, "without --case it should match")
+
+    def test_def_reports_the_match_mode(self):
+        rc, out, _ = gpq("def", "ReconstructionTre", "--limit", "2")
+        self.assertEqual(rc, 0)
+        self.assertIn("[prefix]", out)
+
+    def test_bad_regex_is_usage_error_not_crash(self):
+        for cmd in ("sym", "def", "decl"):
+            rc, _, _ = gpq(cmd, "([unclosed", "--mode", "regex")
+            self.assertEqual(rc, 2, "%s should exit 2 on a bad regex" % cmd)
+
+    def test_pyapi_captures_add_static_property(self):
+        """All ten Colour.* colour constants come from `add_static_property`,
+        which the binding regex used to omit entirely."""
+        rc, out, _ = gpq("pyapi", "Colour", "--limit", "40")
+        self.assertEqual(rc, 0)
+        for name in ("blue", "red", "white", "black", "green",
+                     "grey", "silver", "purple", "yellow", "navy"):
+            self.assertTrue(any("Colour.%s" % name in h for h in hits(out)),
+                            "missing binding Colour.%s" % name)
+
+    def test_pyapi_captures_init_constructors(self):
+        rc, out, _ = gpq("pyapi", "Colour", "--limit", "40")
+        self.assertEqual(rc, 0)
+        self.assertTrue(any("__init__" in h for h in hits(out)))
+
+    def test_class_under_a_misparsed_function_is_still_found(self):
+        """tree-sitter mis-nests GPlatesScribe::Scribe under a bogus
+        function_definition; the class must still be indexed."""
+        rc, out, _ = gpq("decl", "Scribe", "--kind", "class", "--limit", "30")
+        self.assertEqual(rc, 0)
+        self.assertTrue(any("src/scribe/Scribe.h" in h and "(def)" in h
+                            for h in hits(out)),
+                        "Scribe.h definition missing from the index")
+
+    def test_uses_header_marks_declarations(self):
+        rc, out, _ = gpq("uses", "PolylineOnSphere", "--kind", "class", "--limit", "5")
+        self.assertEqual(rc, 0)
+        self.assertIn("definition", out)
+
+    def test_refs_reports_the_true_total(self):
+        """The header used to print the number shown, not the population size."""
+        rc, out, _ = gpq("refs", "GPlatesAssert", "--limit", "5")
+        self.assertEqual(rc, 0)
+        self.assertIn("showing", out)
+
+    def test_hier_truncation_names_the_hidden_depths(self):
+        rc, out, _ = gpq("hier", "ReferenceCount", "--down", "--depth", "2", "--limit", "5")
+        self.assertEqual(rc, 0)
+        self.assertRegex(out, r"d1=\d+")
+
+    def test_entity_kinds_do_not_include_using(self):
+        """`using` is a ctags kind, not an entity kind - the docs claimed otherwise."""
+        con = open_db()
+        kinds = {r[0] for r in con.execute("SELECT DISTINCT kind FROM entities")}
+        con.close()
+        self.assertNotIn("using", kinds)
+        self.assertEqual(len(kinds), 19)
+
+    def test_every_confidence_label_is_documented(self):
+        con = open_db()
+        labels = {r[0] for r in con.execute(
+            "SELECT DISTINCT confidence FROM occurrences")}
+        con.close()
+        self.assertEqual(labels, {"local", "member", "file", "unique",
+                                  "include", "ambiguous", "unknown"})
+
+
+@needs_graph
+class GraphRegressions(unittest.TestCase):
+
+    def test_neighbors_tags_definition_versus_stub(self):
+        rc, out, _ = gpq("neighbors", "LayerProxy", "--relation", "inherits", "--limit", "5")
+        self.assertEqual(rc, 0)
+        self.assertIn("[def]", out)
+
+    def test_communities_record_real_definition_counts(self):
+        con = sqlite3.connect("file:%s?mode=ro" % GRAPH_DB.as_posix(), uri=True)
+        rows = con.execute(
+            "SELECT COUNT(*), SUM(real_defs IS NULL), SUM(located IS NULL) "
+            "FROM communities").fetchone()
+        con.close()
+        self.assertGreater(rows[0], 200)
+        self.assertEqual(rows[1], 0, "every community needs a real_defs count")
+        self.assertEqual(rows[2], 0, "every community needs a located count")
+
+    def test_list_ranks_by_real_definitions_not_raw_size(self):
+        rc, by_defs, _ = gpq("community", "--list", "--limit", "5", "--json")
+        self.assertEqual(rc, 0)
+        rc, by_size, _ = gpq("community", "--list", "--by-size", "--limit", "5", "--json")
+        self.assertEqual(rc, 0)
+        defs_rows, size_rows = json.loads(by_defs), json.loads(by_size)
+        self.assertTrue(defs_rows and size_rows)
+        # ranked by defs -> descending real_defs; ranked by size -> descending size
+        self.assertEqual([r["real_defs"] for r in defs_rows],
+                         sorted((r["real_defs"] for r in defs_rows), reverse=True))
+        self.assertEqual([r["size"] for r in size_rows],
+                         sorted((r["size"] for r in size_rows), reverse=True))
+
+    def test_community_members_flag_declarations(self):
+        rc, out, _ = gpq("community", "ReconstructLayerProxy", "--limit", "60")
+        self.assertEqual(rc, 0)
+        self.assertIn("real definitions", out)
+
 if __name__ == "__main__":
     if not HAVE_INDEX:
         print("warning: no index at %s - only unit tests will run\n"

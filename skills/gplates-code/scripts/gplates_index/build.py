@@ -165,8 +165,14 @@ def extract_connections(text):
 
 
 CLASS_RE = re.compile(r'\b(?:bp::)?(class_|enum_)\s*<\s*(.*?)\s*>\s*\(\s*"([^"]+)"', re.S)
-DEF_RE = re.compile(r'(?:^|[.\s;(])(?:bp::)?(def|def_readonly|def_readwrite|value|staticmethod)'
+# Longest alternatives first: Python's `|` takes the first that matches, so a bare
+# `def` listed ahead of `def_readwrite` would shadow it.
+DEF_RE = re.compile(r'(?:^|[.\s;(])(?:bp::)?'
+                    r'(add_static_property|add_property|def_readwrite|def_readonly'
+                    r'|staticmethod|value|def)'
                     r'\s*\(\s*"([^"]+)"\s*(?:,\s*([^,)\n]*))?')
+# Constructor overloads carry no Python name; record them as __init__.
+INIT_RE = re.compile(r'\.\s*def\s*\(\s*(?:bp::)?init\s*<\s*(.*?)\s*>\s*\(\s*\)\s*\)', re.S)
 
 
 def extract_py_api(text):
@@ -175,13 +181,16 @@ def extract_py_api(text):
     A `class_<>`/`enum_<>` opens an owner scope that stays in effect for every
     following `.def(...)` until the statement ends at the next top-level `;`.
     """
-    if "class_" not in text and "enum_" not in text and "def(" not in text:
+    if ("class_" not in text and "enum_" not in text and "def(" not in text
+            and "add_property" not in text and "add_static_property" not in text):
         return
     matches = []
     for m in CLASS_RE.finditer(text):
         matches.append((m.start(), "class", m))
     for m in DEF_RE.finditer(text):
         matches.append((m.start(), "def", m))
+    for m in INIT_RE.finditer(text):
+        matches.append((m.start(), "init", m))
     matches.sort(key=lambda t: t[0])
 
     line_of = _line_counter(text)
@@ -196,6 +205,10 @@ def extract_py_api(text):
             owner = m.group(3)
             yield line_of(start), "", owner, kind, squash(m.group(2)).split(",")[0]
             continue
+        if what == "init":
+            yield (line_of(start), owner, "__init__", "constructor",
+                   ("init<%s>" % squash(m.group(1)))[:200])
+            continue
         verb, pyname = m.group(1), m.group(2)
         target = squash(m.group(3) or "")[:200]
         if verb == "def":
@@ -204,6 +217,8 @@ def extract_py_api(text):
             kind = "enum_value"
         elif verb == "staticmethod":
             kind = "staticmethod"
+        elif verb == "add_static_property":
+            kind = "static_attribute"
         else:
             kind = "attribute"
         yield line_of(start), owner, pyname, kind, target or None

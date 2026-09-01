@@ -260,6 +260,15 @@ def _handle_enum(data, node, sink, container, scope, access):
 
 def _handle_function(data, node, sink, container, scope, access,
                      template_params, is_def):
+    # A class/struct/enum can appear as the *type* of a function definition, both
+    # legitimately (`struct S {...} f();`) and when tree-sitter's error recovery
+    # mis-nests a namespace-level class under a bogus function_definition — which
+    # is what happens to GPlatesScribe::Scribe. Extract it either way.
+    type_node = _field(node, "type")
+    if type_node is not None and type_node.type in (
+            "class_specifier", "struct_specifier", "union_specifier", "enum_specifier"):
+        _handle_decl(data, type_node, sink, container, scope, access)
+
     declarator = _field(node, "declarator")
     if declarator is None:
         return
@@ -312,14 +321,29 @@ def _handle_function(data, node, sink, container, scope, access,
 
 
 def _collect_locals(data, body, sink, container, scope):
-    """Local variables inside a function body (one level of block nesting is enough)."""
+    """Locals inside a function body, plus any types declared there.
+
+    Types matter more than they look: C++ allows local classes, and tree-sitter's
+    error recovery sometimes mis-nests a whole namespace-level class under a
+    `function_definition` (GPlatesScribe::Scribe is one). Without this, such a
+    class would be missing from the index entirely.
+    """
     stack = list(body.children)
     while stack:
         n = stack.pop()
+        if n.type in ("class_specifier", "struct_specifier", "union_specifier"):
+            _handle_class(data, n, sink, container, scope, None, None)
+            continue
+        if n.type == "enum_specifier":
+            _handle_enum(data, n, sink, container, scope, None)
+            continue
         if n.type == "declaration":
             tn = _field(n, "type")
+            if tn is not None and tn.type in ("class_specifier", "struct_specifier",
+                                              "union_specifier", "enum_specifier"):
+                _handle_decl(data, tn, sink, container, scope, None)
             for child in n.children:
-                if child is tn:
+                if tn is not None and child.id == tn.id:
                     continue
                 nn = _declarator_name(data, child)
                 if nn is not None and nn.type == "identifier":
@@ -328,7 +352,7 @@ def _collect_locals(data, body, sink, container, scope):
         elif n.type in ("compound_statement", "for_statement", "if_statement",
                         "while_statement", "do_statement", "switch_statement",
                         "try_statement", "catch_clause", "case_statement",
-                        "for_range_loop"):
+                        "for_range_loop", "declaration_list", "template_declaration"):
             stack.extend(n.children)
 
 

@@ -104,6 +104,17 @@ def _esc(s):
     return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+def compile_mode(pattern, mode):
+    """Validate a regex up front so a bad one is usage error 2, not crash 3."""
+    if mode in ("regex", "auto"):
+        try:
+            re.compile(pattern)
+        except re.error as exc:
+            if mode == "regex":
+                raise SkillError("bad regex: %s" % exc)
+    return mode
+
+
 def auto_modes(mode):
     """`auto` widens from exact to prefix to substring until something matches."""
     return list(MODES[:3]) if mode == "auto" else [mode]
@@ -138,10 +149,12 @@ def cmd_info(con, args):
 
 
 def cmd_sym(con, args):
+    compile_mode(args.name, args.mode)
     where, params = ["1=1"], []
     rx = None
     for mode in auto_modes(args.mode):
-        clause, extra = name_clause(args.name, mode, case_sensitive=args.case)
+        clause, extra = name_clause(args.name, mode, column="s.name",
+                                    lc_column="s.name_lc", case_sensitive=args.case)
         w, p = list(where), list(params)
         if clause is None:
             rx = extra
@@ -195,9 +208,12 @@ def _print_symbols(rows, mode, args):
 
 
 def cmd_def(con, args):
+    compile_mode(args.name, args.mode)
     rows = None
+    used_mode = args.mode
     for mode in auto_modes(args.mode):
-        clause, extra = name_clause(args.name, mode, case_sensitive=args.case)
+        clause, extra = name_clause(args.name, mode, column="s.name",
+                                    lc_column="s.name_lc", case_sensitive=args.case)
         params = list(extra) if clause else []
         sql = ("SELECT s.name, s.kind, s.scope, s.signature, s.line, s.end_line, f.path, f.id "
                "FROM symbols s JOIN files f ON f.id = s.file_id "
@@ -214,12 +230,14 @@ def cmd_def(con, args):
             rx = extra
             got = [r for r in got if rx.search(r["name"])]
         if got:
-            rows = got
+            rows, used_mode = got, mode
             break
     if not rows:
         note("no definition found for %r" % args.name)
         return 1
-    note("%d definition(s)" % len(rows))
+    note("%d definition(s)%s [%s]"
+         % (len(rows), "" if len(rows) <= args.limit else ", showing %d" % args.limit,
+            used_mode))
     for r in rows[:args.limit]:
         span = "%d-%s" % (r["line"], r["end_line"] or "?")
         emit("%s %s%s  %s:%s"
@@ -326,19 +344,21 @@ def cmd_refs(con, args):
     word = re.compile(r'\b%s\b' % re.escape(args.name))
     def_at = {(d["path"], d["line"]) for d in defs}
     rows = []
+    total = 0
     for r in con.execute(sql, params):
         if (r["path"], r["line"]) in def_at:
             continue
         if word.search(r["text"]):
-            rows.append(r)
-            if len(rows) > args.limit:
-                break
+            total += 1
+            if len(rows) <= args.limit:
+                rows.append(r)
     if not rows:
         note("no other references")
         return 0 if defs else 1
-    truncated = len(rows) > args.limit
+    truncated = total > args.limit
     rows = rows[:args.limit]
-    note("%d reference(s)%s" % (len(rows), " (truncated)" if truncated else ""))
+    note("%d reference(s)%s"
+         % (total, ", showing %d" % len(rows) if truncated else ""))
     for r in rows:
         emit("%s:%d: %s" % (r["path"], r["line"], clip(r["text"])),
              {"path": r["path"], "line": r["line"], "text": r["text"]})
@@ -526,6 +546,7 @@ def _entity_line(r):
 
 def _find_entities(con, name, args, only_def=None, kinds=None):
     """Resolve a user-supplied name to entity rows, widening exact -> prefix -> substring."""
+    compile_mode(name, getattr(args, "mode", "auto"))
     for mode in auto_modes(getattr(args, "mode", "auto")):
         clause, extra = name_clause(name, mode, column="e.name", lc_column="e.name_lc",
                                     case_sensitive=getattr(args, "case", False))
@@ -585,10 +606,14 @@ def cmd_uses(con, args):
         note("no entity named %r" % args.name)
         return 1
     ids = [r["id"] for r in rows]
-    note("%d matching entities [%s]: %s" % (
+    defs = [r for r in rows if r["is_def"]]
+    note("%d matching entities [%s]%s: %s" % (
         len(rows), mode,
-        "; ".join("%s %s (%s:%d)" % (t["kind"], t["qname"], t["path"], t["line"])
-                  for t in rows[:5])))
+        "" if len(defs) == len(rows) else " (%d definition(s), rest are declarations)"
+        % len(defs),
+        "; ".join("%s %s (%s:%d)%s" % (t["kind"], t["qname"], t["path"], t["line"],
+                                       "" if t["is_def"] else " decl")
+                  for t in (defs or rows)[:5])))
     where = ["o.entity_id IN (%s)" % ",".join("?" * len(ids))]
     params = list(ids)
     if args.role:
@@ -665,12 +690,22 @@ def cmd_hier(con, args):
             "JOIN entities e ON e.id = c.descendant_id JOIN files f ON f.id = e.file_id "
             "WHERE c.ancestor_id = ? AND c.depth <= ? ORDER BY c.depth, e.qname",
             (target["id"], args.depth)).fetchall()
-        note("%d subclass(es) within depth %d" % (len(subs), args.depth))
-        for sub in subs[:args.limit]:
-            emit("  sub  d%-5d %-52s  %s:%d" % (sub["depth"], sub["qname"], sub["path"],
-                                                sub["line"]), dict(sub))
+        by_depth = {}
+        for row in subs:
+            by_depth[row["depth"]] = by_depth.get(row["depth"], 0) + 1
+        note("%d subclass(es) within depth %d (%s)"
+             % (len(subs), args.depth,
+                ", ".join("d%d=%d" % kv for kv in sorted(by_depth.items()))))
+        for row in subs[:args.limit]:
+            emit("  sub  d%-5d %-52s  %s:%d" % (row["depth"], row["qname"], row["path"],
+                                                row["line"]), dict(row))
         if len(subs) > args.limit:
-            note("%d more subclasses - raise --limit" % (len(subs) - args.limit))
+            shown_depths = {r["depth"] for r in subs[:args.limit]}
+            missing = sorted(d for d in by_depth if d not in shown_depths)
+            note("%d more subclasses - raise --limit%s"
+                 % (len(subs) - args.limit,
+                    (" (nothing shown yet at depth %s)"
+                     % ", ".join(str(d) for d in missing)) if missing else ""))
     return 0
 
 
@@ -884,14 +919,15 @@ def attach_graph(con):
 
 def _community_header(con, cid):
     row = con.execute(
-        "SELECT id, name, size, top_dirs, top_nodes FROM g.communities WHERE id = ?",
-        (cid,)).fetchone()
+        "SELECT id, name, size, located, real_defs, top_dirs, top_nodes "
+        "FROM g.communities WHERE id = ?", (cid,)).fetchone()
     if row is None:
         return None
     label = row["name"] or ("Community %d" % row["id"])
-    note("community %d: %s  (%d nodes)" % (row["id"], label, row["size"]))
+    note("community %d: %s  (%d nodes, %d located, %d real definitions)"
+         % (row["id"], label, row["size"], row["located"] or 0, row["real_defs"] or 0))
     if row["top_dirs"]:
-        note("  dirs: %s" % row["top_dirs"])
+        note("  dirs (of %d located): %s" % (row["located"] or 0, row["top_dirs"]))
     return row
 
 
@@ -900,15 +936,20 @@ def cmd_community(con, args):
     attach_graph(con)
 
     if args.list:
+        order = "size DESC" if args.by_size else "real_defs DESC, size DESC"
         rows = con.execute(
-            "SELECT id, name, size, top_dirs, top_nodes FROM g.communities "
-            "ORDER BY size DESC LIMIT ?", (args.limit,)).fetchall()
+            "SELECT id, name, size, located, real_defs, top_dirs, top_nodes "
+            "FROM g.communities ORDER BY " + order + " LIMIT ?", (args.limit,)).fetchall()
         total = con.execute("SELECT COUNT(*) FROM g.communities").fetchone()[0]
-        note("%d communities, largest %d shown" % (total, len(rows)))
+        note("%d communities, %d shown, ranked by %s"
+             % (total, len(rows), "node count" if args.by_size else "real definitions"))
+        note("%-6s %-5s %-5s %s" % ("id", "defs", "nodes", "dominant directories"))
         for r in rows:
-            emit("%-6d %-5d %-46s %s"
-                 % (r["id"], r["size"], clip(r["top_dirs"] or "", 46),
-                    clip(r["top_nodes"] or "", 70)), dict(r))
+            emit("%-6d %-5d %-5d %-44s %s"
+                 % (r["id"], r["real_defs"] or 0, r["size"],
+                    clip(r["top_dirs"] or "", 44), clip(r["top_nodes"] or "", 60)), dict(r))
+        note("`defs` counts members sitting on a real definition; the remainder are "
+             "forward declarations and stubs")
         return 0
 
     if args.id is not None:
@@ -969,9 +1010,11 @@ def cmd_community(con, args):
 
 def _print_members(con, cid, args):
     rows = con.execute(
-        "SELECT label, path, line, is_class, is_callable FROM g.graph_nodes "
-        "WHERE community = ? AND path IS NOT NULL "
-        "ORDER BY is_class DESC, path, line", (cid,)).fetchall()
+        "SELECT n.label, n.path, n.line, n.is_class, n.is_callable, "
+        "  EXISTS (SELECT 1 FROM entities e JOIN files f ON f.id = e.file_id "
+        "     WHERE f.path = n.path AND e.line = n.line AND e.is_def = 1) AS is_def "
+        "FROM g.graph_nodes n WHERE n.community = ? AND n.path IS NOT NULL "
+        "ORDER BY is_def DESC, n.is_class DESC, n.path, n.line", (cid,)).fetchall()
     hidden = con.execute(
         "SELECT COUNT(*) FROM g.graph_nodes WHERE community = ? AND path IS NULL",
         (cid,)).fetchone()[0]
@@ -979,8 +1022,9 @@ def _print_members(con, cid, args):
          % (len(rows), (", %d stubs hidden" % hidden) if hidden else ""))
     for r in rows[:args.limit]:
         kind = "class" if r["is_class"] else ("callable" if r["is_callable"] else "")
-        emit("  %-10s %-44s %s:%s" % (kind, clip(r["label"], 44),
-                                      r["path"] or "?", r["line"] or "?"), dict(r))
+        tag = "" if r["is_def"] else " (decl)"
+        emit("  %-10s %-44s %s:%s%s" % (kind, clip(r["label"], 44),
+                                        r["path"] or "?", r["line"] or "?", tag), dict(r))
     if len(rows) > args.limit:
         note("%d more - raise --limit" % (len(rows) - args.limit))
     return 0
@@ -1011,8 +1055,9 @@ def cmd_neighbors(con, args):
     else:
         nodes = nodes[:args.nodes]
     for n in nodes:
-        note("%s  %s:%s  (degree %d)"
-             % (n["label"], n["path"] or "?", n["line"] or "?", n["degree"]))
+        tag = {0: "def", 1: "ref", 2: "stub"}[n["rank"]]
+        note("%s  %s:%s  [%s] (degree %d)"
+             % (n["label"], n["path"] or "?", n["line"] or "?", tag, n["degree"]))
         where = "e.relation IN (%s)" % ",".join("?" * len(args.relation)) \
             if args.relation else "1=1"
         params = list(args.relation) if args.relation else []
@@ -1184,7 +1229,10 @@ def build_parser():
     p = add("community", cmd_community, "code communities (clusters) from the graph")
     p.add_argument("name", nargs="?", default="")
     p.add_argument("--id", type=int, help="show one community by id")
-    p.add_argument("--list", action="store_true", help="list communities by size")
+    p.add_argument("--list", action="store_true",
+                   help="list communities, best-defined first")
+    p.add_argument("--by-size", action="store_true",
+                   help="with --list, rank by raw node count instead of real definitions")
     p.add_argument("--case", action="store_true")
 
     p = add("neighbors", cmd_neighbors, "graph edges into and out of a symbol")

@@ -8,7 +8,7 @@ the code's own Doxygen comments (`gpq def <Class> --body`) over this summary.
 
 | Path | What it is |
 |---|---|
-| `src/` | all C++ sources, ~2.4k files, ~23 MB |
+| `src/` | all sources: 2,823 files, of which ~2.4k C++ files are ~23 MB |
 | `cmake/modules/` | build machinery; `Version.cmake` holds the version numbers |
 | `scripts/` | standalone Python scripts using the GPlates Python API |
 | `sample-data/` | example `.gpml`, `.rot`, shapefile, colour palette and unit-test data |
@@ -17,8 +17,10 @@ the code's own Doxygen comments (`gpq def <Class> --body`) over this summary.
 | `BUILD.Windows`, `DEPS.Windows` | how the project is actually built |
 
 Entry points: `src/gplates_main.cc` (GUI), `src/gplates_demo_no_gui_main.cc`
-(headless), `src/gplates_unit_test_main.cc` (tests). `src/CMakeLists.txt` lists
-every source file and is the authoritative module inventory.
+(headless), `src/gplates_unit_test_main.cc` (tests). `src/CMakeLists.txt` selects the
+build target and pulls in each module via `add_subdirectory()`; the authoritative
+per-file inventory is the 20 `src/<module>/CMakeLists.txt` files, each a plain
+`set(srcs ...)` list.
 
 ## Modules and namespaces
 
@@ -41,12 +43,13 @@ Each `src/<dir>` maps cleanly onto one `GPlates<Something>` namespace.
 | `qt-resources` | — | non-code resources compiled into the binary: GLSL shaders, GPGIM XML, Python scripts, icons |
 | `data-mining` | `GPlatesDataMining` | co-registration and spatio-temporal data mining | `DataSelector`, `CoRegConfigurationTable`, `RegionOfInterestFilter` |
 | `scribe` | `GPlatesScribe` | the serialisation framework behind projects and sessions | `Scribe`, `Transcription`, `ObjectTag` |
-| `api` | `GPlatesApi` | Boost.Python bindings for the embedded Python console | `Feature`, `FeatureCollection`, `Application`, `Colour` |
+| `api` | `GPlatesApi` | Boost.Python bindings, shared by the GPlates console and the pyGPlates module | `Feature`, `FeatureCollection`, `Application`, `PythonInterpreterLocker` |
 | `utils` | `GPlatesUtils` | general-purpose infrastructure | `ObjectCache`, `ObjectPool`, `ReferenceCount`, `StringSet` |
 | `global` | `GPlatesGlobal` | the exception hierarchy, assertions and version constants | `Exception`, `PreconditionViolationError`, `AssertionFailureException`, `NotYetImplementedException` |
 | `cli` | `GPlatesCli` | command-line sub-commands for the headless build |
+| `system-fixes` | — | vendored compatibility headers (boost `cstdint`, Loki) |
 | `unit-test` | `GPlatesUnitTest` | Boost.Test suites |
-| `deprecated` | — | code kept for reference; usually not what you want |
+| `deprecated` | `GPlatesControls` | code kept for reference; usually not what you want. Most modules also have their own `deprecated/` subdirectory, which keeps the parent's namespace |
 
 Get the current numbers any time with `gpq info`, and drill in with
 `gpq tree src/<module>`.
@@ -100,7 +103,7 @@ src/app-logic/ApplicationState.h --by` shows how widely.
 
 `src/qt-resources/opengl/` holds the GLSL shaders, one directory per rendering
 subsystem (`scalar_field_3d`, `multi_resolution_raster`, `layer_painter`,
-`normal_map_source`, …). They are compiled into the binary via the `.qrc` files and
+`normal_map_source`, …), plus a shared `utils.glsl` at the top level. They are compiled into the binary via the `.qrc` files and
 loaded by name from the matching `GL*` class in `src/opengl`. Search them with
 `gpq grep <name> --category shader`.
 
@@ -111,17 +114,22 @@ Two different things share the name:
 - **The embedded API** (`src/api/`, `GPlatesApi`) — Boost.Python bindings exposed to
   the Python console inside the GPlates application. `gpq pyapi` lists the whole
   surface. Example scripts ship in `src/qt-resources/python/scripts/`.
-- **pyGPlates** — the standalone library, built from the `pygplates` branch of the
-  GPlates repository. It is *not* in the GPlates 2.5.0 source archive, so the index
-  cannot answer questions about it.
+- **pyGPlates** — the standalone Python extension module. It is built from *this
+  same* source tree: the top-level `GPLATES_BUILD_GPLATES` option switches
+  `src/CMakeLists.txt` between the `gplates` executable and the `pygplates` module
+  (`BOOST_PYTHON_MODULE(pygplates)` in `src/api/Python.cc`, plus
+  `src/ScribeExportPyGPlates.cc` and `src/pygplates_pch.h`). Both share `src/api/`,
+  so the index does cover it.
 
 `scripts/*.py` at the top of the tree (`reconstruct.py`, `hellinger.py`,
 `feature_collection_demo.py`) are worked examples of the API.
 
 ## Sample data
 
-`sample-data/` is indexed as text (category `data`), so it doubles as a corpus of
-real file-format examples: `gpml/` for the native XML format, `plates4-rotation-files/`
+The text formats under `sample-data/` are indexed line by line (category `data`) —
+116 of 185 files; the binary shapefile components (`.shp`/`.shx`/`.dbf`) are listed
+but have no searchable content. So it doubles as a corpus of real file-format
+examples: `gpml/` for the native XML format, `plates4-rotation-files/`
 for `.rot`, `shapefiles/`, `cpt/` for colour palettes, `unit-test-data/` for the
 Boost.Test fixtures. `gpq grep "<element>" --category data` shows how a construct
 appears in a real file.

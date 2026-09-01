@@ -65,7 +65,8 @@ python scripts/gpq.py def ReconstructionTree --kind class --body
 python scripts/gpq.py def get_anchor_plate_id --body --limit 1
 ```
 
-Same name flags as `sym`, plus:
+Takes `--mode`, `--kind`, `--path` and `--case` (not `--lang`, `--scope` or
+`--defs-only`), plus:
 
 | Flag | Effect |
 |---|---|
@@ -95,7 +96,7 @@ token must appear on the line. `_` counts as a word character, so
 | `--regex` | Python regex over the raw line; slower (full scan) but exact |
 | `--case` | case-sensitive; regex mode only |
 | `--path SUBSTR` | restrict by path |
-| `--category C` | `cpp`, `python`, `ui`, `shader`, `gpgim`, `resource`, `build`, `data`, `doc`; repeatable |
+| `--category C` | `cpp`, `python`, `ui`, `shader`, `gpgim`, `resource`, `build`, `data`, `doc`; repeatable (a tenth category, `other`, holds only binary files with no searchable text) |
 
 Results are ranked code-first (cpp → python → ui → shader → gpgim → resource →
 build → data → doc), so a truncated result set keeps the useful half. Use
@@ -129,9 +130,10 @@ Every site where the name is introduced, definitions first, each tagged `(def)` 
 `(decl)`. This separates a class's real definition from its forward declarations,
 and a method's out-of-line definition from its in-class declaration.
 
-Entity kinds: `namespace`, `class`, `struct`, `union`, `enum`, `enumerator`,
-`typedef`, `alias`, `using`, `function`, `method`, `constructor`, `destructor`,
+Entity kinds (19): `namespace`, `class`, `struct`, `union`, `enum`, `enumerator`,
+`typedef`, `alias`, `function`, `method`, `constructor`, `destructor`,
 `operator`, `field`, `variable`, `parameter`, `local`, `macro`, `macro_function`.
+(`using` is a *ctags* kind in `sym`, not an entity kind.)
 
 Lines carry the declared/return type, the signature, access, and the template
 parameter list for templates.
@@ -161,9 +163,10 @@ Occurrences bound to the entity, with a per-role breakdown first. Roles:
 | `decl` / `def` | the declaration and definition sites themselves |
 
 `--exclude-decl` drops the declaration sites; `--context-symbol` appends the
-enclosing function to each line. The command finishes by reporting how many
-same-named occurrences it could **not** bind to a specific entity — use
-`gpq refs <name>` to see those.
+enclosing function to each line. When any same-named occurrences could **not** be
+bound to a specific entity, a closing line says how many — use `gpq refs <name>`
+to see those. The header marks which matched entities are definitions rather than
+forward declarations.
 
 ### `hier <class>` — inheritance, transitively
 
@@ -185,7 +188,7 @@ Direct bases outside the GPlates tree — `QObject`, `QWidget`, `boost::noncopya
 python scripts/gpq.py members ReconstructionTree
 python scripts/gpq.py members ReconstructionTree --kind field
 python scripts/gpq.py members ReconstructionTree --kind method --access public
-python scripts/gpq.py members GPlatesMaths --kind class
+python scripts/gpq.py members ReconstructUtils --kind function
 python scripts/gpq.py members ReconstructLayerProxy --inherited
 ```
 
@@ -211,8 +214,9 @@ they expand to, and with `--uses` every place they are used.
 python scripts/gpq.py refs reconstruct_feature_geometries --limit 30
 ```
 
-Prints indexed definitions first (`[def kind]`), then whole-word occurrences on
-other lines. This is the closest thing to "find usages"; it is text-based, so
+`--path SUBSTR` restricts the search. Prints indexed definitions first
+(`[def kind]`), then whole-word occurrences on other lines; the header reports the
+true total, not just the number shown. This is the closest thing to "find usages"; it is text-based, so
 overloads and same-named members of unrelated classes all show up.
 
 ### `file <path>` — one file
@@ -272,12 +276,14 @@ name you need to grep for in the `.cc`.
 
 ```bash
 python scripts/gpq.py signals reconstruction_time_changed
-python scripts/gpq.py signals ViewportWindow
+python scripts/gpq.py signals ApplicationState
 ```
 
 Every `connect(...)` call using the `SIGNAL()`/`SLOT()` macros, printed as
 `path:line: sender.signal(...) -> receiver.slot(...)`. Matches against any of the
-four parts. Function-pointer style connections carry no macro and are not indexed —
+four parts — but those are stored as written *expressions* (`this`,
+`d_application_state_ptr`), so search for a signal, slot or variable name rather
+than a class name. Function-pointer style connections carry no macro and are not indexed —
 find those with `gpq grep "connect(" --regex`.
 
 ### `pyapi [name]` — Python bindings
@@ -318,6 +324,8 @@ python scripts/gpq.py neighbors LayerProxy --relation inherits
 
 Both rank candidates against the entity index, so a real definition beats one of
 graphify's location-less stub nodes; lines are tagged `[def]`, `[ref]`, `[stub]`.
+Both also take `--case`; `neighbors` takes `--nodes N` (how many same-named nodes
+to expand, default 2) and `community` takes `--by-size`.
 
 ### `sql <query>` — escape hatch
 
@@ -327,7 +335,7 @@ python scripts/gpq.py sql "SELECT kind, COUNT(*) FROM symbols GROUP BY kind ORDE
 
 Read-only SQL against the index. The connection is opened `mode=ro`, so writes fail.
 When the code graph exists it is attached as schema `g` (`g.communities`,
-`g.graph_nodes`, `g.graph_edges`). Schema: [INDEXING.md](INDEXING.md).
+`g.graph_nodes`, `g.graph_edges`, `g.meta`). Schema: [INDEXING.md](INDEXING.md).
 
 ---
 
@@ -384,8 +392,9 @@ preprocessor expansion, no template instantiation and no overload resolution, so
 - **Resolution is scope-and-reachability based.** Every occurrence carries a
   confidence: `local` (a parameter/local of the enclosing function), `member` (a
   member of the enclosing class), `file`, `unique` (the name is declared once in
-  the whole tree), `include` (reachable through this file's `#include`s), or
-  `ambiguous`. 91.8% of the 560k occurrences bind to a specific entity; the rest
+  the whole tree), `include` (reachable through this file's `#include`s),
+  `ambiguous` (several equal candidates) or `unknown` (no candidate at all).
+  `ambiguous` and `unknown` both leave `entity_id` NULL. 91.8% of the 560k occurrences bind to a specific entity; the rest
   are still stored and still findable by name, they just do not claim a target.
 - **Overloads are not distinguished.** Two methods with the same name in the same
   class share their usage sites.

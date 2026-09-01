@@ -18,7 +18,7 @@ offset, line and column in the parse tree still refers to the real file.
    unaffected (their first arm is the whole file).
 
 Together these take the share of bytes inside ERROR nodes on GPlates 2.5.0 from
-1.36% down to well under 0.5%.
+1.357% down to 0.063% (measured over all 2,366 C/C++ files).
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ def ensure_parser():
     for site in _SITE:
         if site.is_dir() and str(site) not in sys.path:
             sys.path.insert(0, str(site))
-    # PYLIBS may have been created/populated after an earlier failed import, and
+    # .venv may have been created by `uv sync` after an earlier failed import, and
     # Python caches a finder per directory - drop it or the fresh install is invisible.
     importlib.invalidate_caches()
     try:

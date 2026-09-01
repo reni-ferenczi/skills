@@ -40,7 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from gplates_index import cpp_parse  # noqa: E402
 from gplates_index.common import (  # noqa: E402
-    DATA_DIR, SKILL_DIR, SkillError, check_source_root, open_db, read_config,
+    DATA_DIR, DB_PATH, SKILL_DIR, SkillError, check_source_root, open_db, read_config,
 )
 
 VENV_DIR = SKILL_DIR / ".venv"
@@ -70,11 +70,14 @@ CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE communities (
     id        INTEGER PRIMARY KEY,
     name      TEXT,          -- 'Community N' unless labelled with --label
-    size      INTEGER NOT NULL,
+    size      INTEGER NOT NULL,  -- all member nodes, stubs included
+    located   INTEGER,       -- members that carry a source path and line
+    real_defs INTEGER,       -- members sitting on a real definition in the entity index
     top_dirs  TEXT,          -- dominant source directories, most common first
     top_nodes TEXT           -- a few representative member labels
 );
 CREATE INDEX idx_comm_size ON communities(size);
+CREATE INDEX idx_comm_defs ON communities(real_defs);
 
 CREATE TABLE graph_nodes (
     id          TEXT PRIMARY KEY,
@@ -223,12 +226,9 @@ def import_graph(source_root: Path, quiet=False) -> dict:
 
     # Community summaries: size, dominant directories, representative members.
     con.execute("""
-        INSERT INTO communities(id, name, size, top_dirs, top_nodes)
-        SELECT community,
-               NULL,
-               COUNT(*),
-               NULL,
-               NULL
+        INSERT INTO communities(id, name, size, located, real_defs, top_dirs, top_nodes)
+        SELECT community, NULL, COUNT(*),
+               SUM(CASE WHEN path IS NOT NULL THEN 1 ELSE 0 END), 0, NULL, NULL
         FROM graph_nodes WHERE community IS NOT NULL GROUP BY community""")
     names = {}
     for n in nodes:
@@ -252,6 +252,8 @@ def import_graph(source_root: Path, quiet=False) -> dict:
     con.executemany(
         "UPDATE communities SET name=?, top_dirs=?, top_nodes=? WHERE id=?", updates)
 
+    _count_real_defs(con)
+
     stats = {
         "nodes": con.execute("SELECT COUNT(*) FROM graph_nodes").fetchone()[0],
         "edges": con.execute("SELECT COUNT(*) FROM graph_edges").fetchone()[0],
@@ -270,6 +272,29 @@ def import_graph(source_root: Path, quiet=False) -> dict:
     log(quiet, "  imported %d nodes, %d edges, %d communities"
         % (stats["nodes"], stats["edges"], stats["communities"]))
     return stats
+
+
+def _count_real_defs(con):
+    """How many members of each community sit on a real definition, not a stub.
+
+    The largest communities are dominated by forward declarations, so raw node
+    count is a poor guide to which cluster is worth reading. This gives
+    `gpq community --list` something meaningful to rank by.
+    """
+    _MAIN_DB = DB_PATH
+    if not _MAIN_DB.exists():
+        return
+    # Plain path, not a file: URI - this connection was not opened with uri=True.
+    con.execute("ATTACH DATABASE ? AS main_idx", (str(_MAIN_DB),))
+    con.execute("""
+        UPDATE communities SET real_defs = (
+            SELECT COUNT(*) FROM graph_nodes n
+            WHERE n.community = communities.id
+              AND EXISTS (SELECT 1 FROM main_idx.entities e
+                          JOIN main_idx.files f ON f.id = e.file_id
+                          WHERE f.path = n.path AND e.line = n.line AND e.is_def = 1))""")
+    con.commit()
+    con.execute("DETACH DATABASE main_idx")
 
 
 def resolve_dirs(quiet=False):

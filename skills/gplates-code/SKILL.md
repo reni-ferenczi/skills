@@ -1,6 +1,6 @@
 ---
 name: gplates-code
-description: Deeply index and search the GPlates 2.5+ C++/Python source tree. Finds the declaration, definition, usages, subclasses and base classes of any type, member, variable, template or preprocessor macro, plus Qt dialogs and signal/slot wiring, the GPGIM feature model, OpenGL shaders, sample data, and an optional Leiden-clustered code graph for semantic grouping. Use for any question about GPlates or pyGPlates internals, or when writing code against them.
+description: Search a prebuilt deep index of a local GPlates 2.5+ C++/Python source tree (Windows; the user supplies the extracted source). Finds the declaration, definition, usages, subclasses, base classes and members of any type, member, variable or preprocessor macro, plus full-text line search, the #include graph, Qt dialogs and signal/slot wiring, the Boost.Python bindings, the GPGIM feature model, OpenGL shaders, sample data, and an optional Leiden-clustered code graph. Use for any question about GPlates or pyGPlates internals, or when writing code against them.
 license: MIT
 ---
 
@@ -9,23 +9,31 @@ license: MIT
 Search a local GPlates source tree (2.5.0 or later) through a prebuilt SQLite index.
 
 The core is a **semantic index built with tree-sitter**: 121k entities — types,
-members, variables, parameters, locals, templates and preprocessor macros — each
-with its declaration and definition sites, 560k identifier occurrences bound to the
-entity they name (91.8% resolved), and a transitive inheritance graph. Around that
-sit an FTS5 index of every source line, the `#include` graph, Qt Designer forms, Qt
-signal/slot connections, the Boost.Python bindings and the GPGIM feature model.
+members, variables, parameters, locals and preprocessor macros (templates are
+flagged, not a separate kind) — each with its declaration and definition sites,
+560k identifier occurrences bound to the entity they name (91.8% resolved), and a
+transitive inheritance graph.
+
+Around that sit an FTS5 index of all 844k source lines, a 53k-symbol ctags layer
+(which also covers Python), the resolved `#include` graph, 185 Qt Designer forms,
+1656 Qt signal/slot connections, the Boost.Python bindings and the GPGIM feature
+model.
 
 Everything is one command: `scripts/gpq.py`. Output is one result per line, mostly
 `path:line: text`, so it pipes into `grep`, `head` and friends.
 
 No GPlates build is required — nothing needs Qt, Boost, CGAL, GDAL or PROJ
 installed. Dependencies are declared in `pyproject.toml` and materialised by
-`uv sync` into the skill's own `.venv`; setup also downloads a 2.9 MB ctags binary.
+`uv sync` into the skill's own `.venv`; setup also downloads a 2.9 MB ctags archive.
 
 **Platform:** Windows (the ctags download is Windows-only; the rest is portable).
 **Python:** 3.12 (`C:\Python312\python.exe`). Pinned `>=3.12,<3.13` because the
 fast Leiden clustering backend has no wheel for 3.13.
 **Needs:** `uv` (`pip install uv`).
+
+Only *building* the index needs Python 3.12. Querying with `gpq.py` uses nothing
+but the standard library and runs on any Python 3, so the examples below use a
+bare `python`.
 
 ## 1. Check the index
 
@@ -48,20 +56,24 @@ C:\Python312\python.exe scripts/setup_index.py --source C:\Dev\gplates_2.5.0_src
 ```
 
 This validates the tree is really GPlates ≥ 2.5.0, downloads Universal Ctags into
-`data/tools/`, pip-installs tree-sitter into `data/pylibs/`, and writes
+`data/tools/`, runs `uv sync` to materialise the skill's `.venv/`, and writes
 `data/gplates.db` (~191 MB, about 30 seconds). It refuses to continue on a wrong
 directory, an old version, or an index that comes out short on any expected row count.
 
-Optionally, then build the code graph (~100 s), which adds Leiden-detected
-communities for semantic grouping:
+Useful `setup_index.py` variants: `--validate-only` (check the path, build
+nothing), `--check` (re-verify an existing index), `--rebuild` (rebuild from the
+stored path), `--ctags <path>` (use your own Universal Ctags).
+
+Optionally, then build the code graph (~100 s), which adds ~1,700-2,000
+Leiden-detected communities for semantic grouping:
 
 ```bash
 C:\Python312\python.exe scripts/build_graph.py
 ```
 
-Useful variants: `--validate-only` (check the path, build nothing), `--check`
-(re-verify an existing index), `--rebuild` (rebuild from the stored path),
-`--ctags <path>` (use your own Universal Ctags).
+`build_graph.py` takes `--check` (verify an existing graph), `--no-cluster`
+(skip community detection), `--label` (name communities with an LLM instead of
+`Community N`) and `--keep-mirror`.
 
 ## 3. Search
 
@@ -109,7 +121,7 @@ python scripts/gpq.py file <path>              # a file's symbols, in line order
 python scripts/gpq.py def <symbol> --body      # finally, read the code
 ```
 
-`info` and `tree` are cheap and give you the shape of a 850k-line codebase in two
+`info` and `tree` are cheap and give you the shape of an 844k-line codebase in two
 commands. Reach for `def --body` or `file --range` only once you know where to look.
 
 For what each module is responsible for, the namespace layout and the main classes:
@@ -143,6 +155,8 @@ covers more than C++:
 skills/gplates-code/
 ├── SKILL.md
 ├── pyproject.toml         dependencies (uv sync -> .venv)
+├── uv.lock                pinned dependency versions
+├── .gitignore             excludes data/ and .venv/
 ├── references/
 │   ├── SEARCH.md          full gpq reference and recipes
 │   ├── ARCHITECTURE.md    GPlates source tree map
@@ -155,6 +169,7 @@ skills/gplates-code/
 │   ├── test_gpq.py        test suite
 │   └── gplates_index/     common, schema, build, indexer,
 │                          cpp_parse, cpp_extract, resolve
+├── .venv/                 uv-managed environment (git-ignored)
 └── data/                  generated, git-ignored
     ├── config.json        remembered source path
     ├── tools/ctags.exe    downloaded Universal Ctags
@@ -172,7 +187,7 @@ the index and the ctags binary.
 C:\Python312\python.exe scripts/test_gpq.py
 ```
 
-109 tests. Parser, extractor and source-tree validation tests run without an
+126 tests. Parser, extractor and source-tree validation tests run without an
 index; index-integrity and CLI tests need one, and the graph tests need
 `build_graph.py` to have run. Anything unavailable is skipped, not failed.
 
@@ -183,9 +198,9 @@ index; index-integrity and CLI tests need one, and the graph tests need
   `setup_index.py --rebuild`, or the line numbers will drift.
 - `gpq sql "<SELECT ...>"` is the escape hatch for anything the subcommands do not
   cover; the schema is in [references/INDEXING.md](references/INDEXING.md).
-- Resolution is syntactic, not compiled: `uses` labels every hit with a confidence
-  and reports how many same-named occurrences it could **not** bind to a specific
-  entity. Overload resolution and template instantiation are out of reach — the
+- Resolution is syntactic, not compiled: `uses` labels every hit with its **role**
+  (the confidence is carried in `--json`) and reports how many same-named
+  occurrences it could **not** bind to a specific entity. Overload resolution and template instantiation are out of reach — the
   limits are spelled out in [references/SEARCH.md](references/SEARCH.md).
 - The code graph is a **separate, optional** layer in `data/graph.db`; the main
   index works without it. Details and its limits:

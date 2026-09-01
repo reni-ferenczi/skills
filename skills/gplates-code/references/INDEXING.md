@@ -5,9 +5,10 @@
 `scripts/setup_index.py` runs these steps in order and stops at the first failure.
 
 1. **Validate the source tree** (`gplates_index/common.check_source_root`).
-   Ten marker paths must exist — `CMakeLists.txt`, `CHANGELOG`,
-   `cmake/modules/Version.cmake`, `src/gplates_main.cc`, `src/app-logic`,
-   `src/qt-widgets`, `src/maths`, `src/model`, `src/CMakeLists.txt`,
+   Ten marker paths must exist, in the order `common.py` lists them —
+   `CMakeLists.txt`, `CHANGELOG`, `cmake/modules/Version.cmake`,
+   `src/CMakeLists.txt`, `src/gplates_main.cc`, `src/app-logic`,
+   `src/qt-widgets`, `src/maths`, `src/model`,
    `src/qt-resources/gpgim/gpgim.xml` — and `GPLATES_VERSION_{MAJOR,MINOR,PATCH}`
    parsed out of `Version.cmake` must be ≥ 2.5.0. Nothing is downloaded before
    this passes.
@@ -20,8 +21,9 @@
    The binary is then checked: it must report *Universal Ctags* (Exuberant Ctags
    cannot emit JSON) and list `json` among its compiled features.
 3. **Walk the tree** and record every file, skipping `.git`, `.idea`, `build`,
-   `__pycache__` and friends. Files with a known text extension and under 4 MB have
-   their content stored line by line.
+   `__pycache__` and friends. Files with a known text extension - or a known
+   extension-less name such as `CHANGELOG` - and at most 4 MiB have their content
+   stored line by line.
 4. **Extract per file** — `#include` directives, Qt `connect()` calls, and
    Boost.Python `class_<>`/`def()` chains from the C++ sources.
 5. **Resolve includes** — each quoted `#include` is matched against in-tree files
@@ -29,18 +31,19 @@
 6. **Build the FTS5 index** over the stored lines.
 7. **Run ctags** over `src/`, `scripts/` and `cmake/` with JSON output, and load
    the tags. Noise kinds (`parameter`, `local`, `tparam`, `macroparam`, `label`,
-   `file`) and ctags' `qualified` duplicate tags are dropped.
+   `name`, `file`, `unknown`), the `header` kind (already covered by `includes`)
+   and ctags' `qualified` duplicate tags are dropped.
 8. **Parse the Qt `.ui` forms** and `gpgim.xml`.
 9. **Deep-parse every C/C++ file with tree-sitter** (two passes: declarations, then
    occurrences), then resolve base classes, build the inheritance closure and bind
    occurrences to entities. See *The deep C++ pass* below.
 10. **Verify.** Every count in `indexer.SANITY_MINIMUMS` must be met, or the build
-   exits non-zero with the shortfalls listed. The thresholds sit roughly 20-25%
+   exits non-zero with the shortfalls listed. The thresholds sit roughly 25-50%
    below what GPlates 2.5.0 actually produces, so a newer release still passes but
    a broken parse does not.
 
-Typical run on GPlates 2.5.0: about 30 seconds, `data/gplates.db` about 191 MB
-(3081 files, 121k entities, 560k occurrences, 844k lines).
+Typical run on GPlates 2.5.0: about 29 seconds, `data/gplates.db` about 191 MB
+(3081 files, 121.5k entities, 560.6k occurrences, 844k lines).
 
 ## The deep C++ pass
 
@@ -121,8 +124,8 @@ inherit_closure(ancestor_id, descendant_id, depth)
 
 occurrences(id, file_id, line, col, name, name_lc, role,
             container_id,    -- enclosing function/method
-            entity_id,       -- resolved target, NULL when ambiguous
-            confidence)      -- local|member|file|unique|include|ambiguous
+            entity_id,       -- resolved target, NULL when ambiguous or unknown
+            confidence)      -- local|member|file|unique|include|ambiguous|unknown
 ```
 
 Query it directly when the subcommands are not enough:
@@ -141,7 +144,7 @@ python scripts/setup_index.py --rebuild        # rebuild from the stored source 
 python scripts/setup_index.py --source <DIR>   # point at a different source tree
 python scripts/setup_index.py --validate-only --source <DIR>
 python scripts/build_graph.py --check          # verify the optional code graph
-python scripts/test_gpq.py                     # 109 tests
+python scripts/test_gpq.py                     # 126 tests
 ```
 
 Rebuild whenever the source tree changes — the index stores absolute line numbers,
