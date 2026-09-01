@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/deprecated/StageRotation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `StageRotation` represents the difference between two `FiniteRotation` objects, capturing the change in rotation over a change in time. Where a finite rotation maps a point from the present to a past moment, a stage rotation can be viewed as a displacement in rotation-space or as the angular velocity over a time interval. The class holds a `UnitQuaternion3D` and a time delta in millions of years; applying a stage rotation to a finite rotation via `operator*` advances both the quaternion and the time stamp. The free functions compute stage rotations from finite-rotation pairs, rescale them to different time intervals, and support interpolation between finite rotations.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/deprecated/StageRotation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The entire `StageRotation` class and nearly all free functions are disabled via `#if 0 ... #endif` preprocessor blocks and are not compiled into the library. The code is retained for reference but marked for eventual removal. The `subtractFiniteRots()` function performs subtraction in rotation-space via the inverse of `r2` applied to `r1`, resulting in the property that `A == B + C == C * B` (where `+` denotes displacement and `*` denotes premultiplication); this non-symmetric operation is exposed as a named function rather than an operator to avoid confusion over evaluation order. Scaling a stage rotation requires both non-identity rotation and non-zero time delta, otherwise `scaleToNewTimeDelta()` throws `IndeterminateResultException`.
 
 ## Used by
 

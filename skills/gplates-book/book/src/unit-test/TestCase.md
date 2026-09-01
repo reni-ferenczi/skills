@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/TestCase tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Template files for generating new test case classes. These files provide a boilerplate structure with placeholder variables ($TESTCLASS$) that developers substitute to create test classes and their associated Boost.Test suites. The template includes seven empty test case methods and standard constructor and suite-construction code ready for customization.
 
 ## Declared types
 
@@ -27,9 +25,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/TestCase tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

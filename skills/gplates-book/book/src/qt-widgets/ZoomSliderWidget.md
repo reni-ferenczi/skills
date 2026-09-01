@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ZoomSliderWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A vertical slider widget with zoom-in and zoom-out icon buttons (shown as clickable labels at the top and bottom). The slider provides a bidirectional interface to the viewport zoom: when dragged, it changes the zoom level through `ViewportZoom`; when the zoom changes from other sources (spinbox, keyboard, mouse wheel), the slider updates to match. The widget is implemented in code rather than using Designer because it must be positioned carefully between other code-generated widgets to achieve proper layout of a resize grip between the globe view and task panel.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ZoomSliderWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_suppress_zoom_change_event` flag prevents feedback loops in the signal/slot chain: when handle_zoom_changed() sets the slider value programmatically, the flag is set to suppress the resulting valueChanged signal, preventing propagation back to ViewportZoom. This is necessary because slider ticks are coarser than zoom percentages, so an arbitrary zoom value may map to a different slider position, creating a mismatch if both directions are active.
 
 ## Used by
 

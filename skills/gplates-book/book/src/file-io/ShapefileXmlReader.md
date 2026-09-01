@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ShapefileXmlReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Parses GPlatesShapefileMap XML files that define property mappings for shapefile imports. The reader extends Qt's `QXmlStreamReader` and extracts key-value pairs from the root `<GPlatesShapefileMap version="1">` element, populating a `QMap<QString, QString>` provided by the caller. The map entries describe which shapefile attributes map to which GPlates feature properties, allowing `OgrReader` to correctly import shapefile feature collections without hardcoding attribute names.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ShapefileXmlReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Copy construction and assignment are private, preventing implicit copies. The caller owns the `QMap` pointer; the reader does not allocate or delete it. The XML version must be exactly "1" or a parse error is raised. Each XML element at the document root becomes a map entry with the element name as key and its text content as value; complex structures or nested elements are not supported.
 
 ## Used by
 

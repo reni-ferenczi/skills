@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PoleSequenceTableWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt widget that displays a table of rotation poles in a sequence. Each row represents one pole with fixed plate ID, moving plate ID, begin time, and end time. The widget packages the relevant data in a `PoleSequenceInfo` struct that holds a reference to a total rotation sequence feature, the plate IDs, the time range, and a flag indicating the plate relationship within the sequence.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PoleSequenceTableWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

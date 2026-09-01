@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/CoRegFilterMapReduceFactory tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Static factories for the three components of co-registration data mining's map-reduce pipeline. `CoRegFilterFactory` constructs the appropriate filter from a configuration row; `CoRegMapperFactory` builds a mapper based on the attribute type (GPML property, distance, presence, etc.); and `CoRegReducerFactory` instantiates a reducer (min, max, mean, median, percentile, lookup, vote, weighted mean) matching the configured operation. The `create_filter_map_reduce` convenience function assembles all three into a tuple in one call.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/CoRegFilterMapReduceFactory tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

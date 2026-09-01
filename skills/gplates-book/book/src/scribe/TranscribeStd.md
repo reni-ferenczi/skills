@@ -8,9 +8,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeStd tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit provides transcription support for standard library containers and related types. It defines `transcribe()` overloads for `std::vector`, `std::deque`, `std::list`, `std::set`, `std::multiset`, `std::map`, `std::multimap`, `std::queue`, `std::stack`, `std::priority_queue`, `std::pair`, and `std::unique_ptr`.
+
+For sequence containers (`std::deque`, `std::list`), transcription delegates to `transcribe_sequence_protocol()`. For associative containers, this unit defines `TranscribeSequence` specializations for set-like containers and `TranscribeMap` specializations for map-like containers. These protocol classes provide the interface that the sequence and mapping protocol handlers expect: methods to get container length, iterate items, clear the container, and add items back during deserialization.
+
+The key difference between set and multiset is that set's `add_item()` returns false if insertion fails due to a duplicate key, while multiset always succeeds. Similarly, map's `add_item()` returns `boost::optional<iterator>` which is empty on insertion failure, whereas multimap always returns a valid iterator. Pair and unique_ptr support constructor-based deserialization for types that are not default-constructible.
 
 ## Declared types
 
@@ -112,9 +114,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeStd tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `relocated()` functions signal to the Scribe system that container elements moved in memory after deserialization (relevant for vectors and similar containers that may reallocate). This allows transcribe handlers for contained types to perform post-relocation fixups. For containers with non-default-constructible element types, use the `ConstructObject` pattern with `transcribe_construct_data()`. The `transcribed_construct_data` parameter in `transcribe()` functions indicates whether construction data was saved separately; if true, the function skips deserializing individual fields because the object was already reconstructed.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureStoreRootRevision tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureStoreRootRevision` is the apex of the three-tier revisioning hierarchy: it holds the collection of currently-loaded feature collections (each corresponding to one loaded file). When feature collections are added or removed from the store, a new `FeatureStoreRootRevision` is created without modifying the old, preserving edit history for undo support.
+
+Like the other revision types, you access the current version through `FeatureStoreRootHandle`, not directly. Clients do not work with this class directly — it is managed by the transaction system.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureStoreRootRevision tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Reference counted and heap-allocated only via `create()`. Copy construction and assignment are blocked to enforce immutability. The feature store contains a single root revision, which the transaction system manages; normal application code should not construct or manipulate root revisions directly.
 
 ## Used by
 

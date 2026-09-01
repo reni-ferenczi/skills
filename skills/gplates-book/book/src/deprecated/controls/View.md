@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/controls/View tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A stub namespace containing a single function `DocumentMetadata()` that returns the title and metadata for the loaded data set. Currently implemented as a placeholder that returns an empty string.
 
 ## Declared types
 
@@ -30,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/controls/View tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The implementation is a stub that always returns an empty string. The header documentation indicates it should emit an error when no data set is loaded, but this is not implemented.
 
 ## Used by
 

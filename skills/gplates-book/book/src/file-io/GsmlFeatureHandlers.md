@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GsmlFeatureHandlers tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Parses and creates GPlates features from GeoSciML (GSML) XML during file import. `GsmlFeatureHandler` receives XML data containing a feature member, extracts the feature type, runs an XQuery to isolate the feature element, and creates a `FeatureHandle` in the target collection. It detects GPML-specific subtypes (like `RockUnit_*` and `FossilCollection_*`) and creates them with the `gpml:` namespace; other types default to the `gml:` namespace. Property extraction is delegated to `GsmlNodeProcessorFactory`.
+
+The `GsmlFeatureHandlerFactory` exists to allow callers to substitute alternative handler implementations if needed, though the base implementation is used throughout the codebase.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GsmlFeatureHandlers tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

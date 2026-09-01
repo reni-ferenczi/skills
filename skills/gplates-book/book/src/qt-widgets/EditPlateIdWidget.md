@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditPlateIdWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt widget for editing plate ID property values, with an uncommon extension: the ability to hold a null value. The widget presents a spin box for plate ID selection. Unlike most edit widgets, it supports an optional "None" state via `set_null_value_permitted()` and related methods, allowing callers to make null values optional (used in `CreateFeatureDialog` for conjugate plate IDs). When null is permitted, the widget shows -1 as a special "None" value in the spin box and displays a button to toggle the null state. It follows the `AbstractEditWidget` pattern but additionally emits a `value_changed()` signal when the value changes and provides `create_integer_plate_id_from_widget()` to return just the integer value.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditPlateIdWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_plate_id_ptr` pointer can be NULL when adding new properties. Calling any of `create_property_value_from_widget()`, `create_integer_plate_id_from_widget()`, or `update_property_value_from_widget()` on a null or uninitialized widget throws `UninitialisedEditWidgetException`. The null state is represented as -1 and is only meaningful when null values are permitted via `set_null_value_permitted(true)`. The spin box range is 0 to 2^31-1 (max signed 32-bit), or -1 to 2^31-1 when null is permitted. Always call `set_null_value_permitted()` before initializing the widget if null values should be supported.
 
 ## Used by
 

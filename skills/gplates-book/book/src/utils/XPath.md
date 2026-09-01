@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/XPath tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesUtils::XPath` contains a `Tokenizer` class that breaks down XPath expressions into individual tokens for parsing. The tokenizer supports a subset of the full XPath grammar sufficient for the OpenGIS Filter Encoding Implementation Specification v 1.1, including variables (with namespace prefixes), integer and floating-point literals (with scientific notation), string literals, comparison operators, logical operators (and/or), and parentheses/brackets.
+
+The tokenizer uses a state-machine approach to scan the input string character by character and identify token boundaries. It recognizes variables by their identifier syntax (letters, colons, underscores, numbers), numeric literals by their numeric format, string literals enclosed in double quotes (with doubled quotes as escape), and operators by their symbol combinations. The tokenizer provides a pull-based API: `next()` advances to the next token, and `curr_token()` returns the current token type, with accessor methods for the token's parsed value.
 
 ## Declared types
 
@@ -66,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/XPath tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Throws `Exception` on any malformed input (invalid characters, malformed operators, unclosed string literals). The tokenizer does not validate that the token sequence is semantically meaningful — it only ensures individual tokens are syntactically valid.
 
 ## Used by
 

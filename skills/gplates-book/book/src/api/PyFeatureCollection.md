@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyFeatureCollection tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureCollection` is a Python wrapper around `FeatureCollectionHandle` that provides safe access to feature collections from Python. It allows iteration over features with the `features()` method and querying the collection size with `size()`. The wrapper manages validity checking internally, returning empty results if the underlying handle becomes invalid — a critical capability given that feature collections can be unloaded or deleted during application use.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyFeatureCollection tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The wrapper holds a weak reference to the feature collection, so it safely handles the case where the collection is unloaded. Calls to `size()` and `features()` return zero-length results if the handle is no longer valid.
 
 ## Used by
 

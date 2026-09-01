@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PreferencesDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The main preferences dialog for GPlates, presented as a modal window with a categorized layout. Categories such as View, Files/Sessions/Projects, Network, Python, and Kinematic Graphs appear as a list on the left; selecting one displays the corresponding preference pane on the right via a stacked widget. The dialog concludes with an Advanced pane that shows a table of all available preferences.
+
+Each preference category is a separate `PreferencesPaneXXX` widget that manages a subset of settings. The dialog connects the category list to the stacked widget to switch panes when the user selects a different category. The `ConfigTableView` provides a custom table implementation for editing preferences.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PreferencesDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

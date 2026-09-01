@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/MinDataOperator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `DataOperator` that finds and records the minimum value from a feature property. The `get_data()` method calls `get_min_from_feature()` to extract and compute the minimum value across all associated features, then appends it to a data row. `get_min_from_feature()` iterates over associated features, retrieving a property by name from each, extracting numeric values via a visitor, and computing the minimum across all features. `get_min()` performs the actual minimum computation over a vector of doubles.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/MinDataOperator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+If a named property is not found on a feature, a warning is logged and that feature is skipped. If no features have the property or all have empty values, `EmptyData` is recorded. The minimum is computed across all values in all features with the property.
 
 ## Used by
 

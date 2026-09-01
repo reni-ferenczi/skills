@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/SmallCircleGeometryPopulator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SmallCircleGeometryPopulator` is a feature visitor that extracts properties from a `SmallCircle` feature and creates reconstructed small circle geometries. It walks the feature hierarchy to find the centre point, angular radius, plate ID, and valid time; checks that the feature is defined at the reconstruction time; rotates the centre to its reconstructed position; and creates a `ReconstructedSmallCircle` object with the reconstructed centre and radius in radians. Used by `ReconstructMethodSmallCircle` to populate the reconstruction output.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/SmallCircleGeometryPopulator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

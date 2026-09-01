@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlMetadata tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlMetadata` wraps a `FeatureCollectionMetadata` object to represent metadata about a feature collection as a property value. The class is mutable—metadata can be replaced via `set_data()`, which updates the instance ID. It provides convenience methods to access the metadata in different forms: as a multimap for programmatic access, as XML for serialization, or via `serialize()` for direct XML writing. The visitor pattern enables feature traversal to encounter metadata properties.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlMetadata tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

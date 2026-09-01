@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyApplication tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Application` is a Python wrapper around `GPlatesPresentation::Application` that exposes application state and lifecycle operations to the Python API. It provides methods to execute or evaluate Python code on the GUI thread via `exec_gui_string()`, `eval_gui_string()`, and `exec_gui_file()`, ensuring thread-safe execution of GUI operations. The class also supports registering custom utilities and draw styles from Python, querying loaded feature collections, and accessing the current reconstruction time — all critical operations for scripts running in the Python console.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyApplication tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All methods that interact with the GUI (exec_gui_string, eval_gui_string, exec_gui_file, register_utility, register_draw_style) use `DISPATCH_GUI_FUN` to ensure the operation runs on the main GUI thread, making them safe to call from Python scripts running in any thread context.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/presenter/ExposedPresenterObject tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Base class for presenter objects exposed to the view layer. Each instance receives a unique sequential identifier assigned at construction time, accessed via `id()`. Intended to be used as a virtual base class. Explicitly non-copyable and non-assignable to ensure identity semantics — each object's ID is fixed at creation.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/presenter/ExposedPresenterObject tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The static ID counter `d_next_id` has no mutex protection, so ID allocation is not thread-safe. This class should only be used from a single thread, or ID generation must be externally synchronized.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/deprecated/NetCDFWriter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A utility class with a static `Write()` method that serializes a `GridData` object to NetCDF format at the given filename. Takes an optional progress dialog to report writing progress. The helper function converts from GPlates's internal `PointOnSphere` representation to latitude/longitude coordinates for storage in NetCDF. This is deprecated infrastructure for writing legacy NetCDF grid format.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/deprecated/NetCDFWriter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

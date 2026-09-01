@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/VelocityFieldCalculatorLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A layer task that calculates velocity fields on mesh point domains inside static polygons, dynamic resolved topological polygons, or resolved topological networks. The task accepts feature collections and delegates actual calculation work to `VelocityFieldCalculatorLayerProxy`, exposing a layer proxy for downstream consumers and managing parameters through `VelocityFieldCalculatorLayerParams` with Qt signal notifications.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/VelocityFieldCalculatorLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

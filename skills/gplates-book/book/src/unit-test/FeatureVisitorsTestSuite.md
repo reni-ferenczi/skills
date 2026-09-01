@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/FeatureVisitorsTestSuite tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Placeholder test suite for feature visitor patterns. Currently empty—no test cases are registered in `construct_maps()`. Intended to hold unit tests for the visitor pattern implementations used to traverse and process feature data structures in the model layer.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/FeatureVisitorsTestSuite tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

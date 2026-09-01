@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/IntrusivePointerZeroRefCountException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`IntrusivePointerZeroRefCountException` is thrown when an intrusive-pointer reference count reaches zero unexpectedly—indicating a bug in the reference counting logic. It inherits from `InternalObjectInconsistencyException` and captures the address of the problematic object and the source location for debugging.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/IntrusivePointerZeroRefCountException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

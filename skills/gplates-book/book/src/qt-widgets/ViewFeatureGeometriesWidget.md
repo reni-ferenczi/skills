@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ViewFeatureGeometriesWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Displays the geometries of a feature in a tree view, including its reconstructed form at the current reconstruction time. Used within the feature properties dialog to let users inspect the feature's geometry. The widget watches for changes to the focused feature and reconstruction time, and updates its display accordingly. Geometry population is deferred until the widget becomes visible to avoid unnecessary work when it is hidden.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ViewFeatureGeometriesWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

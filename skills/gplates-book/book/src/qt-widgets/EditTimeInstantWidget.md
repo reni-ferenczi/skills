@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditTimeInstantWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An editor widget for `GmlTimeInstant` property values, which specify a time position in geological time (in millions of years). The widget provides a double spinbox for entering or modifying the time value. It follows the standard `AbstractEditWidget` pattern for loading time instants from property values, editing the value, and committing changes back to the original property or creating a new property from the widget's state.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditTimeInstantWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `update_property_value_from_widget()` before loading a time instant with `update_widget_from_time_instant()` throws `UninitialisedEditWidgetException`.
 
 ## Used by
 

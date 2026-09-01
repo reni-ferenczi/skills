@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditShapefileAttributesWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An editor widget for `GpmlKeyValueDictionary` property values, which store shapefile attributes as key-value pairs with typed values (integer, double, or string). The widget displays the dictionary as a three-column table: the first two columns (key and type) are read-only, and the third column (value) is editable. When a user edits a value cell, the widget validates the input against the value's declared type, updates the dictionary if valid, or reverts the cell if invalid. Unlike most edit widgets, this one commits changes immediately by emitting `commit_me()` on each cell edit.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditShapefileAttributesWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `update_property_value_from_widget()` before loading a dictionary with `update_widget_from_key_value_dictionary()` throws `UninitialisedEditWidgetException`. Invalid cell edits (e.g. non-integer input for an integer value) are silently rejected — the cell reverts to its prior value. The widget emits `commit_me()` on each value cell change, committing immediately rather than deferring to an overall save action.
 
 ## Used by
 

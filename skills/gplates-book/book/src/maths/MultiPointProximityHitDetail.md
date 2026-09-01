@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/MultiPointProximityHitDetail tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Encapsulates proximity-hit information for interactions with `MultiPointOnSphere` geometries. When a proximity query (such as a mouse click on the globe) strikes a collection of points, this class stores the reference to the `MultiPointOnSphere` and the distance (closeness value). Like other `ProximityHitDetail` subclasses, it is always heap-allocated and uses intrusive pointers for lifetime management.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/MultiPointProximityHitDetail tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Always heap-allocated via the static `create()` method; copy construction and assignment are explicitly deleted. Uses intrusive reference counting for shared ownership across the rendering and interaction systems.
 
 ## Used by
 

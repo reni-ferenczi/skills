@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=entry-points/gplates_main tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The entry point for GPlates that handles both GUI and command-line operation modes. Parses command-line options to determine whether to launch the interactive GUI application or dispatch to a non-GUI CLI command. For GUI mode, initializes the Qt application, creates the presentation-layer `Application` singleton, initializes Python support if enabled, loads project or feature collection files, and runs the Qt event loop. Provides options to load projects, enable debug menus, control Python and data-mining features, and synchronize with external applications.
 
 ## Declared types
 
@@ -76,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=entry-points/gplates_main tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `main()` function wraps `internal_main()` to handle uncaught exceptions outside the Qt event thread and to ensure profiling reports are generated only on normal exit. The `Application` singleton must be created inside `internal_main()` and destroyed before `QApplication` goes out of scope to avoid Qt crashes. Python initialization uses Boost.Python and must not call `Py_Finalize()` during cleanup.
 
 ## Used by
 

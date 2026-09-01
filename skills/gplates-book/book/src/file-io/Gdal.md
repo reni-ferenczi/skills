@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/Gdal tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Wrapper header for GDAL (Geospatial Data Abstraction Library) includes. This header ensures consistent and system-appropriate inclusion of GDAL functionality across the codebase, including version macros from `GdalVersion`. It is used by GPlates' raster and vector readers/writers to access GDAL's data format support.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/Gdal tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/FeatureSummaryWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A task panel widget that displays metadata of the currently focused feature. When a feature is selected by the user, the widget shows its type, name, plate IDs (reconstruction, conjugate, left, right), valid time span, and the containing feature collection file. It listens to `FeatureFocus` change signals and updates its display accordingly.
+
+The widget also implements the clear action to unset feature focus. Optional plate ID fields are hidden when empty to keep the display uncluttered. Helper functions perform slow lookups through loaded feature collections by feature handle to determine file membership and extract plate ID properties.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/FeatureSummaryWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

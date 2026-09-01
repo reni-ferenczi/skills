@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/OpenProjectRelativeOrAbsoluteDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog presented when opening a project file that has moved since it was saved, where some referenced data files can be located via both the original absolute paths and new relative paths. This situation arises when projects are relocated to different directories but still contain data files accessible from the new location.
+
+The dialog lists existing and missing files under both the original (absolute) and current (relative to new project location) file paths. The user can choose to load files from the original locations, from the current locations, or abort the open operation. This allows flexible project portability without requiring all data files to be relocated.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/OpenProjectRelativeOrAbsoluteDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Completionist tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A singleton that manages autocompletion functionality for Qt line edits. It loads completion term lists from XML resources (such as timescale data), creates `QAbstractItemModel` objects from those resources, and installs `QCompleter` objects on `QLineEdit` widgets. The `install_completer()` method handles the setup—parenting the completer to the widget for proper cleanup. Models are cached and reused across multiple completers to avoid redundant parsing.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Completionist tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_models` map holds `QSharedPointer` to models, enabling safe sharing between multiple completers without duplication or lifetime issues. Currently supports only ICC2012.xml as a built-in resource.
 
 ## Used by
 

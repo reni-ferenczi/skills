@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception class thrown when the OGR (GDAL vector I/O) library encounters an error during file operations. It derives from `GPlatesGlobal::Exception` and stores an error message, providing type-safe error handling for shapefile and other OGR-supported format reading and writing.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

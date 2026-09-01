@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/HasFunction tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`HasFunction` provides two preprocessor macros that generate compile-time meta-functions to detect whether functions or methods with specific signatures exist. The `HAS_FUNCTION` macro creates a meta-function for global functions, and `HAS_MEMBER_FUNCTION` creates one for class member functions.
+
+Each generated meta-function uses SFINAE (Substitution Failure Is Not An Error) to test whether a function pointer with the specified signature can be bound. The meta-function provides both a `value` boolean constant and a `type` typedef with a Boost.MPL boolean, enabling use in conditional compilation and overload resolution. For example, `enable_if` can branch between alternative function implementations based on whether a method signature matches.
 
 ## Declared types
 
@@ -30,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/HasFunction tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The generated meta-function is a template that must be instantiated with the exact function or method signature, including const, volatile, and reference qualifiers. For instance, `HasGetMember<MyClass, int (MyClass::*)() const>` and `HasGetMember<MyClass, int (MyClass::*)()>` check different signatures (const vs. non-const). The check is purely compile-time with no runtime cost or side effects.
 
 ## Used by
 

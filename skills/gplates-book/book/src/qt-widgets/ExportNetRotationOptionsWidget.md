@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportNetRotationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A widget for collecting export options when exporting net rotations. It contains a `VelocityMethodWidget` that allows the user to specify a velocity calculation method and delta time. These settings are packaged into an `ExportNetRotationAnimationStrategy::Configuration` object for use by the export machinery.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportNetRotationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

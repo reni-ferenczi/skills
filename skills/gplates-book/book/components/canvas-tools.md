@@ -20,27 +20,27 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [CanvasToolAdapterForGlobe](../src/canvas-tools/CanvasToolAdapterForGlobe.md) | 2 | 622 | 59 | (pending) |
 | [CanvasToolAdapterForMap](../src/canvas-tools/CanvasToolAdapterForMap.md) | 2 | 662 | 23 | (pending) |
 | [ChangeLightDirectionGlobe](../src/canvas-tools/ChangeLightDirectionGlobe.md) | 2 | 460 | 11 | (pending) |
-| [ChangeLightDirectionMap](../src/canvas-tools/ChangeLightDirectionMap.md) | 3 | 132 | 1 | (pending) |
+| [ChangeLightDirectionMap](../src/canvas-tools/ChangeLightDirectionMap.md) | 3 | 132 | 1 | Map canvas tool for changing light direction (currently unimplemented) |
 | [ClickGeometry](../src/canvas-tools/ClickGeometry.md) | 2 | 349 | 29 | (pending) |
-| [CreateSmallCircle](../src/canvas-tools/CreateSmallCircle.md) | 3 | 334 | 3 | (pending) |
+| [CreateSmallCircle](../src/canvas-tools/CreateSmallCircle.md) | 3 | 334 | 3 | Canvas tool for drawing small circles (geographic circles) on the globe |
 | [DeleteVertex](../src/canvas-tools/DeleteVertex.md) | 2 | 236 | 57 | (pending) |
-| [DigitiseGeometry](../src/canvas-tools/DigitiseGeometry.md) | 3 | 240 | 3 | (pending) |
-| [EditTopology](../src/canvas-tools/EditTopology.md) | 3 | 380 | 1 | (pending) |
+| [DigitiseGeometry](../src/canvas-tools/DigitiseGeometry.md) | 3 | 240 | 3 | Canvas tool for creating new geometries by clicking points interactively |
+| [EditTopology](../src/canvas-tools/EditTopology.md) | 3 | 380 | 1 | Canvas tool for selecting features to build plate boundary topologies |
 | [GeometryOperationState](../src/canvas-tools/GeometryOperationState.md) | 2 | 165 | 369 | (pending) |
-| [InsertVertex](../src/canvas-tools/InsertVertex.md) | 3 | 258 | 2 | (pending) |
-| [ManipulatePole](../src/canvas-tools/ManipulatePole.md) | 3 | 304 | 3 | (pending) |
+| [InsertVertex](../src/canvas-tools/InsertVertex.md) | 3 | 258 | 2 | Canvas tool for inserting vertices into existing or temporary geometries |
+| [ManipulatePole](../src/canvas-tools/ManipulatePole.md) | 3 | 304 | 3 | Canvas tool for interactively adjusting plate rotation poles via dragging |
 | [MeasureDistance](../src/canvas-tools/MeasureDistance.md) | 2 | 825 | 14 | (pending) |
 | [MeasureDistanceState](../src/canvas-tools/MeasureDistanceState.md) | 2 | 724 | 32 | (pending) |
-| [ModifyGeometryState](../src/canvas-tools/ModifyGeometryState.md) | 3 | 77 | 5 | (pending) |
-| [MovePoleGlobe](../src/canvas-tools/MovePoleGlobe.md) | 3 | 261 | 1 | (pending) |
-| [MovePoleMap](../src/canvas-tools/MovePoleMap.md) | 3 | 324 | 5 | (pending) |
-| [MoveVertex](../src/canvas-tools/MoveVertex.md) | 3 | 365 | 6 | (pending) |
-| [PanMap](../src/canvas-tools/PanMap.md) | 3 | 201 | 1 | (pending) |
-| [ReorientGlobe](../src/canvas-tools/ReorientGlobe.md) | 3 | 256 | 1 | (pending) |
-| [SelectHellingerGeometries](../src/canvas-tools/SelectHellingerGeometries.md) | 3 | 684 | 1 | (pending) |
-| [SplitFeature](../src/canvas-tools/SplitFeature.md) | 3 | 274 | 3 | (pending) |
-| [ZoomGlobe](../src/canvas-tools/ZoomGlobe.md) | 3 | 212 | 1 | (pending) |
-| [ZoomMap](../src/canvas-tools/ZoomMap.md) | 3 | 220 | 1 | (pending) |
+| [ModifyGeometryState](../src/canvas-tools/ModifyGeometryState.md) | 3 | 77 | 5 | Signal relay for snap-to-vertices configuration between UI and canvas tools |
+| [MovePoleGlobe](../src/canvas-tools/MovePoleGlobe.md) | 3 | 261 | 1 | Canvas tool for repositioning rotation poles on the globe view |
+| [MovePoleMap](../src/canvas-tools/MovePoleMap.md) | 3 | 324 | 5 | Map canvas tool for interactive pole manipulation |
+| [MoveVertex](../src/canvas-tools/MoveVertex.md) | 3 | 365 | 6 | Canvas tool for interactive vertex editing on the globe |
+| [PanMap](../src/canvas-tools/PanMap.md) | 3 | 201 | 1 | Map canvas tool for panning and reorienting the map view |
+| [ReorientGlobe](../src/canvas-tools/ReorientGlobe.md) | 3 | 256 | 1 | Globe canvas tool for rotating the 3D globe view |
+| [SelectHellingerGeometries](../src/canvas-tools/SelectHellingerGeometries.md) | 3 | 684 | 1 | Canvas tool for selecting geometries to fit a Hellinger rotation pole |
+| [SplitFeature](../src/canvas-tools/SplitFeature.md) | 3 | 274 | 3 | Canvas tool for inserting vertices into feature geometry |
+| [ZoomGlobe](../src/canvas-tools/ZoomGlobe.md) | 3 | 212 | 1 | Globe canvas tool for zooming into the 3D globe view |
+| [ZoomMap](../src/canvas-tools/ZoomMap.md) | 3 | 220 | 1 | Map canvas tool for zooming into the map view |
 
 ## Other files
 

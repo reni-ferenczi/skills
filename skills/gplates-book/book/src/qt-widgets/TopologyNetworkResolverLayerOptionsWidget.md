@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TopologyNetworkResolverLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A comprehensive layer options widget for topology network resolver layers, providing extensive controls over strain rate visualization and rift parameters. Users can choose between three strain rate smoothing algorithms (none, barycentric, natural neighbour) and optionally clamp the strain rate values. Rift-specific parameters include the exponential stretching constant, strain rate resolution, and edge length threshold. The widget offers three visualization modes via palette selection—dilatation, second invariant, and strain rate style—each with independent color scales and range controls. Additional options control whether to fill rigid blocks, show segment velocities, and adjust fill opacity and intensity. Help dialogs are integrated for the more complex parameters to guide users through the configuration.
 
 ## Declared types
 
@@ -114,9 +112,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TopologyNetworkResolverLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

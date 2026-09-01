@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureCollectionRevision tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureCollectionRevision` holds a snapshot of the content of a feature collection — the set of features it contains — at one point in time. It implements the middle tier of a three-level revisioning hierarchy: the feature store contains feature store roots, which contain feature collections, which contain features. Modifications to any collection create a new `FeatureCollectionRevision` without altering the old one, allowing the application to preserve edit history and support undo.
+
+Client code does not use this class directly. Instead, you access the current revision of a collection through its `FeatureCollectionHandle`, which manages the pointer to whichever revision is active at any given moment. When a transaction commits, the handle's pointer swaps to the new revision.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureCollectionRevision tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Instances are always heap-allocated via the static `create()` factory and managed by `ReferenceCount`. Copy construction and assignment are explicitly blocked to enforce the immutability contract and prevent accidental aliasing. Revisions are normally created and discarded by the transaction system; outside of transaction handling, you should not be constructing or destroying them directly.
 
 ## Used by
 

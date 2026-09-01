@@ -16,31 +16,31 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [FeatureClassifier](../src/feature-visitors/FeatureClassifier.md) | 3 | 360 | 0 | (pending) |
+| [FeatureClassifier](../src/feature-visitors/FeatureClassifier.md) | 3 | 360 | 0 | Classifies features by their GPML properties to categorize reconstruction, reconstructable, and instantaneous features |
 | [FromQvariantConverter](../src/feature-visitors/FromQvariantConverter.md) | 2 | 313 | 13 | (pending) |
 | [GeometryFinder](../src/feature-visitors/GeometryFinder.md) | 2 | 391 | 58 | (pending) |
-| [GeometryRotator](../src/feature-visitors/GeometryRotator.md) | 3 | 181 | 0 | (pending) |
+| [GeometryRotator](../src/feature-visitors/GeometryRotator.md) | 3 | 181 | 0 | Applies a finite rotation to all geometry properties in a feature |
 | [GeometrySetter](../src/feature-visitors/GeometrySetter.md) | 2 | 281 | 362 | (pending) |
 | [GeometryTypeFinder](../src/feature-visitors/GeometryTypeFinder.md) | 2 | 465 | 64 | (pending) |
 | [KeyValueDictionaryFinder](../src/feature-visitors/KeyValueDictionaryFinder.md) | 2 | 180 | 43 | (pending) |
 | [PropertyValueFinder](../src/feature-visitors/PropertyValueFinder.md) | 1 | 951 | 320 | (pending) |
-| [QueryFeaturePropertiesWidgetPopulator](../src/feature-visitors/QueryFeaturePropertiesWidgetPopulator.md) | 3 | 945 | 4 | (pending) |
+| [QueryFeaturePropertiesWidgetPopulator](../src/feature-visitors/QueryFeaturePropertiesWidgetPopulator.md) | 3 | 945 | 4 | Populates a tree widget with all properties of a feature for display in the GUI |
 | [ShapefileAttributeFinder](../src/feature-visitors/ShapefileAttributeFinder.md) | 2 | 309 | 95 | (pending) |
 | [ToQvariantConverter](../src/feature-visitors/ToQvariantConverter.md) | 2 | 575 | 38 | (pending) |
 | [TopologySectionsFinder](../src/feature-visitors/TopologySectionsFinder.md) | 2 | 530 | 61 | (pending) |
 | [TotalReconstructionSequencePlateIdFinder](../src/feature-visitors/TotalReconstructionSequencePlateIdFinder.md) | 2 | 212 | 28 | (pending) |
-| [TotalReconstructionSequenceRotationInserter](../src/feature-visitors/TotalReconstructionSequenceRotationInserter.md) | 3 | 602 | 3 | (pending) |
-| [TotalReconstructionSequenceRotationInterpolater](../src/feature-visitors/TotalReconstructionSequenceRotationInterpolater.md) | 3 | 414 | 1 | (pending) |
+| [TotalReconstructionSequenceRotationInserter](../src/feature-visitors/TotalReconstructionSequenceRotationInserter.md) | 3 | 602 | 3 | Inserts or updates a rotation in a total reconstruction sequence at a specific time |
+| [TotalReconstructionSequenceRotationInterpolater](../src/feature-visitors/TotalReconstructionSequenceRotationInterpolater.md) | 3 | 414 | 1 | Interpolates a rotation from a total reconstruction sequence at a specific time |
 | [TotalReconstructionSequenceTimePeriodFinder](../src/feature-visitors/TotalReconstructionSequenceTimePeriodFinder.md) | 2 | 296 | 8 | (pending) |
-| [ViewFeatureGeometriesWidgetPopulator](../src/feature-visitors/ViewFeatureGeometriesWidgetPopulator.md) | 3 | 1018 | 6 | (pending) |
+| [ViewFeatureGeometriesWidgetPopulator](../src/feature-visitors/ViewFeatureGeometriesWidgetPopulator.md) | 3 | 1018 | 6 | Populates a tree widget with both present-day and reconstructed geometry coordinates |
 
 ### `src/feature-visitors/deprecated`
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [GmlTimePeriodFinder](../src/feature-visitors/deprecated/GmlTimePeriodFinder.md) | 3 | 194 | 0 | (pending) |
-| [PlateIdFinder](../src/feature-visitors/deprecated/PlateIdFinder.md) | 3 | 207 | 0 | (pending) |
-| [XsStringFinder](../src/feature-visitors/deprecated/XsStringFinder.md) | 3 | 194 | 0 | (pending) |
+| [GmlTimePeriodFinder](../src/feature-visitors/deprecated/GmlTimePeriodFinder.md) | 3 | 194 | 0 | Finds and accumulates all gml:TimePeriod objects in a feature |
+| [PlateIdFinder](../src/feature-visitors/deprecated/PlateIdFinder.md) | 3 | 207 | 0 | Finds and accumulates all plate IDs in a feature |
+| [XsStringFinder](../src/feature-visitors/deprecated/XsStringFinder.md) | 3 | 194 | 0 | const feature visitor for collecting XsString properties from a feature |
 
 
 ## Other files

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ExportTemplateFilenameSequenceImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Generates sequences of filenames from templates containing format placeholders. Recognizes format codes such as frame number (%f), reconstruction time (printf-style), anchor plate ID (%a), datetime, and layer name, extracting them from the template and substituting values from the reconstruction sequence. Validates that templates produce varied filenames (differ with reconstruction time) and throws exceptions for unrecognized formats.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ExportTemplateFilenameSequenceImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/ViewFeatureGeometriesWidgetPopulator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This visitor populates a `QTreeWidget` with geometry information from both present-day and reconstructed coordinates, allowing users to view how features have moved over time. It takes a `Reconstruction` object (holding the computed reconstructed feature geometries for a specific time) and a feature, then builds a tree showing both the original coordinates and the reconstructed equivalents in side-by-side columns. Like `QueryFeaturePropertiesWidgetPopulator`, it optimizes performance by expanding only the focused geometry if one is provided.
 
 ## Declared types
 
@@ -81,9 +79,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/ViewFeatureGeometriesWidgetPopulator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

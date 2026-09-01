@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlFeatureReaderInterface tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A wrapper interface for reading individual features from GPML XML. `GpmlFeatureReaderInterface` holds a `GpmlFeatureReaderImpl` and delegates the actual parsing to it. When `read_feature` is called, it collects all child XML nodes from the feature element, passes them to the implementation for processing, and asserts that every property node has been consumed (unprocessed nodes indicate a malformed or unrecognized feature structure).
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlFeatureReaderInterface tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

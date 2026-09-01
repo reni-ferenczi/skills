@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/OpaqueDataToQString tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConvertOpaqueDataToString` is a Boost visitor that converts `OpaqueData` to `QString` for display in UI tables and other text representations. It handles multiple data kinds: empty data becomes `"NaN"`, booleans become `"true"` or `"false"`, numeric types are converted via `QString::number()`, strings are returned as-is, and single characters are wrapped in `QString`.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/OpaqueDataToQString tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

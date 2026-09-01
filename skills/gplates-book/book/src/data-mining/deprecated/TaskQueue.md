@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/TaskQueue tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A deprecated thread pool implementation for executing `Prospector` jobs asynchronously. `TaskQueue` manages a fixed pool of `MaxConcurrentThreads` (4) worker threads, each running `TaskScheduler` to fetch and execute prospector tasks. The queue coordinates task distribution and graceful shutdown through mutexes and condition variables.
 
 ## Declared types
 
@@ -60,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/TaskQueue tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Thread safety: access to the wait queue is protected by `d_wait_queue_mux`, and the shutdown flag by `d_shutdown_mux`. Threads must be joined explicitly via `shutdown()` before destruction; the destructor does not join threads, so calling it without shutdown first will leak running threads. Tasks are stored as raw pointers with no ownership transfer; callers must manage task memory.
 
 ## Used by
 

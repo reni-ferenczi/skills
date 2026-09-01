@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/DeferredApiCallImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+DeferredApiCallImpl is the implementation header for the deferred API call mechanism (see `DeferredApiCall`). It contains template metaprogramming to automatically apply argument reference wrapping and generate static `deferred_api_call()` functions for each supported arity (0–10). Each specialization binds a function pointer to wrapped arguments, acquires/releases the Python GIL appropriately, and posts a `DeferredCallEvent` to dispatch the actual function call on the main GUI thread. The implementation uses Boost.Bind, type traits, and template specialization to generate versions suitable for Boost.Python's function-binding API.
 
 ## Declared types
 
@@ -193,9 +191,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/DeferredApiCallImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Each `deferred_api_call()` specialization manages the Python Global Interpreter Lock (GIL) carefully: it acquires the lock with `PythonInterpreterLocker`, then immediately releases it with `PythonInterpreterUnlocker` before posting the `DeferredCallEvent` to the main thread, ensuring the main GUI thread can acquire the GIL when executing the actual function.
 
 ## Used by
 

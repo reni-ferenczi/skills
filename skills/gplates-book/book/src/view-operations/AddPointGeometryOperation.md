@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/AddPointGeometryOperation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GeometryOperation` that responds to user clicks on the globe to add points to a geometry being digitized. It bridges the canvas tools (which handle mouse events) with `GeometryBuilder` (which accumulates points and polygons) and the rendering system (`RenderedGeometryCollection`), updating visual feedback as the user draws.
+
+Enforces proximity thresholding to prevent duplicate points from being added too close to existing vertices. Updates two rendered geometry layers: one for the completed lines/polygon outline, and one for the individual points, allowing the user to see the shape as it is constructed.
 
 ## Declared types
 
@@ -57,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/AddPointGeometryOperation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

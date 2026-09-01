@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GsmlConst tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A collection of XML namespace declarations for GeoSciML and related standards (GML, WFS, OGC sampling) as string constants. These are prepended to XQuery expressions when parsing GeoSciML documents, allowing queries to reference elements in those namespaces by their declared prefixes.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GsmlConst tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

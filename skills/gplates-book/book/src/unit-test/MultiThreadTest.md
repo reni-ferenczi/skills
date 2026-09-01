@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/MultiThreadTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A test framework for multi-threading and performance profiling. `MultiThreadTest` provides seven test methods that are designed to measure and verify concurrent operations—atomic counters, mutex-based synchronization, and profiling—though most test cases are disabled via preprocessor guards. `MultiThreadTestSuite` wraps these tests in the hierarchical framework, instantiating `MultiThreadTest` and registering its test cases. The tests exist as a foundation for future multi-threaded performance analysis using Boost threading primitives and profiling instrumentation.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/MultiThreadTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Most test cases are disabled by `#if 0` preprocessor guards; they are currently placeholders for performance profiling experiments. When enabled, they exercise atomic counters, mutexes, and other synchronization primitives from Boost.
 
 ## Used by
 

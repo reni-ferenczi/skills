@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CreateFeaturePropertiesPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A page in the feature creation wizard that lets users build the property list for a new feature, checking against the GPGIM schema. Presents two tables: available properties from the model schema and already-added properties. Users add, edit, and remove properties; the page emits `finished()` when all required properties (those with GPGIM multiplicity of one) are present. Also exports helper types for working with non-null intrusive pointers in Qt containers and sorting properties by name.
 
 ## Declared types
 
@@ -81,9 +79,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CreateFeaturePropertiesPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

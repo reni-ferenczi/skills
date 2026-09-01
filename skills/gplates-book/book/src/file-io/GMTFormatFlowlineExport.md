@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatFlowlineExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed flowlines to GMT format. A flowline is a path traced by a plate-motion reference point as it moves through geologic time; this exporter writes `ReconstructedFlowline` objects to a GMT-compatible file with their geometry (seed point and traced path) at specified time steps. The output includes GMT headers recording the source files and reconstruction parameters, with spatial coordinates in the GMT xy-format.
 
 ## Declared types
 
@@ -56,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatFlowlineExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

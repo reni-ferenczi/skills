@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GmlGridEnvelope tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GmlGridEnvelope` implements a property value for "gml:GridEnvelope", representing a bounding box in the GML standard format. It stores two coordinate lists—`d_low` and `d_high`—as vectors of integers, allowing each to represent arbitrary dimensions. The class follows the standard property-value factory pattern: instances must be created through the static `create()` method and held in intrusive pointers, ensuring heap allocation and shared ownership. Like other property values in this system, it uses the visitor pattern for traversing feature structures.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GmlGridEnvelope tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

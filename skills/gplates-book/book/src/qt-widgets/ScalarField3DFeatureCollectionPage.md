@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ScalarField3DFeatureCollectionPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A wizard page in the scalar field 3D import dialog allowing users to select or create a feature collection to contain the imported scalar field data. The page always permits advance to the next wizard step via `isComplete()`. A checkbox allows users to request the project be saved after the import completes, with its state tracked in a reference passed to the constructor.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ScalarField3DFeatureCollectionPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

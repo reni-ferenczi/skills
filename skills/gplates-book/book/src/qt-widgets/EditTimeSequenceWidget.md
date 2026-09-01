@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditTimeSequenceWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An editor widget for `GpmlArray` property values containing time periods, displayed and edited as a flat sequence of time samples. The widget presents times in a table with spinbox-editable cells and action buttons for row insertion and deletion. Times can be added singly via a spinbox and button, or in batches via a range-fill interface (from/to/step values). When committing, the widget automatically sorts times, removes duplicates, and converts the flat list back into the structured `GpmlArray` of `GmlTimePeriod` objects. A custom spinbox delegate (`EditTimeSequenceSpinBoxDelegate`) renders and validates the time column. The widget monitors the current reconstruction time and provides buttons to populate fields from it.
 
 ## Declared types
 
@@ -96,9 +94,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditTimeSequenceWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `update_property_value_from_widget()` before loading a time period array with `update_widget_from_time_period_array()` throws `UninitialisedEditWidgetException`. Creating a property value requires at least two time samples (one complete period); an exception is thrown if fewer than two valid times are in the table. Negative time values are silently rejected when inserting. The table is pre-populated with time 0.0 on reset (configurable by DEMAND_ZERO_TIME_VALUE_IN_TABLE). Time duplication and sorting are handled automatically during commit; neither sorting nor duplicate removal is performed when edits are made.
 
 ## Used by
 

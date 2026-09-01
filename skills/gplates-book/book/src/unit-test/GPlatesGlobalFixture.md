@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/GPlatesGlobalFixture tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A global Boost.Test fixture that redirects test logging to a file. The fixture opens a file stream to `GPlates_unit_test.log` during construction and installs it as the Boost.Test logging destination, then restores logging to standard output on destruction. Declared as a global fixture, it runs once at the start and end of the entire test session.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/GPlatesGlobalFixture tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/SingleColourScheme tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A simple colour scheme that assigns a single fixed colour to all reconstruction geometries, regardless of their feature properties or type. Used when the user wants uniform rendering—all geometries appear in the same colour. Defaults to white if no colour is specified. Provides a factory function `make_single_colour_scheme()` to wrap construction in a `ColourScheme` pointer.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/SingleColourScheme tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

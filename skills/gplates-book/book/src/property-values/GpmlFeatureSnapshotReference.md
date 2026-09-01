@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlFeatureSnapshotReference tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlFeatureSnapshotReference` holds a reference to a specific snapshot of a feature, identified by its `FeatureId`, `RevisionId`, and `FeatureType`. This property value type is used to express cross-references to features within the GPlates data model, capturing both the identity and the specific revision of the referenced feature. Instances are immutable after construction—the value type cannot be changed through a setter—and must be created via the factory method and held in intrusive pointers. The class is shallow-clonable since it contains no mutable referenced objects.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlFeatureSnapshotReference tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/deprecated/GmlTimePeriodFinder tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This deprecated visitor finds and accumulates all `GmlTimePeriod` objects contained within a feature. It can optionally filter the search to specific property names (e.g., "gpml:validTime"). The found time periods are accumulated in a container and retrievable via iteration. This is deprecated and exists only for legacy compatibility.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/deprecated/GmlTimePeriodFinder tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

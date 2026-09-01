@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/GenerateVelocityDomainCitcomsTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Tests for velocity domain generation from CitCOMS (Citcom-S) geodynamic models. The test class loads mesh files from the unit-test-data directory and exercises the `GenerateVelocityDomainCitcoms` functionality in `app-logic`. It maintains a `ModelInterface`, a file format registry, and utilities to load and check mesh files at various resolutions.
 
 ## Declared types
 
@@ -55,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/GenerateVelocityDomainCitcomsTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FeatureTypeColourPalette tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides a color palette that maps `FeatureType` to `Colour` for rendering different feature types with distinct colors. The palette uses a hash of the feature type name to select from a palette of 18 base colors, with hardcoded overrides for well-known types (Coastline, Fault, MidOceanRidge, etc). Colors are generated lazily on first request and cached in a mutable map; this hash-based approach ensures colors remain stable when new feature types are added to the GPGIM, unlike index-based assignment which would break backward compatibility.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FeatureTypeColourPalette tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_colours` map is mutable, allowing `get_colour()` to cache generated colors for previously unseen feature types even when called on a const instance. Hard-wired color overrides in the constructor take precedence over the hash-based generation.
 
 ## Used by
 

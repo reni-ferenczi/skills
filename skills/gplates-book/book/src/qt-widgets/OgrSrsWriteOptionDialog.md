@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/OgrSrsWriteOptionDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog that prompts the user when exporting vector data with an OGR format after converting from a non-WGS84 spatial reference system. When data is imported from a file with a non-WGS84 SRS, GPlates converts it to WGS84 for internal processing. This dialog appears at export time to let the user choose how to represent the SRS in the output file.
+
+The user can select one of three behaviors: write to WGS84 SRS (the default), write back to the original SRS, or omit the SRS entirely. The dialog displays the original spatial reference system in WKT format and the filename being exported.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/OgrSrsWriteOptionDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

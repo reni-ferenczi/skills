@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/UninterpretedPropertyValue tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A property value that wraps an uninterpreted XML element node for properties that the parser could not deserialize as a known GPML type. It retains the raw XML element to preserve the data, allowing the property to be read without loss and potentially re-interpreted later or saved back to file unchanged. The wrapped element is immutable and accessed via `value()`.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/UninterpretedPropertyValue tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

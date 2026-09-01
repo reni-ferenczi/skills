@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/ScribeExportDataMining tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Registers Scribe serialization mappings for the data-mining filter configuration classes: `DummyFilter::Config`, `RegionOfInterestFilter::Config`, and `SeedSelfFilter::Config`. Each mapping associates a runtime class with a stable string identifier used during serialization and deserialization. This header is included by the entry-points serialization registration layer to make these types available to the broader GPlates persistence system.
 
 ## Declared types
 
@@ -29,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/ScribeExportDataMining tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The string identifiers used here must never change, as they are persisted in saved files. Modifying or removing an identifier breaks backward compatibility with existing GPlates projects. When adding new filter types to the data-mining module, add their registrations to this macro.
 
 ## Used by
 

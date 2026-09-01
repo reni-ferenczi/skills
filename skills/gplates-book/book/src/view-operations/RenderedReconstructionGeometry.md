@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedReconstructionGeometry tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A composite wrapper that pairs a single `ReconstructionGeometry` object with a `RenderedGeometry`. This class implements the visitor pattern, allowing geometry traversal to visit both the reconstruction geometry and its rendered representation. Proximity testing delegates to the wrapped rendered geometry, enabling interactive selection and manipulation of reconstructed features on the globe.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedReconstructionGeometry tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

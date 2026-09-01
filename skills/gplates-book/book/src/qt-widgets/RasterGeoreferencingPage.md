@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/RasterGeoreferencingPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Wizard page for defining the spatial extent (georeferencing) of a raster during import. It embeds an `EditAffineTransformGeoreferencingWidget` that allows users to specify bounds via affine transformation or latitude-longitude coordinates. The page monitors raster dimensions and reinitializes the georeferencing widget when dimensions change.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/RasterGeoreferencingPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All three constructor parameters—`georeferencing`, `raster_width`, and `raster_height`—are held by reference; changes to them persist to the caller. The page tracks dimension changes across initialization calls and reinitializes the georeferencing widget only when dimensions change.
 
 ## Used by
 

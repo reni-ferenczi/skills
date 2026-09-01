@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/XsBoolean tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A property value class wrapping a single `bool`. `XsBoolean` is a concrete type from the GPML/GML domain model representing XML Schema boolean values in geological features. Like all property value types, it uses intrusive-pointer memory management, forbids stack allocation (constructor is protected), and implements the visitor pattern via `accept_visitor()` for feature traversal. Call `XsBoolean::create()` to make an instance, then use `value()` and `set_value()` to read and modify the wrapped boolean.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/XsBoolean tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

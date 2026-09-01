@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/RasterLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `LayerTask` that handles geo-referenced raster data (image grids). It can resolve time-dependent rasters at a given reconstruction time and optionally reconstruct them using reconstructed plate polygons. The task delegates raster processing to a `RasterLayerProxy` and maintains layer parameters such as the band selection. Optional input channels can supply an age-grid raster for masking and a normal-map raster for shading.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/RasterLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/controls/Dialogs tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A minimal wrapper namespace providing two modal dialogs over wxWidgets' `wxMessageBox`: `ErrorMessage()` displays an error dialog with title, message, and result text in two sections; `InfoMessage()` displays a simpler informational dialog with only title and message. Both dialogs have a single OK button.
 
 ## Declared types
 
@@ -31,9 +29,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/controls/Dialogs tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

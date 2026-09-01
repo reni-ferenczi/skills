@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/deprecated/DigitisationUndoParadoxException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when the digitisation widget's undo/redo stack enters an inconsistent state. Specifically, it signals that an undo command's undo() operation attempted to reverse a redo() but found the expected state missing or corrupted — for example, trying to remove a coordinate that no longer exists. This indicates a programming error in the undo/redo command implementations where undo() and redo() do not properly cancel each other out.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/deprecated/DigitisationUndoParadoxException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

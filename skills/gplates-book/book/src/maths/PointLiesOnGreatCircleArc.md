@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PointLiesOnGreatCircleArc tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A function object that tests whether a point lies on a given `GreatCircleArc`. It extracts and caches the arc's start point, end point, and rotation axis (the normal to the plane containing the arc) during construction, then uses these to efficiently test points at call time. Designed for use with STL algorithms like `std::remove_if()` where the same arc is tested against many points.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PointLiesOnGreatCircleArc tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_arc_normal` field is optional because zero-length arcs have no well-defined plane; in that case, the test function treats the arc as a point and only tests for coincidence with the start point.
 
 ## Used by
 

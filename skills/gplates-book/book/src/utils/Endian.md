@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Endian tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Endian` provides fast endianness conversion functions for basic types and sequences, optimized for processing large raster arrays. It offers `swap()` functions to reverse byte order in place, and `convert()` functions to swap only when the input data's endianness differs from the runtime system.
+
+The implementation uses size-based dispatch through template specialization: types of the same byte size (1, 2, 4, 8) are handled identically using bitwise operations. All functions are inline to enable inlining in the hot path. Qt provides similar functions but is slower; this module was created to speed up CPU-intensive raster conversions. Custom types can be supported by specializing `swap()` for the struct or class.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Endian tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The unspecialized `swap<T>()` template is intentionally undefined; code using unsupported types will not compile. Byte-swapping is in-place and modifies the argument; no copy is made. The `convert()` function is symmetric: the same call converts from system endian to the specified endian or vice versa. Custom types must specialize `swap()` within the `GPlatesUtils::Endian` namespace, recursively swapping member fields of basic types; the header documents the required pattern.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliRelativeTotalRotation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RelativeTotalRotationCommand` is a CLI command that calculates and prints the relative total rotation pole between a moving plate and a fixed plate at a specified reconstruction time. It loads rotation files, constructs a `ReconstructionTree`, and computes the rotation that describes the relative motion between the two plates, optionally extending rotation sequences backward in time. The command supports replacing indeterminate rotations with a zero-angle north pole.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliRelativeTotalRotation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

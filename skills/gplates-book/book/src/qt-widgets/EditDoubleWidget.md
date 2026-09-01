@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditDoubleWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt widget for editing double-precision floating-point property values. The widget presents a spin box to the user for fine-grained numeric input and adjustment. Following the `AbstractEditWidget` pattern, it can be initialized with an `XsDouble` property value, edited by the user, and then either create a new property value via `create_property_value_from_widget()` or update the existing one via `update_property_value_from_widget()`. Each change to the spin box triggers the dirty flag and emits `commit_me()` to notify the containing dialog.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditDoubleWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_double_ptr` pointer can be NULL when adding new properties (as opposed to editing existing ones). Calling `update_property_value_from_widget()` on an uninitialized widget throws `UninitialisedEditWidgetException`; ensure the widget is either initialized via `update_widget_from_double()` or used only for creating new properties.
 
 ## Used by
 

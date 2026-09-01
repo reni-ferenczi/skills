@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlPlateId tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlPlateId` wraps an integer plate ID—a fundamental identifier used throughout GPlates for referring to tectonic plates. This is a simple but ubiquitous property value type used in countless places to specify which plate a feature belongs to or affects. The class is mutable: the plate ID can be changed after construction via `set_value()`, which updates the instance ID to reflect the modification. Instances must be created via the factory method and held in intrusive pointers. The wide use of this class (62+ units) reflects how central plate identification is to plate motion modeling.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlPlateId tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

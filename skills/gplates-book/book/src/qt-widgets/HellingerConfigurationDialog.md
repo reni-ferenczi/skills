@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Settings dialog for the Hellinger plate motion estimation tool, hosted within `HellingerDialog`. It lets users customize the visual appearance of Hellinger results on the globe: colors and thickness for the estimated and best-fit poles and confidence ellipses, and the size of the pole arrow markers used to visualize pole positions.
+
+The dialog delegates its UI to `HellingerConfigurationWidget` and manages a reference to the parent dialog's `Configuration` structure. On apply, it copies the widget's settings to the configuration object and persists them to `UserPreferences` so they survive between sessions. It validates changes via the configuration widget's `configuration_changed()` signal, enabling the apply button only when the current settings are valid.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

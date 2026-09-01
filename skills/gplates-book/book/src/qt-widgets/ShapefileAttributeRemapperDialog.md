@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ShapefileAttributeRemapperDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A modal dialog for remapping existing shapefile/OGR attribute associations to different model properties. Like `ShapefileAttributeMapperDialog`, it wraps a `ShapefileAttributeWidget` where the user modifies attribute field selections via combo boxes. The key difference is that the remapper is used when attributes are already partially mapped and the user needs to change those associations, rather than establishing a mapping for the first time.
+
+When the user accepts the dialog, the new mapping is written back to the caller's `model_to_attribute_map` parameter; when they click Reset, the widget restores the mappings that were in effect when the dialog was opened.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ShapefileAttributeRemapperDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

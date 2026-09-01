@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GenerateDeformingMeshPointsDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A wizard dialog for generating a distribution of mesh points with initial crustal thickness properties at a past geological time. The dialog guides users through three pages: defining the point generation region (from lat/lon extents or a focused polygon boundary), specifying the point distribution density, filling in reconstruction properties (plate ID, valid time span, feature name), and choosing the target feature collection.
+
+Each point is assigned three related crustal scalar values: crustal thickness (in km), stretching (beta) factor indicating relative thickness change, and thinning (gamma) factor. Points can be generated inside a topological plate or network (optionally excluding rigid block interiors) or in a user-specified lat/lon extent.
 
 ## Declared types
 
@@ -84,9 +84,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GenerateDeformingMeshPointsDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The dialog tracks feature creation with a guard to detect when a new reconstruct layer is created as a side effect of creating the feature, which may trigger topology reconstruction parameter setup.
 
 ## Used by
 

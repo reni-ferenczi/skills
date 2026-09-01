@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PythonExecutionMonitorWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A monitor widget for long-running Python script execution. It displays a cancel button that allows users to interrupt execution, and listens for Ctrl+C keypresses as an alternative. The widget holds a reference to `GPlatesApi::PythonExecutionThread` and calls `raise_keyboard_interrupt_exception()` when either the button is clicked or Ctrl+C is detected. The widget installs global and parent-level event filters to intercept keyboard input and reposition itself when the parent is resized. It appears with a 500-millisecond delay to avoid distraction during short scripts.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PythonExecutionMonitorWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+A global event filter is installed at construction and removed at destruction. Parent-widget event filters are installed on `showEvent` and removed on `hideEvent`. The widget positions itself in the bottom-right corner of its parent via `reposition()`.
 
 ## Used by
 

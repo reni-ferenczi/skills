@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/GenericFilter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenericFilter` is a deprecated template class that implements the `Filter` interface by wrapping a user-supplied implementation functor. It provides three overloaded `operator()` signatures supporting different output buffer management: writing to an external output iterator, using an internally-managed output vector, or appending to an external container.
+
+The implementation functor is responsible for iterating the input range and calling the output handler's `insert()` method for each filtered element. `GenericFilter` abstracts away the output handling details and returns a tuple of begin/end iterators for the result.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/GenericFilter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The internal output vector d_output_data is shared across all three operator() variants; if you use different variants in sequence, results from earlier calls may be overwritten or mixed. When using iterator mode, the implementation's return value indicates the number of elements written, which is used to advance the result end iterator.
 
 ## Used by
 

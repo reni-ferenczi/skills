@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReconstructedScalarCoverageExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed scalar coverages (scalar fields sampled at points on a sphere) to GPML and GMT formats. A scalar coverage associates a scalar value with each point in a domain point set; this exporter can also include associated deformation scalars: dilatation strain, dilatation strain rate, and second invariant strain rate.
+
+The main entry points are `export_reconstructed_scalar_coverages_to_gpml_format()` for GPML output (preserving the data as features in the model) and `export_reconstructed_scalar_coverages_to_gmt_format()` for GMT format (one point per line with scalars). Both support single-file and per-input-file export modes simultaneously. The GMT exporter can output coordinates as either (lon, lat) or (lat, lon).
 
 ## Declared types
 
@@ -40,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReconstructedScalarCoverageExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The GPML exporter takes a `ModelInterface` to create new features in the model, whereas the GMT exporter writes text. Both support optional inclusion of dilatation strain and strain rate data. Single-file and per-input-file exports can be combined in one call.
 
 ## Used by
 

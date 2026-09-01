@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/InvalidPropertyValueException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown by edit widgets when create_property_value_from_widget() is called but the widget fields do not contain data to construct a valid `PropertyValue`. For example, `EditGeometryWidget` throws this when the user has not supplied enough distinct points to form a valid `PolylineOnSphere`.
+
+The exception carries a human-readable reason string that describes the specific validation failure. This reason is intended to be presented to the user via a message box in the context of `AddPropertyDialog`.
 
 ## Declared types
 
@@ -37,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/InvalidPropertyValueException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

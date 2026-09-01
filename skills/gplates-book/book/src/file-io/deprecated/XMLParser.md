@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/deprecated/XMLParser tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A DOM-like wrapper around the expat XML parser library. `XMLParser::Parse()` reads an XML document from an input stream and builds a tree of `Element` nodes, where each `Element` holds a name, text content, attributes (as name/value pairs), and links to parent and child elements. The implementation uses expat callbacks to incrementally construct the tree as the parser encounters start tags, end tags, and character data.
 
 ## Declared types
 
@@ -76,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/deprecated/XMLParser tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The caller is responsible for deleting the returned `Element` tree; the destructor recursively cleans up all children. Contiguous blocks of whitespace in element content are compressed to a single space. `Parse()` throws `FileFormatException` on parse errors, including malformed XML or stream failures. The parser uses a stack-based approach with callbacks; a stack mismatch (mismatched tags) terminates with an error message to stderr.
 
 ## Used by
 

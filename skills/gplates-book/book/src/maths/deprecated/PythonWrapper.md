@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/deprecated/PythonWrapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A deprecated Boost.Python module entry point that wraps core maths types (`PointOnSphere`, `PolylineOnSphere`, `Real`, `UnitVector3D`, `Vector3D`) for Python access. The `BOOST_PYTHON_MODULE(_maths)` macro builds a Python extension module by delegating to export functions defined in the respective type headers. This was part of an early Python binding strategy that has since evolved.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/deprecated/PythonWrapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

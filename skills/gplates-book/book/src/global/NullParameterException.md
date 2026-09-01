@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/NullParameterException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown when a function receives a NULL pointer for a parameter that must not be null. This detects violated preconditions on pointer arguments — callers must ensure they pass valid pointers rather than null. Unlike `NotYetImplementedException`, this exception carries a custom message (passed at construction) that can describe which parameter was null or what the expected value should have been, helping callers diagnose what went wrong.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/NullParameterException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/deprecated/MainWindow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`MainWindow` is the top-level wxFrame that houses the entire deprecated GUI application. It creates and manages a menu bar with File, Reconstruct, and Help menus, a toolbar with zoom controls and an animation stop button, a status bar displaying current time, globe position, and zoom level, and a `GLCanvas` for rendering the globe visualization. The window handles file operations (opening, importing, exporting, and saving data and rotation files), reconstruction commands (jumping to a specific time, returning to present, and running animations), and zoom controls. It maintains two operational modes: normal mode for interactive use, and animation mode which disables menus and enables the Escape key to interrupt animations. The window also caches the last-used directories and animation parameters for convenience.
 
 ## Declared types
 
@@ -115,9 +113,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/deprecated/MainWindow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Mode switching between `NORMAL_MODE` and `ANIMATION_MODE` manipulates the event handler stack and replaces the accelerator table; in animation mode, all menus are disabled and the Escape key stops the animation. The window owns the `_menu_bar`, `_tool_bar`, `_status_bar`, and `_canvas` pointers. The status bar contains four fields with fixed widths except the first (info) field which is variable-width. Animation parameters (`_last_start_time`, `_last_end_time`, `_last_time_delta`, `_last_finish_on_end`) are cached across dialog invocations, and the Reconstruct menu items are currently if-0-ed out.
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/UnableToIntersectEquivalentGreatCirclesException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when code attempts to calculate the intersection of two great circles that are equivalent—that is, they represent the same great circle on the sphere. Since equivalent great circles intersect everywhere rather than at discrete points, computing a unique intersection is undefined. The exception inherits from `PreconditionViolationError` and carries both arcs that violated the requirement that they be distinct great circles.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/UnableToIntersectEquivalentGreatCirclesException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

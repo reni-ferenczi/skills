@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliConvertFileFormatCommand tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConvertFileFormatCommand` is a CLI command that converts loaded feature collections from one file format to another. It reads feature collections into a `ModelInterface`, then saves them in the specified output format (GPML, compressed GPML, Shapefile, GMT, or Plates4 line format). The command allows users to provide prefix and suffix decorations to the output filenames during conversion.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliConvertFileFormatCommand tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

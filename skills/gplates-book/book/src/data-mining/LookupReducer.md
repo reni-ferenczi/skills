@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/LookupReducer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A reducer that selects a single data value from a set of candidates by proximity to a seed geometry. With one input, returns it unchanged; with multiple inputs, finds the target geometry closest to the seed. When the seed is inside multiple target polygons (distance zero), returns the value from the smallest polygon to break ties deterministically. Returns empty data if no inputs are provided.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/LookupReducer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

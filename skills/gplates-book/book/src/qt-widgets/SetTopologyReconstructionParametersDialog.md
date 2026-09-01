@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SetTopologyReconstructionParametersDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for configuring topology-based feature geometry reconstruction. Users control when reconstruction begins (feature appearance or import time), set time intervals for iterative reconstruction, and enable optional features like lifetime detection (subduction/ridge consumption), line tessellation, deformed network interpolation modes, and strain accumulation tracking. Built-in help dialogs explain each feature with detailed parameter descriptions.
 
 ## Declared types
 
@@ -67,9 +65,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SetTopologyReconstructionParametersDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/presenter/ReconstructionContext tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Presenter-side context for managing the inputs to a reconstruction: a collection of feature collections (with usage masks to filter them), a time value, and a root plate ID. Lazily instantiates and caches the actual `Reconstruction` object. Tracks dirtiness to detect when parameters have changed and the reconstruction output needs regeneration. Uses virtual inheritance from `ExposedPresenterObject` to support multiple inheritance patterns.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/presenter/ReconstructionContext tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Uses virtual inheritance from `ExposedPresenterObject` to enable multiple inheritance patterns in derived classes. The `reconstruction_instance()` method lazily instantiates the actual `Reconstruction` object on first access, but the implementation in the header is incomplete (marked with a comment). Methods have EMIT comments suggesting they were designed to work with an event/signal system.
 
 ## Used by
 

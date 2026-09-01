@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportResolvedTopologyOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A form-based widget for configuring resolved topology export options. Users select which topology types to export (resolved lines, polygons, networks, boundary segments, and topological line sub-segments), and optionally force polygon orientation. It optionally includes a `DatelineWrapOptionsWidget` and always delegates to `ExportFileOptionsWidget` for file settings. Collected options are packaged as `ExportResolvedTopologyAnimationStrategy::Configuration`.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportResolvedTopologyOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

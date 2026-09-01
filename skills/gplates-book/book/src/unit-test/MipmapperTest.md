@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/MipmapperTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Tests the mipmapping functionality in `GPlatesGui::Mipmapper`, which generates downsampled image pyramids from raster data. `MipmapperTest` contains seven test methods that verify raster extension and downsampling behavior across different data types: extending rasters to even dimensions (tests 1-4), and validating mipmap generation for RGBA, floating-point, and integer rasters. `MipmapperTestSuite` wraps these tests in the hierarchical test framework, instantiating `MipmapperTest` and registering its test cases via the `ADD_TESTCASE` macro.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/MipmapperTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

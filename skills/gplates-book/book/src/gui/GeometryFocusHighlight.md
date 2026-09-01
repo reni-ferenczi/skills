@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GeometryFocusHighlight tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A utility namespace that renders the geometry of a focused feature into a specified rendered geometry layer. If there is a focused geometry, the function renders all reconstruction geometries of the focused feature across all geometry properties; the clicked geometry is highlighted in white and all other geometries of the same feature are rendered in grey. Non-clicked geometries are rendered first to avoid occluding the clicked geometry. If no geometry is focused, the layer is cleared.
 
 ## Declared types
 
@@ -30,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GeometryFocusHighlight tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Renders all reconstruction geometries of the focused feature across all layers, not just those from the layer that contains the clicked geometry. This handles cases where a feature is reconstructed in multiple layers and the user may click on a geometry from any layer. The function assumes the caller is responsible for activating and deactivating the specified rendered geometry layer.
 
 ## Used by
 

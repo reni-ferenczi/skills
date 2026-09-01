@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TrinketIcon tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An interactive icon widget extending `QLabel` for use in status bars. It wraps a static icon label with mouse event handling and callback support: when clicked (if enabled), it invokes a user-supplied callback function and emits a `clicked` signal. The widget maintains separate pixmaps for normal and pressed states to give visual feedback during interaction. It is primarily used by `TrinketArea` to manage a collection of interactive icons in the application's status bar.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TrinketIcon tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

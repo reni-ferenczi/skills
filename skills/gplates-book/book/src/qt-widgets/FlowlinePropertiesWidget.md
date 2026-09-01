@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/FlowlinePropertiesWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A custom properties widget for flowline features, allowing users to define the role of a selected point in creating a flowline. The widget presents three options: the point is the spreading centre, the left endpoint, or the right endpoint of the flowline. If the user selects an endpoint, the widget uses `FlowlineUtils` to compute the equivalent centre point that would yield the desired endpoint after plate reconstruction at the current time.
+
+The geometry correction respects the flowline properties (left and right plate IDs, valid time period) extracted from the feature handle.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/FlowlinePropertiesWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

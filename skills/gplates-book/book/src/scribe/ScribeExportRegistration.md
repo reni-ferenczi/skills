@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeExportRegistration tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit defines the macro framework for registering polymorphic classes and variant types with the `Scribe` serialization system. Polymorphic classes (those with virtual methods) and types used in `boost::variant` objects must be registered so that when a base-class pointer or variant is transcribed, the loader knows which derived type to instantiate. Each module defines a `SCRIBE_EXPORT_<module>` macro listing its types; the `SCRIBE_EXPORT_REGISTRATION` macro takes the combined registry and invokes `ExportRegistry::register_class_type<T>()` for each at program startup. The macros use Boost.Preprocessor to expand a sequence of (type, id-string) tuples into individual registration calls.
 
 ## Declared types
 
@@ -31,9 +29,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeExportRegistration tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The string identifiers (`ClassIdName`) in each registration are permanent once written to a transcribed archive; changing them breaks compatibility between GPlates releases. If a class is renamed or moved to a different namespace, keep its original identifier. All identifiers must be unique across the entire registration set. Abstract classes with pure virtual methods cannot be registered; attempting to do so causes a compile-time error. Private nested classes require a `friend class GPlatesScribe::Access` declaration in the parent class.
 
 ## Used by
 

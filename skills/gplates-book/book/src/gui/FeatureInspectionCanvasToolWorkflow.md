@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FeatureInspectionCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A workflow that manages a suite of geometry editing and inspection tools for a single focused feature. It extends `CanvasToolWorkflow` to provide tools for clicking geometries, measuring distance, and modifying feature geometry via vertex operations (move, insert, delete) and splitting polylines. Each tool works on both the 3D globe and 2D map via `GlobeCanvasTool` and `MapCanvasTool` adapters, and all tools operate on the focused feature via a `GeometryBuilder`.
+
+The workflow intelligently enables and disables tools based on the feature type, geometry type, and vertex count. Editing tools are disabled for topological features and features reconstructed by topologies, and deletion/insertion/splitting are disabled for scalar coverage features to preserve the one-to-one mapping between geometry points and their scalar values. The workflow owns the state of which tool is active and communicates tool enable/disable state through Qt signals.
 
 ## Declared types
 
@@ -66,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FeatureInspectionCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Activation sets `GeometryOperationState` to use the focused feature's `GeometryBuilder`; deactivation clears it. The main rendered layer (`FEATURE_INSPECTION_CANVAS_TOOL_WORKFLOW_LAYER`) is only active when the workflow is active, and the focused feature geometry is redrawn whenever the feature or its properties change or the render parameters change. The workflow listens to `FeatureFocus` for changes to enable and disable tools appropriately—most editing tools are disabled for topological or topology-reconstructed features, and tools that change vertex count are disabled for scalar coverage features (those with per-point scalar values).
 
 ## Used by
 

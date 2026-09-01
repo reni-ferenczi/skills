@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PythonArgumentWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A base widget class for Python script configuration arguments. `PythonArgumentWidget` is the abstract parent; three concrete subclasses handle different argument types. `PythonArgDefaultWidget` provides a text line edit for simple string arguments. `PythonArgColorWidget` shows a read-only line edit with background colour and a button to open a colour picker. `PythonArgPaletteWidget` shows a read-only line edit for colour palette file paths, with buttons to open a file dialog and reload the selected palette. Each subclass holds a pointer to `GPlatesGui::PythonCfgItem` and synchronises widget changes to it, emitting the `configuration_changed()` signal when the value changes.
 
 ## Declared types
 
@@ -74,9 +72,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PythonArgumentWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `PythonCfgItem` pointer passed to each subclass is assumed to be owned externally; the widgets hold non-owning pointers and do not delete it. In `PythonArgPaletteWidget`, `d_last_open_directory` persists across file selections to remember where the user last browsed.
 
 ## Used by
 

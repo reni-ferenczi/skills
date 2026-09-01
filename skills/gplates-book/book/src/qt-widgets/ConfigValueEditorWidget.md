@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ConfigValueEditorWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A composite editor widget used by `ConfigValueDelegate` in model-view contexts. It combines a `QLineEdit` for text input with a reset button, allowing users to restore a config value to its default. When the reset button is clicked, the widget emits `reset_requested` and sets a flag queryable via `wants_reset()`. The widget acts as a focus proxy, delegating focus to the line edit for a natural interaction flow.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ConfigValueEditorWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

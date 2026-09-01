@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliInvalidOptionValue tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InvalidOptionValue` is an exception thrown when a command-line option receives a value that cannot be interpreted or is outside the acceptable range. It inherits from `GPlatesGlobal::Exception` and captures the name of the offending option for diagnostic output. Various CLI commands use this exception to signal parsing errors when validating user-supplied option values.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliInvalidOptionValue tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

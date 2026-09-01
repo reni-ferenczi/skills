@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/QtFormattingUtils tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides formatting utilities for Qt types. `qdatetime_to_elapsed_duration()` takes a `QDateTime` (typically a feature creation time) and returns a human-readable string describing the elapsed time since that moment. For recent events it returns phrases like "right now", "5 minutes ago", "1 hour ago"; for events more than a week old it returns the date itself. This is used in the Clicked Feature Table to provide at-a-glance feedback on when features were created.
 
 ## Declared types
 
@@ -29,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/QtFormattingUtils tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

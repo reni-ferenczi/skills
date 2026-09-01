@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/deprecated/GPlatesApp tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GPlatesApp` is the wxWidgets application class that manages application lifecycle during startup and shutdown. When wxWindows begins execution, it calls `OnInit()` to set up the application state, and `OnExit()` to tear it down. During initialization, `GPlatesApp` creates a single `MainWindow` instance, shows it to the user, and registers it as the top window. It applies a Mesa graphics library workaround if needed, and catches any exceptions thrown during the main window construction, reporting them to standard error rather than crashing silently.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/deprecated/GPlatesApp tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`OnInit()` catches `GPlatesGlobal::Exception`, `std::exception`, and all other exceptions, preventing any throw from propagating beyond the initialization phase. The `MainWindow` owns the `d_main_win` pointer and the window is deleted in `OnExit()`. The Mesa workaround (`fix_mesa_bug()`) sets an environment variable to disable SSE optimizations in Mesa, which has no effect on systems without Mesa or unaffected by the bug.
 
 ## Used by
 

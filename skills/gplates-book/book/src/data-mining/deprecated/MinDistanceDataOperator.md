@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/MinDistanceDataOperator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `DistanceDataOperator` subclass that computes the minimum distance from a collection of distance values. The `calculate()` method delegates to `DataMiningUtils::minimum()` to find and return the smallest distance in the input vector.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/MinDistanceDataOperator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

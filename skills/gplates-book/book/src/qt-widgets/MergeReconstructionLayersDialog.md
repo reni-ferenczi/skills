@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/MergeReconstructionLayersDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for selecting Reconstruction Tree layers to merge into a target layer. The `populate()` method fills a table with all Reconstruction Tree layers except the current target, presenting each layer with a checkbox to enable or disable it for merging. Users can toggle individual layers, use "Select All" and "Clear All" buttons to bulk-select, and apply or cancel the selection. The dialog tracks layer selection state in `LayerState` objects and provides a method to retrieve the final selection as a vector of `GPlatesAppLogic::Layer` objects.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/MergeReconstructionLayersDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Layers are enabled by default in the `LayerState` constructor—the user must explicitly disable those they do not wish to merge. The current visual layer is held as a weak pointer, which is locked in `populate()` to verify it still exists; `populate()` must be called before showing the dialog. Column widths are adjusted to stretch the layer name column and fit the enable/disable checkbox column.
 
 ## Used by
 

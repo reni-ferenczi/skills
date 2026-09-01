@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/deprecated/XsStringFinder tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is a `ConstFeatureVisitor` that traverses a feature's property structure to collect all `XsString` (XML Schema string) properties. You can optionally constrain the search to specific property names by building an allowlist with `add_property_name_to_allow()`. Call `visit_feature_handle()` to start the traversal, then access the collected strings via the `found_strings_begin()` and `found_strings_end()` iterators.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/deprecated/XsStringFinder tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

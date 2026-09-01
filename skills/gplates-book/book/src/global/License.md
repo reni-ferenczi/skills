@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/License tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The `License` namespace provides functions to retrieve GPlates' copyright information in plain-text and HTML-formatted forms, used by the About dialog and other UI components that display license and attribution details.
 
 ## Declared types
 
@@ -30,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/License tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

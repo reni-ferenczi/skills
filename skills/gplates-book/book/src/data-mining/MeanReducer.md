@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/MeanReducer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A reducer that returns the arithmetic mean of numeric values from a dataset. Extracts opaque data from all inputs, converts them to doubles, and returns their sum divided by count.
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/MeanReducer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

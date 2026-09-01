@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructionLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructionLayerTask` is a fundamental layer task that generates a `ReconstructionTree` from rotation features, establishing the plate circuit hierarchy at a given reconstruction time. It accepts multiple collections of reconstruction features (rotation files) as input and delegates the actual tree construction to `ReconstructionLayerProxy`. The task manages layer parameters through `ReconstructionLayerParams` and updates the proxy with the current reconstruction time and anchor plate ID whenever the reconstruction context changes. Other layers depend on the output of this task to perform feature reconstruction.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructionLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

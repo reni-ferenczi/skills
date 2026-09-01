@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/ViolatedUnitVectorInvariantException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when unit vector invariants are violated. A unit vector must have magnitude exactly 1; this exception is thrown when an operation attempts to create or manipulate a `UnitVector3D` in a way that would violate this requirement. The `UnitVector3D` class uses this exception to enforce its preconditions, ensuring that code working with unit vectors can rely on the magnitude invariant.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/ViolatedUnitVectorInvariantException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

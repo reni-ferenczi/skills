@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/deprecated/types tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A collection of deprecated type aliases and enumerations that were used throughout earlier versions of GPlates for basic type identification. The unit provides convenient type names for rotation IDs (`rid_t`), integral values (`integer_t`), and array indices (`index_t`), as well as enumerations to classify geometry features (`FeatureTypes`) and topology structures (`TopologyTypes`). This header was designed to support control flow and optimisation decisions based on geometry and topology types, but is now superseded by the modern type model in the `model` and `property-values` modules.
 
 ## Declared types
 
@@ -68,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/deprecated/types tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

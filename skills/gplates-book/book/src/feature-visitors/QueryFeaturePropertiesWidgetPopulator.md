@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/QueryFeaturePropertiesWidgetPopulator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This visitor populates a `QTreeWidget` with the hierarchical properties of a feature, converting GPML data into a tree view for display in the GUI. It traverses all property types (geometries, times, rotations, measurements, strings) and formats them as human-readable tree items. A key optimization: if a focused geometry is provided (the geometry the user clicked on), only that geometry's subtree is expanded by default, avoiding performance issues when a feature has many geometries. The visitor is used by `QueryFeaturePropertiesWidget` to display feature details when the user queries them.
 
 ## Declared types
 
@@ -65,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/QueryFeaturePropertiesWidgetPopulator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

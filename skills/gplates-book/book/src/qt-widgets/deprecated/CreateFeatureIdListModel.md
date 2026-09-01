@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/deprecated/CreateFeatureIdListModel tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt item model that wraps a `QStringList` of feature IDs for display in a list view. The model implements the `QAbstractItemModel` interface with one column showing feature ID strings and supports add, remove, and clear operations. When items are added or removed, the model emits the appropriate Qt signals to notify any attached views.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/deprecated/CreateFeatureIdListModel tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

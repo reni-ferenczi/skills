@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PythonConsoleDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for interactive Python console access, allowing users to enter statements into the Python interpreter and view output. It comprises three classes: `PythonConsoleDialog` (the main dialog), `ConsoleTextEdit` (the output display and input line container), and `ConsoleInputTextEdit` (the single-line input field). Python's stdout and stderr are redirected to this dialog via `ConsoleWriter`, and stdin is redirected via `ConsoleReader` to a modal input dialog. The console maintains command history, displays errors with special formatting, and supports running external Python scripts via file dialog. The unit also provides a recent-scripts menu and script execution monitoring.
 
 ## Declared types
 
@@ -151,9 +149,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PythonConsoleDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The dialog is thread-safe for `append_text()` and `read_line()` — both may be called from any thread. `PythonReadlineDialog` must be constructed before and destructed after `ConsoleReader` to maintain correct object lifetime. The input widget (`ConsoleInputTextEdit`) blocks paste operations and drag/drop; command history navigation uses up/down arrow keys. The dialog can be prevented from closing via the `d_disable_close` flag.
 
 ## Used by
 

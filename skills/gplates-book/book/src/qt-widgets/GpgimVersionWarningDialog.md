@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GpgimVersionWarningDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Warning dialog shown when loading or saving GPML files created with a different GPGIM (GPlates Geological Information Model) version than the current application. The dialog alerts the user that overwriting files with a different GPGIM version could render them unreadable by older versions of GPlates, and provides options appropriate to the context: when saving, the user can choose to save, abort the save, or close; when loading, they can acknowledge or suppress future warnings.
+
+The dialog is customizable via `set_action_requested()` to distinguish between load and save workflows, adjusting the button labels and descriptive text via `tweak_buttons()` and `tweak_label()`. It tracks the user's preference to suppress load warnings independently, always showing the dialog for save operations where the risk of data loss is higher.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GpgimVersionWarningDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

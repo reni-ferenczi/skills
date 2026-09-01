@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/UnableToExtendPointlikeArcException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when code attempts to extend a pointlike `GreatCircleArc` to a full great circle. A pointlike arc is one where both endpoints are the same or numerically indistinguishable, which does not uniquely determine the great circle it lies on; therefore, extension is impossible. The exception inherits from `PreconditionViolationError` and carries the arc that violated the requirement, signaling an operation precondition failure rather than a resource error.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/UnableToExtendPointlikeArcException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

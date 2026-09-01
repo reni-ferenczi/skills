@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/VisualLayersWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The main layer management interface, providing a list of visual layers with controls for adding, reordering, and toggling visibility. Uses a `VisualLayersListView` and `VisualLayersDelegate` to display each layer with its editable options. A `VisualLayersProxy` wrapper inverts the layer order for the UI (showing newest layers at the top). Coordinates button actions for adding layers, controlling visibility, and accessing the draw style dialog.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/VisualLayersWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

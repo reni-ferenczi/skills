@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ViewportProjection tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A central hub for map projection state: holds the current `MapProjection::Type` and the central meridian, and notifies listeners whenever either changes. When `set_projection_type()` or `set_central_meridian()` is called, it emits a before-change signal, updates the state, then emits an after-change signal, allowing both pre-validation and post-update reactions across the presentation and UI layers.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ViewportProjection tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -21,26 +21,26 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [CallStackTracker](../src/utils/CallStackTracker.md) | 1 | 288 | 1195 | (pending) |
 | [CommandLineParser](../src/utils/CommandLineParser.md) | 2 | 555 | 68 | (pending) |
 | [ComponentManager](../src/utils/ComponentManager.md) | 2 | 137 | 294 | (pending) |
-| [ConfigBundle](../src/utils/ConfigBundle.md) | 3 | 541 | 0 | (pending) |
-| [ConfigBundleUtils](../src/utils/ConfigBundleUtils.md) | 3 | 180 | 13 | (pending) |
+| [ConfigBundle](../src/utils/ConfigBundle.md) | 3 | 541 | 0 | Lightweight portable key-value configuration store with user and default values |
+| [ConfigBundleUtils](../src/utils/ConfigBundleUtils.md) | 3 | 180 | 13 | Utility functions for manipulating hierarchical key names in configuration bundles |
 | [ConfigInterface](../src/utils/ConfigInterface.md) | 2 | 303 | 27 | (pending) |
 | [CopyConst](../src/utils/CopyConst.md) | 2 | 52 | 387 | (pending) |
-| [CopyOnWrite](../src/utils/CopyOnWrite.md) | 3 | 506 | 0 | (pending) |
+| [CopyOnWrite](../src/utils/CopyOnWrite.md) | 3 | 506 | 0 | Template wrapper providing copy-on-write semantics for smart pointers |
 | [Counter64](../src/utils/Counter64.md) | 2 | 147 | 61 | (pending) |
 | [DeferredCallEvent](../src/utils/DeferredCallEvent.md) | 2 | 405 | 63 | (pending) |
 | [Earth](../src/utils/Earth.md) | 2 | 85 | 30 | (pending) |
-| [Endian](../src/utils/Endian.md) | 3 | 382 | 7 | (pending) |
-| [Environment](../src/utils/Environment.md) | 3 | 127 | 3 | (pending) |
+| [Endian](../src/utils/Endian.md) | 3 | 382 | 7 | Fast endianness conversion functions for basic types and sequences |
+| [Environment](../src/utils/Environment.md) | 3 | 127 | 3 | Wrapper around std::getenv() returning QStrings with boolean interpretation |
 | [FeatureUtils](../src/utils/FeatureUtils.md) | 2 | 410 | 48 | (pending) |
 | [FunctionTypes](../src/utils/FunctionTypes.md) | 2 | 511 | 34 | (pending) |
 | [GeometryCreationUtils](../src/utils/GeometryCreationUtils.md) | 2 | 519 | 89 | (pending) |
-| [GetPropertyAsPythonObjVisitor](../src/utils/GetPropertyAsPythonObjVisitor.md) | 3 | 628 | 2 | (pending) |
-| [HasFunction](../src/utils/HasFunction.md) | 3 | 114 | 1 | (pending) |
+| [GetPropertyAsPythonObjVisitor](../src/utils/GetPropertyAsPythonObjVisitor.md) | 3 | 628 | 2 | Visitor that converts GPlates property values to Boost.Python objects |
+| [HasFunction](../src/utils/HasFunction.md) | 3 | 114 | 1 | Compile-time meta-functions for detecting functions with specific signatures |
 | [IdStringSet](../src/utils/IdStringSet.md) | 1 | 810 | 356 | (pending) |
 | [IntrusiveSinglyLinkedList](../src/utils/IntrusiveSinglyLinkedList.md) | 2 | 348 | 336 | (pending) |
 | [KeyValueCache](../src/utils/KeyValueCache.md) | 2 | 429 | 47 | (pending) |
 | [LatLonAreaSampling](../src/utils/LatLonAreaSampling.md) | 2 | 839 | 6 | (pending) |
-| [Mapper](../src/utils/Mapper.md) | 3 | 122 | 6 | (pending) |
+| [Mapper](../src/utils/Mapper.md) | 3 | 122 | 6 | Abstract base class template defining interface for sequence transformation |
 | [NetworkUtils](../src/utils/NetworkUtils.md) | 3 | 158 | 6 | (pending) |
 | [NullIntrusivePointerHandler](../src/utils/NullIntrusivePointerHandler.md) | 2 | 90 | 116 | (pending) |
 | [NullNonNullIntrusivePointerException](../src/utils/NullNonNullIntrusivePointerException.md) | 3 | 70 | 0 | (pending) |
@@ -67,8 +67,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [UnicodeString](../src/utils/UnicodeString.md) | 1 | 374 | 784 | (pending) |
 | [UnicodeStringUtils](../src/utils/UnicodeStringUtils.md) | 2 | 94 | 289 | (pending) |
 | [UniqueId](../src/utils/UniqueId.md) | 3 | 110 | 3 | (pending) |
-| [VirtualProxy](../src/utils/VirtualProxy.md) | 3 | 81 | 0 | (pending) |
-| [XPath](../src/utils/XPath.md) | 3 | 623 | 0 | (pending) |
+| [VirtualProxy](../src/utils/VirtualProxy.md) | 3 | 81 | 0 | Defers creation of a pointee object until first dereference via pointer-like interface |
+| [XPath](../src/utils/XPath.md) | 3 | 623 | 0 | Tokenizer for breaking XPath expressions into individual tokens |
 | [XQueryUtils](../src/utils/XQueryUtils.md) | 2 | 547 | 102 | (pending) |
 | [XmlNamespaces](../src/utils/XmlNamespaces.md) | 2 | 433 | 57 | (pending) |
 | [non_null_intrusive_ptr](../src/utils/non_null_intrusive_ptr.md) | 1 | 305 | 1689 | (pending) |
@@ -77,18 +77,18 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [BinaryReducer](../src/utils/deprecated/BinaryReducer.md) | 3 | 82 | 0 | (pending) |
-| [FeatureHandleToOldId](../src/utils/deprecated/FeatureHandleToOldId.md) | 3 | 142 | 0 | (pending) |
-| [Filter](../src/utils/deprecated/Filter.md) | 3 | 155 | 0 | (pending) |
-| [FilterMapOutputHandler](../src/utils/deprecated/FilterMapOutputHandler.md) | 3 | 109 | 8 | (pending) |
-| [FilterMapReduceWorkFlow](../src/utils/deprecated/FilterMapReduceWorkFlow.md) | 3 | 152 | 1 | (pending) |
-| [GenericFilter](../src/utils/deprecated/GenericFilter.md) | 3 | 155 | 0 | (pending) |
-| [GenericMapper](../src/utils/deprecated/GenericMapper.md) | 3 | 154 | 0 | (pending) |
-| [GenericMapperImpl](../src/utils/deprecated/GenericMapperImpl.md) | 3 | 64 | 0 | (pending) |
-| [GenericReducer](../src/utils/deprecated/GenericReducer.md) | 3 | 76 | 0 | (pending) |
-| [GenericReducerImpl](../src/utils/deprecated/GenericReducerImpl.md) | 3 | 55 | 0 | (pending) |
-| [PredicateFilter](../src/utils/deprecated/PredicateFilter.md) | 3 | 176 | 0 | (pending) |
-| [UnaryMapper](../src/utils/deprecated/UnaryMapper.md) | 3 | 116 | 0 | (pending) |
+| [BinaryReducer](../src/utils/deprecated/BinaryReducer.md) | 3 | 82 | 0 | Deprecated reducer that applies a binary function to accumulate a sequence into a single result |
+| [FeatureHandleToOldId](../src/utils/deprecated/FeatureHandleToOldId.md) | 3 | 142 | 0 | Deprecated utility for extracting legacy Plates format identifiers from features |
+| [Filter](../src/utils/deprecated/Filter.md) | 3 | 155 | 0 | Abstract interface for filtering operations that transform input ranges to output ranges |
+| [FilterMapOutputHandler](../src/utils/deprecated/FilterMapOutputHandler.md) | 3 | 109 | 8 | Abstracts output writing for filter/map operations, dispatching to iterator or container modes |
+| [FilterMapReduceWorkFlow](../src/utils/deprecated/FilterMapReduceWorkFlow.md) | 3 | 152 | 1 | Orchestrates a pipeline of filter, map, and reduce operations using template metaprogramming |
+| [GenericFilter](../src/utils/deprecated/GenericFilter.md) | 3 | 155 | 0 | Concrete filter implementation that wraps a user-supplied functor for filtering logic |
+| [GenericMapper](../src/utils/deprecated/GenericMapper.md) | 3 | 154 | 0 | Concrete template mapper that applies user-provided implementation functors to transform input sequences |
+| [GenericMapperImpl](../src/utils/deprecated/GenericMapperImpl.md) | 3 | 64 | 0 | Abstract interface for implementation functors used by GenericMapper |
+| [GenericReducer](../src/utils/deprecated/GenericReducer.md) | 3 | 76 | 0 | Concrete template reducer that applies user-provided implementation functors to combine input sequences |
+| [GenericReducerImpl](../src/utils/deprecated/GenericReducerImpl.md) | 3 | 55 | 0 | Abstract interface for implementation functors used by GenericReducer |
+| [PredicateFilter](../src/utils/deprecated/PredicateFilter.md) | 3 | 176 | 0 | Concrete template filter that selects input elements matching a user-supplied boolean predicate |
+| [UnaryMapper](../src/utils/deprecated/UnaryMapper.md) | 3 | 116 | 0 | Concrete template mapper that applies a unary transformation function to each input element |
 
 
 ## Other files

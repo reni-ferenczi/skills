@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SpecifyAnchoredPlateIdDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A modal dialog for specifying an anchored (fixed) plate ID. The dialog presents a spinbox for direct entry and a menu button that extracts available plate IDs from the focused feature's properties. The inner `ExtractPlateIds` visitor walks the feature to collect all `GpmlPlateId` values keyed by their property names; menu items created from this list let the user quickly select a known plate ID instead of typing it.
+
+When the user accepts the dialog, it emits a `value_changed` signal carrying the final plate ID value. A Reset button allows resetting to zero.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SpecifyAnchoredPlateIdDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

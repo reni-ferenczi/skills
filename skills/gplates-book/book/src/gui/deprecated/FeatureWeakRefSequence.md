@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/deprecated/FeatureWeakRefSequence tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+**Deprecated.** A container of weak references to features, created via `create()` and managed by intrusive pointer for sharing across objects of different lifetimes. It provides a vector-like interface (size, iteration, indexed access, clear, push_back) to hold the weak references but guarantees nothing about their validity — features may be deleted or the model reverted.
+
+The class is no longer used in the codebase and is retained only for reference.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/deprecated/FeatureWeakRefSequence tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Copy construction and assignment are intentionally disabled — the private declarations (never defined) ensure no copies can be made. The weak references held are not guaranteed valid; features may be deleted or the model reverted without warning. This container owns no references to the features themselves, only weak references that become invalid when their targets are destroyed.
 
 ## Used by
 

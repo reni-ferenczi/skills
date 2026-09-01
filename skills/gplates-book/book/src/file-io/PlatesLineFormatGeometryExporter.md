@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PlatesLineFormatGeometryExporter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A visitor that converts GPlates geometries to PLATES4 format pen commands and writes them to a `QTextStream`. Coordinates are written with fixed precision and field width, followed by a pen position code (2 to draw a line from the previous point, 3 to skip and start a new line). Supports optional coordinate order reversal and can add a closing point to polygons for PLATES4 compatibility.
 
 ## Declared types
 
@@ -58,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PlatesLineFormatGeometryExporter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

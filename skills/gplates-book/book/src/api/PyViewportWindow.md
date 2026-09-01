@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyViewportWindow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This class wraps the GUI's viewport and camera controls, exposing them to Python scripts. It holds references to the main window, active scene view, and viewport zoom controller, which are retrieved from the `Application` singleton at construction. Methods dispatch camera operations (pan, rotate, reset) to the scene view and zoom operations to the zoom controller. `set_focus` allows setting the feature focus and optionally auto-panning the camera to the focused feature, and accepts either a `Feature` object directly or a feature ID string to look up in the loaded feature collections.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyViewportWindow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All methods dispatch to the GUI thread via `DISPATCH_GUI_FUN` to ensure thread safety. The constructor captures references to singleton objects from `Application::instance()`, not owned instances.
 
 ## Used by
 

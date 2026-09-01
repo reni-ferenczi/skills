@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=entry-points/gplates_demo_no_gui_main tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The entry point for the headless demo application that exercises the feature model and reconstruction engine without a GUI. Creates hard-coded GPGIM-based test features (isochronal features with plate IDs and time intervals), demonstrates reconstruction at specific geological times, and outputs the results as GPML. The demo accepts an optional filename argument to load and process a GPML file, making it useful for testing the model, file I/O, and reconstruction logic in isolation.
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=entry-points/gplates_demo_no_gui_main tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

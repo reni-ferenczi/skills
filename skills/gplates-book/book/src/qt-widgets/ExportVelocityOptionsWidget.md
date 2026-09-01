@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportVelocityOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides the user interface for configuring velocity export options across multiple file formats: GPML, GMT, Terra text, and CitcomS global. The widget inherits from `ExportOptionsWidget` and acts as a container that delegates velocity calculation parameters to `ExportVelocityCalculationOptionsWidget` and file format options to `ExportFileOptionsWidget`.
+
+For GMT export, the widget exposes many velocity-specific controls: velocity vector format (3D, colatitude-longitude, angle-magnitude, or azimuth-magnitude), velocity scaling, velocity sampling stride, coordinate order, and optional metadata inclusion (plate ID, domain points, domain metadata). For Terra text and CitcomS global formats, the widget provides filename template controls to match grid file naming conventions. The widget dynamically hides or shows controls based on the selected file format and updates the output description label whenever options change.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportVelocityOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

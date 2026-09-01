@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/VisualLayersListView tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A list view for displaying visual layers with drag-and-drop support for reordering. Uses persistent editors (one `VisualLayerWidget` per row) that remain open so users can edit each layer without double-clicking. Handles the lifecycle of editors as layers are added and removed.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/VisualLayersListView tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

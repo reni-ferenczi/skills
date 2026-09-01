@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatMultiPointVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports velocity vector fields to GMT format. The exporter writes `MultiPointVectorField` objects (collections of velocities sampled at multiple points) to a GMT file with selectable output options: domain points (spatial positions where velocities were calculated), velocity vectors in user-chosen format, and associated plate IDs. Velocity magnitudes can be scaled and output filtered by stride to control density. Output includes GMT headers with reconstruction metadata, and coordinates follow GMT xy-format conventions.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatMultiPointVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

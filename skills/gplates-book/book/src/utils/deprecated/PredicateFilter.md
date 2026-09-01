@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/PredicateFilter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PredicateFilter` is a concrete template that implements the abstract `Filter` interface using a user-supplied boolean predicate. It selects elements from an input sequence that satisfy the predicate condition and copies them to the output, supporting three output collection modes: appending to a provided iterator, using an internal vector, or populating a supplied vector. The input and output element types must be identical, enforced by the base class.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/PredicateFilter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

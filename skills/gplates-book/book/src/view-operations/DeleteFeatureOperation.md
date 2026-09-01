@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/DeleteFeatureOperation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A thin wrapper that removes the currently focused feature from its parent feature collection. It exists to bridge the Qt signal/slot system with the feature model layer, allowing the main window and other GUI components to trigger feature deletion through `delete_focused_feature()` rather than directly manipulating the model.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/DeleteFeatureOperation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

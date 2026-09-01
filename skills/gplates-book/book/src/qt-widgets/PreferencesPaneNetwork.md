@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PreferencesPaneNetwork tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A preference pane for network configuration, embedded in the `PreferencesDialog`. It presents controls for settings managed by `GPlatesAppLogic::UserPreferences`: proxy URL and enabled status, server port, and local listening mode. Widget configuration is generated from a Qt Designer form; the constructor uses `GPlatesGui::ConfigGuiUtils::link_widget_to_preference` to synchronise each control with its corresponding preference key. The pane has no network logic of its own — it only presents a user-friendly layout. Listeners in other classes respond to preference changes as needed.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PreferencesPaneNetwork tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

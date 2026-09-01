@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Environment tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Environment` wraps the standard library's `std::getenv()` to return `QString` instead of C strings, eliminating manual conversions and enabling the use of Qt's string operations and locale-aware comparisons. The `getenv()` function returns a null `QString` if the variable is not defined.
+
+An additional `getenv_as_bool()` function interprets environment variable values as boolean, returning the default value if the variable is unset, treating any value except "0", "false", "off", "disabled", or "no" (case-insensitive) as true. This enables users to set flags with simple environment variables like `GPLATES_FEATURE=1`.
 
 ## Declared types
 
@@ -31,9 +31,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Environment tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`getenv()` returns a null `QString` when the variable is undefined, not an empty string; check with `.isNull()` to distinguish. Passing a null pointer to `getenv()` is handled safely, returning an empty QString. The `getenv_as_bool()` function normalizes values (trimming whitespace, converting to lowercase, applying Unicode normalization) before checking against the set of false values; any other value is treated as true.
 
 ## Used by
 

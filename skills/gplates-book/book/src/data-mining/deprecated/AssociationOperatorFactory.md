@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/AssociationOperatorFactory tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A factory for creating `AssociationOperator` instances based on type enum and configuration parameters. The static `create()` method accepts an `AssociationOperatorType` and `AssociationOperatorParameters` and returns a new operator instance. This class is deprecated and was part of an earlier data-mining workflow architecture.
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/AssociationOperatorFactory tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `create()` method currently creates a `RegionOfInterestAssociationOperator` for all type values, including the default case. The implementation is incomplete and marked as TODO.
 
 ## Used by
 

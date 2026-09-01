@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PreferencesPaneKinematicGraphs tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A preference pane embedded in the main `PreferencesDialog` that provides controls for kinematic graph settings such as velocity calculations. The pane uses a `KinematicGraphsConfigurationWidget` to manage controls for delta time intervals, velocity warning thresholds (yellow and red levels), and velocity calculation methods.
+
+Settings are linked to the user preferences system, allowing these defaults to persist across sessions.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PreferencesPaneKinematicGraphs tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

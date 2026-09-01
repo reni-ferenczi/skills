@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/StandaloneBundle tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Locates bundled resources in standalone distributions of GPlates and pyGPlates, where the binary and all dependencies (GDAL, PROJ, Python standard library) are packaged together. The namespace provides queries for PROJ data (`proj.db`), GDAL data and plugins, and Python standard library location, returning `boost::optional<QString>` to indicate whether resources were bundled.
+
+On initialization, the module configures PROJ and GDAL to look for their data files in the bundle via environment variables and library-specific APIs. GPlates finds its bundle relative to the executable; pyGPlates must specify its import directory explicitly. All queries return `none` if the build was not configured for standalone deployment (`GPLATES_INSTALL_STANDALONE` undefined).
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/StandaloneBundle tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All functions are compile-time conditionally defined: only included if `GPLATES_INSTALL_STANDALONE` is defined. The module is initialized once; for GPlates it uses `QCoreApplication::applicationDirPath()` (which requires Qt to be initialized first), while pyGPlates requires calling `initialise()` with its import directory after being imported. PROJ context paths are set with version-specific APIs to support both old and new PROJ versions. GDAL paths are set via `CPLSetConfigOption()` for data and plugins. On macOS, GPlates uses a different bundle structure (`gplates.app/Contents/`); Windows and Linux use the executable's parent directory.
 
 ## Used by
 

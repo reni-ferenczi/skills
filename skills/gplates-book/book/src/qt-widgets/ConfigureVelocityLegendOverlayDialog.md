@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ConfigureVelocityLegendOverlayDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides a dialog and helper widget for configuring the appearance of velocity legend overlays on the map. `ConfigureVelocityLegendOverlayDialog` wraps a Qt Designer form to present controls for arrow colour, scale text colour, background colour, font selection, and scale range. `ColourButton` is a custom colour button that opens a `QColorDialog` preserving alpha values, used elsewhere in the codebase that need to set colours with transparency.
 
 ## Declared types
 
@@ -62,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ConfigureVelocityLegendOverlayDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

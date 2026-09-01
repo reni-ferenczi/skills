@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/deprecated/FeaturePropertiesMap tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A singleton that maps each GPML feature type to its set of valid properties and the functions that create `property-values` objects from XML. The map is populated at construction by a hierarchy of getter functions (`get_abstract_feature_properties()`, `get_tangible_feature_properties()`, etc.) that mirror the GPML feature-type hierarchy — base types accumulate properties from their ancestors, and each feature-specific getter adds its own. Used during GPML file reading to validate property names and instantiate the correct property-value types when parsing features from XML.
 
 ## Declared types
 
@@ -114,9 +112,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/deprecated/FeaturePropertiesMap tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

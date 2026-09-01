@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/TotalReconstructionSequenceRotationInserter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This visitor updates a total reconstruction sequence (rotation file) by inserting or modifying a rotation at a specific reconstruction time. It visits the finite rotation structures in the feature, finds the rotation corresponding to the target time, applies a supplied `Rotation` to compose with it, and updates the result back into the data structure. It handles both exact time matches and interpolated rotations via `GpmlFiniteRotationSlerp` and `GpmlIrregularSampling`. The visitor is non-copyable and maintains references to the file state and rotation proxy needed to persist changes back to the rotation file.
 
 ## Declared types
 
@@ -54,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/TotalReconstructionSequenceRotationInserter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Non-copyable: the class explicitly deletes copy construction and copy assignment to prevent accidental copies, as it holds references to file state that should not be duplicated.
 
 ## Used by
 

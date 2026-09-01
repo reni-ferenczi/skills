@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VisualLayerInputChannelName tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides a mapping from app-logic `LayerInputChannelName` enumerations to human-readable display strings for the GUI. The single function `get_input_channel_name()` translates layer connection type identifiers into user-friendly labels describing what kind of layer data each input channel expects—for example, `RECONSTRUCTION_FEATURES` becomes `"Reconstruction features"` and `CO_REGISTRATION_SEED_GEOMETRIES` becomes `"Reconstructed seed geometries"`.
 
 ## Declared types
 
@@ -30,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VisualLayerInputChannelName tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The function asserts on unknown enumeration values; keep the switch statement in sync with `GPlatesAppLogic::LayerInputChannelName::Type`. The returned strings are presented directly to the user in the GUI, so changes to the text should be reviewed for UI impact.
 
 ## Used by
 

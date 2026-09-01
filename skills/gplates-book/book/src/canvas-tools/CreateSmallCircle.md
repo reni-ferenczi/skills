@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/CreateSmallCircle tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Canvas tool for drawing small circles (geographic circles of constant latitude with respect to a rotation pole) on the globe. Inherits from both `QObject` and `CanvasTool` to handle mouse events and Qt signals. Uses a two-click interface: first click marks the centre point, second click specifies a point on the radius to define the circle size. Shift-click continues from the current centre to add additional radii, building concentric circles.
+
+The tool maintains optional centre and radius points (`d_centre`, `d_point_on_radius`), a boolean state tracking whether a circle is mid-draw, and a collection of completed `SmallCircle` objects held by the associated widget. It renders circles through a `RenderedGeometryLayer` and responds to the widget's clear signal via Qt slot.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/CreateSmallCircle tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_circle_is_being_drawn` boolean tracks a two-state drawing machine: the first click sets `d_centre`, the second click sets `d_point_on_radius` and completes the circle. On completion, the circle is appended to the collection held by the widget (via `d_small_circle_collection_ref`), not owned by the tool itself. Clearing the collection resets the state without clearing the current work-in-progress circle.
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/LogDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog displaying application log messages for users who do not start GPlates from a terminal. `LogDialog` uses a `GPlatesGui::LogFilterModel` proxy to filter messages from the application's `LogModel` by severity (debug, warning, critical) and by text search. The dialog includes a list view that automatically scrolls to show new messages, checkboxes to toggle message categories, a text input for incremental filtering, and a copy-to-clipboard button for selected messages. In public releases, debug messages are hidden by default.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/LogDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The text filter has a configurable 800ms debounce delay to prevent the view from updating on every keystroke. Pressing Enter in the filter field immediately applies the filter without waiting. The Close button is explicitly set to not be the default button to avoid stealing focus from the filter text input.
 
 ## Used by
 

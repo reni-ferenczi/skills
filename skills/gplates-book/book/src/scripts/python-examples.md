@@ -14,9 +14,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=python-examples/scripts tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Standalone Python scripts that demonstrate the `pygplates` module API, ranging from simple reconstruction examples to complex plate motion analysis. Scripts include basic geometric reconstruction at a specified time (`reconstruct.py`), interpolation testing (`interpolation_test.py`), interactive camera controls for the main window (`camera_demo.py`), co-registration workflows (`CoRegDemo.py`), and feature collection manipulation (`feature_collection_demo.py`). The pair `hellinger.py` and `hellinger_maths.py` implement a complete Python port of the FORTRAN Hellinger method for estimating tectonic plate rotations from ship track crossing data, including quaternion operations, matrix decomposition, and minimization routines. These scripts serve as worked examples and integration tests for users learning to extend GPlates through its Python API.
 
 ## Declared types
 
@@ -32,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=python-examples/scripts tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

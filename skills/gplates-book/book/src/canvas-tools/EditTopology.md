@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/EditTopology tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Canvas tool for interactively selecting features to build up topologies (closed boundaries, lines, and networks). Inherits from both `QObject` and `CanvasTool` to handle Qt signals and mouse events. On activation, it determines the topology type being edited and sets a filter to show only geometries valid as topological sections, then activates the `TopologyToolsWidget`. On left-click, it finds all clicked geometries near the cursor and populates the feature table with them. On deactivation, it restores the previously focused feature to leave the UI in a consistent state.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/EditTopology tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Focused feature state is preserved: on activation, the current focused feature and its geometry property are saved; on deactivation, they are restored. This allows the user to return to their previous selection after finishing topology editing. The `d_topology_sections_filter` is set during activation based on the topology geometry type (LINE, BOUNDARY, or NETWORK) and cleared on deactivation, ensuring only valid sections are clickable while the tool is active.
 
 ## Used by
 

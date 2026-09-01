@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/MapCanvas tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QGraphicsScene` subclass that renders the 2D map view using OpenGL. `MapCanvas` paints geometry, overlays (text and velocity legends), and manages viewport transforms. It supports rendering to `QImage` and feedback paint devices for image export and printing. The class maintains an OpenGL context with frame-to-frame caching of persistent resources to avoid unnecessary regeneration, and provides tile-based rendering for large images. Unlike `GlobeCanvas` (which renders the 3D globe), `MapCanvas` is the rendering surface; `MapView` is the container and interaction handler.
 
 ## Declared types
 
@@ -60,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/MapCanvas tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The off-screen OpenGL context is created lazily in `initializeGL`, not in the constructor. The frame cache mechanism holds the previous frame's cached resources while the current frame is being generated, then releases them to prevent old cached resources from being invalidated each frame. The `MakeGLContextCurrent` utility in the constructor enables OpenGL calls during initialization, which would otherwise only be possible in `drawBackground`.
 
 ## Used by
 

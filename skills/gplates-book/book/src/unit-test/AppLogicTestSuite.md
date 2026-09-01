@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/AppLogicTestSuite tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Test suite for application-logic subsystems. Aggregates unit tests for `ApplicationStateTest` and `GenerateVelocityDomainCitcomsTest`, which verify the core state management and domain-generation code that powers GPlates' interactive features. Used by higher-level test suites like `DataAssociationDataTableTest` and `DataMiningTestSuite` to ensure these dependencies work correctly in integration scenarios.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/AppLogicTestSuite tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

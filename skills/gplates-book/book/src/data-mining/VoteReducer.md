@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/VoteReducer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Implements a reducer that determines consensus values through a voting mechanism. The `exec()` method takes a range of `OpaqueData` items, converts them to strings, and returns the most frequently occurring value. This is useful in co-registration workflows where feature attributes are being merged and a consensus or majority-rule value is needed.
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/VoteReducer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The voting algorithm converts each input value to a string for comparison and counting. The implementation sorts the string values and counts consecutive equal elements to find the mode. If the input is empty, the reducer returns "N/A".
 
 ## Used by
 

@@ -19,55 +19,55 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [CheckAttrTypeVisitor](../src/data-mining/CheckAttrTypeVisitor.md) | 2 | 294 | 58 | (pending) |
 | [CoRegConfigurationTable](../src/data-mining/CoRegConfigurationTable.md) | 1 | 526 | 420 | (pending) |
 | [CoRegFilter](../src/data-mining/CoRegFilter.md) | 2 | 218 | 65 | (pending) |
-| [CoRegFilterCache](../src/data-mining/CoRegFilterCache.md) | 3 | 170 | 7 | (pending) |
-| [CoRegFilterMapReduceFactory](../src/data-mining/CoRegFilterMapReduceFactory.md) | 3 | 215 | 4 | (pending) |
+| [CoRegFilterCache](../src/data-mining/CoRegFilterCache.md) | 3 | 170 | 7 | Cache for reconstructed feature vectors keyed by co-registration filter configuration |
+| [CoRegFilterMapReduceFactory](../src/data-mining/CoRegFilterMapReduceFactory.md) | 3 | 215 | 4 | Static factories for filter, mapper, and reducer components of co-registration data mining |
 | [CoRegMapper](../src/data-mining/CoRegMapper.md) | 2 | 95 | 20 | (pending) |
 | [CoRegReducer](../src/data-mining/CoRegReducer.md) | 2 | 132 | 47 | (pending) |
-| [DataMiningCache](../src/data-mining/DataMiningCache.md) | 3 | 89 | 0 | (pending) |
+| [DataMiningCache](../src/data-mining/DataMiningCache.md) | 3 | 89 | 0 | Generic template cache interface supporting perfect hits, partial hits, and misses |
 | [DataMiningUtils](../src/data-mining/DataMiningUtils.md) | 2 | 521 | 92 | (pending) |
 | [DataSelector](../src/data-mining/DataSelector.md) | 2 | 730 | 23 | (pending) |
 | [DataTable](../src/data-mining/DataTable.md) | 2 | 287 | 127 | (pending) |
-| [GetValueFromPropertyVisitor](../src/data-mining/GetValueFromPropertyVisitor.md) | 3 | 308 | 5 | (pending) |
-| [LookupReducer](../src/data-mining/LookupReducer.md) | 3 | 249 | 1 | (pending) |
-| [MaxReducer](../src/data-mining/MaxReducer.md) | 3 | 76 | 1 | (pending) |
-| [MeanReducer](../src/data-mining/MeanReducer.md) | 3 | 59 | 1 | (pending) |
-| [MedianReducer](../src/data-mining/MedianReducer.md) | 3 | 69 | 1 | (pending) |
-| [MinReducer](../src/data-mining/MinReducer.md) | 3 | 78 | 1 | (pending) |
+| [GetValueFromPropertyVisitor](../src/data-mining/GetValueFromPropertyVisitor.md) | 3 | 308 | 5 | Visitor that extracts scalar and geometric data from property values |
+| [LookupReducer](../src/data-mining/LookupReducer.md) | 3 | 249 | 1 | Reducer that selects data by proximity to a seed geometry |
+| [MaxReducer](../src/data-mining/MaxReducer.md) | 3 | 76 | 1 | Reducer that returns the maximum numeric value from a dataset |
+| [MeanReducer](../src/data-mining/MeanReducer.md) | 3 | 59 | 1 | Reducer that returns the arithmetic mean of numeric values |
+| [MedianReducer](../src/data-mining/MedianReducer.md) | 3 | 69 | 1 | Reducer that returns the median of numeric values using partitioning |
+| [MinReducer](../src/data-mining/MinReducer.md) | 3 | 78 | 1 | Computes the minimum value from a sequence of numerical data in co-registration pipelines |
 | [OpaqueData](../src/data-mining/OpaqueData.md) | 2 | 102 | 96 | (pending) |
-| [OpaqueDataToDouble](../src/data-mining/OpaqueDataToDouble.md) | 3 | 89 | 2 | (pending) |
-| [OpaqueDataToQString](../src/data-mining/OpaqueDataToQString.md) | 3 | 98 | 8 | (pending) |
-| [PercentileReducer](../src/data-mining/PercentileReducer.md) | 3 | 53 | 1 | (pending) |
-| [PopulateShapeFileAttributesVisitor](../src/data-mining/PopulateShapeFileAttributesVisitor.md) | 3 | 204 | 4 | (pending) |
-| [RFGToPropertyValueMapper](../src/data-mining/RFGToPropertyValueMapper.md) | 3 | 97 | 2 | (pending) |
-| [RFGToRelationalPropertyMapper](../src/data-mining/RFGToRelationalPropertyMapper.md) | 3 | 124 | 1 | (pending) |
-| [RegionOfInterestFilter](../src/data-mining/RegionOfInterestFilter.md) | 3 | 321 | 6 | (pending) |
-| [ScribeExportDataMining](../src/data-mining/ScribeExportDataMining.md) | 3 | 56 | 0 | (pending) |
-| [SeedSelfFilter](../src/data-mining/SeedSelfFilter.md) | 3 | 168 | 1 | (pending) |
+| [OpaqueDataToDouble](../src/data-mining/OpaqueDataToDouble.md) | 3 | 89 | 2 | Visitor that extracts numeric values from opaque data variant type |
+| [OpaqueDataToQString](../src/data-mining/OpaqueDataToQString.md) | 3 | 98 | 8 | Visitor that converts opaque data to QString for UI display |
+| [PercentileReducer](../src/data-mining/PercentileReducer.md) | 3 | 53 | 1 | Placeholder reducer for computing percentiles from numerical data sequences |
+| [PopulateShapeFileAttributesVisitor](../src/data-mining/PopulateShapeFileAttributesVisitor.md) | 3 | 204 | 4 | Feature visitor that extracts shapefile attribute names for export |
+| [RFGToPropertyValueMapper](../src/data-mining/RFGToPropertyValueMapper.md) | 3 | 97 | 2 | Mapper extracting property values from reconstructed features for co-registration |
+| [RFGToRelationalPropertyMapper](../src/data-mining/RFGToRelationalPropertyMapper.md) | 3 | 124 | 1 | Mapper computing relational attributes like distance between reconstructed features |
+| [RegionOfInterestFilter](../src/data-mining/RegionOfInterestFilter.md) | 3 | 321 | 6 | Filters reconstructed geometries within a distance threshold of a seed feature |
+| [ScribeExportDataMining](../src/data-mining/ScribeExportDataMining.md) | 3 | 56 | 0 | Registers Scribe serialization mappings for data-mining filter configuration classes |
+| [SeedSelfFilter](../src/data-mining/SeedSelfFilter.md) | 3 | 168 | 1 | Filter that outputs a single seed feature regardless of input, used to bootstrap co-registration |
 | [Types](../src/data-mining/Types.md) | 2 | 199 | 91 | (pending) |
-| [VoteReducer](../src/data-mining/VoteReducer.md) | 3 | 85 | 1 | (pending) |
-| [WeightedMeanReducer](../src/data-mining/WeightedMeanReducer.md) | 3 | 52 | 1 | (pending) |
+| [VoteReducer](../src/data-mining/VoteReducer.md) | 3 | 85 | 1 | Reducer that finds the most frequently occurring value through voting |
+| [WeightedMeanReducer](../src/data-mining/WeightedMeanReducer.md) | 3 | 52 | 1 | Stub reducer for computing weighted means, currently unimplemented |
 
 ### `src/data-mining/deprecated`
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AssociationOperatorFactory](../src/data-mining/deprecated/AssociationOperatorFactory.md) | 3 | 60 | 2 | (pending) |
-| [DataOperator](../src/data-mining/deprecated/DataOperator.md) | 3 | 278 | 37 | (pending) |
-| [DataOperatorFactory](../src/data-mining/deprecated/DataOperatorFactory.md) | 3 | 124 | 10 | (pending) |
-| [DistanceDataOperator](../src/data-mining/deprecated/DistanceDataOperator.md) | 3 | 142 | 4 | (pending) |
-| [IsInRegionOfInterestVisitor](../src/data-mining/deprecated/IsInRegionOfInterestVisitor.md) | 3 | 595 | 47 | (pending) |
-| [LookupDataOperator](../src/data-mining/deprecated/LookupDataOperator.md) | 3 | 224 | 1 | (pending) |
-| [MaxDistanceDataOperator](../src/data-mining/deprecated/MaxDistanceDataOperator.md) | 3 | 70 | 0 | (pending) |
-| [MeanDistanceDataOperator](../src/data-mining/deprecated/MeanDistanceDataOperator.md) | 3 | 73 | 0 | (pending) |
-| [MedianDistanceDataOperator](../src/data-mining/deprecated/MedianDistanceDataOperator.md) | 3 | 73 | 0 | (pending) |
-| [MinDataOperator](../src/data-mining/deprecated/MinDataOperator.md) | 3 | 200 | 2 | (pending) |
-| [MinDistanceDataOperator](../src/data-mining/deprecated/MinDistanceDataOperator.md) | 3 | 96 | 1 | (pending) |
-| [NumInROIDataOperator](../src/data-mining/deprecated/NumInROIDataOperator.md) | 3 | 77 | 1 | (pending) |
-| [PresenceDataOperator](../src/data-mining/deprecated/PresenceDataOperator.md) | 3 | 83 | 1 | (pending) |
-| [Prospector](../src/data-mining/deprecated/Prospector.md) | 3 | 47 | 8 | (pending) |
-| [RegionOfInterestAssociationOperator](../src/data-mining/deprecated/RegionOfInterestAssociationOperator.md) | 3 | 233 | 2 | (pending) |
-| [SubDataSelector](../src/data-mining/deprecated/SubDataSelector.md) | 3 | 161 | 0 | (pending) |
-| [TaskQueue](../src/data-mining/deprecated/TaskQueue.md) | 3 | 189 | 0 | (pending) |
+| [AssociationOperatorFactory](../src/data-mining/deprecated/AssociationOperatorFactory.md) | 3 | 60 | 2 | Factory for creating AssociationOperator instances based on type enum |
+| [DataOperator](../src/data-mining/deprecated/DataOperator.md) | 3 | 278 | 37 | Abstract base class for extracting and reducing feature data in data-mining workflows |
+| [DataOperatorFactory](../src/data-mining/deprecated/DataOperatorFactory.md) | 3 | 124 | 10 | Factory for creating DataOperator instances based on operation type |
+| [DistanceDataOperator](../src/data-mining/deprecated/DistanceDataOperator.md) | 3 | 142 | 4 | Abstract base for distance-based data extraction with pluggable reduction strategy |
+| [IsInRegionOfInterestVisitor](../src/data-mining/deprecated/IsInRegionOfInterestVisitor.md) | 3 | 595 | 47 | Double-dispatch visitor for testing spatial proximity between spherical geometries |
+| [LookupDataOperator](../src/data-mining/deprecated/LookupDataOperator.md) | 3 | 224 | 1 | Data operator that retrieves attribute values from features or shapefile attributes |
+| [MaxDistanceDataOperator](../src/data-mining/deprecated/MaxDistanceDataOperator.md) | 3 | 70 | 0 | Data operator subclass for computing maximum distance (unimplemented) |
+| [MeanDistanceDataOperator](../src/data-mining/deprecated/MeanDistanceDataOperator.md) | 3 | 73 | 0 | Data operator subclass for computing mean distance (unimplemented) |
+| [MedianDistanceDataOperator](../src/data-mining/deprecated/MedianDistanceDataOperator.md) | 3 | 73 | 0 | Data operator subclass for computing median distance (unimplemented) |
+| [MinDataOperator](../src/data-mining/deprecated/MinDataOperator.md) | 3 | 200 | 2 | Data operator that finds the minimum value from feature properties |
+| [MinDistanceDataOperator](../src/data-mining/deprecated/MinDistanceDataOperator.md) | 3 | 96 | 1 | Data operator subclass for computing minimum distance |
+| [NumInROIDataOperator](../src/data-mining/deprecated/NumInROIDataOperator.md) | 3 | 77 | 1 | Data operator that counts features in a region of interest |
+| [PresenceDataOperator](../src/data-mining/deprecated/PresenceDataOperator.md) | 3 | 83 | 1 | Deprecated data operator that appends a presence indicator to a data row |
+| [Prospector](../src/data-mining/deprecated/Prospector.md) | 3 | 47 | 8 | Deprecated abstract base class defining the interface for prospector jobs |
+| [RegionOfInterestAssociationOperator](../src/data-mining/deprecated/RegionOfInterestAssociationOperator.md) | 3 | 233 | 2 | Deprecated association operator identifying target features within a proximity range of seed geometry |
+| [SubDataSelector](../src/data-mining/deprecated/SubDataSelector.md) | 3 | 161 | 0 | Deprecated prospector job that extracts data for a seed feature using co-registration configuration |
+| [TaskQueue](../src/data-mining/deprecated/TaskQueue.md) | 3 | 189 | 0 | Deprecated thread pool implementation for executing prospector jobs asynchronously |
 
 
 ## Other files

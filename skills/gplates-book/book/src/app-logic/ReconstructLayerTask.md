@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `LayerTask` that reconstructs feature geometries from input feature collections using rotation data. The task connects to a rotation layer (via a `ReconstructionLayerProxy`) and optionally to topology surface layers (resolved boundary or network) for more sophisticated reconstruction. It delegates the actual geometry reconstruction to a `ReconstructLayerProxy` and maintains layer parameters for reconstruction options.
 
 ## Declared types
 
@@ -59,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The task can use a default `ReconstructionLayerProxy` or connect to topology surface layers dynamically; the latter is determined at update time based on input layer connections.
 
 ## Used by
 

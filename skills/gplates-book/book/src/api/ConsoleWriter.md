@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/ConsoleWriter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+ConsoleWriter captures Python output by redirecting either `sys.stdout` or `sys.stderr` to a GPlates console on construction and restoring the original on destruction. The `write()` method is the only output operation supported, but this is sufficient to capture print output and errors printed via Python's error handlers. The `error` flag on construction selects which stream to redirect.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/ConsoleWriter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only `write()` is supported; other stream methods are not implemented. The stream redirection is scoped to the lifetime of the `ConsoleWriter` instance.
 
 ## Used by
 

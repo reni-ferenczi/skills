@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/FeatureHandleToOldId tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureHandleToOldId` provides deprecated utility functions for extracting legacy Plates format identifiers from features. The functions use a `ValueFinder` visitor to search for the "oldPlatesHeader" property on a feature and return its string value. This unit is kept for backward compatibility with older file formats.
+
+Two overloads are provided: one taking a `FeatureHandle` by const reference, and another taking a `FeatureHandle::weak_ref`.
 
 ## Declared types
 
@@ -31,9 +31,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/FeatureHandleToOldId tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Returns an empty string if the feature does not have an "oldPlatesHeader" property.
 
 ## Used by
 

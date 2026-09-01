@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/PoleManipulationCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Implements a workflow for manipulating rotation poles on the globe and map views. The workflow manages three interactive tools: `ClickGeometry` for selecting geometries, `ManipulatePole` for adjusting pole positions interactively on the canvas, and `MovePole` for dragging poles with real-time feedback. Each tool has parallel implementations for both the 3D globe and 2D map views via `CanvasToolAdapterForGlobe` and `CanvasToolAdapterForMap`.
+
+The workflow maintains the set of enabled tools based on the current feature focus: not all tools apply to every geometry type. It renders the focused feature geometry in a dedicated canvas layer that is activated when the workflow is active and deactivated when switching to other workflows. Updates to the rendered feature are driven by signals from `FeatureFocus` and `RenderedGeometryParameters`, and rendering consults the topological context from `ApplicationState`.
 
 ## Declared types
 
@@ -56,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/PoleManipulationCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The workflow's render layer is activated only while the workflow itself is active. Signal connections to `FeatureFocus` and `RenderedGeometryParameters` are made in `activate_workflow()` and disconnected in `deactivate_workflow()` to avoid drawing when inactive. The enable state of the manipulate-pole tool depends on the currently focused feature and is updated reactively in `update_enable_state()`.
 
 ## Used by
 

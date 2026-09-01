@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/deprecated/NetCDFReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A utility class with a static `Read()` method that parses a NetCDF file (an external binary grid format) and returns a `GridData` object representing the grid. Takes an optional progress dialog to report parsing progress. The helper functions convert between latitudes/longitudes and `PointOnSphere` to map NetCDF coordinate conventions to the GPlates internal geometry representation. This is deprecated infrastructure for reading legacy NetCDF raster formats.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/deprecated/NetCDFReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

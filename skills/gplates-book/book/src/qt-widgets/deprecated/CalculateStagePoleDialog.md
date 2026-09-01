@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/deprecated/CalculateStagePoleDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for calculating a stage pole from two plate IDs and two times, then using the pole's rotation axis as a center point. The dialog takes input for two moving and fixed plate IDs and two reconstruction times; pressing Calculate computes the stage pole between those plates at those times using the default reconstruction tree, extracts the rotation axis, and displays it as latitude/longitude coordinates. The Use button passes the calculated center to an associated `SmallCircleWidget`.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/deprecated/CalculateStagePoleDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

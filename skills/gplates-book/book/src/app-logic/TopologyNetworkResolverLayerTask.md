@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyNetworkResolverLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A layer task orchestrating the resolution of topological networks from feature collections. The task manages input connections from feature collections containing network features and from upstream topological section layers (both reconstructed geometry and resolved line variants), then delegates to `TopologyNetworkResolverLayerProxy` to perform the actual resolution work.
+
+The task exposes a `LayerProxy` for downstream consumers and maintains layer parameters via `TopologyNetworkLayerParams`, responding to parameter changes through Qt signals.
 
 ## Declared types
 
@@ -58,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyNetworkResolverLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

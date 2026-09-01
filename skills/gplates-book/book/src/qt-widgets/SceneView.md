@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SceneView tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Abstract base class for viewport implementations (globe 3D and map 2D). Defines the interface for camera control, rendering, and viewport management shared by `GlobeCanvas` and `MapView`. Provides methods to set camera viewpoint and orientation, render the scene to image formats or vector graphics, and handle interactive camera motions. The class is non-copyable and cannot be instantiated directly.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SceneView tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/presenter/Presenter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Singleton class providing global access to a presenter instance via the static method `get_presenter()`. All construction, copy, assignment and destruction are private to enforce the single-instance constraint.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/presenter/Presenter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

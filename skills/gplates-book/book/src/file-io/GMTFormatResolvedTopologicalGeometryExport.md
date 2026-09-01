@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatResolvedTopologicalGeometryExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports resolved topological geometries and sections to GMT format. Resolved topologies are reconstructed plate-boundary features: `ResolvedTopologicalLine`, `ResolvedTopologicalBoundary`, and `ResolvedTopologicalNetwork` objects. The exporter writes these geometries with optional polygon-orientation forcing (clockwise or counter-clockwise). It also exports individual `ResolvedTopologicalSection` objects and their sub-segments, with options to control sub-segment expansion. Output includes GMT headers with reconstruction metadata.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatResolvedTopologicalGeometryExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

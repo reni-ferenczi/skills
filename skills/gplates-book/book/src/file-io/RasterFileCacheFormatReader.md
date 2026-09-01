@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RasterFileCacheFormatReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Reads raster images from GPlates' custom cached file format where pixels are stored as fixed-size blocks arranged in a Hilbert curve (a space-filling curve that preserves locality for efficient disk access). This reader can retrieve arbitrary rectangular regions of the image by identifying the relevant blocks, sorting them to minimize seeks, and copying out the requested data.
+
+The cache format stores the image data in `RasterFileCacheFormat::BLOCK_SIZE`x`BLOCK_SIZE` blocks along the Hilbert path, with block metadata (offset, dimensions, file position) read during construction. For rasters that support coverage (all except RGBA), separate coverage data is stored alongside the main image. The reader also preserves no-data values and raster statistics from the original source.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RasterFileCacheFormatReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Requests for regions outside the image bounds return `boost::none`. The reader maintains file offsets and sorts blocks by offset when reading to minimize disk seeks. The template parameter `RawRasterType` determines the element type (RGBA, float, integer, etc.), and coverage data is only available for non-RGBA rasters.
 
 ## Used by
 

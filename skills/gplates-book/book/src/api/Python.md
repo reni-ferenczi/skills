@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/Python tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This file defines the module initialization for pygplates, the standalone Python extension module. It declares and calls export functions from across the api directory to register all Python bindings: feature collections, features, reconstruction functions, GUI controls, and utility functions. The `BOOST_PYTHON_MODULE(pygplates)` macro serves as the module entry point. Some exports are conditional on `GPLATES_PYTHON_EMBEDDING` to distinguish between the embedded Python console (inside GPlates) and the standalone module.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/Python tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+This file has no header; it is purely an initialization aggregate. The build configuration determines which exports are included via `GPLATES_PYTHON_EMBEDDING` to support both embedded and standalone use.
 
 ## Used by
 

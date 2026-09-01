@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/FeatureClassifier tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This visitor classifies features in a collection by their GPML properties, using duck typing to determine whether each feature is a reconstruction (has fixed or moving reference frame), reconstructable (has reconstruction plate ID), or instantaneous (has reconstructed plate ID and time). It walks the feature hierarchy, filtering to specific property names, and accumulates counts of each category and the total feature count. The classification helps the application understand what kind of data it is working with without relying on strict feature type definitions.
 
 ## Declared types
 
@@ -56,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/FeatureClassifier tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/RasterFeatureCollectionPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Wizard page for selecting a feature collection to hold the raster during import. It shows a list of existing feature collections and a checkbox to control whether the collection should be saved after import. The checkbox state is synchronized with a boolean reference passed at construction.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/RasterFeatureCollectionPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_save_after_finish` boolean is held by reference; changes persist to the caller's variable. This page always returns `isComplete() == true`.
 
 ## Used by
 

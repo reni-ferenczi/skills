@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/KinematicGraphsConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for configuring kinematic graph calculation parameters. It wraps a `KinematicGraphsConfigurationWidget` in a modal dialog with Apply and Close buttons. The dialog maintains a reference to a `KinematicGraphsDialog::Configuration` object and synchronizes widget state with configuration settings.
+
+When the user clicks Apply, `handle_apply()` copies the current settings (delta time, velocity thresholds, and velocity method) from the widget to the configuration. The `handle_configuration_changed()` slot enables or disables the Apply button based on whether the current widget state represents a valid configuration.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/KinematicGraphsConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

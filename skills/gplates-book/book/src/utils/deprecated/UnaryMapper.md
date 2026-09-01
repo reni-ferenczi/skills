@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/UnaryMapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`UnaryMapper` is a concrete template that implements the abstract `Mapper` interface using a user-supplied unary transformation function. It applies the function element-by-element to an input sequence to produce an output sequence, with an optional output iterator parameter that defaults to an internal vector if not provided. Unlike `GenericMapper`, it does not require the implementation to handle different output collection strategies.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/UnaryMapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

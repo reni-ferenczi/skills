@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is the core transcription framework for user-defined classes. The main `transcribe()` function gates all object serialization and delegates to `Access::transcribe()` after enforcing compile-time constraints: no pointers (which require special handling) and no unhandled enums (which must be explicitly transcribed). The framework provides two customization points via optional static methods: `transcribe_construct_data()` to control object construction during load (or use default-constructor semantics if absent), and `relocated()` to handle any relocation side effects (or do nothing if absent; most types need neither). Detection of these methods uses SFINAE via the `Access` helper class, allowing the framework to adapt to both custom and default behaviors.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Pointer types and enumerations are rejected by compile-time assertions and cannot pass through this generic transcriber; they require their own specializations. Any enumeration type must explicitly provide a transcribe overload using `TranscribeEnumProtocol.h`, and private nested enums must do so as friend functions. The framework automatically relocates all data members and base classes; most types need no custom `relocated()` implementation unless they hold pointers to external objects that require manual update.
 
 ## Used by
 

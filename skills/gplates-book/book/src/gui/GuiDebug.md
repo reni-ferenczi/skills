@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GuiDebug tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A debug utility class that creates a Debug menu in the main window when instantiated (via the `--debug-gui` command-line flag). The class uses Qt introspection to automatically discover all slots with the `debug_` prefix and adds them as menu items. It provides utility functions for introspecting and manipulating the GUI at runtime: printing menu structure, examining font metrics, checking system paths, testing unsaved changes functionality, and a catch-all debug action (Ctrl-Alt-/) for rapid testing.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GuiDebug tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Uses Qt's `QMetaObject` introspection to automatically discover and add menu items for slots with the `debug_` prefix; only slots with no parameters are eligible. The Debug menu is only created when GuiDebug is instantiated, which occurs only when the `--debug-gui` command-line flag is present, keeping it out of production builds.
 
 ## Used by
 

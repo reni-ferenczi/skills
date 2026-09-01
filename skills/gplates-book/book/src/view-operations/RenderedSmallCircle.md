@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedSmallCircle tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered geometry wrapper for a small circle on a sphere, defined by an axis (pole) and a colatitude (radius). Holds the circle, its display colour, and line width hint. Proximity testing computes the angular distance from the test point to the circle's axis and uses that to find the closest point on the circle, returning a closeness measure based on the angular separation. This enables interactive selection of plate motion circles and other geographic constraints.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedSmallCircle tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

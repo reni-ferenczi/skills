@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/RetrievalFromEmptyContainerException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown when code attempts to retrieve an element from an empty container. This extends `PreconditionViolationError`, classifying it as a precondition violation — the caller violated the requirement that the container must be non-empty before retrieval is attempted. The exception records the filename and line number from which it was thrown.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/RetrievalFromEmptyContainerException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

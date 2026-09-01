@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditOldPlatesHeaderWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A specialized widget for editing `GpmlOldPlatesHeader` property values, which represent the header information of old PLATES format polygon files. The widget provides fields for all the header metadata: region and reference numbers, string number, geographic description, plate ID, age of appearance and disappearance, data type codes, conjugate plate ID, and colour code. The number of points is displayed read-only. Following the `AbstractEditWidget` pattern, it can be initialized from an existing header via `update_widget_from_old_plates_header()`, edited by the user, and then either create a new header via `create_property_value_from_widget()` or update the existing one. Each field change marks the widget dirty.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditOldPlatesHeaderWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_old_plates_header_ptr` pointer can be NULL when adding new properties (as opposed to editing existing ones). Calling `update_property_value_from_widget()` on an uninitialized widget throws `UninitialisedEditWidgetException`; ensure the widget is either initialized via `update_widget_from_old_plates_header()` or used only for creating new properties. The number-of-points field is read-only (populated from the header but not sent back when updating), as it cannot be edited by the user.
 
 ## Used by
 

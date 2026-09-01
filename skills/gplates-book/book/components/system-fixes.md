@@ -16,13 +16,13 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [cstdint](../src/system-fixes/boost/cstdint.md) | 3 | 44 | 0 | (pending) |
+| [cstdint](../src/system-fixes/boost/cstdint.md) | 3 | 44 | 0 | Compatibility wrapper for Boost cstdint header fixing Visual Studio 2010 UINT8\_C macro conflicts |
 
 ### `src/system-fixes/loki`
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [RefToValue](../src/system-fixes/loki/RefToValue.md) | 3 | 68 | 8 | (pending) |
+| [RefToValue](../src/system-fixes/loki/RefToValue.md) | 3 | 68 | 8 | Template class transporting references as values for smart pointers and scope guards |
 | [ScopeGuard](../src/system-fixes/loki/ScopeGuard.md) | 2 | 382 | 12 | (pending) |
 
 

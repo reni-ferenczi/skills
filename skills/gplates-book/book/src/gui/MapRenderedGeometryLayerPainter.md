@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapRenderedGeometryLayerPainter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A visitor that renders all rendered geometries in a single layer on the 2D map. It handles every rendered geometry type through virtual visitor methods: points, polylines, polygons, arrows, symbols, meshes, rasters, and strings. Each geometry is projected through the specified `MapProjection` and wrapped around the dateline where necessary. Opaque primitives are rendered first, followed by transparent ones, and curved geometries (great circle arcs >1 degree, small circles, ellipses) are tessellated to a fixed angular resolution. The class caches the compiled draw state, returning an opaque handle that the caller can reuse to avoid recompilation.
 
 ## Declared types
 
@@ -126,9 +124,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapRenderedGeometryLayerPainter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Great circle arcs are tessellated if endpoints are >1 degree apart. Small circles are tessellated at configurable angular increments. The class supports per-vertex coloring with color interpolation at wrapped and tessellated vertices. `DatelineWrappedProjectedLineGeometry` tracks interpolation information to enable color interpolation on wrapped geometries. The cached `cache_handle_type` is an opaque `boost::shared_ptr<void>` that the caller holds to avoid recompilation across multiple render passes.
 
 ## Used by
 

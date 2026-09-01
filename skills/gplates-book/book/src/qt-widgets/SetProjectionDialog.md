@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SetProjectionDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for selecting the map projection and configuring projection parameters. Users choose from orthographic, rectangular, Mercator, Mollweide, or Robinson projections. A central meridian spinbox allows fine-tuning the meridian offset for projections that support it; the spinbox is disabled when orthographic projection is selected since it has no longitude offset.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SetProjectionDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

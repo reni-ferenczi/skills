@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/ConsoleReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+ConsoleReader is a Python object that intercepts stdin to prevent the Python console from hanging when users try to read from the standard input stream. On construction it replaces `sys.stdin` with itself and restores the original on destruction. The `readline()` method opens a modal dialog to prompt for user input, ensuring the GUI remains responsive even during interactive input operations.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/ConsoleReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Only `readline()` is supported for stdin. The `sys.stdin` replacement is managed by construction and destruction, so the lifetime of a `ConsoleReader` instance controls when the override is active.
 
 ## Used by
 

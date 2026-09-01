@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ReconstructedFlowlineExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed flowlines to files in multiple formats: GMT (.xy), Shapefile (.shp), OGR GMT (.gmt), and GeoJSON (.geojson or .json). A flowline represents the path traced by a point on a plate as it moves over time; this exporter writes those reconstructed paths at a given reconstruction time.
+
+The main entry point, `export_reconstructed_flowlines()`, can export either to a single output file or to per-collection files grouped by their source. It delegates to format-specific exporters: `GMTFormatFlowlinesExport` for GMT, and `OgrFormatFlowlineExport` for the OGR-based formats. The export can optionally wrap geometries to the antimeridian and tracks the reconstruction anchor plate ID and time.
 
 ## Declared types
 
@@ -53,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ReconstructedFlowlineExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The export is grouped by feature before being grouped by collection, so that each output file contains geometries from the features that originally referenced it. Both single-file and per-collection exports can be performed in a single call. The file format is determined from the filename extension via the `FeatureCollectionFileFormat::Registry`.
 
 ## Used by
 

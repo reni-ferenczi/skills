@@ -14,32 +14,32 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AppLogicTestSuite](../src/unit-test/AppLogicTestSuite.md) | 3 | 96 | 11 | (pending) |
-| [ApplicationStateTest](../src/unit-test/ApplicationStateTest.md) | 3 | 156 | 0 | (pending) |
-| [CanvasToolsTestSuite](../src/unit-test/CanvasToolsTestSuite.md) | 3 | 91 | 0 | (pending) |
-| [CoregTest](../src/unit-test/CoregTest.md) | 3 | 618 | 0 | (pending) |
-| [CptPaletteTest](../src/unit-test/CptPaletteTest.md) | 3 | 224 | 3 | (pending) |
-| [DataAssociationDataTableTest](../src/unit-test/DataAssociationDataTableTest.md) | 3 | 181 | 0 | (pending) |
-| [DataMiningTestSuite](../src/unit-test/DataMiningTestSuite.md) | 3 | 102 | 0 | (pending) |
+| [AppLogicTestSuite](../src/unit-test/AppLogicTestSuite.md) | 3 | 96 | 11 | Test suite for application-logic subsystems |
+| [ApplicationStateTest](../src/unit-test/ApplicationStateTest.md) | 3 | 156 | 0 | Unit test for ApplicationState model interface accessor |
+| [CanvasToolsTestSuite](../src/unit-test/CanvasToolsTestSuite.md) | 3 | 91 | 0 | Placeholder test suite for canvas tools functionality |
+| [CoregTest](../src/unit-test/CoregTest.md) | 3 | 618 | 0 | Unit tests for co-registration data mining functionality |
+| [CptPaletteTest](../src/unit-test/CptPaletteTest.md) | 3 | 224 | 3 | Unit tests for CPT color palette parsing and retrieval |
+| [DataAssociationDataTableTest](../src/unit-test/DataAssociationDataTableTest.md) | 3 | 181 | 0 | Unit test for DataTable heterogeneous data container |
+| [DataMiningTestSuite](../src/unit-test/DataMiningTestSuite.md) | 3 | 102 | 0 | Aggregate test suite for data-mining subsystem |
 | [FeatureHandleTest](../src/unit-test/FeatureHandleTest.md) | 2 | 424 | 31 | (pending) |
-| [FeatureVisitorsTestSuite](../src/unit-test/FeatureVisitorsTestSuite.md) | 3 | 91 | 0 | (pending) |
-| [FileIoTestSuite](../src/unit-test/FileIoTestSuite.md) | 3 | 91 | 0 | (pending) |
-| [FilterTest](../src/unit-test/FilterTest.md) | 3 | 276 | 0 | (pending) |
-| [GPlatesGlobalFixture](../src/unit-test/GPlatesGlobalFixture.md) | 3 | 49 | 1 | (pending) |
+| [FeatureVisitorsTestSuite](../src/unit-test/FeatureVisitorsTestSuite.md) | 3 | 91 | 0 | Placeholder test suite for feature visitor patterns |
+| [FileIoTestSuite](../src/unit-test/FileIoTestSuite.md) | 3 | 91 | 0 | Container for Boost.Test cases exercising file I/O operations |
+| [FilterTest](../src/unit-test/FilterTest.md) | 3 | 276 | 0 | Test fixtures for filter operations in data-mining workflows |
+| [GPlatesGlobalFixture](../src/unit-test/GPlatesGlobalFixture.md) | 3 | 49 | 1 | Global Boost.Test fixture redirecting test logging to file |
 | [GPlatesTestSuite](../src/unit-test/GPlatesTestSuite.md) | 2 | 158 | 333 | (pending) |
-| [GenerateVelocityDomainCitcomsTest](../src/unit-test/GenerateVelocityDomainCitcomsTest.md) | 3 | 345 | 0 | (pending) |
-| [GeometryVisitorsTestSuite](../src/unit-test/GeometryVisitorsTestSuite.md) | 3 | 92 | 0 | (pending) |
-| [GlobalTestSuite](../src/unit-test/GlobalTestSuite.md) | 3 | 92 | 0 | (pending) |
-| [GuiTestSuite](../src/unit-test/GuiTestSuite.md) | 3 | 95 | 0 | (pending) |
-| [MainTestSuite](../src/unit-test/MainTestSuite.md) | 3 | 148 | 1 | (pending) |
-| [MathsTestSuite](../src/unit-test/MathsTestSuite.md) | 3 | 93 | 0 | (pending) |
-| [MipmapperTest](../src/unit-test/MipmapperTest.md) | 3 | 385 | 0 | (pending) |
-| [ModelTestSuite](../src/unit-test/ModelTestSuite.md) | 3 | 94 | 0 | (pending) |
-| [MultiThreadTest](../src/unit-test/MultiThreadTest.md) | 3 | 250 | 0 | (pending) |
-| [PresentationTestSuite](../src/unit-test/PresentationTestSuite.md) | 3 | 93 | 0 | (pending) |
-| [PropertyValuesTestSuite](../src/unit-test/PropertyValuesTestSuite.md) | 3 | 93 | 0 | (pending) |
-| [RealTest](../src/unit-test/RealTest.md) | 3 | 165 | 0 | (pending) |
-| [ScribeExportUnitTest](../src/unit-test/ScribeExportUnitTest.md) | 3 | 54 | 0 | (pending) |
+| [GenerateVelocityDomainCitcomsTest](../src/unit-test/GenerateVelocityDomainCitcomsTest.md) | 3 | 345 | 0 | Tests for velocity domain generation from CitCOMS geodynamic models |
+| [GeometryVisitorsTestSuite](../src/unit-test/GeometryVisitorsTestSuite.md) | 3 | 92 | 0 | Container for test cases exercising geometry visitor patterns |
+| [GlobalTestSuite](../src/unit-test/GlobalTestSuite.md) | 3 | 92 | 0 | Container for global-scope test cases |
+| [GuiTestSuite](../src/unit-test/GuiTestSuite.md) | 3 | 95 | 0 | Container for GUI-related test suites |
+| [MainTestSuite](../src/unit-test/MainTestSuite.md) | 3 | 148 | 1 | Root test suite aggregating all module-specific test suites |
+| [MathsTestSuite](../src/unit-test/MathsTestSuite.md) | 3 | 93 | 0 | Test suite container for mathematics-related tests |
+| [MipmapperTest](../src/unit-test/MipmapperTest.md) | 3 | 385 | 0 | Tests mipmapping functionality for raster downsampling across multiple data types |
+| [ModelTestSuite](../src/unit-test/ModelTestSuite.md) | 3 | 94 | 0 | Test suite container for feature data model tests |
+| [MultiThreadTest](../src/unit-test/MultiThreadTest.md) | 3 | 250 | 0 | Test framework for multi-threading and performance profiling |
+| [PresentationTestSuite](../src/unit-test/PresentationTestSuite.md) | 3 | 93 | 0 | Test suite container for presentation-layer tests |
+| [PropertyValuesTestSuite](../src/unit-test/PropertyValuesTestSuite.md) | 3 | 93 | 0 | Test suite container for property value type tests |
+| [RealTest](../src/unit-test/RealTest.md) | 3 | 165 | 0 | Tests floating-point utility functions for classifying special values |
+| [ScribeExportUnitTest](../src/unit-test/ScribeExportUnitTest.md) | 3 | 54 | 0 | Registers test classes with the Scribe serialization framework |
 | [ScribeTestSuite](../src/unit-test/ScribeTestSuite.md) | 3 | 98 | 0 | (pending) |
 | [SmartNodeLinkedListTest](../src/unit-test/SmartNodeLinkedListTest.md) | 3 | 298 | 0 | (pending) |
 | [StringSetTest](../src/unit-test/StringSetTest.md) | 3 | 134 | 0 | (pending) |

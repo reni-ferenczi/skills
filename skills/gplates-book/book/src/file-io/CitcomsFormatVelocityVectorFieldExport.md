@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/CitcomsFormatVelocityVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports velocity vector fields to CitcomS global format, the text format used by Citcom mantle convection simulations. Each velocity vector is decomposed into colatitude and longitude components. Optionally generates a GMT-compatible output file where velocities are expressed as magnitude and azimuth at each domain point, with configurable scaling and stride (decimation) for sparse output.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/CitcomsFormatVelocityVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

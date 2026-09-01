@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexElementBufferImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexElementBufferImpl` provides fallback element buffer (index buffer) support for OpenGL implementations that lack the vertex buffer object extension. It wraps a `GLBufferImpl` and delegates bind and draw operations to the `GLRenderer`, which implements them using client-side memory arrays via base OpenGL 1.1.
+
+Like `GLVertexBufferImpl`, this is a compatibility layer maintaining a uniform interface across platforms that may or may not have native hardware vertex buffer support.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexElementBufferImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

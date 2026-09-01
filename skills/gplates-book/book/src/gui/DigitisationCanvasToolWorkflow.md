@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/DigitisationCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A canvas tool workflow that manages interactive geometry digitization on both globe and map views. It creates and coordinates multiple tool pairs: digitization tools for creating new points, polylines, and polygons; vertex modification tools for moving, deleting, and inserting vertices; and a distance measurement tool. The workflow delegates to individual tools and listens to the shared `GeometryBuilder` for geometry changes, enabling undoable feature creation and editing.
 
 ## Declared types
 
@@ -61,9 +59,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/DigitisationCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Tools are held as `boost::scoped_ptr` pairs for globe and map views, enabling independent tool instances per canvas. The workflow references shared state objects (`GeometryBuilder`, `RenderedGeometryCollection`, operation states) that are owned elsewhere; it connects to geometry builder signals to track focused feature changes.
 
 ## Used by
 

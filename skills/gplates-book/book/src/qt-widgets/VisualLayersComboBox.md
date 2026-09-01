@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/VisualLayersComboBox tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A combobox that lists visual layers, with filtering by a user-supplied predicate on layer type. Used in dialogs that need to let users select a layer (for styling, velocity legends, or reconstruction pole visualization) but only want to show applicable layer types. The list automatically updates as layers are added, removed, or changed in the presentation state.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/VisualLayersComboBox tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodHalfStageRotation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `ReconstructMethodInterface` that reconstructs features using a half-stage rotation defined by left and right plate IDs. The method extracts the feature's present-day geometry and rotates it using a finite rotation derived from the left/right plate plate circuit. It delegates geometry reconstruction to inner visitor classes and supports velocity calculations at reconstructed positions.
 
 ## Declared types
 
@@ -110,9 +108,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodHalfStageRotation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The reconstruction method requires features to have a "HalfStageRotation" reconstruction method property and left and right plate properties; features matching these criteria can be reconstructed.
 
 ## Used by
 

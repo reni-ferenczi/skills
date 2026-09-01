@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ColourPaletteRangeRemapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides functions to remap the value ranges of colour palettes. The `remap_colour_palette_range()` functions take a source palette and new lower/upper bounds, then scale and translate each colour slice in the palette to fit the new range. The module uses visitor pattern: `RangeRemapperVisitor` handles regular CPT palettes and `RasterColourPaletteRangeRemapperVisitor` handles raster palettes. Currently, only `RegularCptColourPalette` is fully supported; other types return none.
 
 ## Declared types
 
@@ -55,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ColourPaletteRangeRemapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The helper function `get_double_value()` handles conversion from both `double` and `GPlatesMaths::Real` to enable templated implementations over different key types.
 
 ## Used by
 

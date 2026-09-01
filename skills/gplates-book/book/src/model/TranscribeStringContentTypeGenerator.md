@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/TranscribeStringContentTypeGenerator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header provides serialization support for the template class `StringContentTypeGenerator`, implementing Scribe transcribe methods that save and load string content. It uses the delegate protocol to make `StringContentTypeGenerator` and `UnicodeString` interchangeable during serialization — allowing the two types to be transcribed as equivalents of each other.
+
+Like `TranscribeQualifiedXmlName`, the file is kept separate from the main `StringContentTypeGenerator.h` header to avoid pulling in the heavyweight Scribe framework into non-serialization code paths.
 
 ## Declared types
 
@@ -28,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/TranscribeStringContentTypeGenerator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

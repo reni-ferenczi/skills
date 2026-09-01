@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=entry-points/ScribeExportGPlates tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Defines the set of polymorphic classes and types that the Scribe serialization framework will register as available for transcription in the main GPlates application. The macro combines type export groups from the `data-mining` module with external types, then registers them all at compile time so they can be serialized and deserialized when GPlates saves and loads projects.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=entry-points/ScribeExportGPlates tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

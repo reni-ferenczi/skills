@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/controls/File tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Deprecated file I/O control functions for opening, loading, importing, and saving GPlates data files. The public interface provides `OpenData()` for native GPML files, `LoadRotation()` for PLATES rotation files, `ImportData()` for non-native formats, `SaveData()` to write GPML output, and `Quit()` to exit the application. Internal helpers include file-format detection based on extension and magic bytes, conversion functions between PLATES parser types and GPlates maths types, and a visitor for building drawable data maps from geological data.
 
 ## Declared types
 
@@ -75,9 +73,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/controls/File tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The code contains marked TODOs indicating technical debt: `ConvertPlatesParserLatLonToMathsLatLon` is noted as a duplicate of a function in `PlatesPostParseTranslator`, and `ConvertPlatesParserAngleToGPlatesMathsAngle` should ultimately be removed. File I/O errors are presented to users via `Dialogs::ErrorMessage()` rather than propagated as exceptions.
 
 ## Used by
 

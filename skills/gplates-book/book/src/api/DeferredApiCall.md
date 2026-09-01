@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/DeferredApiCall tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+DeferredApiCall provides a mechanism and supporting types for wrapping Qt-dependent functions so they execute on the main GUI thread when called from Python. The module defines tag types (`no_wrap`, `ref`, `cref`) to control how function arguments are wrapped with `boost::reference_wrapper` for deferred execution. `ArgReferenceWrappings` is a variadic template struct that collects up to ten wrapping directives corresponding to function parameters. The `GPLATES_DEFERRED_API_CALL` macro (defined at the end of the header) is the user-facing interface that creates a wrapper function suitable for exposure in the Python API.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/DeferredApiCall tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Wrapped functions must have no more than ten parameters (including the hidden `this` pointer for member functions).
 
 ## Used by
 

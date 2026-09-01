@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/IsInRegionOfInterestVisitor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A double-dispatch visitor system that tests whether one spherical geometry is within a specified range of another. The main entry point is `is_close_enough()`, which accepts any two `GeometryOnSphere` objects and checks their proximity in kilometres using Earth's radius (6378.1 km). The implementation uses `IsInReigonOfInterestDispatchVisitor` to branch on the type of a base geometry, then `IsInReigonOfInterestCheckerVisitor<GeometryType>` to perform the actual proximity test against a candidate geometry. All combinations of geometry types—`PointOnSphere`, `PolylineOnSphere`, `PolygonOnSphere`, and `MultiPointOnSphere`—are handled via overloaded `is_close_enough_internal()` functions.
 
 ## Declared types
 
@@ -98,9 +96,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/IsInRegionOfInterestVisitor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Many `is_close_enough_internal()` overloads are incomplete, with TODO comments and stub implementations returning `true`. The point-to-polygon test is disabled (wrapped in `#if 0`). The point-to-point test is fully implemented using great-circle arc distance. Point-to-polyline tests use a proximity criteria with a cosine threshold. Other geometry combinations (polyline-polyline, polygon-polygon, etc.) are not yet implemented.
 
 ## Used by
 

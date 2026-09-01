@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/RasterLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Options widget for raster layers shown in the visual layers panel. It allows users to select display bands, adjust opacity and intensity, control surface relief scaling, and configure color palettes via an embedded `RemappedColourPaletteWidget`. The widget computes scalar min/max and mean/standard deviation from raster data to support palette range controls, updating the layer's parameters when settings change. Created via a factory method and associated with a visual layer via `set_data()`.
 
 ## Declared types
 
@@ -61,9 +59,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/RasterLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The widget holds references to `ApplicationState`, `ViewState`, and `ViewportWindow` that must remain valid for the widget's lifetime. The `d_current_visual_layer` is held as a weak_ptr and may become invalid if the visual layer is deleted; callers should check validity before invoking `set_data()`. All user interactions with the UI controls trigger layer parameter updates via slots connected to the embedded palette and control widgets.
 
 ## Used by
 

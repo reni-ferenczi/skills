@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/IllegalParametersException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`IllegalParametersException` is thrown when a function or method is called with parameters that are illegal or semantically invalid. It wraps a message describing what made the parameters unacceptable and inherits from `Exception` to capture the call stack for debugging.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/IllegalParametersException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

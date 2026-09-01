@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolylineEquivalencePredicates tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides two function objects for testing polyline equivalence: `PolylineIsDirectedEquivalentRef` (which respects segment direction) and `PolylineIsUndirectedEquivalentRef` (which ignores direction). Both hold references to a polyline for comparison and are designed for use with STL algorithms like `std::find_if()` to locate matching polylines in a collection.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolylineEquivalencePredicates tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both function objects store a pointer to the reference polyline; the caller must ensure the polyline outlives the predicate object. Use with caution if the polyline can be destroyed before the predicate completes its use.
 
 ## Used by
 

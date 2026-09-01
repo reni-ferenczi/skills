@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/TranscribeQualifiedXmlName tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This header provides serialization support for the template class `QualifiedXmlName`, implementing the Scribe transcribe methods that save and load the three components of a qualified XML name — the namespace URI, namespace alias, and local name. The implementations handle both object construction during loading and state transcription during save/load cycles.
+
+The file is kept separate from the main `QualifiedXmlName.h` header to avoid pulling in the heavyweight Scribe framework into code that does not serialize.
 
 ## Declared types
 
@@ -28,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/TranscribeQualifiedXmlName tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

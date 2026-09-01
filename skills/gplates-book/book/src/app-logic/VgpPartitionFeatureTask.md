@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/VgpPartitionFeatureTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Assigns properties to VirtualGeomagneticPole features by partitioning them. When partitioning a VGP, the task locates the VGP's average sample site point within the partitioning polygons and assigns the reconstruction plate ID of the containing polygon to the feature.
+
+VGP data represents present-day measurements regardless of sample age; the sample site location is not reconstructed at the requested time. Partitioning thus requires present-day polygon boundaries and the feature time period is ignored.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/VgpPartitionFeatureTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+VGP paleomagnetic data is always present-day, not reconstructed, despite the sample having an age. Partitioning uses only the present-day sample site location and requires present-day partitioning polygon boundaries. The `respect_feature_time_period` parameter is ignored.
 
 ## Used by
 

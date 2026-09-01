@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ScalarField3DLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `LayerOptionsWidget` that lets users adjust rendering parameters for 3D scalar field layers in the visual layers dock. Controls include choosing between isosurface and cross-section render modes, setting deviation windows and color schemes, adjusting opacity and depth restrictions, and configuring quality–performance trade-offs. The widget manages scalar-value and gradient-magnitude color palettes with custom range scaling, and updates itself when switching between layers via `set_data()`.
 
 ## Declared types
 
@@ -97,9 +95,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ScalarField3DLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

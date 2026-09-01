@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerPointDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Modal dialog for creating or editing a single Hellinger pick (measured point), with fields for latitude, longitude, plate index (1, 2, or 3), and uncertainty. The dialog mode is determined at construction: when creating, it prompts the user to click the globe to select pick coordinates; when editing, it displays the current pick and allows clicking to adjust it. The dialog is always-on-top to remain visible while the user interacts with the globe.
+
+The dialog maintains a `HellingerPick` object that represents the current pick data, synchronized between the widgets (spinboxes, radio buttons) and the model. When the user clicks apply, it emits `finished_editing()` and updates the underlying `HellingerModel`. The `set_active()` method disables all controls except close, allowing the dialog to serve a viewing-only role when needed. The dialog can also be updated by external pick operations via `update_pick_coords()`, which changes the coordinate fields and emits `update_editing()`.
 
 ## Declared types
 
@@ -58,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerPointDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

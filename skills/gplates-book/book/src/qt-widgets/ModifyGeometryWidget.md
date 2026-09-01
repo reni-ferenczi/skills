@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ModifyGeometryWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A task panel widget that displays the latitude/longitude coordinates of a geometry as it is being modified by an interactive canvas tool. When a user modifies geometry on the globe or map, this widget reflects those changes in real-time by displaying each vertex's coordinates.
+
+The widget uses a `LatLonCoordinatesTable` to wrap around the underlying `QTreeWidget` and automatically listens to the `GeometryBuilder` state of the canvas tool. As vertices are added, moved, or removed, the coordinates table is kept in sync and refreshed on demand via `reload_coordinates_table_if_necessary()`.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ModifyGeometryWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

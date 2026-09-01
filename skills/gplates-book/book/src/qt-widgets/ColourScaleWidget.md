@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ColourScaleWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A custom widget that renders a visual colour scale bar with annotations on a canvas. After populating it with a `GPlatesGui::RasterColourPalette`, the widget draws the scale and labels at minimum height of 200 pixels. It supports optional logarithmic scaling of the colour range and handles redraws on resize. The context menu allows saving the scale as an image.
 
 ## Declared types
 
@@ -55,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ColourScaleWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

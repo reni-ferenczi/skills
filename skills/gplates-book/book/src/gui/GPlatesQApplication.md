@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GPlatesQApplication tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Extends `QApplication` to provide exception handling for the Qt event loop and special event processing. The `notify()` method wraps event delivery in exception handling that catches uncaught `GPlatesGlobal::Exception`, `std::exception`, and unknown exceptions; reports them to the user via a message dialog (in release builds); and logs them with call stack traces (where available). In debug builds, exceptions are not caught to preserve debugger stack traces. The class also handles `DeferredCallEvent`s intended for the main thread and macOS-specific `FileOpen` events for opening projects from Finder.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GPlatesQApplication tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Exception handling behavior differs between debug and release builds: debug builds do not catch exceptions (except `NeedExitException`) to allow the debugger to capture the native stack trace; release builds catch all exceptions and exit after reporting them. The `notify()` method creates a `RenderedGeometryCollection::UpdateGuard` at the start of event processing to batch render updates across the single user interaction. `DeferredCallEvent`s are processed at the application level to avoid requiring each class that uses them to handle them separately.
 
 ## Used by
 

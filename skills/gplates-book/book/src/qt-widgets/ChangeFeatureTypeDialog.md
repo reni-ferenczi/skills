@@ -10,9 +10,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChangeFeatureTypeDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Dialog for changing the feature type of an existing feature. When a feature type changes, its properties must be re-validated: some existing properties may become invalid for the new type, or valid in type but requiring renaming. This dialog guides the user through that reconciliation by showing a `ChooseFeatureTypeWidget` to select the new type, then dynamically populating `ChangePropertyWidget` instances for each property that needs renaming, and displaying a list of properties that have become entirely invalid.
+
+Properties are reused in a pool (`d_change_property_widget_pool`) to avoid repeated allocation and destruction. When the feature type selection changes, the dialog re-evaluates all properties against the GPGIM constraints: properties with matching names require no action, properties with matching type but incompatible names are offered for renaming through the widget pool, and properties with incompatible types are listed as unresolvable. The OK button is disabled until the user selects a type different from the current one.
+
+After confirmation, the dialog applies the type change to the model, asks each active property widget to commit its renaming, and if any geometry property was renamed to the focused geometry, it triggers reconstruction and updates the feature focus.
 
 ## Declared types
 
@@ -49,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChangeFeatureTypeDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

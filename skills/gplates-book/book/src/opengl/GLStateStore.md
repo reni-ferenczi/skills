@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLStateStore tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLStateStore` manages a pool of `GLState` objects, which snapshot the global OpenGL render state at a point in time. It reuses recycled instances when possible and creates new ones on demand, reducing allocation pressure. When a `GLState` object is deallocated, `clear()` is called on it and it returns to the pool for reuse.
+
+The store optimizes memory across potentially thousands of `GLState` instances by sharing constant `SharedData` — which holds capabilities information and state-set metadata — so each instance only tracks which state sets it has modified, not the entire static configuration. This significantly reduces per-object memory overhead.
+
+`GLStateStore` is owned by `GLContext` and used by `GLRenderer` to snapshot OpenGL state during rendering operations.
 
 ## Declared types
 
@@ -46,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLStateStore tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`SharedData` is immutable and shared across all `GLState` instances allocated by a store to reduce memory consumption. When all shared pointers to a `GLState` object are destroyed, the cache invokes `GLState::clear()` before returning it to the pool, resetting it for reuse.
 
 ## Used by
 

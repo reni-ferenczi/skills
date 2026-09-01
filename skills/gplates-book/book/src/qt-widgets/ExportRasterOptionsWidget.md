@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportRasterOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A form-based widget for configuring raster (colour or numerical) export options. Users specify resolution (in degrees), geographic extents (top, bottom, left, right latitude/longitude), choice of pixel or grid-line registration, and optional compression. The widget automatically updates displayed raster dimensions as extents and resolution change, using the `get_export_raster_parameters()` helper to compute width and height. Collected options are packaged as `ExportRasterAnimationStrategy::Configuration`.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportRasterOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

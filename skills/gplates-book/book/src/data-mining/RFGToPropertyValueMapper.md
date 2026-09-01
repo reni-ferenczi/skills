@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/RFGToPropertyValueMapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RFGToPropertyValueMapper` is a mapper that extracts property values from reconstructed features and pairs them with the features themselves for co-registration data pipelines. It extends `CoRegMapper` and takes an attribute name and a boolean flag indicating whether the attribute comes from shapefile metadata or regular feature properties. The `process()` method iterates through reconstructed features and outputs tuples of extracted values with their source features.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/RFGToPropertyValueMapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

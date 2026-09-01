@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/InternalInconsistencyException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`InternalInconsistencyException` is thrown when code detects an unexpected internal inconsistency that indicates a bug or corruption in the application state. It supports defensive programming: checking invariants the compiler cannot guarantee (e.g., that a lookup succeeds, that state transitions are valid). When detected at runtime, it provides a descriptive message and call stack rather than allowing silent failures or delayed crashes.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/InternalInconsistencyException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

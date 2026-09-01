@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CoRegistrationLayerConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Configuration dialog for co-registration layers, which perform data mining by associating reconstructed geometries or raster data with feature attributes according to user-specified rules. The dialog displays a list of target layers (raster or reconstructed geometries), allows users to select a target and add configuration rows that define how attributes should be computed. Each configuration row maps a specific attribute on the target layer to a source layer using a filter type, an optional reduction function, and layer/attribute information.
+
+The dialog presents two attribute categories: relational attributes (for geometry targets) and co-registration attributes (with level-of-detail and polygon-filling options for raster targets). Configuration changes are immediately reflected in `CoRegConfigurationTable` and synchronized to the layer parameters. Input layer changes are detected and the GUI is automatically updated when the feature store is modified, as available attributes depend on the current data.
 
 ## Declared types
 
@@ -93,9 +93,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CoRegistrationLayerConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

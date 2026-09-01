@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/MissingSessionFilesDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog displayed when loading a project or session with missing files. `MissingSessionFilesDialog` presents a table of missing file paths (highlighted in red) and provides a "Locate" button for each file, allowing users to browse and specify replacement files. The dialog uses a `QSignalMapper` to track which row's button was clicked. Users can remap missing file paths to new locations, and `get_file_path_remapping()` returns the mapping of original to replacement paths. The dialog supports two action types: `LOAD_PROJECT` and `LOAD_SESSION`.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/MissingSessionFilesDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+File name items are read-only and non-selectable, with a red background (#FF6149) to indicate missing files. The table's filename column stretches to fill available space while the update button column is sized to fit. The `QSignalMapper` maps each "Locate" button to its row index, enabling the `update()` slot to know which file the user is remapping.
 
 ## Used by
 

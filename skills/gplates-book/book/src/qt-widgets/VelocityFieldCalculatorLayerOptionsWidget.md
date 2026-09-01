@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/VelocityFieldCalculatorLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Options panel for `VelocityFieldCalculatorLayer`, controlling how velocities are calculated and displayed. It allows users to select the velocity calculation method (velocities of surfaces versus velocities of domain points), configure arrow rendering density and scale, and set up smoothing of velocities across plate boundaries. The widget manages its own state through slots that respond to spinbox and combobox changes, reading and writing layer parameters from the current `VisualLayer`.
 
 ## Declared types
 
@@ -68,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/VelocityFieldCalculatorLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

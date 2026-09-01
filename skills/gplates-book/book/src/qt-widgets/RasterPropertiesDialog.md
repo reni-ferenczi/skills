@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/RasterPropertiesDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Dialog for viewing and configuring raster properties and appearance. It displays basic raster information (filename, format, no-data value, statistics), allows users to set the spatial extent via an affine transform or lat-lon bounds, and provides controls for selecting or changing color maps (via CPT files or built-in defaults). Context-sensitive help is available for each section. The dialog is currently tightly coupled to `ViewState`; a FIXME indicates future refactoring to move raster management out of the presentation layer.
 
 ## Declared types
 
@@ -61,9 +59,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/RasterPropertiesDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `ViewState` pointer must remain valid for the dialog's lifetime; see FIXME comment on `d_view_state`. The georeferencing widget is currently disabled (compiled out with `#if 0`). The `populate_from_data()` method must be called to populate the dialog before display.
 
 ## Used by
 

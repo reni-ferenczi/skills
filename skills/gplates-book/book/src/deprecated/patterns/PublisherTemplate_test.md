@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/patterns/PublisherTemplate_test tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Test and demonstration file for `PublisherTemplate<T>`, instantiated with a concrete `TestPublisher` and `TestSubscriber` pair. The file exercises all operations on the publisher-subscriber pattern: subscription, unsubscription, notification, copy construction, and assignment, as well as lifetime and cleanup scenarios. It is not compiled into the GPlates executable; instead it serves as a standalone reference implementation showing correct usage of the template.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/patterns/PublisherTemplate_test tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

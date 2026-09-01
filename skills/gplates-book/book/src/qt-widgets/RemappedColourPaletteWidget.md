@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/RemappedColourPaletteWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This widget manages the selection and configuration of color palettes used to visualize scalar data. It provides controls for choosing between built-in palettes and loading custom CPT (Color Palette Table) files, and displays a visual preview of the selected palette via `ColourScaleWidget`. The widget's main purpose is to map a range of data values to colors for rendering scalar fields and coverages.
+
+A key feature is the ability to remap the palette's value range in two ways: by explicitly setting min and max bounds, or by automatically calculating bounds based on the layer's scalar statistics (min/max or mean plus/minus standard deviation). The widget emits signals when users change palette selections or range settings, allowing parent widgets like `ReconstructScalarCoverageLayerOptionsWidget` to persist these choices to the layer's visual parameters.
 
 ## Declared types
 
@@ -63,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/RemappedColourPaletteWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

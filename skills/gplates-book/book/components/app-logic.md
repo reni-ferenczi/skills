@@ -45,7 +45,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [RasterLayerParams](../src/app-logic/RasterLayerParams.md) | 2 | 387 | 50 | (pending) |
 | [RasterLayerProxy](../src/app-logic/RasterLayerProxy.md) | 1 | 1762 | 349 | (pending) |
-| [RasterLayerTask](../src/app-logic/RasterLayerTask.md) | 3 | 490 | 2 | (pending) |
+| [RasterLayerTask](../src/app-logic/RasterLayerTask.md) | 3 | 490 | 2 | Layer task for reconstructing geo-referenced raster data |
 
 #### Reconstruct
 
@@ -57,21 +57,21 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [ReconstructHandle](../src/app-logic/ReconstructHandle.md) | 1 | 79 | 761 | (pending) |
 | [ReconstructLayerParams](../src/app-logic/ReconstructLayerParams.md) | 2 | 196 | 13 | (pending) |
 | [ReconstructLayerProxy](../src/app-logic/ReconstructLayerProxy.md) | 1 | 2795 | 285 | (pending) |
-| [ReconstructLayerTask](../src/app-logic/ReconstructLayerTask.md) | 3 | 590 | 2 | (pending) |
+| [ReconstructLayerTask](../src/app-logic/ReconstructLayerTask.md) | 3 | 590 | 2 | Layer task that reconstructs feature geometries from input collections |
 | [ReconstructMethodByPlateId](../src/app-logic/ReconstructMethodByPlateId.md) | 2 | 974 | 35 | (pending) |
 | [ReconstructMethodFiniteRotation](../src/app-logic/ReconstructMethodFiniteRotation.md) | 1 | 158 | 459 | (pending) |
-| [ReconstructMethodFlowline](../src/app-logic/ReconstructMethodFlowline.md) | 3 | 445 | 2 | (pending) |
-| [ReconstructMethodHalfStageRotation](../src/app-logic/ReconstructMethodHalfStageRotation.md) | 3 | 838 | 2 | (pending) |
+| [ReconstructMethodFlowline](../src/app-logic/ReconstructMethodFlowline.md) | 3 | 445 | 2 | Reconstructs flowline features by tracking plate motion through time |
+| [ReconstructMethodHalfStageRotation](../src/app-logic/ReconstructMethodHalfStageRotation.md) | 3 | 838 | 2 | Reconstructs features using half-stage rotations from plate IDs |
 | [ReconstructMethodInterface](../src/app-logic/ReconstructMethodInterface.md) | 1 | 480 | 396 | (pending) |
-| [ReconstructMethodMotionPath](../src/app-logic/ReconstructMethodMotionPath.md) | 3 | 299 | 2 | (pending) |
+| [ReconstructMethodMotionPath](../src/app-logic/ReconstructMethodMotionPath.md) | 3 | 299 | 2 | Reconstructs motion path features showing point trajectories through time |
 | [ReconstructMethodRegistry](../src/app-logic/ReconstructMethodRegistry.md) | 2 | 578 | 16 | (pending) |
-| [ReconstructMethodSmallCircle](../src/app-logic/ReconstructMethodSmallCircle.md) | 3 | 338 | 2 | (pending) |
+| [ReconstructMethodSmallCircle](../src/app-logic/ReconstructMethodSmallCircle.md) | 3 | 338 | 2 | Reconstruction method for small circle features; rotates the centre point via plate ID |
 | [ReconstructMethodType](../src/app-logic/ReconstructMethodType.md) | 2 | 58 | 385 | (pending) |
-| [ReconstructMethodVirtualGeomagneticPole](../src/app-logic/ReconstructMethodVirtualGeomagneticPole.md) | 3 | 562 | 2 | (pending) |
+| [ReconstructMethodVirtualGeomagneticPole](../src/app-logic/ReconstructMethodVirtualGeomagneticPole.md) | 3 | 562 | 2 | Reconstruction method for VGP (paleomagnetic pole) features with uncertainty parameters |
 | [ReconstructParams](../src/app-logic/ReconstructParams.md) | 2 | 624 | 102 | (pending) |
 | [ReconstructScalarCoverageLayerParams](../src/app-logic/ReconstructScalarCoverageLayerParams.md) | 2 | 543 | 15 | (pending) |
 | [ReconstructScalarCoverageLayerProxy](../src/app-logic/ReconstructScalarCoverageLayerProxy.md) | 2 | 1416 | 23 | (pending) |
-| [ReconstructScalarCoverageLayerTask](../src/app-logic/ReconstructScalarCoverageLayerTask.md) | 3 | 359 | 2 | (pending) |
+| [ReconstructScalarCoverageLayerTask](../src/app-logic/ReconstructScalarCoverageLayerTask.md) | 3 | 359 | 2 | Layer task for reconstructing and evolving scalar coverages like crustal thickness |
 | [ReconstructScalarCoverageParams](../src/app-logic/ReconstructScalarCoverageParams.md) | 2 | 126 | 23 | (pending) |
 | [ReconstructUtils](../src/app-logic/ReconstructUtils.md) | 2 | 870 | 43 | (pending) |
 
@@ -100,9 +100,9 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [ReconstructionGraph](../src/app-logic/ReconstructionGraph.md) | 1 | 362 | 279 | (pending) |
 | [ReconstructionGraphBuilder](../src/app-logic/ReconstructionGraphBuilder.md) | 2 | 370 | 19 | (pending) |
 | [ReconstructionGraphPopulator](../src/app-logic/ReconstructionGraphPopulator.md) | 2 | 417 | 4 | (pending) |
-| [ReconstructionLayerParams](../src/app-logic/ReconstructionLayerParams.md) | 3 | 124 | 4 | (pending) |
+| [ReconstructionLayerParams](../src/app-logic/ReconstructionLayerParams.md) | 3 | 124 | 4 | Qt-based wrapper for reconstruction layer parameters with visitor pattern and signals |
 | [ReconstructionLayerProxy](../src/app-logic/ReconstructionLayerProxy.md) | 2 | 629 | 52 | (pending) |
-| [ReconstructionLayerTask](../src/app-logic/ReconstructionLayerTask.md) | 3 | 300 | 2 | (pending) |
+| [ReconstructionLayerTask](../src/app-logic/ReconstructionLayerTask.md) | 3 | 300 | 2 | Layer task that builds ReconstructionTree from rotation features; core engine of reconstruction |
 | [ReconstructionParams](../src/app-logic/ReconstructionParams.md) | 2 | 171 | 16 | (pending) |
 | [ReconstructionTree](../src/app-logic/ReconstructionTree.md) | 1 | 919 | 339 | (pending) |
 | [ReconstructionTreeCreator](../src/app-logic/ReconstructionTreeCreator.md) | 1 | 800 | 157 | (pending) |
@@ -136,7 +136,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [ScalarCoverageTimeSpan](../src/app-logic/ScalarCoverageTimeSpan.md) | 2 | 752 | 8 | (pending) |
 | [ScalarField3DLayerParams](../src/app-logic/ScalarField3DLayerParams.md) | 2 | 346 | 44 | (pending) |
 | [ScalarField3DLayerProxy](../src/app-logic/ScalarField3DLayerProxy.md) | 2 | 1281 | 34 | (pending) |
-| [ScalarField3DLayerTask](../src/app-logic/ScalarField3DLayerTask.md) | 3 | 518 | 2 | (pending) |
+| [ScalarField3DLayerTask](../src/app-logic/ScalarField3DLayerTask.md) | 3 | 518 | 2 | Layer task for 3D scalar field visualization via volume rendering |
 
 #### Topology
 
@@ -144,15 +144,15 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 |---|---|---|---|---|
 | [TopologyGeometryResolver](../src/app-logic/TopologyGeometryResolver.md) | 2 | 1128 | 17 | (pending) |
 | [TopologyGeometryResolverLayerProxy](../src/app-logic/TopologyGeometryResolverLayerProxy.md) | 2 | 2257 | 59 | (pending) |
-| [TopologyGeometryResolverLayerTask](../src/app-logic/TopologyGeometryResolverLayerTask.md) | 3 | 566 | 2 | (pending) |
+| [TopologyGeometryResolverLayerTask](../src/app-logic/TopologyGeometryResolverLayerTask.md) | 3 | 566 | 2 | Layer task that resolves topological boundaries and lines by walking section references |
 | [TopologyGeometryType](../src/app-logic/TopologyGeometryType.md) | 2 | 56 | 142 | (pending) |
 | [TopologyInternalUtils](../src/app-logic/TopologyInternalUtils.md) | 2 | 1695 | 55 | (pending) |
 | [TopologyIntersections](../src/app-logic/TopologyIntersections.md) | 2 | 1347 | 37 | (pending) |
 | [TopologyNetworkLayerParams](../src/app-logic/TopologyNetworkLayerParams.md) | 2 | 129 | 9 | (pending) |
 | [TopologyNetworkParams](../src/app-logic/TopologyNetworkParams.md) | 2 | 522 | 122 | (pending) |
-| [TopologyNetworkResolver](../src/app-logic/TopologyNetworkResolver.md) | 3 | 1348 | 2 | (pending) |
+| [TopologyNetworkResolver](../src/app-logic/TopologyNetworkResolver.md) | 3 | 1348 | 2 | Resolves topological network features at a reconstruction time, assembling boundary sections and interior geometries |
 | [TopologyNetworkResolverLayerProxy](../src/app-logic/TopologyNetworkResolverLayerProxy.md) | 2 | 1712 | 12 | (pending) |
-| [TopologyNetworkResolverLayerTask](../src/app-logic/TopologyNetworkResolverLayerTask.md) | 3 | 513 | 2 | (pending) |
+| [TopologyNetworkResolverLayerTask](../src/app-logic/TopologyNetworkResolverLayerTask.md) | 3 | 513 | 2 | Layer task orchestrating resolution of topological networks from feature collections |
 | [TopologyPointLocation](../src/app-logic/TopologyPointLocation.md) | 2 | 269 | 59 | (pending) |
 | [TopologyReconstruct](../src/app-logic/TopologyReconstruct.md) | 1 | 4375 | 161 | (pending) |
 | [TopologyReconstructedFeatureGeometry](../src/app-logic/TopologyReconstructedFeatureGeometry.md) | 2 | 342 | 33 | (pending) |
@@ -165,7 +165,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [VelocityDeltaTime](../src/app-logic/VelocityDeltaTime.md) | 2 | 193 | 282 | (pending) |
 | [VelocityFieldCalculatorLayerParams](../src/app-logic/VelocityFieldCalculatorLayerParams.md) | 2 | 160 | 9 | (pending) |
 | [VelocityFieldCalculatorLayerProxy](../src/app-logic/VelocityFieldCalculatorLayerProxy.md) | 2 | 977 | 16 | (pending) |
-| [VelocityFieldCalculatorLayerTask](../src/app-logic/VelocityFieldCalculatorLayerTask.md) | 3 | 476 | 2 | (pending) |
+| [VelocityFieldCalculatorLayerTask](../src/app-logic/VelocityFieldCalculatorLayerTask.md) | 3 | 476 | 2 | Layer task calculating velocity fields on mesh points inside static or dynamic polygons |
 | [VelocityParams](../src/app-logic/VelocityParams.md) | 2 | 395 | 91 | (pending) |
 
 #### Other
@@ -188,12 +188,12 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [GPlatesQtMsgHandler](../src/app-logic/GPlatesQtMsgHandler.md) | 2 | 785 | 53 | (pending) |
 | [GenerateVelocityDomainCitcoms](../src/app-logic/GenerateVelocityDomainCitcoms.md) | 2 | 480 | 6 | (pending) |
 | [GenerateVelocityDomainTerra](../src/app-logic/GenerateVelocityDomainTerra.md) | 2 | 412 | 34 | (pending) |
-| [GenericPartitionFeatureTask](../src/app-logic/GenericPartitionFeatureTask.md) | 3 | 348 | 1 | (pending) |
+| [GenericPartitionFeatureTask](../src/app-logic/GenericPartitionFeatureTask.md) | 3 | 348 | 1 | Partitions feature geometry by reconstructed plates and assigns plate IDs |
 | [GeometryCookieCutter](../src/app-logic/GeometryCookieCutter.md) | 2 | 1150 | 83 | (pending) |
 | [GeometryUtils](../src/app-logic/GeometryUtils.md) | 1 | 2011 | 431 | (pending) |
 | [LogModel](../src/app-logic/LogModel.md) | 2 | 445 | 65 | (pending) |
-| [LogToModelHandler](../src/app-logic/LogToModelHandler.md) | 3 | 121 | 1 | (pending) |
-| [MotionPathGeometryPopulator](../src/app-logic/MotionPathGeometryPopulator.md) | 3 | 478 | 2 | (pending) |
+| [LogToModelHandler](../src/app-logic/LogToModelHandler.md) | 3 | 121 | 1 | Routes Qt messages into the application's log model |
+| [MotionPathGeometryPopulator](../src/app-logic/MotionPathGeometryPopulator.md) | 3 | 478 | 2 | Reconstructs motion path features by tracing seed point trajectories |
 | [MotionPathUtils](../src/app-logic/MotionPathUtils.md) | 2 | 497 | 53 | (pending) |
 | [MultiPointVectorField](../src/app-logic/MultiPointVectorField.md) | 1 | 529 | 911 | (pending) |
 | [NetRotationUtils](../src/app-logic/NetRotationUtils.md) | 2 | 343 | 60 | (pending) |
@@ -203,21 +203,21 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [PlateVelocityUtils](../src/app-logic/PlateVelocityUtils.md) | 2 | 1559 | 67 | (pending) |
 | [PropertyExtractors](../src/app-logic/PropertyExtractors.md) | 2 | 252 | 14 | (pending) |
 | [RotationUtils](../src/app-logic/RotationUtils.md) | 2 | 690 | 51 | (pending) |
-| [SmallCircleGeometryPopulator](../src/app-logic/SmallCircleGeometryPopulator.md) | 3 | 301 | 1 | (pending) |
+| [SmallCircleGeometryPopulator](../src/app-logic/SmallCircleGeometryPopulator.md) | 3 | 301 | 1 | Feature visitor that creates reconstructed small circle geometries from SmallCircle features |
 | [TRSUtils](../src/app-logic/TRSUtils.md) | 2 | 379 | 34 | (pending) |
 | [TimeSpanUtils](../src/app-logic/TimeSpanUtils.md) | 1 | 1295 | 190 | (pending) |
 | [UserPreferences](../src/app-logic/UserPreferences.md) | 1 | 993 | 231 | (pending) |
-| [VgpPartitionFeatureTask](../src/app-logic/VgpPartitionFeatureTask.md) | 3 | 203 | 1 | (pending) |
+| [VgpPartitionFeatureTask](../src/app-logic/VgpPartitionFeatureTask.md) | 3 | 203 | 1 | Partitions VirtualGeomagneticPole features by assigning plate IDs from sample site locations |
 
 ### `src/app-logic/deprecated`
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [PaleomagUtils](../src/app-logic/deprecated/PaleomagUtils.md) | 3 | 575 | 10 | (pending) |
-| [PaleomagWorkflow](../src/app-logic/deprecated/PaleomagWorkflow.md) | 3 | 465 | 0 | (pending) |
-| [PlateVelocityWorkflow](../src/app-logic/deprecated/PlateVelocityWorkflow.md) | 3 | 438 | 0 | (pending) |
-| [PropertyValuePropogator](../src/app-logic/deprecated/PropertyValuePropogator.md) | 3 | 511 | 0 | (pending) |
-| [ReconstructedFeatureGeometryPopulator](../src/app-logic/deprecated/ReconstructedFeatureGeometryPopulator.md) | 3 | 664 | 0 | (pending) |
+| [PaleomagUtils](../src/app-logic/deprecated/PaleomagUtils.md) | 3 | 575 | 10 | Utilities for paleomagnetic data detection and rendering |
+| [PaleomagWorkflow](../src/app-logic/deprecated/PaleomagWorkflow.md) | 3 | 465 | 0 | Workflow for managing paleomagnetic feature collections and rendering |
+| [PlateVelocityWorkflow](../src/app-logic/deprecated/PlateVelocityWorkflow.md) | 3 | 438 | 0 | Workflow for managing plate velocity feature collections and calculations |
+| [PropertyValuePropogator](../src/app-logic/deprecated/PropertyValuePropogator.md) | 3 | 511 | 0 | Assigns properties to features using cookie-cutter geometry with partitioning polygons |
+| [ReconstructedFeatureGeometryPopulator](../src/app-logic/deprecated/ReconstructedFeatureGeometryPopulator.md) | 3 | 664 | 0 | Visitor that reconstructs feature geometries by applying plate circuit rotations at a specified reconstruction time |
 
 
 ## Other files

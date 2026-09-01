@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliCommandDispatcher tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CommandDispatcher` is a registry and executor for CLI commands. It holds a map of `Command` subclasses, indexed by name, and instantiates them at construction time by iterating over a compile-time list of registered command types via Boost.MPL meta-programming. The dispatcher provides a uniform interface to look up commands by name, gather their command-line options, and dispatch execution to the chosen command once its options have been parsed.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliCommandDispatcher tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

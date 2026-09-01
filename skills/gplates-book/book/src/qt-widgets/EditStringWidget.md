@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditStringWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A simple editor widget for `XsString` property values (XML schema strings). The widget provides a line edit for entering the string value. A code-space selector is defined in the form but remains hidden; support for editing the code-space attribute is not yet implemented (marked FIXME). The widget follows the standard `AbstractEditWidget` pattern for loading, editing, and committing string values.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditStringWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `update_property_value_from_widget()` before loading a string with `update_widget_from_string()` throws `UninitialisedEditWidgetException`.
 
 ## Used by
 

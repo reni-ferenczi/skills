@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CoRegistrationResultTableDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog window displaying the results of co-registration computations as a table. `CoRegistrationResultTableDialog` hosts a custom `ResultTableView` backed by a `ResultTableModel`, which wraps a `GPlatesDataMining::DataTable`. The dialog connects to the application state to refresh results whenever a reconstruction occurs. The table view supports a context menu action to highlight seed data rows in the viewport.
 
 ## Declared types
 
@@ -71,9 +69,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CoRegistrationResultTableDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

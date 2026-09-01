@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/PolylineProximityHitDetail tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A concrete `ProximityHitDetail` subclass that records a proximity hit on a `PolylineOnSphere`. It holds the polyline that was hit and inherits the closeness value (distance metric) and an optional vertex index from its base class. The class uses intrusive pointer semantics for memory management and cannot be copied or stack-allocated; instances must be created via the static `create` factory method.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/PolylineProximityHitDetail tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

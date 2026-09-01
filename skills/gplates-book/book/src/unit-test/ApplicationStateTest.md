@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/ApplicationStateTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Unit test for `GPlatesAppLogic::ApplicationState`, verifying the model interface accessor through `test_get_model_interface()`. The test class is minimal: full instantiation of `ApplicationState` in test context is problematic because it depends on `QCoreApplication` initialization, which the Boost test harness does not set up properly, causing crashes during destruction via `QSettings`. The test is wrapped in `ApplicationStateTestSuite` for inclusion in larger test suites.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/ApplicationStateTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Do not instantiate `ApplicationState` as a member variable in the test—it will crash during test cleanup due to QSettings trying to access `QCoreApplication::applicationName()` when no proper `QCoreApplication` exists.
 
 ## Used by
 

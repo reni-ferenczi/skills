@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlArray tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlArray` represents a GPML array property value—a heterogeneous collection of `PropertyValue` objects held in a vector. Each array instance stores both the member elements and a `StructuralType` describing the type of elements it contains. The class is used where feature properties need to hold multiple values of potentially different kinds. It follows the standard property-value factory pattern with heap-only allocation via intrusive pointers and visitor-pattern traversal. Unlike shallow-cloned property values, `GpmlArray` requires deep cloning to recursively copy its member elements.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlArray tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

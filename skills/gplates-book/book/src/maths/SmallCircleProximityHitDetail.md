@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/SmallCircleProximityHitDetail tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A concrete `ProximityHitDetail` subclass that records a proximity hit on a small circle. Unlike other proximity hit detail subclasses, it does not store a reference to the small circle itself; it records only the closeness value. The class uses intrusive pointer semantics and follows the same pattern as other proximity hit detail types: no stack allocation, no copying, and creation through a static `create` factory method.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/SmallCircleProximityHitDetail tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/ProximityCriteria tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A parameter object encapsulating the criteria for proximity queries on the sphere. It stores a test point and a closeness threshold (supplied as a cosine value and converted to an `AngularExtent`). The threshold provides both a closeness inclusion limit and a latitude exclusion limit — the sine and cosine components of the angular extent — allowing both angular distance and latitudinal constraints to be applied uniformly in proximity tests across different geometry types.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/ProximityCriteria tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

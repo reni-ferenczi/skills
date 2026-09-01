@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/GetValueFromPropertyVisitor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A visitor that extracts data from property values during traversal. Handles scalar properties (boolean, integer, double, string) by storing their raw values, and converts geometric and complex properties to string representations. Stores all extracted values in a vector of `OpaqueData` objects. Many property types are not extracted (routed to no-op visits) because they lack meaningful scalar or geometric data to mine.
 
 ## Declared types
 
@@ -68,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/GetValueFromPropertyVisitor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

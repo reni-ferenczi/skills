@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/OpaqueDataToDouble tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConvertOpaqueDataToDouble` is a Boost visitor that extracts numeric values from `OpaqueData` (a variant type holding different data kinds). It provides overloads for `int`, `double`, `float`, and `unsigned` types that wrap the value in `boost::optional<double>`, and a template fallback that returns `boost::none` for non-numeric types. This enables safe conversion of opaque data to numerical form for aggregation operations.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/OpaqueDataToDouble tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

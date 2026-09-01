@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/SplitFeatureUndoCommand tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QUndoCommand` that implements splitting a polyline feature into two separate features at a specified point. When redo is called, it clones the original feature and divides its geometry at the given point index, creating a new feature that holds the second half of the line while the original feature retains the first half. Optionally inserts a new point at the split location, with support for reverse-reconstructing it back to present day if needed. The command wraps geometry creation and model notifications to ensure a clean undo/redo cycle. On undo, it restores the original geometry to the old feature and removes the newly created feature from the collection.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/SplitFeatureUndoCommand tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Currently hard-coded to split polyline geometries only; other geometry types are not yet supported. The implementation assumes the focused feature has exactly one geometry property. The `d_nothing_has_been_done` flag tracks whether a split actually occurred (e.g., avoiding splits at start/end points). After the model notification guard is released during undo, reconstruction happens synchronously and data members should not be accessed.
 
 ## Used by
 

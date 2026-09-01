@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/controls/GuiCalls tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A static callback interface allowing deprecated control classes to invoke methods on GUI components (`MainWindow` and `GLCanvas`) without direct dependencies. All operations are no-ops if components have not been set via `SetComponents()`. Used by `AnimationTimer` to update display state and by other control code to coordinate GUI updates.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/controls/GuiCalls tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All methods safely handle NULL pointers by checking before use. `RepaintCanvas()` posts a `wxPaintEvent` to the canvas rather than calling a paint method directly. Static member pointers are initialized to NULL and must be set by calling `SetComponents()` before the other methods will have effect.
 
 ## Used by
 

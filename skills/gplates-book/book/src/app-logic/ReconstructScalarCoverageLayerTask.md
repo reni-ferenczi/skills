@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructScalarCoverageLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructScalarCoverageLayerTask` reconstructs and evolves scalar coverage features (such as crustal thickness and topography) as a layer in the reconstruction graph. The task depends on input `ReconstructLayerProxy` layers that provide domain geometries and does not connect to feature files directly. The actual reconstruction and scalar value evolution is delegated to `ReconstructScalarCoverageLayerProxy`, which applies deformation from resolved topological networks to the scalar values over time. For scalar coverage types that do not support evolution, values remain constant across reconstruction time.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructScalarCoverageLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Member initialization order matters: `d_reconstruct_scalar_coverage_layer_proxy` must be created before `d_layer_params` because the params object takes the proxy as a dependency.
 
 ## Used by
 

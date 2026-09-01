@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=system-fixes/loki/RefToValue tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A template class from the Loki library that transports a reference as a value, enabling the Colvin/Gibbons trick used by SmartPtr and ScopeGuard to maintain reference semantics across object copies and template instantiations. `RefToValue<T>` wraps a reference to type T and provides a conversion operator to recover the original reference, allowing references to be passed through containers and template parameters that normally require value types.
+
+The `ByRef` helper function creates instances with type deduction, commonly used when passing references through APIs that expect value types.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=system-fixes/loki/RefToValue tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Copy construction is allowed and preserves reference identity—the copy refers to the same object as the original. Default construction and assignment are disabled to prevent dangling references.
 
 ## Used by
 

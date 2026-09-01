@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/LightingWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A task panel widget providing UI controls for adjusting scene lighting parameters in the viewport. `LightingWidget` inherits from `TaskPanelWidget` and uses a Qt Designer form to expose toggles for lighting individual geometry types (geometry on sphere, filled geometry, arrows, rasters, and scalar fields), an ambient light intensity control, and an option to attach light direction to the view frame. The widget initializes its controls from the current `GPlatesPresentation::ViewState` scene lighting parameters and reactively updates those parameters—and forces a canvas redraw—whenever the user interacts with any control.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/LightingWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+When toggling `light_direction_attached_to_view_frame`, the light direction coordinate space must be transformed: if attaching to the view frame, the direction shifts from world-space to view-space; if detaching, it shifts from view-space to world-space. This transformation uses the current globe orientation to ensure the light does not appear to jump when the setting changes.
 
 ## Used by
 

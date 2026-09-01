@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/ConfigBundle tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConfigBundle` is a lightweight, portable key-value configuration store that exists independently of GPlates' main preference system. It holds pairs of string keys and `QVariant` values organized hierarchically using "/" as a path delimiter, with optional support for default values that user-set values can shadow.
+
+The bundle maintains two internal maps: one for user-set values and one for defaults. When a key is queried, a user value takes precedence over a default; if neither exists, a null `QVariant` is returned. This design allows `ConfigBundle` to serve contexts where configuration is transient—not necessarily saved to disk—while still providing fallback values and signal-driven updates when keys change.
+
+The class is thread-unaware but Qt-integrated: it inherits from `ConfigInterface` and uses Qt signals to notify listeners of value changes, making it suitable for GUI applications that need to coordinate configuration state across multiple components.
 
 ## Declared types
 
@@ -51,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/ConfigBundle tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

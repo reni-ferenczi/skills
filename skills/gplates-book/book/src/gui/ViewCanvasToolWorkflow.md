@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ViewCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A concrete `CanvasToolWorkflow` that manages view-manipulation tools — dragging the globe, zooming, and changing lighting. It maintains paired tools (one `GlobeCanvasTool` for 3D globe view, one `MapCanvasTool` for 2D map view) for each of the three operations, created via `create_canvas_tools()` and selected via `get_selected_globe_and_map_canvas_tools()`.
+
+When activated, this workflow makes its selected tool pair active on the canvas; when deactivated, it disables them. The workflow updates tool availability via `update_enable_state()` based on the current application state.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ViewCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

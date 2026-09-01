@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditStringListWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An editor widget for `GpmlStringList` property values (ordered sequences of strings). The widget displays the list in a two-column table: the first column holds editable string values, and the second column holds action buttons. Rows can be inserted above or below the current row, or deleted, via these action buttons. Alternatively, strings can be appended via a text-edit field with an "Append Element" button. The widget also inherits from `EditTableWidget`, which provides the table-editing framework and action-button management.
 
 ## Declared types
 
@@ -68,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditStringListWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `update_property_value_from_widget()` before loading a list with `update_widget_from_string_list()` throws `UninitialisedEditWidgetException`. Empty strings are valid list elements and are preserved. The widget listens to the `cellActivated` signal (not `cellChanged`) to detect edits; `cellChanged` fires during table population, so a different signal is used to distinguish user edits from programmatic updates.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/MovePoleMap tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A map canvas tool for interactive pole manipulation. Extends `MapCanvasTool` and translates mouse drag events on the map into calls to `MovePoleOperation`, which updates the pole location in the 3D geometry space. It is activated and deactivated alongside the pole adjustment workflow, with drag events and cursor movements on the map canvas triggering updates to the pole position.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/MovePoleMap tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

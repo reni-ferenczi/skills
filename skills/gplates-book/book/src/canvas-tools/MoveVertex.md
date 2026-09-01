@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/MoveVertex tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A canvas tool for interactive vertex editing on the globe. Extends `CanvasTool` and handles mouse clicks and drags on geometry vertices, delegating the actual vertex movement to `MoveVertexGeometryOperation`. It integrates with digitisation and feature inspection workflows, using proximity thresholds to snap to nearby vertices and providing status bar feedback during editing. Manages drag state to distinguish between single clicks and multi-point dragging operations.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/MoveVertex tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

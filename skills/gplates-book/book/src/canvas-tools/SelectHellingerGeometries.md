@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/SelectHellingerGeometries tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A canvas tool for selecting and manipulating geometries to fit a rotation pole (Hellinger pole fitting). Extends both `QObject` and `CanvasTool` to integrate Qt's signal/slot mechanism with globe interaction. It contains an inner `GeometryFinder` visitor class that extracts `PointOnSphere` coordinates from various rendered geometry types (point, multipoint, and symbol geometries like circles, crosses, squares, and triangles). The tool tracks detailed mouse interaction state (editable pick hover, selectable pick hover, drag state) and communicates with `HellingerDialog` via Qt signals to coordinate pole fitting workflows.
 
 ## Declared types
 
@@ -57,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/SelectHellingerGeometries tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The tool is tightly coupled to `HellingerDialog` via Qt signals; changes to signal names (`finished_editing`, `begin_new_pick`, `begin_edit_pick`) or their emission points affect tool behavior. State tracking relies on boolean flags that must be coordinated across mouse events and dialog callbacks.
 
 ## Used by
 

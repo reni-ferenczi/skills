@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/VirtualProxy tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`VirtualProxy` is a template class that defers the creation of its pointee type until first dereferenced. It wraps a `boost::scoped_ptr` and an optional factory, allowing the expensive construction of the type to be postponed until the moment it is actually needed. `DefaultFactory` is a simple factory that calls the pointee's default constructor; custom factories may override this to perform more complex initialization.
+
+The proxy is non-copyable (due to `boost::scoped_ptr`) and intended for objects that are expensive to create but may not always be used. The indirection operators `operator*()` and `operator->()` perform lazy creation on first use: the factory's `create()` method is invoked exactly once, and subsequent dereferences return the already-constructed object.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/VirtualProxy tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Non-copyable; the pointee is owned by the proxy and destroyed when the proxy goes out of scope. The factory is copied into the proxy and must be copy-constructable. Creation is not thread-safe: concurrent dereference from multiple threads will result in multiple calls to the factory; the caller must synchronize if thread-safety is needed.
 
 ## Used by
 

@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/FeaturePropertiesDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The main dialog for inspecting and editing the properties of a feature. The dialog presents three tabbed views: Query Properties for viewing feature properties, Edit Properties for modifying them, and View Coordinates for examining feature geometry. The dialog observes the feature focus from `ViewState` and automatically displays and updates whenever the focused feature changes or is modified.
+
+Users can also change the feature type of the currently selected feature through an embedded `ChangeFeatureTypeDialog`. The dialog holds weak references to the focused feature and its associated reconstruction geometry, enabling safe observation across revisions and deletions.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/FeaturePropertiesDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The feature reference stored in `d_feature_ref` may become invalid at any time if the feature is deleted or the model is modified. The dialog checks for this in `refresh_display()` and disables widgets when the reference is invalid.
 
 ## Used by
 

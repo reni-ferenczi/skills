@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportStageRotationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides the user interface for configuring export options when exporting stage rotations, including equivalent and relative rotation variants. The widget inherits from `ExportOptionsWidget` and acts as a container that combines two sub-widgets: `ExportRotationOptionsWidget` for general rotation export options and `ExportStageRotationOnlyOptionsWidget` for stage-rotation-specific settings.
+
+The widget delegates to its sub-components to collect rotation options and stage rotation options separately, then merges them back into a unified configuration object when the user is ready to export.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportStageRotationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

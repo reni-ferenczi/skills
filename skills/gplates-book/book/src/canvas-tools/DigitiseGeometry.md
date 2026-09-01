@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/DigitiseGeometry tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Canvas tool for creating new geometries interactively by clicking points on the globe or map. It stores a default geometry type and delegates the actual digitisation work to an `AddPointGeometryOperation`. On activation, the tool enables point addition; on deactivation, it disables it. Each left-click calls the operation's click handler to add a vertex.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/DigitiseGeometry tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -14,22 +14,22 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AddPointGeometryOperation](../src/view-operations/AddPointGeometryOperation.md) | 3 | 571 | 4 | (pending) |
+| [AddPointGeometryOperation](../src/view-operations/AddPointGeometryOperation.md) | 3 | 571 | 4 | Responds to user clicks to add points to digitized geometry |
 | [ChangeLightDirectionOperation](../src/view-operations/ChangeLightDirectionOperation.md) | 2 | 433 | 10 | (pending) |
-| [CloneOperation](../src/view-operations/CloneOperation.md) | 3 | 244 | 1 | (pending) |
-| [DeleteFeatureOperation](../src/view-operations/DeleteFeatureOperation.md) | 3 | 130 | 0 | (pending) |
-| [DeleteVertexGeometryOperation](../src/view-operations/DeleteVertexGeometryOperation.md) | 3 | 692 | 7 | (pending) |
-| [FocusedFeatureGeometryManipulator](../src/view-operations/FocusedFeatureGeometryManipulator.md) | 3 | 728 | 0 | (pending) |
+| [CloneOperation](../src/view-operations/CloneOperation.md) | 3 | 244 | 1 | Duplicates the focused feature or just its geometry |
+| [DeleteFeatureOperation](../src/view-operations/DeleteFeatureOperation.md) | 3 | 130 | 0 | Removes the currently focused feature from its parent collection |
+| [DeleteVertexGeometryOperation](../src/view-operations/DeleteVertexGeometryOperation.md) | 3 | 692 | 7 | Responds to user clicks on vertices to delete them |
+| [FocusedFeatureGeometryManipulator](../src/view-operations/FocusedFeatureGeometryManipulator.md) | 3 | 728 | 0 | Bridges geometry editing in GeometryBuilder back to the feature model |
 | [GeometryBuilder](../src/view-operations/GeometryBuilder.md) | 1 | 1901 | 555 | (pending) |
 | [GeometryBuilderUndoCommands](../src/view-operations/GeometryBuilderUndoCommands.md) | 2 | 473 | 5 | (pending) |
 | [GeometryOperation](../src/view-operations/GeometryOperation.md) | 2 | 209 | 19 | (pending) |
-| [GeometryOperationUndo](../src/view-operations/GeometryOperationUndo.md) | 3 | 225 | 5 | (pending) |
+| [GeometryOperationUndo](../src/view-operations/GeometryOperationUndo.md) | 3 | 225 | 5 | Coordinates undo/redo for geometry operations and canvas tool state |
 | [InsertVertexGeometryOperation](../src/view-operations/InsertVertexGeometryOperation.md) | 2 | 1111 | 13 | (pending) |
 | [InternalGeometryBuilder](../src/view-operations/InternalGeometryBuilder.md) | 2 | 308 | 28 | (pending) |
 | [MovePoleOperation](../src/view-operations/MovePoleOperation.md) | 2 | 580 | 28 | (pending) |
 | [MoveVertexGeometryOperation](../src/view-operations/MoveVertexGeometryOperation.md) | 2 | 1149 | 21 | (pending) |
-| [QueryProximityThreshold](../src/view-operations/QueryProximityThreshold.md) | 3 | 64 | 6 | (pending) |
-| [RenderedArrowedPolyline](../src/view-operations/RenderedArrowedPolyline.md) | 3 | 111 | 7 | (pending) |
+| [QueryProximityThreshold](../src/view-operations/QueryProximityThreshold.md) | 3 | 64 | 6 | Interface for calculating click-hit proximity thresholds |
+| [RenderedArrowedPolyline](../src/view-operations/RenderedArrowedPolyline.md) | 3 | 111 | 7 | Renders a polyline with arrows for globe and map display |
 | [RenderedCircleSymbol](../src/view-operations/RenderedCircleSymbol.md) | 2 | 119 | 79 | (pending) |
 | [RenderedColouredEdgeSurfaceMesh](../src/view-operations/RenderedColouredEdgeSurfaceMesh.md) | 2 | 230 | 95 | (pending) |
 | [RenderedColouredMultiPointOnSphere](../src/view-operations/RenderedColouredMultiPointOnSphere.md) | 3 | 114 | 9 | (pending) |
@@ -50,25 +50,25 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [RenderedGeometryUtils](../src/view-operations/RenderedGeometryUtils.md) | 2 | 832 | 46 | (pending) |
 | [RenderedGeometryVisitor](../src/view-operations/RenderedGeometryVisitor.md) | 2 | 247 | 133 | (pending) |
 | [RenderedMultiPointOnSphere](../src/view-operations/RenderedMultiPointOnSphere.md) | 3 | 99 | 4 | (pending) |
-| [RenderedMultiReconstructionGeometry](../src/view-operations/RenderedMultiReconstructionGeometry.md) | 3 | 84 | 0 | (pending) |
-| [RenderedPointOnSphere](../src/view-operations/RenderedPointOnSphere.md) | 3 | 99 | 0 | (pending) |
-| [RenderedPolygonOnSphere](../src/view-operations/RenderedPolygonOnSphere.md) | 3 | 149 | 0 | (pending) |
-| [RenderedPolylineOnSphere](../src/view-operations/RenderedPolylineOnSphere.md) | 3 | 159 | 1 | (pending) |
+| [RenderedMultiReconstructionGeometry](../src/view-operations/RenderedMultiReconstructionGeometry.md) | 3 | 84 | 0 | Wrapper combining multiple ReconstructionGeometry objects with a rendered representation |
+| [RenderedPointOnSphere](../src/view-operations/RenderedPointOnSphere.md) | 3 | 99 | 0 | Rendered geometry wrapper for a point on a sphere |
+| [RenderedPolygonOnSphere](../src/view-operations/RenderedPolygonOnSphere.md) | 3 | 149 | 0 | Rendered geometry wrapper for a polygon on a sphere with fill support |
+| [RenderedPolylineOnSphere](../src/view-operations/RenderedPolylineOnSphere.md) | 3 | 159 | 1 | Rendered geometry wrapper for a polyline on a sphere with optional fill |
 | [RenderedRadialArrow](../src/view-operations/RenderedRadialArrow.md) | 2 | 236 | 35 | (pending) |
-| [RenderedReconstructionGeometry](../src/view-operations/RenderedReconstructionGeometry.md) | 3 | 88 | 0 | (pending) |
-| [RenderedResolvedRaster](../src/view-operations/RenderedResolvedRaster.md) | 3 | 138 | 4 | (pending) |
-| [RenderedResolvedScalarField3D](../src/view-operations/RenderedResolvedScalarField3D.md) | 3 | 107 | 1 | (pending) |
-| [RenderedSmallCircle](../src/view-operations/RenderedSmallCircle.md) | 3 | 133 | 0 | (pending) |
-| [RenderedSmallCircleArc](../src/view-operations/RenderedSmallCircleArc.md) | 3 | 97 | 0 | (pending) |
-| [RenderedSquareSymbol](../src/view-operations/RenderedSquareSymbol.md) | 3 | 120 | 0 | (pending) |
-| [RenderedStrainMarkerSymbol](../src/view-operations/RenderedStrainMarkerSymbol.md) | 3 | 116 | 10 | (pending) |
-| [RenderedString](../src/view-operations/RenderedString.md) | 3 | 144 | 4 | (pending) |
+| [RenderedReconstructionGeometry](../src/view-operations/RenderedReconstructionGeometry.md) | 3 | 88 | 0 | Composite wrapper pairing a single ReconstructionGeometry with a rendered representation |
+| [RenderedResolvedRaster](../src/view-operations/RenderedResolvedRaster.md) | 3 | 138 | 4 | Rendered geometry wrapper for a georeferenced raster with colour palette and modulation |
+| [RenderedResolvedScalarField3D](../src/view-operations/RenderedResolvedScalarField3D.md) | 3 | 107 | 1 | Rendered geometry wrapper for a 3D scalar field with rendering parameters |
+| [RenderedSmallCircle](../src/view-operations/RenderedSmallCircle.md) | 3 | 133 | 0 | Rendered geometry wrapper for a small circle on a sphere |
+| [RenderedSmallCircleArc](../src/view-operations/RenderedSmallCircleArc.md) | 3 | 97 | 0 | Rendered geometry wrapper for small circle arcs with colour and line width |
+| [RenderedSquareSymbol](../src/view-operations/RenderedSquareSymbol.md) | 3 | 120 | 0 | Rendered geometry wrapper for square symbols at a point on the sphere |
+| [RenderedStrainMarkerSymbol](../src/view-operations/RenderedStrainMarkerSymbol.md) | 3 | 116 | 10 | Rendered geometry wrapper for strain marker ellipses with scale and rotation |
+| [RenderedString](../src/view-operations/RenderedString.md) | 3 | 144 | 4 | Rendered geometry wrapper for text labels positioned on the sphere |
 | [RenderedSubductionTeethPolyline](../src/view-operations/RenderedSubductionTeethPolyline.md) | 2 | 139 | 16 | (pending) |
-| [RenderedTangentialArrow](../src/view-operations/RenderedTangentialArrow.md) | 3 | 192 | 4 | (pending) |
-| [RenderedTriangleSymbol](../src/view-operations/RenderedTriangleSymbol.md) | 3 | 122 | 0 | (pending) |
+| [RenderedTangentialArrow](../src/view-operations/RenderedTangentialArrow.md) | 3 | 192 | 4 | Rendered geometry wrapper for directional arrows with constant projected size |
+| [RenderedTriangleSymbol](../src/view-operations/RenderedTriangleSymbol.md) | 3 | 122 | 0 | Rendered geometry wrapper for equilateral triangle symbols at a point |
 | [ScalarField3DRenderParameters](../src/view-operations/ScalarField3DRenderParameters.md) | 1 | 938 | 663 | (pending) |
 | [SplitFeatureGeometryOperation](../src/view-operations/SplitFeatureGeometryOperation.md) | 2 | 975 | 13 | (pending) |
-| [SplitFeatureUndoCommand](../src/view-operations/SplitFeatureUndoCommand.md) | 3 | 448 | 1 | (pending) |
+| [SplitFeatureUndoCommand](../src/view-operations/SplitFeatureUndoCommand.md) | 3 | 448 | 1 | Undo command that splits a polyline feature into two at a specified point |
 | [UndoRedo](../src/view-operations/UndoRedo.md) | 2 | 717 | 42 | (pending) |
 | [VisibleReconstructionGeometryExport](../src/view-operations/VisibleReconstructionGeometryExport.md) | 2 | 811 | 29 | (pending) |
 

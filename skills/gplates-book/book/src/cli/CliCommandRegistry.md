@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliCommandRegistry tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CommandTypes::command_types` is a compile-time registry of available CLI command classes expressed as a Boost.MPL vector. It names each `Command` subclass that the CLI supports, and `CommandDispatcher` iterates over this vector at construction time to instantiate and register each command in its internal map. Adding a new command requires both creating the command class and adding it to this vector.
 
 ## Declared types
 
@@ -32,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliCommandRegistry tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

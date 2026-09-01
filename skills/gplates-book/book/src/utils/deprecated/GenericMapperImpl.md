@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/GenericMapperImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenericMapperImpl` is an abstract template base class that defines the interface for implementation functors used by `GenericMapper`. It declares two virtual operator() overloads that accept input and output iterator pairs and direct results either to an output iterator or into a provided vector, returning the count of items processed. Subclasses supply the actual mapping algorithm.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/GenericMapperImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

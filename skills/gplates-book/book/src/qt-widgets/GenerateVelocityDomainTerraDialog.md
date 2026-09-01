@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GenerateVelocityDomainTerraDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Dialog for generating velocity domain points using the Terra spherical icosahedral gridding library. The Terra algorithm creates a grid of points distributed across the globe according to configurable parameters: mt controls the icosahedral diamond resolution (power of two), nt controls the local subdomain resolution (power of two), and nd controls diamond density per processor (5 or 10). The dialog lets users set these parameters, choose an output directory, and define a filename template to save the generated points as GPML files.
+
+The dialog delegates the actual gridding work to `GenerateVelocityDomainTerra` in app-logic and saves the result as features in the model. It enforces parameter constraints via custom spinbox validators — `PowerOfTwoSpinBox` for mt and nt, and `NdSpinBox` which accepts only 5 or 10. Parameter changes trigger recalculation of the required processor count via the formula (mt/nt)² × (10/nd), which the dialog displays to guide the user towards feasible configurations.
 
 ## Declared types
 
@@ -84,9 +84,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GenerateVelocityDomainTerraDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

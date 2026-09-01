@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/GenericReducer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenericReducer` is a concrete template that implements the abstract `Reducer` interface by accepting a user-provided implementation functor as a template parameter. It combines a sequence of input elements into a single output value of a specified type, delegating the actual reduction algorithm to the implementation callable. This allows flexible reduction strategies to be composed at compile time.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/GenericReducer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

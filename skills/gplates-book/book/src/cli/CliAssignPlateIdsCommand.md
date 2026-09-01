@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliAssignPlateIdsCommand tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`AssignPlateIdsCommand` is a CLI command that assigns plate IDs and optionally time periods to features in a feature collection by partitioning them against a set of dynamic or static polygons. It collaborates with `GPlatesAppLogic::AssignPlateIds` to apply these assignments at a specified reconstruction time, and can extend rotation sequences backward to prevent geometries from snapping to present-day positions.
+
+The command supports two assignment methods: assigning each feature to its most overlapping plate, or partitioning features across multiple plates when they straddle plate boundaries. It can optionally respect the temporal validity of features and save the results in multiple formats including GPML, Shapefile, or GMT.
 
 ## Declared types
 
@@ -70,9 +70,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliAssignPlateIdsCommand tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

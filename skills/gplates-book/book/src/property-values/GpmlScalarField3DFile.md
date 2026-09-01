@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlScalarField3DFile tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Encodes a reference to a 3D scalar field file in the GPML model as a property value. It holds a filename as an `XsString` and provides access via `file_name()` and modification via `set_file_name()`. When the filename is updated, the property's instance ID is marked as changed. This class follows the standard property value pattern with heap-only allocation and visitor-based traversal support.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlScalarField3DFile tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

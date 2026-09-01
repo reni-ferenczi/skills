@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ShapefilePropertyMapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A concrete `PropertyMapper` that guides the user through mapping shapefile attributes to model properties. The `map_properties()` method is the main entry point; it branches between initial mapping (showing `ShapefileAttributeMapperDialog`) and remapping of existing attributes (showing `ShapefileAttributeRemapperDialog`), both of which run modally and return success or failure based on whether the user accepted the dialog.
+
+The mapper holds a pointer to the parent Qt window for use as the dialog parent, and is not copyable.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ShapefilePropertyMapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

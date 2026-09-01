@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GuiException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A marker exception class for GUI-related errors. All GUI exceptions inherit from this class, which itself inherits from `GPlatesGlobal::Exception`. This provides a consistent way to catch and handle GUI-specific failures throughout the application.
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GuiException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

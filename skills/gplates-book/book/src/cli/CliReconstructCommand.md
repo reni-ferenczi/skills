@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliReconstructCommand tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ReconstructCommand` is a CLI command that reconstructs feature collections to a specified geological time, applying plate motions described in rotation files. It loads reconstructable features and rotation data, applies `ReconstructParams` to compute their positions at the target reconstruction time relative to an anchor plate, and exports the results to a specified format. The command supports both single consolidated output and separate files per input collection, optionally organizing them in separate output directories.
 
 ## Declared types
 
@@ -60,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliReconstructCommand tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

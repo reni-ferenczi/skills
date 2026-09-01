@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ProjectionException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GuiException` subclass for errors in map projection operations. Thrown when projection calculations fail—for example, when a map view encounters invalid parameters or cannot compute a coordinate transformation. The exception stores a message string describing the problem and is caught by map projection, map grid, and other projection-related code to handle errors gracefully.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ProjectionException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

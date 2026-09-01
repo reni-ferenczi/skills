@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatReconstructedScalarCoverageExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed scalar coverages to GMT format. A scalar coverage is a field of scalar values (such as temperature or age) sampled at domain points on a reconstructed surface; this exporter writes `ReconstructedScalarCoverage` objects to a GMT file with each line containing the spatial position, optional strain invariants and rates, and the scalar value. Output includes GMT headers with reconstruction metadata, and coordinates follow GMT xy-format conventions with configurable coordinate order.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatReconstructedScalarCoverageExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/DeprecatedSessionRestore tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides backward-compatibility loading of sessions saved before the scribe serialization framework was introduced. Session files from versions 1–3 stored layers and their connections as XML DOM; this module parses that format, reconstructs layers from their type and parameters, and re-establishes the connections between them and input files. The main entry point `restore_session()` branches on the session version and delegates to helper functions that parse DOM elements into `ReconstructGraph` layers and connections. A RAII class suppresses automatic layer creation during restore so that the recovered state exactly matches the saved state.
 
 ## Declared types
 
@@ -56,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/DeprecatedSessionRestore tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Deprecated since session version 4; do not use for new code. Files not found during load are reported in the read errors dialog rather than raising an exception. Converts deprecated string-based layer input channel names (e.g. `"Topological boundary section features"`) to their modern enumeration equivalents. Version 1 introduced topological boundary section connections; version 2 deprecated them as redundant, so the loader silently drops those connections on restore from version-1 sessions.
 
 ## Used by
 

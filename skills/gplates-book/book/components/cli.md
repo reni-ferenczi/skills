@@ -14,18 +14,18 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [CliAssignPlateIdsCommand](../src/cli/CliAssignPlateIdsCommand.md) | 3 | 533 | 13 | (pending) |
+| [CliAssignPlateIdsCommand](../src/cli/CliAssignPlateIdsCommand.md) | 3 | 533 | 13 | CLI command that assigns plate IDs to features using partitioning polygons at a reconstruction time |
 | [CliCommand](../src/cli/CliCommand.md) | 2 | 103 | 25 | (pending) |
-| [CliCommandDispatcher](../src/cli/CliCommandDispatcher.md) | 3 | 327 | 19 | (pending) |
-| [CliCommandRegistry](../src/cli/CliCommandRegistry.md) | 3 | 58 | 2 | (pending) |
-| [CliConvertFileFormatCommand](../src/cli/CliConvertFileFormatCommand.md) | 3 | 245 | 1 | (pending) |
-| [CliEquivalentTotalRotation](../src/cli/CliEquivalentTotalRotation.md) | 3 | 314 | 1 | (pending) |
+| [CliCommandDispatcher](../src/cli/CliCommandDispatcher.md) | 3 | 327 | 19 | Registry and executor for CLI commands indexed by name |
+| [CliCommandRegistry](../src/cli/CliCommandRegistry.md) | 3 | 58 | 2 | Compile-time registry of CLI command classes as a Boost.MPL vector |
+| [CliConvertFileFormatCommand](../src/cli/CliConvertFileFormatCommand.md) | 3 | 245 | 1 | CLI command that converts feature collections from one file format to another |
+| [CliEquivalentTotalRotation](../src/cli/CliEquivalentTotalRotation.md) | 3 | 314 | 1 | CLI command that calculates the equivalent total rotation pole between two plates |
 | [CliFeatureCollectionFileIO](../src/cli/CliFeatureCollectionFileIO.md) | 2 | 631 | 123 | (pending) |
-| [CliInvalidOptionValue](../src/cli/CliInvalidOptionValue.md) | 3 | 87 | 4 | (pending) |
-| [CliReconstructCommand](../src/cli/CliReconstructCommand.md) | 3 | 413 | 1 | (pending) |
-| [CliRelativeTotalRotation](../src/cli/CliRelativeTotalRotation.md) | 3 | 317 | 1 | (pending) |
-| [CliRequiredOptionNotPresent](../src/cli/CliRequiredOptionNotPresent.md) | 3 | 111 | 14 | (pending) |
-| [CliStageRotationCommand](../src/cli/CliStageRotationCommand.md) | 3 | 470 | 1 | (pending) |
+| [CliInvalidOptionValue](../src/cli/CliInvalidOptionValue.md) | 3 | 87 | 4 | Exception thrown when a command-line option receives an invalid or out-of-range value |
+| [CliReconstructCommand](../src/cli/CliReconstructCommand.md) | 3 | 413 | 1 | CLI command that reconstructs features to a paleo time using plate rotation paths |
+| [CliRelativeTotalRotation](../src/cli/CliRelativeTotalRotation.md) | 3 | 317 | 1 | CLI command that calculates the relative rotation between a moving and fixed plate pair |
+| [CliRequiredOptionNotPresent](../src/cli/CliRequiredOptionNotPresent.md) | 3 | 111 | 14 | Exception thrown when a required command-line option or configuration parameter is missing |
+| [CliStageRotationCommand](../src/cli/CliStageRotationCommand.md) | 3 | 470 | 1 | CLI command to calculate stage rotations between two plates over a time interval |
 
 ## Other files
 

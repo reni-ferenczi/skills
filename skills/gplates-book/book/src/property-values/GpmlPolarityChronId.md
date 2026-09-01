@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlPolarityChronId tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Encodes a polarity chron identifier from the GPML model, with three optional attributes: an era code (text), a major region number, and a minor region code. All three attributes are optional and may be absent; when set, they trigger instance-id updates to track property changes. This class inherits from `PropertyValue` and enforces heap allocation via protected constructors to integrate with GPlates' memory-managed property value system.
 
 ## Declared types
 
@@ -54,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlPolarityChronId tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

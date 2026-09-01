@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyGeometryResolverLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`TopologyGeometryResolverLayerTask` resolves topological boundary and line geometries by walking their section references to build complete resolved geometries. It requires a reconstruction layer (or defaults to the global default) and topological section layers (either from `ReconstructLayerProxy` or from other `TopologyGeometryResolverLayerProxy` layers) that provide the individual topological sections. When no topological section layers are explicitly connected, the task performs a global search through all active layers; when connected, it uses only the specified layers. The work is delegated to `TopologyGeometryResolverLayerProxy`.
 
 ## Declared types
 
@@ -59,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyGeometryResolverLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Topological boundaries can reference topological lines from this same layer, creating a cyclic non_null_ptr dependency. The destructor explicitly clears topological section layer references to break this cycle and enable proper cleanup. The `activate(false)` method also clears these references for the same reason. When no topological section layers are explicitly connected, the task globally searches all active reconstruct and topology layers; explicit connections restrict the search to only those layers.
 
 ## Used by
 

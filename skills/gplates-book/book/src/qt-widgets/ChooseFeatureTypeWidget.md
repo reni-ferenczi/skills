@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChooseFeatureTypeWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Selection widget for choosing a feature type, wrapping `SelectionWidget` to show all concrete feature types from GPGIM. The `populate()` method can optionally filter to feature types that have properties of a specified structural type. Feature types are displayed by name only, without the `gpml:` namespace prefix, to enable effective find-as-you-type searching. Previous selection is retained when re-populating if the previously selected type still exists in the new list.
+
+The widget emits `current_index_changed()` with the selected type whenever the selection changes, and `item_activated()` when the user double-clicks or presses Enter. A custom `DefaultConstructibleFeatureType` wrapper allows feature type objects to be stored directly in Qt's item model.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChooseFeatureTypeWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

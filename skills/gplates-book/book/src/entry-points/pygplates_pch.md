@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=entry-points/pygplates_pch tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A precompiled header for the pyGPlates Python extension module build. It collects all the common dependencies: C++ standard library headers, Boost libraries (including `boost/python.hpp` for bindings), Qt GUI components, CGAL computational geometry, QWT plotting, and GDAL spatial reference systems. Precompiling this single header once speeds up compilation of the many `.cc` files in the API module by avoiding repeated parsing of the same included headers. This is specific to the pyGPlates standalone module build (controlled by the `GPLATES_BUILD_GPLATES` CMake flag) and is distinct from the main GPlates application executable.
 
 ## Declared types
 
@@ -26,9 +24,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=entry-points/pygplates_pch tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

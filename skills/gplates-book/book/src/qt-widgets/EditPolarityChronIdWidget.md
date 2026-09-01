@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditPolarityChronIdWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An editor widget for `GpmlPolarityChronId` property values. These values store magnetic polarity chron identification data as three optional fields: an era (text, presented as a dropdown), a major region (integer, presented as a spinbox), and a minor region (text, presented as a line edit). The widget follows the `AbstractEditWidget` protocol: it updates its UI from a loaded property value, signals when edited, and can either update an existing value in place or create a new value from the current UI state.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditPolarityChronIdWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Calling `update_property_value_from_widget()` before loading a property value with `update_widget_from_polarity_chron_id()` throws `UninitialisedEditWidgetException`. The era dropdown accepts values not in its predefined list — if a loaded value's era does not match any item, it is appended to the dropdown.
 
 ## Used by
 

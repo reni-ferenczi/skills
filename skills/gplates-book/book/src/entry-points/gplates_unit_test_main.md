@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=entry-points/gplates_unit_test_main tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The entry point for the unit test executable that uses the Boost.Test framework. Initializes Qt resources needed by tests (OpenGL, Python, GPGIM, and widgets), checks for floating-point infinity and NaN support, sets up the Qt message handler, creates and registers the test suite hierarchy, and supports filtering tests by name via command-line options. Uses dynamic linking to Boost.Test to maintain consistency with other dynamically-linked Boost libraries.
 
 ## Declared types
 
@@ -33,9 +31,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=entry-points/gplates_unit_test_main tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `init_unit_test()` function creates `MainTestSuite` with `new` (not on the stack); the memory is intentionally managed by the Boost.Test framework, not by C++ scope. Uses dynamic linking (`BOOST_TEST_DYN_LINK`) to avoid conflicts with static linking of other Boost libraries. Tests can be listed with `--list_content` and filtered by name with `--run_test=SuiteName,*/*/TestName`.
 
 ## Used by
 

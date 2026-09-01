@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditFeaturePropertiesWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A widget that presents a feature's properties in a table and allows editing them one at a time. The widget owns a `FeaturePropertyTableModel` to display all properties, an `EditWidgetGroupBox` that shows the appropriate edit widget for the selected property, and an `AddPropertyDialog` to add new properties. When a user selects a row in the property table, the widget switches the edit widget to display that property; when edit widgets signal changes, the widget commits the data back to the property. The widget tracks the feature being edited via both a weak reference and a `FeatureFocus` handle, responding to feature deletion and model changes. Call `edit_feature()` to load a new feature, and `commit_edit_widget_data()` to flush any pending changes.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditFeaturePropertiesWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Owns the property model and edit dialogs; deletes them in the destructor. Always call `commit_edit_widget_data()` before switching features to ensure uncommitted changes are written. The `d_selected_property_iterator` tracks which property is currently being edited and is cleared when switching features or deleting the selected property. A `handle_model_change()` slot exists but is currently disabled (see the commented code in the constructor) as modifications now flow only through the edit widgets.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/CloneOperation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A utility for duplicating the focused feature or just its geometry. `clone_focused_geometry()` copies the geometry from a focused feature into the digitise `GeometryBuilder` and switches to the appropriate digitise tool so the user can edit the copy. `clone_focused_feature()` makes a full clone of the feature with all its properties and adds it to a feature collection (defaulting to the feature's own collection), then focuses the new feature.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/CloneOperation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

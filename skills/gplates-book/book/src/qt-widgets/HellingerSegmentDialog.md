@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerSegmentDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Dialog for creating or editing a Hellinger segment with its constituent picks (measured points). The dialog displays the segment's picks in a table with columns for plate index, latitude, longitude, uncertainty, and enabled status. Users can add or remove picks, enable or disable individual picks, reset a pick to its default state, or change the plate index for all picks in the segment at once. The `SpinBoxDelegate` provides custom spinbox editing for numeric fields, adapting to whether 3-way fitting is enabled in the parent tool.
+
+The dialog can operate in two modes: creating a new segment or editing an existing one. In create mode, users may encounter a `HellingerNewSegmentWarning` if the segment number already exists. The dialog tracks the currently selected pick and can be updated by globe interactions via `update_pick_coords()`. When the user finishes, it calls `add_segment_to_model()` to persist the segment to the underlying `HellingerModel`, then emits `finished_editing()` to notify the parent dialog.
 
 ## Declared types
 
@@ -86,9 +86,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerSegmentDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

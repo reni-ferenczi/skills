@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/SmallCircleCoverageMesh tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`SmallCircleCoverageMesh` holds the output of a coverage calculation: a vector of triangles that completely cover a region bounded by a small circle. `SmallCircleCoverageMeshBuilder` is the builder that generates this mesh by recursively traversing a hierarchical triangular mesh and collecting triangles from a specified depth that overlap the small circle bounds. The builder uses the visitor pattern, integrating with `SphericalSubdivision::HierarchicalTriangularMeshTraversal` to traverse the mesh efficiently and avoid testing triangles that are known to be completely outside the small circle region.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/SmallCircleCoverageMesh tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

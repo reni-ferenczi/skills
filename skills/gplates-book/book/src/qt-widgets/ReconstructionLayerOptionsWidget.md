@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ReconstructionLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This widget provides options for reconstruction layers, which contain the plate rotation data used to reconstruct geometries through time. It allows users to view the total reconstruction poles, merge multiple reconstruction layer trees, and control how rotation data is extrapolated beyond the time range covered by the input rotation file.
+
+The widget offers a checkbox to mark a reconstruction layer as the default, which determines which rotation sequence is used when multiple reconstruction layers are available. It also provides an option to extend rotation poles to the distant past, preventing geometries from snapping back to present-day positions when the reconstruction time predates the oldest rotation data. A dialog is available to help users understand this extrapolation behavior and its effects on ancient reconstructions.
 
 ## Declared types
 
@@ -51,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ReconstructionLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/VelocityLegendOverlay tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Paints a scale arrow legend on the globe or map to indicate the visual scale of velocity vectors. The `paint()` method renders the legend onto the OpenGL viewport using a `GLRenderer`, constrained by `VelocityLegendOverlaySettings` and scaled to the viewport dimensions.
+
+The supporting free functions calculate the arrow scale factor from velocity layers via `get_scale_from_uppermost_velocity_layer()`, adjust font sizes via `scale_font()`, and dynamically resize the legend to fit the available space with `reduce_to_fit()` and `increase_to_fit()`.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/VelocityLegendOverlay tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/FilterMapOutputHandler tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FilterMapOutputHandler` is a deprecated template class that abstracts output writing for filter/map operations. It takes two template parameters: `OutputHandle` (the target iterator or container) and `OutputMode` (either `OUTPUT_BY_ITERATOR` or `OUTPUT_BY_CONTAINER`). The handler provides an `insert()` method that dispatches to the appropriate output strategy based on the mode.
+
+When in iterator mode, `insert()` writes by dereferencing and advancing the output iterator; in container mode, it appends using `push_back()`. This allows filter/mapper implementations to be mode-agnostic.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/FilterMapOutputHandler tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+In iterator mode, the output iterator must be valid and derefernceable; in container mode, the container must support `push_back()`. The output handle is held by non-const reference.
 
 ## Used by
 

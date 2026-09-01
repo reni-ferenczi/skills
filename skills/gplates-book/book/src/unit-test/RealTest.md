@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/RealTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Tests the floating-point utility functions in `GPlatesMaths` that classify special double values. `RealTest` contains four test methods that verify the predicates for detecting positive infinity, negative infinity, NaN (not-a-number), and zero—checking both positive and negative cases. `RealTestSuite` wraps these tests in the hierarchical framework, instantiating `RealTest` and registering its test cases via the `ADD_TESTCASE` macro.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/RealTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

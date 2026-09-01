@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ShapefileAttributeViewerDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A modeless dialog that displays the raw shapefile attributes of features in the current feature collection as a table. The dialog extracts the `shapefileAttributes` property (a `GpmlKeyValueDictionary` containing key-value pairs from the original shapefile) from each feature and populates table columns from the keys and rows from the values.
+
+The dialog holds a `vector` of `File::Reference` pointers to track files with shapefile attributes and allows the user to switch between feature collections via a combo box. When the file state changes (e.g., a file is loaded or reloaded), the dialog updates to reflect the new set of available feature collections and their attributes.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ShapefileAttributeViewerDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_file_vector` maintains its own copies of file references to track which files contain shapefile attributes. Features are normally expected to have at most one `shapefileAttributes` property, though the code defends against multiple dictionaries and logs a comment if found.
 
 ## Used by
 

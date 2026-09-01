@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/HellingerCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A canvas tool workflow for performing pole fits using the Hellinger method, a technique for determining optimal rotations. It manages two interactive tools: `SelectHellingerGeometries` for selecting and manipulating pole fit data points, and `AdjustFittedPoleEstimate` for refining the computed pole estimate. Each tool is available in both 3D globe and 2D map views via adapters.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/HellingerCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_hellinger_dialog_ptr` is not owned — it is obtained from `ViewportWindow::dialogs()` and must remain valid for the lifetime of the workflow. The same underlying canvas tools are wrapped in separate adapters for globe and map views.
 
 ## Used by
 

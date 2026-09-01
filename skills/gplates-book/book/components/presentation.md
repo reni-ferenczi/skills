@@ -15,7 +15,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [Application](../src/presentation/Application.md) | 2 | 318 | 8 | (pending) |
-| [DeprecatedSessionRestore](../src/presentation/DeprecatedSessionRestore.md) | 3 | 677 | 15 | (pending) |
+| [DeprecatedSessionRestore](../src/presentation/DeprecatedSessionRestore.md) | 3 | 677 | 15 | Backward-compatibility loader for pre-scribe session formats (versions 1–3) |
 | [InternalSession](../src/presentation/InternalSession.md) | 2 | 833 | 68 | (pending) |
 | [LayerOutputRenderer](../src/presentation/LayerOutputRenderer.md) | 2 | 502 | 20 | (pending) |
 | [ProjectSession](../src/presentation/ProjectSession.md) | 2 | 820 | 17 | (pending) |
@@ -33,8 +33,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [VelocityFieldCalculatorVisualLayerParams](../src/presentation/VelocityFieldCalculatorVisualLayerParams.md) | 2 | 146 | 31 | (pending) |
 | [ViewState](../src/presentation/ViewState.md) | 1 | 1174 | 1718 | (pending) |
 | [VisualLayer](../src/presentation/VisualLayer.md) | 1 | 642 | 490 | (pending) |
-| [VisualLayerGroup](../src/presentation/VisualLayerGroup.md) | 3 | 57 | 30 | (pending) |
-| [VisualLayerInputChannelName](../src/presentation/VisualLayerInputChannelName.md) | 3 | 154 | 1 | (pending) |
+| [VisualLayerGroup](../src/presentation/VisualLayerGroup.md) | 3 | 57 | 30 | Enumeration of visual layer categories controlling on-screen organization |
+| [VisualLayerInputChannelName](../src/presentation/VisualLayerInputChannelName.md) | 3 | 154 | 1 | Mapping from layer input channel enumerations to GUI display strings |
 | [VisualLayerParams](../src/presentation/VisualLayerParams.md) | 2 | 167 | 64 | (pending) |
 | [VisualLayerParamsVisitor](../src/presentation/VisualLayerParamsVisitor.md) | 2 | 126 | 57 | (pending) |
 | [VisualLayerRegistry](../src/presentation/VisualLayerRegistry.md) | 2 | 880 | 59 | (pending) |

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/ProxiedRasterCache tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Maintains a cache of proxied `RawRaster` objects for each band in a raster file, detecting and reloading them when the file on disk is modified. Uses the Pimpl pattern via a `scoped_ptr` to `ProxiedRasterCacheImpl` to hide implementation details. The concrete implementation monitors file modification timestamps and only reloads bands when the file actually changes, providing lazy refresh without constant re-reading. Access to the cached rasters triggers a freshness check.
 
 ## Declared types
 
@@ -67,9 +65,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/ProxiedRasterCache tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

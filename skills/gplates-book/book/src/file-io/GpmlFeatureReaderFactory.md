@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlFeatureReaderFactory tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A factory that creates `GpmlFeatureReaderInterface` instances configured for the GPGIM version embedded in a GPML file being loaded. GPlates always loads GPML files into the latest internal GPGIM version, so this factory knows how to read and upgrade features from older versions. It accepts the GPGIM version from the GPML file's root element and builds readers on demand as feature types are encountered, avoiding creation overhead for types never loaded.
+
+Each reader created is capable of handling unprocessed properties via catch-all property readers. The factory manages version-specific upgrade logic for known GPGIM version transitions (1.6.318, 1.6.319, 1.6.320, etc.) and supports property renames and removals as the schema evolves.
 
 ## Declared types
 
@@ -56,9 +56,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlFeatureReaderFactory tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Feature readers are created on demand and cached in a mutable map, even though `get_feature_reader` is const. This allows the factory to avoid creating readers for feature types never encountered in the loaded files.
 
 ## Used by
 

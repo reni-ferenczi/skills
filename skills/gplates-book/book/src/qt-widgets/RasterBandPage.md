@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/RasterBandPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Wizard page for assigning user-friendly names to raster bands during import. Users enter a name for each band in a table, where edits are managed by a custom `BandNameComboBox` delegate that handles text changes. The page validates that all band names are unique before the wizard can proceed, updating the band names vector passed at construction.
 
 ## Declared types
 
@@ -64,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/RasterBandPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_band_names` vector is held by reference; changes persist to the caller's vector. The page validates uniqueness of band names in `isComplete()`; the wizard cannot proceed until all names are distinct.
 
 ## Used by
 

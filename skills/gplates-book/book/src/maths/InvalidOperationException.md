@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/InvalidOperationException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when an invalid mathematical operation is attempted. Code in the maths module raises this to signal that an operation cannot be completed because the input data or state violates a mathematical constraint—for instance, attempting to construct a geometric primitive with degenerate parameters.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/InvalidOperationException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

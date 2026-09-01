@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ColouringDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for managing colour schemes applied to feature collections or globally. It loads colour schemes from CPT files into a categorized container and displays previews in a list with thumbnail icons. The dialog clones a `GlobeAndMapWidget` to render each preview, using a `PreviewColourScheme` wrapper to allow testing different colour schemes without affecting the main window. Users can load files, add single colours, edit schemes, and switch between per-collection and global colouring modes.
 
 ## Declared types
 
@@ -99,9 +97,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ColouringDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RgbaRasterWriter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Writes RGBA rasters to image files—PNG, JPEG, BMP, GIF, or SVG—via Qt's `QImageWriter`. Unlike the reader, the writer accepts pixel data incrementally through `write_region_data()` calls that copy RGBA8 pixels into an internal `QImage` buffer, which is then flushed to disk via `write_file()`. 
+
+This writer does not support georeferencing or spatial reference systems; any calls to set those attributes are no-ops. It enforces a single-band-only constraint: `num_raster_bands` must be 1 and `raster_band_type` must be RGBA8, rejecting multi-band or other data types. The internal `QImage` is deallocated after `write_file()` completes, causing subsequent calls to `can_write()` to return false.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RgbaRasterWriter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The writer is write-once: after `write_file()` succeeds, `can_write()` returns false and further write operations fail. Memory for the `QImage` is allocated in the constructor and may fail for very large dimensions; construction does not throw but leaves `d_image` null, which `can_write()` detects. Pixel data is expected in RGBA8 format and converted to Qt's ARGB32 internal format on copy. Region write calls perform bounds checking and fail if the region extends beyond the raster dimensions.
 
 ## Used by
 

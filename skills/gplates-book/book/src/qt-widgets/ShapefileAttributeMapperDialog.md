@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ShapefileAttributeMapperDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A modal dialog that maps shapefile/OGR attributes to GPlates model properties. The user selects which attribute field from the source file corresponds to each model property via combo boxes in the embedded `ShapefileAttributeWidget`. When the user accepts the dialog, the mapping is written back to the caller's `model_to_attribute_map` parameter; when they click Reset, the widget restores the original mappings shown when the dialog was set up.
+
+A TODO comment indicates this dialog is used for other OGR formats beyond shapefiles, but has not yet been renamed or redesigned accordingly.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ShapefileAttributeMapperDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

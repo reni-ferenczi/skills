@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/InsertVertex tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Canvas tool for inserting vertices into existing geometries, either work-in-progress temporary geometries or the focused feature's geometry. Wraps an `InsertVertexGeometryOperation` that performs the actual insertion. On activation, the underlying operation is activated to enable vertex insertion; on deactivation, the operation is deactivated. Supports left-click to insert a single vertex, left-drag for interactive placement, and move-without-drag for visual feedback.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/InsertVertex tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditExportParametersDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for editing export parameters in the animation export workflow. The dialog is initialized via `initialise()` with the export row being edited and the export configuration, then lets the user modify the export filename template and any export format-specific options. It uses `ExportFileNameTemplateWidget` to manage filename template configuration and dynamically creates an `ExportOptionsWidget` appropriate to the export type (which may be omitted for formats with no options). The dialog is a client of `ExportAnimationContext`, which holds all the export configuration data in the Strategy pattern. When the user accepts, it calls `react_edit_item_accepted()` to sync changes back to the context.
 
 ## Declared types
 
@@ -49,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditExportParametersDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The dialog must be initialized via `initialise()` before being shown; the export row and ID are stored in optional fields and checked for validity when accepting. The export options widget is also optional (some export types have no format-specific options). The dialog delegates export configuration management to `ExportAnimationContext` and does not own the configuration data. The `set_single_frame()` method controls whether the dialog is for a single-frame or animated export.
 
 ## Used by
 

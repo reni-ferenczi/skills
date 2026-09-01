@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliRequiredOptionNotPresent tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception class thrown by CLI command handlers when a required option or configuration parameter is missing from the command line or configuration file. It carries the name of the missing option and an optional explanatory message describing why that option is mandatory. This exception is used throughout the CLI module to provide clear error reporting when users omit required parameters.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliRequiredOptionNotPresent tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

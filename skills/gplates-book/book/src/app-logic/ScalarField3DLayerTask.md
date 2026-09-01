@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ScalarField3DLayerTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ScalarField3DLayerTask` manages a 3D scalar field for volume rendering visualization. The task accepts a scalar field feature from a file and optionally connects to multiple `ReconstructLayerProxy`, `TopologyGeometryResolverLayerProxy`, or `TopologyNetworkResolverLayerProxy` layers to provide cross-sections and surface polygon masks for visualization. The actual 3D field processing is delegated to `ScalarField3DLayerProxy`, which computes and caches the scalar field data at each reconstruction time.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ScalarField3DLayerTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The scalar field feature collection is expected to contain exactly one feature; collections with zero or multiple features are handled with warnings and the task uses only the first feature. Unlike most layer tasks, this one does not require a reconstruction layer input.
 
 ## Used by
 

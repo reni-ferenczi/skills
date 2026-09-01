@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/deprecated/Reader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An abstract base class that defines the interface for file format readers. Subclasses implement `read_file()` to parse a file in a specific format and populate the given `ModelInterface` with the resulting feature collection, accumulating any errors in `ReadErrorAccumulation`. Concrete readers like `GPlatesReader` extend this class to support legacy file formats. This is deprecated infrastructure for the old reader-writer architecture.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/deprecated/Reader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

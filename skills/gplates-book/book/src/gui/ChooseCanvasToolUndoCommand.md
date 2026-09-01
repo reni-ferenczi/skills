@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ChooseCanvasToolUndoCommand tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QUndoCommand` that captures and restores the currently active canvas tool. On construction, it saves the active tool by querying `CanvasToolWorkflows`. When undone or redone, it restores that saved tool state by calling `choose_canvas_tool()` on the workflows. This integrates tool selection into the standard undo/redo stack, so switching between tools becomes undoable alongside other operations.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ChooseCanvasToolUndoCommand tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_first_redo` flag suppresses action on the first `redo()` call, since construction already placed the workflows in the correct tool state (the currently active one).
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TopologyCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Implements a workflow for building and editing topological features. The workflow manages five interactive tools: `ClickGeometry` for selecting features, and `BuildTopology` with three variants (for line, boundary, and network topologies), plus `EditTopology` for modifying existing topologies. Each tool has parallel globe and map implementations. The build tools are always enabled, while the edit tool is conditionally enabled based on the current active tool and whether a topological feature is focused. The workflow renders the focused feature and responds to feature focus changes to manage tool state.
 
 ## Declared types
 
@@ -64,9 +62,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TopologyCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The render layer is activated only while the workflow is active. The build topology tools are always enabled, but the edit topology tool is conditionally enabled: it's enabled when it's the current active tool, or when no build tools are active and a topological feature is focused. The edit tool uses feature focus extensively (to add topology sections), so the focus state changes dynamically while it is active. The workflow listens to canvas tool activation changes to update tool enable states via `handle_canvas_tool_activated()`.
 
 ## Used by
 

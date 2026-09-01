@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/CustomCompleter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QCompleter` subclass that customizes completion behaviour for two-column models. The completer maintains a two-column model where the first column holds raw completion text and the second holds display text; the popup is configured as a custom `QTreeView` that hides the first column at zero width while maintaining proper focus behaviour. The `splitPath()` method returns the trimmed user input as-is, and `pathFromIndex()` extracts the `EditRole` text from the model for insertion.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/CustomCompleter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The first column must remain visible (at zero width) rather than being hidden via `setSectionHidden()`, because `QCompleter` only navigates the zero-th column; hiding it breaks keyboard navigation. Column expansion is controlled via header resize modes to prevent user interaction.
 
 ## Used by
 

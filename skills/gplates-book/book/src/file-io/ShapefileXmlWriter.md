@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ShapefileXmlWriter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Serializes a `QMap<QString, QString>` property mapping to a GPlatesShapefileMap XML file. The writer extends Qt's `QXmlStreamWriter` and emits the map as a root `<GPlatesShapefileMap version="1">` element with one child element per key-value pair. The output includes a detailed comment header documenting supported tags—such as `ReconstructionPlateId`, `FeatureType`, `Begin`, `End`—and their meanings, making the file human-readable and self-documenting for shapefile-import configurations.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ShapefileXmlWriter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Copy construction and assignment are private. Auto-formatting is enabled on construction, making the output indented and human-readable. The comment header includes the GPlates version string from the build time, a documented list of supported property tags, and usage instructions. The XML version is hardcoded to "1" and the file is opened with `Text` mode for cross-platform line-ending handling.
 
 ## Used by
 

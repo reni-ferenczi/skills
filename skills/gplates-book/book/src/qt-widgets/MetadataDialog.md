@@ -13,9 +13,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/MetadataDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A comprehensive metadata editor supporting three metadata types: feature collection metadata, moving plate rotation sequence (MPRS) metadata, and pole metadata. `MetadataDialog` uses a tree widget to organize metadata fields and provides a function map to dispatch display/save operations based on the selected metadata type. Users can add and remove contributors, creators, geological timescales, and other structured metadata via embedded helper widgets (`AddContributorWidget`, `AddCreatorWidget`, `AddGTSWidget`). The `MetadataTextEditor` widget provides inline editing with a browser view and edit buttons, distinguishing optional fields (which can be deleted) from required ones. The dialog supports both read-only and editable modes for different metadata contexts.
 
 ## Declared types
 
@@ -180,9 +178,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/MetadataDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_func_map` stores function pointers to dispatch display and save operations based on the selected metadata item type—the tree widget's `currentItemChanged` signal invokes the appropriate show/refresh function. Optional metadata fields are indicated by a flag passed to `MetadataTextEditor`, which enables the delete button only for optional fields. Read-only mode disables editing. Pole metadata is computed by merging MPRS-only data with default pole data to avoid duplication.
 
 ## Used by
 

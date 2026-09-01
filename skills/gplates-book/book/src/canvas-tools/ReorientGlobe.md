@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/ReorientGlobe tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A globe canvas tool for reorienting the 3D globe view. Extends `GlobeCanvasTool` and translates mouse drag events on the globe canvas into view rotations. It supports both regular rotation (left drag) and an alternative rotation mode (shift+left drag) to provide flexible navigation of the 3D globe. It manages the rendered geometry collection to control visibility of focused geometry highlights and passes status bar feedback through the viewport window.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/ReorientGlobe tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

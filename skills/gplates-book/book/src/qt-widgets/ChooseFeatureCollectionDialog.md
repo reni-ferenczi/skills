@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChooseFeatureCollectionDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Dialog wrapper around `ChooseFeatureCollectionWidget` for selecting a feature collection file. The dialog offers three overloaded `get_file_reference()` methods: one taking an initial file reference to pre-select, one taking an initial feature collection, and one with no initial selection. Each runs the dialog and returns either the user's selected file reference plus a flag indicating whether it was newly created, or `boost::none` if the user cancelled or an exception occurred.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChooseFeatureCollectionDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

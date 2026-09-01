@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=entry-points/gplates-lib_pch tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A precompiled header that brings together the most frequently used external and standard headers across the GPlates library. Includes standard C/C++ library headers, Python, OpenGL, Boost, Qt, CGAL, and OGR/GDAL headers. Including this in the build precompiles these headers once, reducing overall compilation time across all translation units that reference it.
 
 ## Declared types
 
@@ -26,9 +24,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=entry-points/gplates-lib_pch tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

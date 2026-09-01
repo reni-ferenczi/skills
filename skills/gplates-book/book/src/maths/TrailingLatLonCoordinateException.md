@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/TrailingLatLonCoordinateException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when parsing a sequence of latitude/longitude coordinates encounters an unpaired trailing coordinate. Since coordinates must be processed in (latitude, longitude) pairs, an odd-length sequence is an error. The exception stores the trailing coordinate value and the length of the sequence, allowing error reporting and diagnosis. It inherits from `ExternalResourceFailureException`, categorizing it as a resource parsing error.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/TrailingLatLonCoordinateException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

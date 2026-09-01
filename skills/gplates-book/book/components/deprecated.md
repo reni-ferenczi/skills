@@ -29,15 +29,15 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [PublisherTemplate](../src/deprecated/patterns/PublisherTemplate.md) | 3 | 685 | 27 | (pending) |
-| [PublisherTemplate_test](../src/deprecated/patterns/PublisherTemplate_test.md) | 3 | 360 | 0 | (pending) |
+| [PublisherTemplate_test](../src/deprecated/patterns/PublisherTemplate_test.md) | 3 | 360 | 0 | Test and demonstration file for PublisherTemplate, exercising subscription, notification, and lifetime scenarios |
 
 ### `src/deprecated/presenter`
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [ExposedPresenterObject](../src/deprecated/presenter/ExposedPresenterObject.md) | 3 | 139 | 1 | (pending) |
-| [Presenter](../src/deprecated/presenter/Presenter.md) | 3 | 43 | 0 | (pending) |
-| [ReconstructionContext](../src/deprecated/presenter/ReconstructionContext.md) | 3 | 103 | 0 | (pending) |
+| [ExposedPresenterObject](../src/deprecated/presenter/ExposedPresenterObject.md) | 3 | 139 | 1 | Base class for presenter objects with unique sequential identifiers |
+| [Presenter](../src/deprecated/presenter/Presenter.md) | 3 | 43 | 0 | Singleton class providing global access to a presenter instance |
+| [ReconstructionContext](../src/deprecated/presenter/ReconstructionContext.md) | 3 | 103 | 0 | Presenter context managing reconstruction inputs and lazily instantiating output |
 
 
 ## Other files

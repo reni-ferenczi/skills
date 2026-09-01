@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportStageRotationOnlyOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides the user interface for configuring stage rotation-specific export options. Unlike other export option widgets, this does not inherit from `ExportOptionsWidget` and is not a standalone widget—it is designed to be embedded inside another export options widget as a sub-component.
+
+The widget allows users to set the time interval between output stage rotations. It manages a single control: a spin box for the time interval value. When the user changes the interval, the widget updates the internal configuration object, which can be retrieved via `get_export_stage_rotation_options()`.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportStageRotationOnlyOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

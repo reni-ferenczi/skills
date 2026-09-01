@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/UnsupportedFunctionException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown when code calls a function that is deliberately unsupported. Unlike `NotYetImplementedException` (which indicates work in progress), this signals that a function is intentionally not available — there may be architectural or design reasons why it is not supported. The exception stores the name of the unsupported function for diagnostic purposes.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/UnsupportedFunctionException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

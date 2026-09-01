@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlPiecewiseAggregation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlPiecewiseAggregation` represents a time-dependent property value by partitioning time into windows, each holding a different property value or interpolation function. The class stores a vector of `GpmlTimeWindow` objects—each defining a time interval and the value valid during that interval—along with a `StructuralType` that describes the type of values within each window. This allows features to have properties that change at discrete times or vary smoothly within specified intervals. Unlike shallow-cloned property values, deep cloning is required because each time window contains nested `PropertyValue` objects that must be recursively copied.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlPiecewiseAggregation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/UninitialisedIteratorException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown when code attempts to dereference or access an uninitialized iterator. This catches usage errors where an iterator has been created but not yet assigned a valid position or target. The exception takes a custom message to help describe which iterator was uninitialized or what was being attempted.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/UninitialisedIteratorException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/UnableToNormaliseZeroVectorException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when code attempts to normalize a zero vector, which is mathematically undefined since it would require division by zero. Normalization produces a unit vector pointing in the same direction; the zero vector has no direction. The exception inherits from `MathematicalException`, categorizing it as a mathematical constraint violation rather than a resource or precondition error.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/UnableToNormaliseZeroVectorException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

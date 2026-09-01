@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeArray tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit provides transcription support for native C++ static arrays, including multidimensional ones. It recursively handles arrays of arrays by using `boost::enable_if` to branch: when the element type `T` is itself an array, it recurses; when `T` is a scalar, it uses `ConstructObject` semantics for saving and `LoadRef` for loading. The array size is treated as part of the serialized format and validated on load; if the source code changes the array size, loading old archives will fail. Arrays use the same sequence protocol as `std::vector`, making them compatible with other container types during transcription.
 
 ## Declared types
 
@@ -32,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeArray tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Multidimensional arrays cannot be constructed via `ConstructObject` (only initialized via brace syntax), but you can transcribe arrays of non-default-constructable items as long as the array itself is already allocated. Changing an array's compile-time size in source code breaks compatibility with previously saved archives; there is no version migration path short of storing arrays in a container class and manually reconstructing the serialization logic.
 
 ## Used by
 

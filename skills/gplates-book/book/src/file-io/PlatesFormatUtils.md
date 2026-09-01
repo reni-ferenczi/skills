@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PlatesFormatUtils tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Maps GPlates geological feature types to PLATES4 format header data type codes. The module implements `get_plates_data_type_code()` which dispatches to feature-type-specific getter functions that return two-letter codes (e.g., "BA" for bathymetry, "AR" for aseismic ridge). Handles special cases like features with an `isActive` property, returning active or inactive variants of the code.
 
 ## Declared types
 
@@ -79,9 +77,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PlatesFormatUtils tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

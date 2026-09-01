@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/deprecated/InternalRID tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+**Deprecated.** A lightweight wrapper around an unsigned integer that represents a rotation ID (RID) of a rotating object. This was introduced to isolate internal kinematic calculations from the complex state of plate IDs and rotation IDs in GPlates and GPML. The Earth's internal RID is always 0. The class deliberately lacks a default constructor (you must provide an initial value) and provides comparison operators primarily to enable use as keys in STL containers.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/deprecated/InternalRID tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The comparison operators `<` and `>` are provided solely to enable `InternalRID` to be used as a key in STL associative containers; they do not represent a meaningful ordering and their use in other contexts is misleading.
 
 ## Used by
 

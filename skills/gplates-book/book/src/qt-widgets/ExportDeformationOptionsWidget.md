@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportDeformationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportDeformationOptionsWidget` is the options panel for exporting deformation data (strain and strain rate) from the reconstruction. It presents checkboxes for controlling which deformation components are included in the export (principal strain stretch, dilatation strain, dilatation strain rate, second invariant of strain rate, strain rate style).
+
+The widget also supports format-specific options: for GMT output, the user can choose between lon/lat and lat/lon coordinate order. An embedded `ExportFileOptionsWidget` handles file naming and format selection. As the user toggles options, `update_output_description_label()` dynamically shows what will be exported.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportDeformationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ConfigValueDelegate tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt delegate for editing configuration and user preference values in table views. When a cell is edited, it creates a `ConfigValueEditorWidget` and delegates the standard Qt item view operations: populating the editor from the model, and writing changes back. The delegate also routes "reset to defaults" signals from the editor through the standard `commitData` and `closeEditor` mechanisms so the model can detect and handle reset requests.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ConfigValueDelegate tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The delegate passes schema information through custom Qt user roles. The `reset_requested` signal from the editor is connected to the private `commit_and_close` slot, which converts the signal into calls to the standard Qt delegate signals so the model can recognize reset requests.
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GeoscimlProfile tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A parser for the GeoSciML XML format. `GeoscimlProfile` inherits from both `ArbitraryXmlProfile` and Qt's `QObject`, implementing the interface to extract features from GeoSciML documents and populate a `FeatureCollectionHandle` with them. It uses XQuery to locate feature members in the XML and dispatches them through factory handlers to create the GPlates feature model objects.
+
+The class supports reading from either a file on disk or raw XML data in memory. It displays a progress dialog during parsing that can be cancelled by the user via the Qt slot mechanism. The `count_features` method allows clients to inspect the number of parseable features before attempting a full parse.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GeoscimlProfile tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

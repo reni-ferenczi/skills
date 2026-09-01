@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrFormatResolvedTopologicalGeometryExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports resolved topological geometries to OGR format (ESRI Shapefile). Handles `ResolvedTopologicalLine`, `ResolvedTopologicalBoundary`, `ResolvedTopologicalNetwork`, and `ResolvedTopologicalSection` objects. Provides specialized CitcomS-format export functions for use with CitcomS software. Optionally preserves shapefile attributes from original features (when geometries come from a single collection) or exports reconstruction metadata (anchor plate, time, referenced files) instead. Supports optional polygon orientation normalization and dateline clipping.
 
 ## Declared types
 
@@ -54,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrFormatResolvedTopologicalGeometryExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

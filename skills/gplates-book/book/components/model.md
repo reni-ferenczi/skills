@@ -20,13 +20,13 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [BasicRevision](../src/model/BasicRevision.md) | 2 | 495 | 56 | (pending) |
 | [ChangesetHandle](../src/model/ChangesetHandle.md) | 2 | 218 | 62 | (pending) |
 | [FeatureCollectionHandle](../src/model/FeatureCollectionHandle.md) | 1 | 241 | 1062 | (pending) |
-| [FeatureCollectionRevision](../src/model/FeatureCollectionRevision.md) | 3 | 162 | 0 | (pending) |
+| [FeatureCollectionRevision](../src/model/FeatureCollectionRevision.md) | 3 | 162 | 0 | Immutable snapshot of a feature collection's contents at one point in time |
 | [FeatureHandle](../src/model/FeatureHandle.md) | 1 | 568 | 1995 | (pending) |
-| [FeatureHandleWeakRefBackInserter](../src/model/FeatureHandleWeakRefBackInserter.md) | 3 | 149 | 6 | (pending) |
+| [FeatureHandleWeakRefBackInserter](../src/model/FeatureHandleWeakRefBackInserter.md) | 3 | 149 | 6 | Output iterator adapter that converts strong feature handles to weak references |
 | [FeatureId](../src/model/FeatureId.md) | 2 | 69 | 130 | (pending) |
-| [FeatureRevision](../src/model/FeatureRevision.md) | 3 | 289 | 3 | (pending) |
+| [FeatureRevision](../src/model/FeatureRevision.md) | 3 | 289 | 3 | Immutable snapshot of a feature's properties at one point in time |
 | [FeatureStoreRootHandle](../src/model/FeatureStoreRootHandle.md) | 2 | 166 | 14 | (pending) |
-| [FeatureStoreRootRevision](../src/model/FeatureStoreRootRevision.md) | 3 | 161 | 0 | (pending) |
+| [FeatureStoreRootRevision](../src/model/FeatureStoreRootRevision.md) | 3 | 161 | 0 | Immutable snapshot of the root container of all loaded feature collections |
 | [FeatureType](../src/model/FeatureType.md) | 1 | 55 | 600 | (pending) |
 | [FeatureVisitor](../src/model/FeatureVisitor.md) | 1 | 961 | 5674 | (pending) |
 | [Gpgim](../src/model/Gpgim.md) | 1 | 2617 | 144 | (pending) |
@@ -54,8 +54,8 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [TopLevelProperty](../src/model/TopLevelProperty.md) | 2 | 291 | 91 | (pending) |
 | [TopLevelPropertyInline](../src/model/TopLevelPropertyInline.md) | 1 | 482 | 255 | (pending) |
 | [TopLevelPropertyRef](../src/model/TopLevelPropertyRef.md) | 2 | 250 | 30 | (pending) |
-| [TranscribeQualifiedXmlName](../src/model/TranscribeQualifiedXmlName.md) | 3 | 110 | 0 | (pending) |
-| [TranscribeStringContentTypeGenerator](../src/model/TranscribeStringContentTypeGenerator.md) | 3 | 105 | 0 | (pending) |
+| [TranscribeQualifiedXmlName](../src/model/TranscribeQualifiedXmlName.md) | 3 | 110 | 0 | Serialization support for qualified XML names with namespace and local name |
+| [TranscribeStringContentTypeGenerator](../src/model/TranscribeStringContentTypeGenerator.md) | 3 | 105 | 0 | Serialization support for string content using Scribe delegate protocol |
 | [WeakObserver](../src/model/WeakObserver.md) | 1 | 551 | 2798 | (pending) |
 | [WeakObserverPublisher](../src/model/WeakObserverPublisher.md) | 2 | 362 | 11 | (pending) |
 | [WeakObserverVisitor](../src/model/WeakObserverVisitor.md) | 2 | 380 | 28 | (pending) |
@@ -73,7 +73,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [PythonWrapper](../src/model/deprecated/PythonWrapper.md) | 3 | 35 | 0 | (pending) |
+| [PythonWrapper](../src/model/deprecated/PythonWrapper.md) | 3 | 35 | 0 | Deprecated legacy Boost.Python module wrapper for the \_model module |
 
 
 ## Other files

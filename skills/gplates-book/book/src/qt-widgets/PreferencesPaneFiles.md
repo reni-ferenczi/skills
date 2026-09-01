@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PreferencesPaneFiles tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A preference pane embedded in the main `PreferencesDialog` that provides controls for file-related preferences such as default paths and file open/save behavior. The pane organizes controls for feature collections, projects, exports, and other file operations into logically grouped sections.
+
+The pane focuses on presentation only — the actual preference management and listening to preference changes is handled elsewhere via `UserPreferences`. It includes controls for configuring default file directories and file behavior options (always use default, default then last used, or always use last used). Directory chooser buttons are linked to text fields via `link_dir_chooser_button()` helper function.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PreferencesPaneFiles tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

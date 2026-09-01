@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GsmlNodeProcessor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A processor that executes XQueries against GSML XML and delegates result handling to a callback. Constructed with a query string and a `Handler` callback (a `boost::function<void(QBuffer&)>`), `execute()` evaluates the query, extracts results, and invokes the handler on each matching element wrapped in a `QBuffer`. It inherits from `ArbitraryNodeProcessor`, supporting the processing pipeline used during GSML feature and property extraction.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GsmlNodeProcessor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

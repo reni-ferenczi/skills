@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Reducer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A template base class that defines the interface for reduction operations over a range of values. Subclasses implement `operator()` to take a pair of iterators and produce a single output value of type `OutputDataType`. The template automatically deduces `InputValueType` from the iterator type, whether it is a pointer iterator or a standard iterator with a `value_type` member. This serves as the functional interface used by more specialized reducer implementations.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Reducer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedTangentialArrow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered geometry wrapper for directional arrows, typically used to display velocity vectors or motion on the globe. The arrow starts at a `PointOnSphere` and extends in a `Vector3D` direction (which may be arbitrary, though in 2D map views only the tangential component is rendered). The arrowhead has a fixed projected size that remains constant on screen regardless of zoom level, but for very short arrows, the arrowhead can scale down to a configurable fraction of the line length to avoid oversized heads on tiny arrows. The class supports two rendering modes: 3D cylinders for the globe view and anti-aliased line primitives for 2D map views, each with separate width-control parameters. All data members are const since arrows are immutable once constructed. Proximity testing is disabled since arrows are meant to be visual annotations, not selectable objects.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedTangentialArrow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All member variables are const, enforcing immutability. The arrow direction is not constrained to be tangential at construction time; map views are responsible for extracting only the tangential component during rendering.
 
 ## Used by
 

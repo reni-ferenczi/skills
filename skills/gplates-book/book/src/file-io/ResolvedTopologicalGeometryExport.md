@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/ResolvedTopologicalGeometryExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports resolved topological geometries to files in multiple formats: GMT (.xy), Shapefile (.shp), OGR GMT (.gmt), and GeoJSON (.geojson or .json). Resolved topologies are geometries that respect plate boundaries and are precisely joined at shared nodes. This unit exports two kinds: topological geometries (lines, boundaries, and networks) and topological sections (the individual subsegments that compose boundary segments).
+
+Both `export_resolved_topological_geometries()` and `export_resolved_topological_sections()` follow the same pattern: they can export to a single file or grouped by input collection. Topological boundaries and networks can optionally have their polygon orientation forced (clockwise or counter-clockwise), and all exports can optionally wrap geometries to the dateline. Topological sections support granular export of sub-segments from resolved topological lines.
 
 ## Declared types
 
@@ -54,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/ResolvedTopologicalGeometryExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Polygon orientation forcing only applies to boundaries and networks (which have polygon boundaries); lines are unaffected. Dateline wrapping is currently ignored by GMT .xy format. The export is grouped by feature before being grouped by collection. Both single-file and per-collection exports can be performed in a single call. The file format is determined from the filename extension via the `FeatureCollectionFileFormat::Registry`.
 
 ## Used by
 

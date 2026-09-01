@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/Stars tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Renders a random starfield background for the 3D globe view. Creates two sizes of stars (small and large) placed uniformly on a sphere around the globe, using Marsaglia's method for even distribution on the sphere surface. During construction, generates 4,250 small stars and 3,750 large stars using a fixed random seed so the pattern is consistent across sessions. Uses OpenGL point primitives with alpha blending and anti-aliasing for visual quality, and pre-compiles the draw state for efficient rendering. The starfield is shown or hidden based on the `show_stars` setting in `ViewState`.
 
 ## Declared types
 
@@ -62,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/Stars tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The star pattern is generated once at construction using a fixed random seed (0) and reused at every paint call. The `paint()` method checks `ViewState` to determine whether stars should be visible and handles both direct OpenGL framebuffer rendering and rendering through QPainter feedback. Point sizes are adjusted by the device pixel ratio to maintain visual appearance on high-DPI displays.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/MovePoleGlobe tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GlobeCanvasTool` for interactively repositioning the rotation pole on the globe view by dragging a visual indicator. It delegates pole movement to a `MovePoleOperation`. On activation, the operation is activated and expects drag interactions; on deactivation, the operation is deactivated. Drag operations update the pole location, with mouse movement without a drag providing visual feedback of nearby clickable poles. Checks that the globe canvas is visible before processing interactions.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/MovePoleGlobe tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The tool checks `globe_canvas().isVisible()` before processing interactions, returning silently if the globe is hidden. The `d_is_in_drag` flag ensures `start_drag_on_globe` is called exactly once per drag sequence. Release handler calls `handle_left_drag` before finalizing the drag, ensuring initialization occurs even for click-and-release (zero-distance drag). Uses oriented (globe-space) coordinates when communicating with the operation, accounting for globe orientation.
 
 ## Used by
 

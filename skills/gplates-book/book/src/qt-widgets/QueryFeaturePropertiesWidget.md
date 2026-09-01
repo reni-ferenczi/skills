@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/QueryFeaturePropertiesWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Widget that displays the properties of a selected feature in a tree layout. It shows reconstruction parameters (Euler pole, rotation angle, plate IDs, reconstruction time) and a tree of the feature's property-value structure. The widget automatically refreshes when reconstruction geometry changes via a connection to `ApplicationState::reconstructed()`, and uses a lazy-population optimization to avoid populating the tree while the widget is hidden.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/QueryFeaturePropertiesWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The displayed feature ref `d_feature_ref` is a weak reference that must be checked for validity before use. The tree is populated only when the widget is visible, deferred by `d_populate_property_tree_when_visible`; callers should be prepared for the tree to remain unpopulated while the widget is hidden.
 
 ## Used by
 

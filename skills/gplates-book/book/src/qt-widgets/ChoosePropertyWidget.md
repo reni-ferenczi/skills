@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChoosePropertyWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Selection widget for choosing a property name, wrapping `SelectionWidget` to show properties from GPGIM. The static method `get_properties_to_populate()` filters properties for a target feature type and structural type, optionally excluding properties with multiplicity at most one if they already exist in a source feature. The `populate()` method sorts these properties by unqualified name and displays them by user-friendly name, preserving the previous selection if it still exists in the filtered list.
+
+The widget emits `item_activated()` when the user double-clicks or presses Enter on a property. Properties are stored using a `DefaultConstructiblePropertyName` wrapper to allow property objects to live in Qt's item model.
 
 ## Declared types
 
@@ -60,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChoosePropertyWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

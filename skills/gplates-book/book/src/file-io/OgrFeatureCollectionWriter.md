@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrFeatureCollectionWriter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A feature collection visitor that exports features to an OGR-supported format (such as shapefile, GeoJSON, or other vector formats) determined by the file extension. As it walks the feature tree, it visits geometry properties (`GmlPoint`, `GmlLineString`, `GmlPolygon`, `GmlMultiPoint`, `GmlOrientableCurve`), accumulating them per feature, and visits property values, extracting and mapping GPlates model properties to OGR attributes. A configurable model-to-attribute map controls which model properties map to which shapefile/OGR fields; unmappable properties and special metadata (plate IDs, timing, Old Plates headers) are stored in key-value dictionaries. The accumulated geometries and attributes are written via `OgrWriter` when each feature is finalized.
 
 ## Declared types
 
@@ -103,9 +101,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrFeatureCollectionWriter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Geometries and attributes are accumulated per feature during traversal and written out when feature finalization occurs; accumulators are cleared after each feature is finalized. Configuration is provided via the file's attached configuration (if available and compatible) or the supplied default configuration. Property mapping is bidirectional: the model-to-attribute map persists changes made during writing, allowing subsequent writes to preserve customized mappings.
 
 ## Used by
 

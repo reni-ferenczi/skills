@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/LogFilterModel tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt proxy model that sits between the app-logic `LogModel` and the `LogDialog` to provide filtering and color-coding of log entries. It filters entries by text content (case-insensitive substring search) and by severity level (DEBUG, WARNING, CRITICAL, and higher). The display is enhanced with color coding: META entries are gray, WARNING entries are dark red, and CRITICAL/FATAL entries are darker red.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/LogFilterModel tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The model is noncopyable. By default, all severity levels are shown; the dialog controls visibility through `set_filter()`.
 
 ## Used by
 

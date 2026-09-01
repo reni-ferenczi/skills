@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyCoregistrationLayerProxy tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PyCoregistrationLayerProxy` is a Python wrapper around `GPlatesAppLogic::CoRegistrationLayerProxy` that exposes the results of the co-registration layer to Python scripts. It provides access to seed features, association configurations, and tabular coregistration data. The `get_coregistration_data()` methods retrieve the computed data table for a specified time (or use the current reconstruction time), making the results of spatio-temporal data mining operations available to Python.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyCoregistrationLayerProxy tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `get_coregistration_data()` methods require an active OpenGL context and renderer for computing the data table. The wrapper deduplicates seed features by tracking handles to avoid returning the same feature multiple times.
 
 ## Used by
 

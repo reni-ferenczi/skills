@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/ScribeExportUnitTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Registers test classes with the Scribe serialization framework. This header-only file defines the `SCRIBE_EXPORT_UNIT_TEST` macro, which enrolls several transcription test types—`TranscribePrimitivesTest::Data::NonDefaultConstructable`, `TranscribeInheritanceTest::D`, and `TranscribeCompatibilityTest::Derived`—for object serialization support. These registrations enable the Scribe framework to serialize and deserialize test objects, supporting the transcription tests in `TranscribeTest.h`.
 
 ## Declared types
 
@@ -29,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/ScribeExportUnitTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+String IDs for serialized types are part of the serialization format; changing them breaks backward and forward compatibility with saved objects.
 
 ## Used by
 

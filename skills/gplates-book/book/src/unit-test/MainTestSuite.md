@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/MainTestSuite tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The root test suite that aggregates all module-specific test suites. It inherits from `GPlatesTestSuite` with test level 0 and registers 16 sub-suites via `construct_maps()`: AppLogic, CanvasTools, DataMining, FeatureVisitors, FileIo, GeometryVisitors, Global, Gui, Maths, Model, Presentation, PropertyValues, Scribe, Utils, ViewOperations, and UnitTest. The `add_test_suites()` method registers each sub-suite with the Boost.Test master suite using a filter to control which tests run based on verbosity level.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/MainTestSuite tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

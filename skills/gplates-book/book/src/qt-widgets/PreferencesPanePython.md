@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PreferencesPanePython tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A preference pane for Python configuration, embedded in the `PreferencesDialog`. It presents controls for settings managed by `GPlatesAppLogic::UserPreferences`: the Python home directory, Python system and user script directories, and an option to show the Python initialization failure dialog. The constructor uses `GPlatesGui::ConfigGuiUtils::link_widget_to_preference` to synchronise widgets with preference keys, and a local helper `link_dir_chooser_button` creates directory chooser dialogs that update line edits and signal completion to trigger preference updates. Like other preference panes, it handles only UI presentation; actual Python initialization and configuration is managed elsewhere.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PreferencesPanePython tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

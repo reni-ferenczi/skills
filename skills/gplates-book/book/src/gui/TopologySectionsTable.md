@@ -9,9 +9,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TopologySectionsTable tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Manages a QTableWidget that displays the topology sections the user is building up through the plate polygon tool. The class bridges the UI layer (the table widget and its cells) with the model layer (`TopologySectionsContainer`), synchronizing edits in either direction and enforcing validity constraints via validation functions like `check_row_validity()`.
+
+The table displays both boundary and interior sections; when the user edits cells, `update_data_from_table()` converts table widget items back into container data. An "insertion point" row marks where new sections will be inserted, and an `ActionButtonBox` floats over the table to offer per-row remove, insert above, and insert below commands.
+
+The class uses `TableUpdateGuard` to suppress the QTableWidget's `cellChanged()` signal when updating the table programmatically, allowing `react_cell_changed()` to distinguish user edits from internal refreshes. It holds references to `ApplicationState` and `ViewState` to retrieve geometry and reconstruction context for validation.
 
 ## Declared types
 
@@ -101,9 +103,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TopologySectionsTable tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_suppress_update_notification_guard` flag is crucial: when `TableUpdateGuard` is instantiated in a scope that modifies table cells programmatically, it sets this flag, allowing `react_cell_changed()` to skip processing those changes as user input. Without this guard, every programmatic cell update would trigger the same validation logic intended only for user-initiated edits.
+
+The insertion point row is a visual-only construct that does not correspond to any entry in the data vector; `convert_data_index_to_table_row()` and `convert_table_row_to_data_index()` account for its presence when mapping between table rows and container indices. The containers are held as pointers and can be swapped via `react_container_change()`, which re-wires all signal/slot connections.
 
 ## Used by
 

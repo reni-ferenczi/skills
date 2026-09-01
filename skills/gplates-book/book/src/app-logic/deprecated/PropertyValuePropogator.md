@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/deprecated/PropertyValuePropogator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Assigns properties such as reconstruction plate IDs to features using a cookie-cutter geometry approach with resolved topological boundaries. The propagator creates an internal `Reconstruction` from partitioning and reconstruction feature collections at a specified time, then uses `PartitionFeatureTask` instances to assign properties to features based on which partitioning polygons they overlap.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/deprecated/PropertyValuePropogator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

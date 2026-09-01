@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/RgbaRasterReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Loads RGBA raster images—such as PNG or JPEG—into GPlates using Qt's `QImageReader`. The reader adapts Qt's per-file codec support to GPlates' `RasterReaderImpl` interface, exposing the raster as a single RGBA8 band that can be queried for georeferencing (none), spatial reference (none), or raw pixel data by region.
+
+To avoid repeated decoding cost, the reader creates a persistent file cache on first load, storing the RGBA data in `RasterFileCacheFormat` organized by Hilbert curve traversal for spatial locality. Subsequent access reads from this cache rather than re-decoding the source. The cache layout enables efficient region reads without loading the entire image into memory, which matters for large rasters that would exceed available DRAM.
 
 ## Declared types
 
@@ -58,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/RgbaRasterReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The reader is single-band only: `get_number_of_bands()` always returns 1 for a successful read and 0 on error. It does not parse georeference metadata from the file (both `get_georeferencing()` and `get_spatial_reference_system()` return `boost::none`). Allocation of image data is bounded by `MIN_IMAGE_ALLOCATION_BYTES_TO_ATTEMPT` (100 MB); if allocation fails beyond that threshold, the exception is logged but recovery is attempted with smaller dimensions. The cache file path is managed by `TemporaryFileRegistry`; cache regeneration is automatic if the file is missing or out of date. The `ProxiedRgba8RawRaster` variant (from `get_proxied_raw_raster()`) defers pixel decoding until requested, suitable for lazy access patterns.
 
 ## Used by
 

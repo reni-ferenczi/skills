@@ -10,9 +10,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportScalarCoverageOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides the user interface for configuring export options when exporting reconstructed scalar coverages. The widget inherits from `ExportOptionsWidget` and manages a configuration object specific to scalar coverage export, allowing users to control both the file format and the deformation measures included in the output.
+
+The widget supports two file formats: GPML (the native GPlates format) and GMT (a widely used gridding and mapping format). For GPML exports, users can optionally include deformation data as separate scalar coverages: dilatation strain, dilatation strain rate, and second invariant strain rate. For GMT exports, users can additionally control the coordinate order (longitude-latitude or latitude-longitude) and specify which deformation values to export as table columns.
+
+The widget manages signal-slot connections to update the export configuration and refresh the output description whenever the user changes any option. It owns an `ExportFileOptionsWidget` for file format and output settings, embedded into the widget layout.
 
 ## Declared types
 
@@ -46,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportScalarCoverageOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

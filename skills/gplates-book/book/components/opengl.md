@@ -92,7 +92,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [GLStateSetKeys](../src/opengl/GLStateSetKeys.md) | 2 | 891 | 253 | (pending) |
 | [GLStateSetStore](../src/opengl/GLStateSetStore.md) | 2 | 118 | 83 | (pending) |
 | [GLStateSets](../src/opengl/GLStateSets.md) | 1 | 5977 | 110 | (pending) |
-| [GLStateStore](../src/opengl/GLStateStore.md) | 3 | 198 | 6 | (pending) |
+| [GLStateStore](../src/opengl/GLStateStore.md) | 3 | 198 | 6 | Manages allocation and reuse of GLState objects through object pooling |
 
 ### GLVertex
 
@@ -103,18 +103,18 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [GLVertexArrayImpl](../src/opengl/GLVertexArrayImpl.md) | 2 | 611 | 4 | (pending) |
 | [GLVertexArrayObject](../src/opengl/GLVertexArrayObject.md) | 2 | 782 | 29 | (pending) |
 | [GLVertexBuffer](../src/opengl/GLVertexBuffer.md) | 2 | 281 | 77 | (pending) |
-| [GLVertexBufferImpl](../src/opengl/GLVertexBufferImpl.md) | 3 | 383 | 1 | (pending) |
+| [GLVertexBufferImpl](../src/opengl/GLVertexBufferImpl.md) | 3 | 383 | 1 | Fallback vertex buffer implementation for systems without hardware buffer object support |
 | [GLVertexBufferObject](../src/opengl/GLVertexBufferObject.md) | 2 | 378 | 14 | (pending) |
 | [GLVertexElementBuffer](../src/opengl/GLVertexElementBuffer.md) | 2 | 238 | 77 | (pending) |
-| [GLVertexElementBufferImpl](../src/opengl/GLVertexElementBufferImpl.md) | 3 | 208 | 1 | (pending) |
-| [GLVertexElementBufferObject](../src/opengl/GLVertexElementBufferObject.md) | 3 | 245 | 4 | (pending) |
+| [GLVertexElementBufferImpl](../src/opengl/GLVertexElementBufferImpl.md) | 3 | 208 | 1 | Fallback element buffer implementation for systems without hardware buffer object support |
+| [GLVertexElementBufferObject](../src/opengl/GLVertexElementBufferObject.md) | 3 | 245 | 4 | Hardware-accelerated element buffer using GPU-resident storage |
 
 ### Open
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [OpenGL](../src/opengl/OpenGL.md) | 2 | 95 | 29 | (pending) |
-| [OpenGLBadAllocException](../src/opengl/OpenGLBadAllocException.md) | 3 | 78 | 0 | (pending) |
+| [OpenGLBadAllocException](../src/opengl/OpenGLBadAllocException.md) | 3 | 78 | 0 | Exception thrown when OpenGL fails to allocate GPU memory |
 | [OpenGLException](../src/opengl/OpenGLException.md) | 2 | 76 | 17 | (pending) |
 
 ### Other

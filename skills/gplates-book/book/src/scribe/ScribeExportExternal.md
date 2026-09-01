@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeExportExternal tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The `SCRIBE_EXPORT_EXTERNAL` macro registers types from external libraries — C++ standard library, Qt framework, and scribe utilities — so the `Scribe` serialization framework can serialize and deserialize them. It maps each type to a stable string identifier that persists across session saves and loads. The macro covers fundamental arithmetic types (integers, floating-point), standard containers like `std::string`, Qt types (`QString`, `QByteArray`, `QStringList`), and the scribe utility `FilePath` class.
 
 ## Declared types
 
@@ -29,9 +27,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeExportExternal tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Changing the string identifiers in this macro breaks backward and forward compatibility with saved projects and sessions. The serialized type identifiers are permanent; any modification must be coordinated with migration logic to handle old-format files.
 
 ## Used by
 

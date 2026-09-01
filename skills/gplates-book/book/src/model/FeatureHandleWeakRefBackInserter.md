@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureHandleWeakRefBackInserter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureHandleWeakRefBackInserter` is an output iterator adapter that bridges the gap between code that holds strong `FeatureHandle*` pointers and algorithms that need to populate a container of weak references. When the iterator's assignment operator receives a pointer, it automatically calls `reference()` to create a weak reference and pushes it to the back of the target container. Use the convenience function `append_as_weak_refs()` to construct an instance without spelling out the template parameter.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureHandleWeakRefBackInserter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Holds a pointer to the target container; do not use the iterator after the container has been destroyed. The iterator itself is copyable and cheap to move. Thread safety follows the container — if the container supports concurrent insertion from multiple threads, the iterator does too, but if not, you must serialize access.
 
 ## Used by
 

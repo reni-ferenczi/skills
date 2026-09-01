@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/ModifyGeometryState tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A simple Qt-signal relay that bridges the `ModifyGeometryWidget` UI in the task panel with canvas tools that edit geometry. It broadcasts snap-to-vertices configuration—whether nearby vertices should be snapped, the snapping distance threshold, and which plate to filter by—to all interested listeners. The sole method `set_snap_vertices_setup` emits the `snap_vertices_setup_changed` signal with the new settings, which canvas tools like `MoveVertexGeometryOperation` connect to in order to update their behaviour.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/ModifyGeometryState tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/Proj tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A compatibility wrapper for the PROJ cartographic projection library. PROJ went through a major API redesign from version 4 to 5+, and this header detects the build configuration and includes the appropriate header: `proj.h` for PROJ 5+, or `proj_api.h` as a fallback for older PROJ 4 installations. It defines `GPLATES_USING_PROJ4` when the older API is in use.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/Proj tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

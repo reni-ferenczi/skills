@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerPickWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Tree widget for displaying and managing Hellinger picks (measured points) organized into segments. Each segment node contains picks with columns for latitude, longitude, segment type, and uncertainty. The widget is embedded in `HellingerDialog` and acts as the primary UI for managing the pick data: editing and adding picks and segments, removing picks or entire segments, enabling or disabling picks, and renumbering segments. It syncs with the underlying `HellingerModel` and emits signals when the user initiates edits.
+
+The widget maintains complex UI state including which segment or pick is selected, which items are expanded in the tree, the scrollbar position, and which items are hovered for visualization on the globe. The `update_from_model()` method rebuilds the tree from the model's current data, while focused methods like `update_after_new_or_edited_pick()` update only the affected parts. Button states are managed by `update_buttons()`, which reflects the current selection and what operations are valid.
 
 ## Declared types
 
@@ -120,9 +120,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerPickWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

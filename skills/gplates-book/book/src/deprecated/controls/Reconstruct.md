@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/controls/Reconstruct tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Deprecated API for reconstructing geological features to positions at different times using plate rotations. The public interface provides `Time()` to reconstruct at a specific geological time, `Present()` to reconstruct at present day, and `Animation()` to drive animated reconstruction from start to end time via `AnimationTimer`. Internally, `WarpToTime()` performs the rotation and drawing; `PopulateRotatableData()` builds a cache of which plates can be rotated at a given time; and `CheckRotation()` recursively validates the rotation hierarchy from any plate to the global reference frame, caching results to avoid redundant traversals.
 
 ## Declared types
 
@@ -50,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/controls/Reconstruct tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both `Time()` and `Animation()` validate that data and rotation histories are loaded; missing data is reported via `Dialogs::ErrorMessage()` rather than as exceptions. The `CheckRotation()` function uses two caches—`rot_cache` for successful rotations and `cannot_be_rotated` for failures—to avoid redundant hierarchy traversals. `Animation()` hard-codes a 500 millisecond update interval (2 updates per second) and has a FIXME comment about not checking the return value from `AnimationTimer::StartNew()`.
 
 ## Used by
 

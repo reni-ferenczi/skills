@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/FullScreenMode tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Manages toggling the main `ViewportWindow` into full-screen presentation mode. When activated, it hides the menu bar, dock panels, task panel, and status bar; disables certain menu actions; and sets the window state to full-screen. When deactivated, it restores all hidden UI elements and restores the window's dock/toolbar state as it was before full-screen activation. The class also manages visibility of the "Leave Full Screen" button and the GMenu button, which only appear in full-screen mode.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/FullScreenMode tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Uses Qt's `saveState()` and `restoreState()` to preserve the window's dock and toolbar configuration when toggling full-screen. Layout margins around the ReconstructionViewWidget are zeroed in full-screen mode and reset to 1px margins in windowed mode to apply Fitt's law. All widget lookups are cached in static locals after first use to avoid repeated `findChild()` calls.
 
 ## Used by
 

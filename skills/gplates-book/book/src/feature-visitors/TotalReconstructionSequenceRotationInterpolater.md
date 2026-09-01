@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=feature-visitors/TotalReconstructionSequenceRotationInterpolater tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This visitor extracts a finite rotation from a total reconstruction sequence at a specific reconstruction time, interpolating between time samples if necessary. It visits the rotation structures in the feature, finds the rotation samples closest to the target time, and either returns the exact rotation (if the time matches) or performs spherical linear interpolation (SLERP) between adjacent samples to produce the result at the requested time. The interpolated rotation is retrievable via `result()` as an optional value.
 
 ## Declared types
 
@@ -47,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=feature-visitors/TotalReconstructionSequenceRotationInterpolater tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Non-copyable: the class explicitly deletes copy construction and copy assignment to prevent unintended duplication of the visitor state.
 
 ## Used by
 

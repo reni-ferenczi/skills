@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GsmlNodeProcessorFactory tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Orchestrates extraction of GSML properties from feature XML. Constructed with a `FeatureHandle`, it holds a `GsmlPropertyHandlers` instance. When `process_with_property_processors()` is called with a feature type and XML data, it looks up the property schema in `GsmlFeaturesDef::AllFeatureTypes`, creating a `GsmlNodeProcessor` for each property with its XQuery and a bound handler callback. It handles both exact type matches (e.g., `MappedFeature`) and prefix-based matches for dynamic types (e.g., `RockUnit_*`). Each processor is executed sequentially against the XML, extracting and populating properties in the target feature.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GsmlNodeProcessorFactory tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

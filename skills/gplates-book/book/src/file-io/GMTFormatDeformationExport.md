@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatDeformationExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports deformation and strain information calculated at reconstructed domain points to GMT format. Each output line records the position of a point on a deformed surface along with optional strain invariants and rates — principal strain (major and minor axes with orientation), dilatation strain, dilatation and second-invariant strain rates, and strain rate style. The exporter wraps `TopologyReconstructedFeatureGeometry` objects that pair domain positions with deformation data, writing them in the GMT xy-format with configurable coordinate conventions (longitude-latitude or latitude-longitude) and selectable strain output options.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatDeformationExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

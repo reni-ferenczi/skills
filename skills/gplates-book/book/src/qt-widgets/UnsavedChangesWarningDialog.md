@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/UnsavedChangesWarningDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A warning dialog that intercepts operations which would lose unsaved changes. It is shown when the user attempts to close GPlates, clear the session, load a previous session, or load a project while unsaved changes exist. The dialog displays a list of unsaved feature collection files and offers three choices: save all changes first and proceed, discard changes and proceed, or abort the operation. The text and button labels adapt to the specific action being interrupted (e.g., "Close GPlates" vs. "Load Project"). It is triggered and managed by `UnsavedChangesTracker` in the gui module.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/UnsavedChangesWarningDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

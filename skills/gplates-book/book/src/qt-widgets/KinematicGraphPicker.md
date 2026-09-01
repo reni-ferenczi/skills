@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/KinematicGraphPicker tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QwtPlotPicker` subclass for extracting and displaying information from kinematic graphs. The primary responsibility is the `trackerTextF()` method, which generates a formatted text string displayed when the user hovers over the graph. It performs linear interpolation between adjacent data points to estimate values between grid points, and appends the appropriate unit suffix based on the graph type (degrees, cm/year, or degrees/Ma depending on whether the graph shows latitude, velocity, or rotation rate).
+
+The `SmallestTimeCoordinateYoungerThan` functor and `get_interpolated_y_value()` helper function support binary search and linear interpolation between the bracketing data points.
 
 ## Declared types
 
@@ -50,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/KinematicGraphPicker tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

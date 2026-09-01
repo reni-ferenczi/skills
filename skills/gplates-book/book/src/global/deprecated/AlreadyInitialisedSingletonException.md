@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/deprecated/AlreadyInitialisedSingletonException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+**Deprecated.** Exception thrown when code attempts to initialize a singleton class that has already been initialized. This is marked deprecated — the singleton pattern it enforces is no longer preferred in modern GPlates code. The exception takes a custom message describing the situation.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/deprecated/AlreadyInitialisedSingletonException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

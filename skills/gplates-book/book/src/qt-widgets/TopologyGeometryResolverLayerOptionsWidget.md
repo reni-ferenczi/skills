@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TopologyGeometryResolverLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A layer options widget providing visualization controls for topology geometry resolver layers. When a user selects such a layer in the visual layers panel, this widget displays options to fill polygons and adjust the fill opacity and intensity. It also provides a link to open the draw style dialog for more detailed appearance settings. The widget coordinates with `ApplicationState`, `ViewState`, and the viewport to propagate user choices back to the visualization.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TopologyGeometryResolverLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

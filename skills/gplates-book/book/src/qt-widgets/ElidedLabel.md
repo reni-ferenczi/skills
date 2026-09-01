@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ElidedLabel tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ElidedLabel` is a custom `QWidget` that displays text and automatically elides it with an ellipsis when the text is wider than the available space. The elision position is configurable via `Qt::TextElideMode` (left, middle, or right).
+
+When text is elided and the user hovers over the widget, a tooltip displays the full unelided text. This avoids truncating important information while keeping the UI compact. The label wraps an internal `QLabel` in a frame and dynamically updates the displayed text when resized or when the content changes.
 
 ## Declared types
 
@@ -52,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ElidedLabel tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

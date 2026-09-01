@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportFlowlineOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportFlowlineOptionsWidget` is the options panel for exporting flowlines (tracks showing how points move over time). It combines two reusable widgets: an optional `DatelineWrapOptionsWidget` (for controlling dateline wrapping behavior) and an `ExportFileOptionsWidget` (for controlling single vs. multiple file output).
+
+The widget is header-only and constructs its UI by adding the helper widgets to a vertical layout. When `create_export_animation_strategy_configuration()` is called, it collects the user's choices from both helper widgets and builds the configuration for the `ExportFlowlineAnimationStrategy`.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportFlowlineOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ResizeToContentsTextEdit tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is a custom QTextEdit subclass that automatically adjusts its size to match its document content, eliminating the need for scrollbars in many UI layouts. By overriding `sizeHint()` and `minimumSizeHint()`, it reports dimensions based on the actual document text, allowing parent layouts to expand the widget to accommodate the full text.
+
+The widget can be configured to resize based on width, height, or both, with height-only resizing as the default. It listens to `textChanged()` signals and recalculates its fitted dimensions via `fit_to_document()` or its width/height variants. This is useful in dialogs where multi-line text fields should grow rather than scroll.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ResizeToContentsTextEdit tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

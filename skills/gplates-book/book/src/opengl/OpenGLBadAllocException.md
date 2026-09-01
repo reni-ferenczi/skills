@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/OpenGLBadAllocException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`OpenGLBadAllocException` is thrown by the OpenGL rendering backend when GPU memory allocation fails. It carries a description of the failed allocation context and is caught by code that needs to handle graphics memory exhaustion — particularly raster I/O and rendering operations that may attempt large allocations.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/OpenGLBadAllocException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

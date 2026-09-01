@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PythonRunner tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PythonRunner` executes Python code in the same thread as the caller, or if posted a `DeferredCallEvent`, in the thread of its creation. It wraps Python's `InteractiveConsole` and exposes methods for executing or evaluating Python code from strings, files, or callable functions. The class maintains an interactive command history buffer and protects all Python operations with `PythonInterpreterLocker` for GIL acquisition. Exception handling is delegated to a `PythonExecutionMonitor` if provided; `SystemExit` is signaled separately as a Qt signal.
 
 ## Declared types
 
@@ -57,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PythonRunner tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All methods acquire the GIL via `PythonInterpreterLocker`; they are safe to call from any thread but block during execution. The class inherits from `QObject` to handle deferred calls via the event loop. When `PythonExecutionMonitor` is null, exceptions are silently logged to the C++ warning stream. The `PythonExecGuard` RAII class in the public slot notifies the `PythonManager` of execution scope.
 
 ## Used by
 

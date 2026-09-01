@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/MeasureDistanceWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A task panel widget displaying measurements from the distance measuring canvas tool. `MeasureDistanceWidget` presents two sections: Quick Measure (for ad-hoc distance measurements between two points) and Feature Measure (for distances and areas computed when a feature is selected). It renders latitude/longitude coordinates, distances, and optional area values with 4 decimal places of precision. The widget responds to measurement state changes via signals from `MeasureDistanceState`, updating the display and highlighting measurement fields when new data arrives. Users can clear all measurements via an action button.
 
 ## Declared types
 
@@ -56,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/MeasureDistanceWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `textEdited` signal (not `textChanged`) is connected for the radius input to capture only user-initiated changes, excluding programmatic updates. Background color changes to `QLineEdit` controls are temporary highlights; the original palette is saved and restored when highlighting is toggled off.
 
 ## Used by
 

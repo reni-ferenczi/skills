@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditAngleWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A simple edit widget for composing and modifying `GpmlMeasure` property values representing angles. Wraps a spin box for numeric input and maintains a reference-counted pointer to the edited measure value.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditAngleWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The stored `d_angle_ptr` may be null: initially when the widget is created, or when editing newly-added properties not yet in the model. Code updating the property value must handle this case.
 
 ## Used by
 

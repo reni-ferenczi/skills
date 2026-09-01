@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/ScribeInternalUtilsImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This file provides template method implementations for `TranscribeOwningPointerTemplate`, which handles serialization of objects owned by pointers. The save path creates a `SaveConstructObject` wrapper and transcribes it; the load path constructs the object on the heap via `LoadConstructObjectOnHeap`, transcribes into it, then releases ownership to the owning pointer. This separation of construction and transcription is necessary because the scribe system must handle both the creation and the value-loading phases independently.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/ScribeInternalUtilsImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GlobeCanvasToolAdapter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An adapter that bridges `GlobeCanvas` mouse signals to the `GlobeCanvasTool` interface. It manages connections and disconnections between the globe canvas and an active canvas tool, and routes mouse events (press, click, drag, release, move) to the appropriate tool methods based on the mouse button and keyboard modifiers (Shift, Ctrl, Shift+Ctrl). Different button/modifier combinations are dispatched to different tool methods: `handle_left_click()`, `handle_shift_left_click()`, `handle_ctrl_left_click()`, and corresponding drag/press/move variants.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GlobeCanvasToolAdapter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+At most one tool can be active at a time; activating a new tool while one is active replaces the old tool without an explicit deactivate. Connections to the globe canvas are only established when the first tool is activated and are only disconnected when the last tool is deactivated.
 
 ## Used by
 

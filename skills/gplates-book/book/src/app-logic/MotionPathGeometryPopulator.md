@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/MotionPathGeometryPopulator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `FeatureVisitor` that reconstructs motion path features by extracting seed points, reconstructing them through time using a `ReconstructionTreeCreator`, and generating motion path geometries that record the path a point travels. The visitor examines motion track properties (e.g. times, plate IDs) to determine the reconstruction trajectory, then creates `ReconstructedFeatureGeometry` objects for output.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/MotionPathGeometryPopulator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The visitor is non-copyable and stateful — it stores rotations and feature properties across visits. It is typically used once per feature collection pass.
 
 ## Used by
 

@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportCitcomsResolvedTopologyOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportCitcomsResolvedTopologyOptionsWidget` is the options panel for exporting resolved topology in CitcomS format. It presents checkboxes for controlling which geometry types (plate polygons, network polygons, slab polygons, plate boundaries, network boundaries, slab boundaries) are exported and whether they go into a single file, individual files per feature, or type-based files.
+
+The widget is created via a factory method and initialized with existing export settings. When the user accepts the export, `create_export_animation_strategy_configuration()` collects the user's choices and builds a configuration object for the `ExportCitcomsResolvedTopologyAnimationStrategy`. It optionally includes a `DatelineWrapOptionsWidget` for controlling whether geometries are wrapped to the dateline.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportCitcomsResolvedTopologyOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

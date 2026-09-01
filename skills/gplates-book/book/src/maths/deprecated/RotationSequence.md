@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/deprecated/RotationSequence tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RotationSequence` represents a time-dependent sequence of plate rotations, storing one or more `FiniteRotation` objects that describe the motion of a moving plate relative to a fixed plate. The sequence spans a time interval from the most recent rotation (closest to present day) to the most distant rotation (furthest in the past), and supports interpolation to obtain a rotation at any time within that span. The class uses reference-counted sharing of the underlying rotation list to avoid expensive copying when sequences are propagated through the reconstruction tree.
+
+The sequence handles two key edge cases: it will not extend to the present day (0 Ma) unless a rotation at 0 Ma is explicitly provided, and if such a rotation exists alongside older rotations, the class supports extrapolation into the future based on the most recent motion segment. Edge properties mark the boundaries where one sequence ends and another begins, providing a mechanism for handling crossover points in the plate motion history.
 
 ## Declared types
 
@@ -57,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/deprecated/RotationSequence tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The underlying `SharedSequence` uses reference counting to manage lifetime; copy construction, assignment and destruction all properly maintain the reference count. The internal sequence list is lazily sorted on first access and marked dirty whenever a new rotation is inserted. Future extrapolation requires both a 0 Ma rotation (so `_most_recent_time == 0.0`) and at least one older rotation (`_most_distant_time != 0.0`); callers should check `isDefinedInFuture()` before attempting to interpolate beyond the present. The `edgeProperties()` function is described as a "kludge" in the source and has a FIXME comment suggesting the crossover-handling mechanism should be redesigned.
 
 ## Used by
 

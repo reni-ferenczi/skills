@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/ViolatedSmallCircleInvariantException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when small circle invariants are violated. Small circles are geometric constructs on a sphere (circles not centered at the pole); they have specific mathematical properties that must be preserved. This exception signals when an operation attempts to create or modify a small circle in a way that would violate these invariants. It follows the same pattern as the other invariant exception classes in the maths module, carrying a message and stack trace.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/ViolatedSmallCircleInvariantException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

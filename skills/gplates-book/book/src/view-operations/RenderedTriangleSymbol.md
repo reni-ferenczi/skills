@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedTriangleSymbol tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered geometry wrapper for an equilateral triangle symbol positioned at a `PointOnSphere`. The triangle is north-south aligned, with one altitude running along the meridian. Like `RenderedSquareSymbol`, it supports optional fill and a configurable size, storing the centre position, visual properties (colour, fill flag, size), and a line-width hint for rendering. Proximity testing delegates to the centre point, allowing the triangle to be selectable via its centre location.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedTriangleSymbol tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

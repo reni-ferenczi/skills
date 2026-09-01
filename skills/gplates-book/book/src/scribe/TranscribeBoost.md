@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeBoost tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit provides transcription support for Boost library types used throughout GPlates. It covers smart pointers (`intrusive_ptr`, `optional`, `scoped_ptr`, `shared_ptr`, `weak_ptr`) via overloads of the transcribe function. The most complex support is for `boost::variant`, which requires all stored types to be export-registered and offers three transcription modes depending on whether the variant is default-constructable: direct transcription if the first type is default-constructable, or explicit save/load construction otherwise. Variants use `SaveVariantVisitor`, `LoadVariant`, and `RelocateVariantVisitor` to handle the type-switching logic; since variant storage is inline (stack-based), relocation is handled automatically by the Scribe framework.
 
 ## Declared types
 
@@ -71,9 +69,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeBoost tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All types stored in a `boost::variant` must be export-registered for serialization to succeed. A variant is only default-constructable if its first type parameter is default-constructable; variants that are not default-constructable must use explicit save/load construction (`scribe.load<>()`) or be initialized with a dummy value before transcription. Variant relocation is automatic because the variant stores its value inline; the Scribe framework does not need explicit relocation callbacks.
 
 ## Used by
 

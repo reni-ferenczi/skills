@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/Sleeper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This RAII class replaces Python's `time.sleep` with a custom implementation that enables thread interruption. The built-in `time.sleep` is non-interruptible by `PyThreadState_SetAsyncExc`, so the replacement breaks the requested sleep duration into small increments (10 per second), calling the original sleep repeatedly. This allows interruption checks to occur between micro-sleeps. The original `time.sleep` is saved on construction and restored on destruction.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/Sleeper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+All operations require `PythonInterpreterLocker` for GIL safety. The class should be instantiated early in Python initialization so that all subsequent `time.sleep` calls are interruptible. Errors in replacement or restoration are logged but do not throw.
 
 ## Used by
 

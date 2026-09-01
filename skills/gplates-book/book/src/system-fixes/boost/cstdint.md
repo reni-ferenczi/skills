@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=system-fixes/boost/cstdint tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A compatibility wrapper around Boost's `cstdint` header that fixes compile errors with Visual Studio 2010. The Visual Studio 2010 compiler has conflicting definitions of the `UINT8_C` macro between Boost's cstdint and the standard library, which this header resolves by undefining and reincluding the macro before and after the Boost header.
+
+This wrapper is included by precompiled headers in rendering and file I/O modules to ensure consistent fixed-width integer type availability across the application.
 
 ## Declared types
 
@@ -28,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=system-fixes/boost/cstdint tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditTotalReconstructionSequenceDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A modal dialog for editing a single `TotalReconstructionSequence` feature. The dialog extracts the TRS data (irregular sampling time-rotation sequence, moving plate ID, fixed plate ID) from the feature using `TRSUtils`, initializes an `EditTotalReconstructionSequenceWidget` with this data, and presents it to the user. When the user clicks Apply, it validates the edited data, updates the parent `TotalReconstructionSequencesDialog` with the changes, and applies them to the feature. The Apply button is enabled or disabled based on whether the edited data is valid and whether changes have been made.
 
 ## Declared types
 
@@ -60,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditTotalReconstructionSequenceDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The dialog does not modify the feature directly. Instead, it collects edits and notifies the parent `TotalReconstructionSequencesDialog` via the Apply handler, which is responsible for updating the feature. The dialog's Apply button is disabled until valid edits have been made. The enclosed `TableUpdateGuard` is a utility class (borrowed from `TopologySectionsTable`) that suppresses table-change notifications during programmatic updates, allowing slot handlers to distinguish user edits from setup.
 
 ## Used by
 

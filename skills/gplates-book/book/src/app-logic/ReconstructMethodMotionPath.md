@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodMotionPath tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `ReconstructMethodInterface` that reconstructs motion path features by reconstructing the path a point traces through time under plate motion. The method extracts present-day seed points and reconstructs them at various times using a `MotionPathGeometryPopulator` to generate the full motion path geometries.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodMotionPath tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Motion path features are designed to represent a single path through time; present-day geometries are the seed points or multipoints used to initialize motion path reconstruction.
 
 ## Used by
 

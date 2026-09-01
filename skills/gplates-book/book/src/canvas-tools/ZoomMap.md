@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/ZoomMap tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A map canvas tool for zooming into the map view. Extends `MapCanvasTool` and responds to left clicks (zoom in) and shift+left clicks (zoom out) to adjust zoom level and reorient the map. It recenters the map on the clicked point using a private `recentre_map()` method and coordinates zoom through `ViewportZoom`. Manages the rendered geometry collection and provides status bar feedback through the viewport window.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/ZoomMap tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

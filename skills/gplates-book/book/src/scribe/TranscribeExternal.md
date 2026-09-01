@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeExternal tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is an umbrella header that aggregates transcription support for external libraries into one include point. It includes `TranscribeBoost`, `TranscribeQt`, and `TranscribeStd`, which provide the specializations of `transcribe()` for Boost, Qt, and standard library types respectively. As a special case, it also includes `TranscribeNonNullIntrusivePtr` — which handles `GPlatesUtils::non_null_intrusive_ptr`, a utility based on Boost's intrusive_ptr. The umbrella design avoids forcing heavyweight `Scribe.h` includes into external library headers (which can't be modified) and centralizes the external type support.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeExternal tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

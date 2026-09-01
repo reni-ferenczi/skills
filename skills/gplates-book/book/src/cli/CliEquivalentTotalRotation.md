@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliEquivalentTotalRotation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EquivalentTotalRotationCommand` is a CLI command that calculates and prints the equivalent total rotation pole between two plates at a specified reconstruction time. It loads rotation files, constructs a `ReconstructionTree` at the requested time, and computes the combined rotation from an anchor plate to a target plate, optionally extending rotation sequences backward in time. The command supports replacing indeterminate rotations with a zero-angle north pole for compatibility.
 
 ## Declared types
 
@@ -53,9 +51,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliEquivalentTotalRotation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

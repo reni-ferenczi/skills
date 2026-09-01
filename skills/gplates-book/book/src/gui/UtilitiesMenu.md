@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/UtilitiesMenu tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Allows Python scripts to register themselves on the Utilities menu and handles their execution when menu items are selected. The class organizes utilities into category-based submenus managed by `get_category_menu()`; `add_utility()` takes a category, display name, and callback and wires the resulting menu action to `handle_action_triggered()`.
+
+When a user selects a utility from the menu, the class invokes the registered callback, coordinating with `PythonManager` to execute the Python code in the appropriate context.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/UtilitiesMenu tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

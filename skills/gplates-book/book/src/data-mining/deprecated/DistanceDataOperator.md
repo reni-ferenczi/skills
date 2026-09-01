@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/DistanceDataOperator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An abstract base class for extracting and reducing distance values from feature associations in data-mining workflows. The `get_data()` method collects minimum distances from each associated feature and appends the result of the `calculate()` method to a `DataRow`. Subclasses override `calculate()` to implement different reduction strategies on the distance vector. This class is part of a deprecated data-mining architecture.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/DistanceDataOperator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The constructors are protected; instances are created only by the `DataOperatorFactory` friend class. The `calculate()` method is pure virtual and must be overridden by subclasses. If no valid distances are found, `get_data()` appends `EmptyData`.
 
 ## Used by
 

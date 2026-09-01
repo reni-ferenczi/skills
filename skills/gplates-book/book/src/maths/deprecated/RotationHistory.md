@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/deprecated/RotationHistory tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A deprecated container for the rotation history of a moving plate. It stores a collection of `RotationSequence` objects, each describing how the plate rotated relative to a fixed reference plate during a specific time interval. The collection is lazily sorted by most-recent time on access via `begin()`, `end()`, or `findAtTime()`, with lazy sorting triggered by a dirty flag (`_is_modified`). Though the class does not enforce temporal continuity or prevent overlaps, comments indicate that design expectations are that sequences should align at cross-over points where one sequence ends and another begins.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/deprecated/RotationHistory tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The collection uses lazy sorting: sequences are kept in insertion order and sorted on-demand when accessed, with a mutable `_is_modified` flag tracking whether re-sorting is needed. Both `_seq` and `_is_modified` are mutable to allow const member functions to maintain cache consistency. The class design assumes but does not enforce that rotation sequences should be continuous at cross-over points (where one sequence ends and another begins) — overlaps at other times are explicitly flagged as "not allowed" in code comments, though the class does not validate this at insert time.
 
 ## Used by
 

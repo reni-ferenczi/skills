@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/AgeModelReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Parses tab-delimited age model files into an `AgeModelCollection`. Each file defines one or more named age models (such as "CandeKent95") via a `@GEOTIMESCALE` marker, then provides chron entries (e.g., "2An.1ny") with corresponding ages in millions of years for each model. The reader validates the file structure and warns if the number of ages per chron does not match the number of models loaded.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/AgeModelReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

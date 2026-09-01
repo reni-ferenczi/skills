@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/GetPropertyAsPythonObjVisitor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GetPropertyAsPythonObjVisitor` is a visitor that converts GPlates property values to Boost.Python objects, enabling seamless integration between the C++ property-value hierarchy and the Python API. It inherits from `ConstFeatureVisitor` and implements visit methods for all property-value types (geometries, enumerations, time windows, references, etc.).
+
+To use it, pass a property value to the visitor's `accept_visitor()` method, then call `get_data()` to retrieve the converted Python object. Simple types like `XsBoolean`, `XsDouble`, `XsInteger`, and `XsString` are converted directly to their Python equivalents; complex types like geometries and structured objects are typically converted to string representations via `to_qstring()` and then to Python strings.
 
 ## Declared types
 
@@ -69,9 +69,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/GetPropertyAsPythonObjVisitor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+This visitor is designed to visit one property value at a time; reusing the same visitor instance for multiple properties is safe, as each visit overwrites the previous result in `d_val`. String values are converted through UTF-8 to ensure round-trip fidelity. Complex types that do not have explicit visitor implementations store a string representation created by `to_qstring()`. The visitor requires Python to be initialized (it uses Boost.Python objects).
 
 ## Used by
 

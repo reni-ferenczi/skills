@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportVelocityCalculationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides the user interface for configuring velocity calculation parameters. Like `ExportVelocityCalculationOptionsWidget`, this widget does not inherit from `ExportOptionsWidget`; it is designed to be embedded in another export options widget as a sub-component.
+
+The widget allows users to control three aspects of velocity export: the velocity delta-time type (three options for computing velocity over different time intervals), the delta-time value, and velocity smoothing near plate boundaries. Users can enable or disable boundary smoothing and adjust the angular half-extent of the smoothing region. There is also an option to exclude deforming regions from smoothing. When any control changes, the widget updates its internal configuration object, which can be retrieved via `get_export_velocity_calculation_options()`.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportVelocityCalculationOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

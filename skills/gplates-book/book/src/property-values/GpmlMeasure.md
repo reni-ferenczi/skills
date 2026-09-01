@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlMeasure tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlMeasure` wraps a double-precision quantity (such as angles or distances in geophysical computations) along with XML attributes that describe or qualify that measurement. Unlike most property values, `GpmlMeasure` is mutable—the quantity can be changed after construction via `set_quantity()`, which updates the property value's instance ID to reflect the modification. Both the quantity and its associated XML attributes are modifiable, making this class useful for interactive edits or algorithmic adjustments of measured values. The class is shallow-clonable since it references no mutable objects by pointer.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlMeasure tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

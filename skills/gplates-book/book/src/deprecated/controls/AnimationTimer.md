@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/controls/AnimationTimer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A singleton wxTimer subclass that manages frame-by-frame playback of geological-time animations. On each timer tick, it invokes a caller-provided warp function to update the display at the next animation frame, stepping through geological time in configurable increments. The timer supports both forward and backward playback and can be stopped or restarted at any point during animation.
+
+`AnimationTimer` coordinates with `GuiCalls` to manage the application's operational mode when animation is active and to handle graceful termination if an exception occurs during playback—which is critical since `Notify()` runs in wxWindows' event loop and cannot propagate exceptions normally.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/controls/AnimationTimer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The singleton pattern and static member data expose threading hazards: the class is not thread-safe and will fail if threading is introduced or if multiple main windows exist. The `Notify()` override catches all `GPlatesGlobal::Exception` objects and terminates the program via `Lifetime::instance()->terminate()` because exceptions cannot propagate from wxWindows timer callbacks. Animation direction (forward or backward) is determined at construction based on the relationship between start and end times and is tracked in the `_sense` field.
 
 ## Used by
 

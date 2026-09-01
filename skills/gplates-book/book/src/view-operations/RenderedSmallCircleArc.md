@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedSmallCircleArc tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered geometry wrapper for a `SmallCircleArc`. This class stores the arc geometry itself, plus visual properties (colour and line width hint) needed by the rendering layer. It inherits from `RenderedGeometryImpl` and implements the visitor pattern so the rendering system can dispatch on rendered geometry types without switch statements. This is one of several rendered-geometry adaptors for different spherical geometry shapes — `RenderedGreatCircleArc`, `RenderedPolylineOnSphere`, and others — each following the same pattern of wrapping a maths object with rendering metadata.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedSmallCircleArc tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `test_proximity` method is a stub that always returns null; proximity testing on small circles is not yet implemented.
 
 ## Used by
 

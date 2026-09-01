@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedColouredPolygonOnSphere tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered representation of a `PolygonOnSphere` geometry where each exterior-ring point carries its own colour. The class holds the underlying polygon geometry, a vector of `ColourProxy` values (one per exterior-ring point), and a width hint for rendering the outline. It implements the visitor pattern and provides proximity testing on both the geometry outline and its individual vertices. Polygon-coloured geometries are drawn as outlines only, not as filled regions.
 
 ## Declared types
 

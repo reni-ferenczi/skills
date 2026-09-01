@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/FilterTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Test fixtures for filter operations, likely exercising the `GPlatesUtils::PredicateFilter` and `GPlatesUtils::GenericFilter` classes used in data-mining workflows. The suite includes `FilterTest`, which holds seven individual test cases (test_case_1 through test_case_7), registered via `FilterTestSuite::construct_maps()`. The class uses auxiliary types like `MyPred` and `MyGFilterImpl` to demonstrate predicate and generic filter implementations.
 
 ## Declared types
 
@@ -75,9 +73,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/FilterTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

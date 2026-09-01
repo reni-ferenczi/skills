@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditAgeWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An edit widget for composing and modifying `GpmlAge` property values. Lets users specify ages as absolute values, named timescale values, or both; add uncertainty as plus/minus offsets or age ranges; and select or enter custom timescale bands. Maintains a reference-counted pointer to the edited age and handles toggling visibility of controls based on the selected age representation mode.
 
 ## Declared types
 
@@ -67,9 +65,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditAgeWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The stored `d_age_ptr` may be null: initially when the widget is created, or when editing newly-added properties not yet in the model. Code updating the property value must handle this case.
 
 ## Used by
 

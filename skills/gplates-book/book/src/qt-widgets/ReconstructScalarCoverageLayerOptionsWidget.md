@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ReconstructScalarCoverageLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This widget manages visualization options for reconstructed scalar coverages—geometries that have associated scalar values (such as ages, densities, or temperatures) that need to be displayed with a color map. It lets users select which scalar property to display via a combobox, then configure the color palette that maps scalar values to colors.
+
+The widget delegates palette management to a `RemappedColourPaletteWidget`, which handles selection of built-in color palettes, loading of custom CPT files, and adjustment of the palette's data range. Users can set explicit min/max values or automatically restore the range based on the layer's min/max or mean plus/minus standard deviation. The widget bridges the application's layer parameters with the visual parameters, updating both when the user changes settings.
 
 ## Declared types
 
@@ -58,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ReconstructScalarCoverageLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

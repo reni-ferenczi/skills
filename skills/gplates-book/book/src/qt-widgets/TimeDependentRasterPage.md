@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TimeDependentRasterPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A wizard page for assembling time-dependent raster sequences during import. It presents a table where users can add raster files from disk, assign or edit time values for each raster, and sort the sequence by time or filename. Time values can be deduced from filenames automatically, or entered manually. Drag-and-drop is supported for adding files. The page tracks whether the sequence is complete and validates time entries; it also supports toggling between short and full file paths for readability. It coordinates with a `TimeDependentRasterSequence` object to build the actual raster sequence, and with a callback function to notify the import workflow of the final band count.
 
 ## Declared types
 
@@ -117,9 +115,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TimeDependentRasterPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

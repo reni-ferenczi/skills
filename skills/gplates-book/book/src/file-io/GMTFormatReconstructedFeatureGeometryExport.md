@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatReconstructedFeatureGeometryExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed feature geometries to GMT format. The exporter writes `ReconstructedFeatureGeometry` objects (geometric features rotated to a given reconstruction time) to a GMT-compatible file. Each geometry is written as a GMT dataset segment, with optional filtering to exclude certain feature types. Output includes GMT headers recording the source data and reconstruction parameters.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatReconstructedFeatureGeometryExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

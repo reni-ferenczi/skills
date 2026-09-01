@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/PythonConsoleHistory tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Manages command history for the Python console, mimicking the behaviour of Bash and the interactive Python interpreter. Maintains two copies of history: `d_unmodifiable_history`, a permanent bounded list of executed commands up to `MAX_HISTORY_SIZE` (80 commands), and `d_modifiable_history`, a working copy that the user can navigate and edit before committing a new command. Navigation with up/down arrows updates the current position in the modifiable copy without affecting the permanent history until the user presses Enter to commit.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/PythonConsoleHistory tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Duplicate consecutive commands and empty commands are not stored in history. The modifiable history always contains at least the blank entry for new commands, which the iterator always points to a valid position within. Pressing Ctrl+C calls `reset_modifiable_history()` to discard in-progress edits and restore from the permanent history.
 
 ## Used by
 

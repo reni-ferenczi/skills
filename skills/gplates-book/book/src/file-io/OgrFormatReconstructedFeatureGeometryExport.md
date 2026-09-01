@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrFormatReconstructedFeatureGeometryExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports `ReconstructedFeatureGeometry` objects to ESRI Shapefile format, with reconstructed geometry and feature metadata encoded as shapefile attributes. Provides two variants: `export_geometries` writes all geometries to a single output file, while `export_geometries_per_collection` separates geometries by their source feature collection. Excludes flowline and motion path features, which are handled by their own specialized exporters.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrFormatReconstructedFeatureGeometryExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

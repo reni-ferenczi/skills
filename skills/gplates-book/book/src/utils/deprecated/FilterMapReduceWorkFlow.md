@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/FilterMapReduceWorkFlow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FilterMapReduceWorkFlow` is a deprecated struct template that orchestrates a chain of filter and map operations followed by a final reduce step. It uses template metaprogramming with `boost::mpl::reverse_fold` to construct a pipeline where each filter/map in the input type list is applied in sequence to transform data. The output of each stage becomes the input of the next, and the final reducer is applied to the output of the last filter/map stage.
+
+The workflow is executed by calling `exec()` with a vector of `boost::any`-wrapped filter/map objects, a reducer, and the input range. Each object in the vector is cast to its expected type at pipeline execution; any type mismatch throws `boost::bad_any_cast`.
 
 ## Declared types
 
@@ -38,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/FilterMapReduceWorkFlow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The caller must ensure the unit_list vector contains valid non-null pointers for all filter/map objects in the type list, in the correct order, and with types matching the FilterMapList parameter; type mismatches will be caught as `boost::bad_any_cast` exceptions at runtime.
 
 ## Used by
 

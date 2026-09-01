@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/TestSuiteFilterTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Test suite for `GPlatesUnitTest::TestSuiteFilter`, a singleton that selectively runs tests based on hierarchical name patterns. The filter uses a format similar to filesystem paths (with `/` and `,` delimiters) to specify which tests to include at each depth level, and supports wildcard matching with `*` to enable flexible test selection from the command line.
 
 ## Declared types
 
@@ -48,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/TestSuiteFilterTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

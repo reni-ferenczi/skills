@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/GenericReducerImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenericReducerImpl` is an abstract template base class that defines the interface for implementation functors used by `GenericReducer`. It declares a single virtual operator() that accepts an input iterator pair and returns a single value of the specified output type. Subclasses implement the actual reduction algorithm that combines multiple inputs into one output.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/GenericReducerImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlFormatReconstructedScalarCoverageExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed scalar coverages to GPML format. A scalar coverage consists of a domain geometry (typically a point or line geometry) paired with range scalars at each point. This module takes `ReconstructedScalarCoverage` objects (geometries that have been moved to a reconstruction time) and writes them as GPML features, preserving the domain and range structure. It can optionally include additional per-point scalars such as dilatation strain, dilatation strain rates, and second invariant strain rates computed during the reconstruction process.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlFormatReconstructedScalarCoverageExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

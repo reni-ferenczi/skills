@@ -62,10 +62,10 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | Name | Unit | Description |
 |---|---|---|
 | [`GET_PROP_VAL_NAME`](../src/file-io/deprecated/FeaturePropertiesMap.md#free-functions-and-macros) | [file-io/deprecated/FeaturePropertiesMap](../src/file-io/deprecated/FeaturePropertiesMap.md) | — |
-| [`GPLATES_ACCESS_EXPORT_REGISTER_CLASS_TYPE`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | Only class Access can form the expression 'register\_class\_type\<class\_type\>' because 'class\_type' might be a private nested class of a parent class and only class Access can privately access that parent class (assuming it has a friend ... |
-| [`GPLATES_ACCESS_EXPORT_REGISTER_CLASS_TYPE_MACRO`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | — |
+| [`GPLATES_ACCESS_EXPORT_REGISTER_CLASS_TYPE`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | Registers a single class type in the export registry with private access |
+| [`GPLATES_ACCESS_EXPORT_REGISTER_CLASS_TYPE_MACRO`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | Boost preprocessor macro that wraps single-class registration |
 | [`GPLATES_ASSERTION_SOURCE`](../src/global/GPlatesAssert.md#free-functions-and-macros) | [global/GPlatesAssert](../src/global/GPlatesAssert.md) | — |
-| [`GPLATES_DEFERRED_API_CALL`](../src/api/DeferredApiCall.md#free-functions-and-macros) | [api/DeferredApiCall](../src/api/DeferredApiCall.md) | For example, status\_message is a member function of ViewportWindow that interacts with QWidget objects. |
+| [`GPLATES_DEFERRED_API_CALL`](../src/api/DeferredApiCall.md#free-functions-and-macros) | [api/DeferredApiCall](../src/api/DeferredApiCall.md) | Macro that creates a wrapper function for deferred execution on the main thread |
 | [`GPLATES_EXCEPTION_SOURCE`](../src/global/GPlatesException.md#free-functions-and-macros) | [global/GPlatesException](../src/global/GPlatesException.md) | Note: we don't use BOOST\_CURRENT\_FUNCTION anymore since it can produce some pretty verbose output when a function has arguments that are template types. |
 | [`GPLATES_GDAL_COMPUTE_VERSION`](../src/global/GdalVersion.md#free-functions-and-macros) | [global/GdalVersion](../src/global/GdalVersion.md) | Same as defined in GDAL \>= 1.10... |
 | [`GPLATES_GDAL_VERSION_NUM`](../src/global/GdalVersion.md#free-functions-and-macros) | [global/GdalVersion](../src/global/GdalVersion.md) | Same as defined in GDAL \>= 1.10... |
@@ -124,8 +124,8 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 
 | Name | Unit | Description |
 |---|---|---|
-| [`HAS_FUNCTION`](../src/utils/HasFunction.md#free-functions-and-macros) | [utils/HasFunction](../src/utils/HasFunction.md) | The following macros provide meta-functions that check if a function (HAS\_FUNCTION) or class method (HAD\_MEMBER\_FUNCTION) exists with a particular signature. |
-| [`HAS_MEMBER_FUNCTION`](../src/utils/HasFunction.md#free-functions-and-macros) | [utils/HasFunction](../src/utils/HasFunction.md) | — |
+| [`HAS_FUNCTION`](../src/utils/HasFunction.md#free-functions-and-macros) | [utils/HasFunction](../src/utils/HasFunction.md) | Macro generating a meta-function to detect global functions via SFINAE |
+| [`HAS_MEMBER_FUNCTION`](../src/utils/HasFunction.md#free-functions-and-macros) | [utils/HasFunction](../src/utils/HasFunction.md) | Macro generating a meta-function to detect member functions via SFINAE |
 | [`HAVE_SNPRINTF`](../src/global/python.md#free-functions-and-macros) | [global/python](../src/global/python.md) | — |
 | [`HIDE_SHADER_TEST_VARIABLE_CONTROLS`](../src/qt-widgets/ScalarField3DLayerOptionsWidget.md#free-functions-and-macros) | [qt-widgets/ScalarField3DLayerOptionsWidget](../src/qt-widgets/ScalarField3DLayerOptionsWidget.md) | Define this to hide the GUI controls that change the shader test variables. |
 
@@ -194,14 +194,14 @@ Every in-tree definition of preprocessor macros, from the `gplates-code` index. 
 | Name | Unit | Description |
 |---|---|---|
 | [`SAVE_LOAD_CLASS_DATA_USING_VARIANT`](../src/unit-test/TranscribeTest.md#free-functions-and-macros) | [unit-test/TranscribeTest](../src/unit-test/TranscribeTest.md) | There's two ways to construct class Data (one using 'int' constructor and one using 'variant' constructor). |
-| [`SCRIBE_EXPORT_DATA_MINING`](../src/data-mining/ScribeExportDataMining.md#free-functions-and-macros) | [data-mining/ScribeExportDataMining](../src/data-mining/ScribeExportDataMining.md) | Scribe export registered classes/types in the 'data-mining' source sub-directory. |
-| [`SCRIBE_EXPORT_EXTERNAL`](../src/scribe/ScribeExportExternal.md#free-functions-and-macros) | [scribe/ScribeExportExternal](../src/scribe/ScribeExportExternal.md) | Scribe export registered classes/types for \*external\* libraries. |
-| [`SCRIBE_EXPORT_GPLATES`](../src/entry-points/ScribeExportGPlates.md#free-functions-and-macros) | [entry-points/ScribeExportGPlates](../src/entry-points/ScribeExportGPlates.md) | Group all classes/types to be scribe export registered for the 'gplates' program. |
-| [`SCRIBE_EXPORT_GPLATES_DEMO_NO_GUI`](../src/entry-points/ScribeExportGPlatesDemoNoGui.md#free-functions-and-macros) | [entry-points/ScribeExportGPlatesDemoNoGui](../src/entry-points/ScribeExportGPlatesDemoNoGui.md) | Group all classes/types to be scribe export registered for the 'gplates-demo-no-gui' program. |
-| [`SCRIBE_EXPORT_GPLATES_UNIT_TEST`](../src/entry-points/ScribeExportGPlatesUnitTest.md#free-functions-and-macros) | [entry-points/ScribeExportGPlatesUnitTest](../src/entry-points/ScribeExportGPlatesUnitTest.md) | Group all classes/types to be scribe export registered for the 'gplates-unit-test' program. |
-| [`SCRIBE_EXPORT_PYGPLATES`](../src/entry-points/ScribeExportPyGPlates.md#free-functions-and-macros) | [entry-points/ScribeExportPyGPlates](../src/entry-points/ScribeExportPyGPlates.md) | Group all classes/types to be scribe export registered for the 'pygplates' dynamic/shared library. |
-| [`SCRIBE_EXPORT_REGISTRATION`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | This macro should be used in a '.cc' file associated with the program being compiled/linked. |
-| [`SCRIBE_EXPORT_UNIT_TEST`](../src/unit-test/ScribeExportUnitTest.md#free-functions-and-macros) | [unit-test/ScribeExportUnitTest](../src/unit-test/ScribeExportUnitTest.md) | Scribe export registered classes/types in the 'unit-test' source sub-directory. |
+| [`SCRIBE_EXPORT_DATA_MINING`](../src/data-mining/ScribeExportDataMining.md#free-functions-and-macros) | [data-mining/ScribeExportDataMining](../src/data-mining/ScribeExportDataMining.md) | Macro that maps data-mining filter configs to stable string identifiers for serialization |
+| [`SCRIBE_EXPORT_EXTERNAL`](../src/scribe/ScribeExportExternal.md#free-functions-and-macros) | [scribe/ScribeExportExternal](../src/scribe/ScribeExportExternal.md) | Registers fundamental types, Qt types, and standard library types for transcription |
+| [`SCRIBE_EXPORT_GPLATES`](../src/entry-points/ScribeExportGPlates.md#free-functions-and-macros) | [entry-points/ScribeExportGPlates](../src/entry-points/ScribeExportGPlates.md) | Combines data-mining and external type groups for main application export registration |
+| [`SCRIBE_EXPORT_GPLATES_DEMO_NO_GUI`](../src/entry-points/ScribeExportGPlatesDemoNoGui.md#free-functions-and-macros) | [entry-points/ScribeExportGPlatesDemoNoGui](../src/entry-points/ScribeExportGPlatesDemoNoGui.md) | Groups external types for demo application export registration |
+| [`SCRIBE_EXPORT_GPLATES_UNIT_TEST`](../src/entry-points/ScribeExportGPlatesUnitTest.md#free-functions-and-macros) | [entry-points/ScribeExportGPlatesUnitTest](../src/entry-points/ScribeExportGPlatesUnitTest.md) | Combines unit-test and external type groups for test executable export registration |
+| [`SCRIBE_EXPORT_PYGPLATES`](../src/entry-points/ScribeExportPyGPlates.md#free-functions-and-macros) | [entry-points/ScribeExportPyGPlates](../src/entry-points/ScribeExportPyGPlates.md) | Groups external types for pyGPlates extension module export registration |
+| [`SCRIBE_EXPORT_REGISTRATION`](../src/scribe/ScribeExportRegistration.md#free-functions-and-macros) | [scribe/ScribeExportRegistration](../src/scribe/ScribeExportRegistration.md) | Registers a set of polymorphic class types for serialization at program startup |
+| [`SCRIBE_EXPORT_UNIT_TEST`](../src/unit-test/ScribeExportUnitTest.md#free-functions-and-macros) | [unit-test/ScribeExportUnitTest](../src/unit-test/ScribeExportUnitTest.md) | Macro registering transcription test types for Scribe serialization |
 | [`STRINGIFY_WARNING`](../src/global/CompilerWarnings.md#free-functions-and-macros) | [global/CompilerWarnings](../src/global/CompilerWarnings.md) | Used to support gcc's \_Pragma() preprocessor operator which expects a string literal. |
 
 ## T

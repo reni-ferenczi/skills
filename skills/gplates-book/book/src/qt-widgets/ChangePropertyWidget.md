@@ -10,9 +10,11 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChangePropertyWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Helper widget for `ChangeFeatureTypeDialog` that presents a checkbox and dropdown list for renaming a single property when its current name becomes invalid under a new feature type. The widget uses `ChoosePropertyWidget` to populate the dropdown with compatible property names for the property's structural type within the target feature type.
+
+The checkbox defaults to checked for well-defined structural types like `gml:TimePeriod`, but unchecked for generic types like `xsi:string`, `xsi:integer`, `xsi:boolean`, and `xsi:double`, since these could semantically mean anything in either context and the user should verify the mapping. When unchecked, the dropdown is disabled. The `populate()` method displays the original property name in the checkbox label to orient the user, obtained from GPGIM if available.
+
+When the user accepts the dialog, `process()` commits the change if the checkbox is checked: it removes the old property and adds a new one with the user's chosen name, via `ModelUtils::rename_property()`. If the property was a focused geometry, it updates the focus reference.
 
 ## Declared types
 
@@ -45,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChangePropertyWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

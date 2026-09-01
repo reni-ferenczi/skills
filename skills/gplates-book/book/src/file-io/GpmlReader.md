@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+The main entry point for reading GPML XML files into the GPlates feature model. `GpmlReader::read_file` opens the GPML file (detecting gzip compression), reads the root element to extract the embedded GPGIM version, and creates a `GpmlFeatureReaderFactory` configured for that version. It then parses each feature in the feature collection using the factory's readers. A helper visitor, `MakeFilePathsAbsoluteVisitor`, walks the loaded features to convert relative file paths to absolute, so that referenced data files (meshes, scalar fields) can be located regardless of working directory.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The file path conversion happens on the fully loaded feature model, not during parsing. This allows relative paths (which GPlates always writes) to work regardless of the current working directory. The reader tolerates absolute paths in GPML files without modification.
 
 ## Used by
 

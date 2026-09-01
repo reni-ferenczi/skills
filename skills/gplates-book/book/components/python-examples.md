@@ -16,7 +16,7 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [python-examples](../src/scripts/python-examples.md) | 3 | 3876 | 0 | (pending) |
+| [python-examples](../src/scripts/python-examples.md) | 3 | 3876 | 0 | example scripts demonstrating the pygplates API for reconstruction, interpolation, camera control, co-registration and plate motion analysis |
 
 ## Other files
 

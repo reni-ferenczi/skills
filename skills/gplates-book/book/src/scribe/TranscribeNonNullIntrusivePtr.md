@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeNonNullIntrusivePtr tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit provides transcription support for `GPlatesUtils::non_null_intrusive_ptr<T, H>`, a non-null variant of Boost's `intrusive_ptr`. The transcribe functions delegate to the smart pointer protocol to serialize the pointed-to object as a shared owner. Two overloads handle the two usage modes: `transcribe()` for existing objects and `transcribe_construct_data()` for constructing from load data. Since the pointer is non-null, both paths must succeed in loading a valid pointer; null pointers are not supported and will cause transcription failure. The header resides in `TranscribeExternal` to avoid pulling `Scribe.h` into the `non_null_intrusive_ptr` utility header.
 
 ## Declared types
 
@@ -30,9 +28,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeNonNullIntrusivePtr tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

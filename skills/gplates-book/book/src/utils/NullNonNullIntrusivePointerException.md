@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/NullNonNullIntrusivePointerException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A precondition violation exception thrown by `NullIntrusivePointerHandler` when code attempts to construct a non-null intrusive pointer with a NULL pointer value. This provides precise exception handling for cases where a nullable intrusive pointer type is used incorrectly in code that requires a guaranteed non-null value.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/NullNonNullIntrusivePointerException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

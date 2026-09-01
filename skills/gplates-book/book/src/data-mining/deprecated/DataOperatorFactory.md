@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/DataOperatorFactory tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A factory for creating `DataOperator` instances based on type enum and parameters. The static `create()` method accepts a `DataOperatorType` and `DataOperatorParameters` and returns an appropriate operator instance. Supported types include Min, Lookup, Min Distance, Presence, and NumberInROI operators. This class is part of a deprecated data-mining workflow architecture.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/DataOperatorFactory tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `create()` method returns a newly allocated `DataOperator` instance; callers are responsible for managing the returned pointer. The default case (unknown type) returns a `MinDataOperator` instance.
 
 ## Used by
 

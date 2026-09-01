@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodSmallCircle tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is a reconstruction method for small circle features, which are circles on a sphere defined by a centre point and a radius. `ReconstructMethodSmallCircle` inherits from `ReconstructMethodInterface` and implements feature reconstruction by rotating the centre point according to a plate circuit. The centre is stored as a `GmlPoint` property and reconstructed using the feature's reconstruction plate ID via `SmallCircleGeometryPopulator`. If no reconstruction plate ID is present, the method defaults to plate ID 0 (the spin axis), which may still apply rotations if an anchor plate is defined.
 
 ## Declared types
 
@@ -62,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodSmallCircle tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

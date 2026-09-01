@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Select tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A template metaprogramming utility for compile-time type selection. `Select<Condition, TrueType, FalseType>` provides a `result` typedef that equals `TrueType` when `Condition` is true, and `FalseType` when false. This is implemented via template specialization: the primary template returns `TrueType`, and a partial specialization for `Condition == false` returns `FalseType`. Based on the design from Alexandrescu's "Modern C++ Design", this predates C++11's `std::conditional` and is used by `TypeTraits` and several GUI components for generic type selection.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Select tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

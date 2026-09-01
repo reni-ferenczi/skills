@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportFileOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportFileOptionsWidget` is a reusable widget for controlling whether export output goes to a single file or multiple files (one per input layer). It is embedded in various exporter-specific options widgets (velocity, flowline, resolved topology, deformation, etc.).
+
+The widget presents checkboxes for "export to single file" and "export to multiple files", plus an optional "separate output directory per file" checkbox that appears only when multiple-file export is selected. The widget is not itself an `ExportOptionsWidget`; rather, it is a helper widget embedded in them.
 
 ## Declared types
 
@@ -39,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportFileOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

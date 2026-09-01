@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ProjectionControlWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A control widget for switching map projections via a combobox. It holds a reference to `GPlatesGui::ViewportProjection` and populates the combobox with five projection types (orthographic, rectangular, Mercator, Mollweide, Robinson), each with a keyboard shortcut. User changes to the combobox, or keyboard shortcuts, trigger calls to `ViewportProjection::set_projection_type`. Conversely, when the projection changes externally, the widget listens to `projection_type_changed` signals and updates the combobox to reflect the current selection. A `show_label` method controls the visibility of the label widget.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ProjectionControlWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The widget prevents signal-slot feedback loops: programmatic combobox index changes do not trigger the `activated()` signal, avoiding infinite cycles when synchronizing with external projection changes.
 
 ## Used by
 

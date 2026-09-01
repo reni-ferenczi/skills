@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexElementBufferObject tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexElementBufferObject` is the hardware-accelerated element buffer implementation, used when the GL_ARB_vertex_buffer_object extension is available. It wraps a `GLBufferObject` and binds it as GL_ELEMENT_ARRAY_BUFFER_ARB for GPU-resident index storage.
+
+It implements the same `GLVertexElementBuffer` interface as `GLVertexElementBufferImpl`, but delegates directly to OpenGL hardware operations rather than simulating with client-side arrays. It also inherits from `GLObject` to mark itself as an OpenGL resource.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexElementBufferObject tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`gl_draw_range_elements` benefits from GL_EXT_draw_range_elements extension when available — it optimizes by limiting the vertex range processed. Without the extension, it falls back to simulating the operation with standard draw calls, effectively ignoring the start/end bounds.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/deprecated/GPlatesReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `Reader` that parses an input stream in the legacy GPlates data format and returns a `DataGroup` internal representation. The helper functions and typedefs support parsing XML-like elements into GPlates geological data structures (points, polylines, data groups) and extracting typed attributes like rotation group IDs, data types, and time windows from parsed elements. This is deprecated infrastructure for reading a format no longer actively used.
 
 ## Declared types
 
@@ -66,9 +64,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/deprecated/GPlatesReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

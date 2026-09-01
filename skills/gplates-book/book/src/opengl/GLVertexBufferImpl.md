@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=opengl/GLVertexBufferImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GLVertexBufferImpl` provides fallback vertex buffer support for OpenGL implementations that lack the vertex buffer object extension. It wraps a `GLBufferImpl` and delegates vertex pointer calls (position, color, normal, texture coordinates, generic attributes) to the `GLRenderer`, which then implements them using client-side memory arrays via base OpenGL 1.1 functionality.
+
+This is a compatibility layer: modern systems have hardware vertex buffer objects, but this implementation allows the rendering code to maintain a uniform interface across all platforms.
 
 ## Declared types
 
@@ -48,9 +48,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=opengl/GLVertexBufferImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

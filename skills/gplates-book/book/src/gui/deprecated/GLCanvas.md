@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/deprecated/GLCanvas tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+**Deprecated.** A wxWidgets-based OpenGL canvas that rendered a 3D globe visualization. It handled paint, resize, and mouse events; managed zoom and globe rotation; and provided screen-to-sphere coordinate conversion via `GetSphereCoordFromScreen()`. 
+
+This code predates GPlates' transition from wxWidgets to Qt and has been superseded by the Qt-based `GlobeCanvas` and `MapCanvas` implementations in the `qt-widgets` module. It is retained for reference only.
 
 ## Declared types
 
@@ -83,9 +83,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/deprecated/GLCanvas tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TotalReconstructionPolesDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for examining and exporting total reconstruction poles at the current reconstruction time. It displays rotation data in two tabular views: relative rotations (each plate relative to the stationary plate) and equivalent rotations (absolute positions). It also shows the reconstruction tree as a hierarchy and the plate circuit as a tree from any plate to the stationary plate. The dialog can export both rotation tables as CSV in multiple formats. It monitors changes to the reconstruction time and the selected visual layer, updating its display automatically when either changes. Stationary plate and time are set by the caller via dedicated methods.
 
 ## Declared types
 
@@ -91,9 +89,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TotalReconstructionPolesDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedPolygonOnSphere tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered geometry wrapper for a polygon on a sphere, holding a `PolygonOnSphere`, display properties (`ColourProxy`, line width hint), and fill state with a modulate colour. Proximity testing first checks the polygon boundary; if the polygon is filled, it also tests point-in-polygon inclusion for the interior, allowing users to click either the boundary or filled area. This enables interactive selection of polygons in topologies and reconstructed features.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedPolygonOnSphere tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

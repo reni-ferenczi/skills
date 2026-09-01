@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/FiniteRotationCalculatorDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A utility dialog providing four calculators for finite rotation operations on a sphere. Users input rotation parameters (axis in lat/lon and angle) or point coordinates, then click the appropriate calculate button to see results. The four operations are: compose two rotations, compute the difference between two rotations, derive the rotation that maps one point to another, and apply a rotation to a point.
+
+An event filter changes the default dialog button based on input focus, allowing users to press Enter after filling in a calculator section to immediately compute its result. Results are shown in read-only text fields displaying the output rotation or transformed point in decimal format.
 
 ## Declared types
 
@@ -47,9 +47,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/FiniteRotationCalculatorDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/UninitialisedEditWidgetException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown when an edit widget is used in the wrong order. Each edit widget must first be initialized by calling `update_widget_from_xxxx()` to set the value it is editing, then the user can modify it, and finally `update_property_value_from_widget()` extracts the edited value. If `update_property_value_from_widget()` is called before initialization, this exception is raised to detect the programming error. It inherits from `PreconditionViolationError` to signal that a precondition was violated.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/UninitialisedEditWidgetException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

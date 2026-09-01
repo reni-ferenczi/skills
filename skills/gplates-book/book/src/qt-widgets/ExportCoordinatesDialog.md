@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportCoordinatesDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportCoordinatesDialog` is a modal dialog for exporting a single geometry (point, line, or polygon) to a coordinate file in one of six formats: PLATES4, GMT, OGR GMT, Shapefile, WKT, or CSV. The user supplies a geometry via `set_geometry_and_display()`, selects a format and output file from the dialog, and clicks Export.
+
+The dialog delegates to `GeometryExporter` subclasses (e.g., `GMTFormatGeometryExporter`, `OgrGeometryExporter`) to handle the actual encoding. Options like coordinate order (latitude-longitude vs. longitude-latitude) are available as checkboxes, and polygon terminating points can be toggled with an explanatory information dialog.
 
 ## Declared types
 
@@ -55,9 +55,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportCoordinatesDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

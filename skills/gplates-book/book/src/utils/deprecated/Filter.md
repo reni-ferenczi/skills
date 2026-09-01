@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/Filter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Filter` is a deprecated abstract template class that defines the interface for filtering operations over ranges. It takes an input range and produces an output range where the input and output value types must be identical. The class provides three overloaded `operator()` signatures for different output buffer management strategies: storing results in an internally-managed buffer, writing to a provided output iterator, or appending to a provided container.
+
+This class is part of a deprecated filtering framework and uses boost::tuple to return both the begin and end iterators of the result range. The `operator<<` and `operator>>` operators allow chaining filters in a pipeline style.
 
 ## Declared types
 
@@ -33,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/Filter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Input and output element types are statically checked to be identical via `BOOST_MPL_ASSERT`. Output iterators must be valid for writing.
 
 ## Used by
 

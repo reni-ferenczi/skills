@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/deprecated/ReconstructedFeatureGeometryPopulator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Implementation of the `ReconstructedFeatureGeometryPopulator` visitor, which reconstructs geometries from features at a specified reconstruction time. It applies plate circuit rotations to `GmlPoint`, `GmlLineString`, `GmlPolygon`, `GmlMultiPoint`, and `GmlOrientableCurve` geometries, storing the resulting reconstructed geometries in a `ReconstructionGeometryCollection`. The implementation handles standard reconstructed geometries as well as specialized types: virtual geomagnetic poles (VGP features), flowlines, and motion paths each receive dedicated reconstruction logic via helper detection visitors.
+
+The file also defines the `CanReconstructFeature` helper visitor, which determines whether a feature is reconstructible by checking for the presence of geometry. This pre-filtering step lets the caller identify reconstructible features before instantiating the full populator.
 
 ## Declared types
 
@@ -45,9 +45,9 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/deprecated/ReconstructedFeatureGeometryPopulator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The reconstructability check in `CanReconstructFeature` is lenient: it requires only geometry presence, not a reconstruction plate ID. Geometries without an explicit plate ID will be reconstructed using identity rotation. This design accommodates the removal of a default reconstruction layer that once handled unrecognized features.
+
+VGP, flowline, and motion-path features receive special handling: they are detected during initialization via dedicated visitor classes (`DetectPaleomagFeatures`, `DetectFlowlineFeatures`, `DetectMotionPathFeatures`), and the visitor methods skip standard reconstruction for these types in favor of their specialized reconstruction logic.
 
 ## Used by
 

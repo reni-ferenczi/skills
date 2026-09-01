@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/HellingerNewSegmentWarning tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Warning dialog that appears during Hellinger segment picking when the user attempts to create a segment that already exists. The dialog offers three options: add picks to the existing segment, replace the segment's picks entirely, or insert the new segment at that position and renumber the following segments. The user selects an action via radio buttons and the dialog returns the choice as a `NewSegmentActionType` enum value.
+
+The `initialise()` method is called before displaying the dialog to configure the radio button labels with the specific segment number and reset the selection to a default state (insert by default). The dialog enforces that the user makes an explicit choice by initially leaving all buttons unchecked; the OK button becomes enabled only after a radio button is clicked.
 
 ## Declared types
 
@@ -53,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/HellingerNewSegmentWarning tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

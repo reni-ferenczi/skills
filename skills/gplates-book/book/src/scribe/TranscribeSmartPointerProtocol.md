@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=scribe/TranscribeSmartPointerProtocol tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit provides a wrapper that enforces a uniform transcription protocol for all smart pointer types. It allows `boost::shared_ptr`, `boost::scoped_ptr`, `boost::intrusive_ptr`, `GPlatesUtils::non_null_intrusive_ptr`, and `std::unique_ptr` to be transcribed interchangeably, so code can switch between different smart pointer implementations without breaking serialization compatibility.
+
+The function accepts a raw pointer reference and a boolean flag indicating ownership sharing. It delegates to `ScribeInternalAccess::transcribe_smart_pointer`, which handles the actual serialization strategy, while `CallStackTracker` records the call site for error reporting.
 
 ## Declared types
 
@@ -29,9 +29,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=scribe/TranscribeSmartPointerProtocol tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

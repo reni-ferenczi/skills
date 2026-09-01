@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/MapGrid tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Renders a latitude/longitude grid (graticule) in the 2D map view. It projects grid lines through the specified `MapProjection`, handling different map projections that may curve longitude lines. The grid is rendered with anti-aliased lines using OpenGL, with configurable spacing, color, and line width via `GraticuleSettings`. The class caches the compiled draw state and only recompiles when the projection or graticule settings change, supporting both framebuffer and QPainter rendering targets.
 
 ## Declared types
 
@@ -76,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/MapGrid tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The compiled draw state is cached and only recompiled if projection or graticule settings change, making repeated calls to `paint()` efficient. Lines of latitude use 100 segments, while longitude lines use 400 segments (to handle curvature). Projection exceptions during line generation are logged but do not prevent rendering of other lines.
 
 ## Used by
 

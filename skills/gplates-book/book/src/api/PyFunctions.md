@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyFunctions tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This module exports Python bindings for two core reconstruction workflows. `reconstruct` takes feature files and rotation files at a specified time and generates reconstructed geometries, exported to a chosen format (GMT, Shapefile, GeoJSON or OGRGMT). `reverse_reconstruct` is the inverse operation: it takes feature files whose geometries are already reconstructed at a given time and reconstructs them back to present day, then writes the result to new files. Helper functions adapt Python types to C++ (`to_str_vector`) and infer the output format from file extension (`get_format`).
 
 ## Declared types
 
@@ -32,9 +30,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyFunctions tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

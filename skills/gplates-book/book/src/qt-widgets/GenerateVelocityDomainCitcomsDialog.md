@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GenerateVelocityDomainCitcomsDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for generating a global mesh of velocity domain points suitable for CitcomS (a mantle convection code). Users specify the mesh resolution (nodes per cap diamond edge) and provide an output directory and file name template. The dialog generates 12 mesh files (one for each diamond face of the cube mesh), each containing a set of `MeshNode` features with multipoint geometries.
 
 ## Declared types
 
@@ -55,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GenerateVelocityDomainCitcomsDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

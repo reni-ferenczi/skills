@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/GeometryOperationUndo tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QUndoCommand` wrapper that coordinates undo/redo across two separate concerns: the specific geometry operation (add point, delete vertex, etc.) and the canvas tool workflow state. When a user performs a geometry operation and then undoes it, this command ensures both that the operation is undone and that the active canvas tool is restored to what it was before the operation began.
+
+Supports command merging to coalesce related geometry operations into single undo steps (e.g., clicking multiple points in sequence can be undone as one "draw polyline" operation rather than one undo per point).
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/GeometryOperationUndo tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

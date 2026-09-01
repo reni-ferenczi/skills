@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/LogToFileHandler tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A message handler that logs Qt messages to a file or stream with severity levels and timestamps. Deriving from `GPlatesQtMsgHandler::MessageHandler`, it implements `handle_qt_message()` to write `QtDebugMsg`, `QtWarningMsg`, `QtCriticalMsg`, and `QtFatalMsg` messages with level prefixes and timestamps. Two constructors support file-based logging (defaults to `GPlates_log.txt`) and stream-based logging (to `stderr` or other file pointers).
+
+When the initial log file path is not writable (e.g., GPlates installed in `Program Files`), it falls back to the platform-specific writable app data directory. The log severity level is configurable via the `GPLATES_LOGLEVEL` environment variable (`debug`, `warning`, or `critical`), allowing post-mortem debugging from user-supplied log files.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/LogToFileHandler tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The log file initially attempts to open in the current working directory; if that fails (common on Windows when installed to `Program Files`), it creates and writes to the platform-specific writable app data directory instead. The severity threshold is adjustable via the `GPLATES_LOGLEVEL` environment variable.
 
 ## Used by
 

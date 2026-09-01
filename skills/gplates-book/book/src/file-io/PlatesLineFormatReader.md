@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PlatesLineFormatReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Reads GPlates feature data from PLATES line-format files and converts them to GPlates GPML features. Maps PLATES4 header data type codes to appropriate GPML feature types (faults, ridges, subduction zones, etc.), parses pen-coded coordinate sequences into geometries (points, polylines, polygons, multipoints), and creates `GpmlOldPlatesHeader` records preserving metadata from the original PLATES format. Supports topology-related features and complex boundary descriptions.
 
 ## Declared types
 
@@ -163,9 +161,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PlatesLineFormatReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

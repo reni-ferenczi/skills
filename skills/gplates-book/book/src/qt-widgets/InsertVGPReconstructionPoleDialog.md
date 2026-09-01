@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/InsertVGPReconstructionPoleDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for inserting a Virtual Geomagnetic Pole (VGP) reconstruction pole. It uses a `ReconstructionPoleWidget` to collect pole data and a `PoleSequenceTableWidget` to display available total reconstruction sequences that can be applied to the pole. The dialog manages the interaction with `ApplicationState` and handles loading of reconstruction feature collections.
+
+The setup() method initializes the dialog with a `ReconstructionPole` and populates the pole widget. Helper functions `examine_trs` and `find_trses` scan the active reconstruction feature collections to discover total reconstruction sequences whose moving or fixed reference-frame plate ID matches the plate of interest, providing the user with valid pole sequence choices.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/InsertVGPReconstructionPoleDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

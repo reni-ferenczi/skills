@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TextOverlay tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Renders text overlays on the globe and map views. Takes `TextOverlaySettings` specifying the text string, font, colour, position, and optional shadow. Before rendering, substitutes the string `%f` with the current reconstruction time formatted to the specified number of decimal places. Positions the text according to a four-point anchor system (top-left, top-right, bottom-left, bottom-right) with optional offsets, and renders it via `GLText` with optional drop shadow.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TextOverlay tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Early return if the overlay is disabled in settings. The OpenGL y-axis is inverted relative to Qt, so y-coordinates are adjusted accordingly. Text width calculation uses Qt 5.11+ `horizontalAdvance()` on newer versions and the deprecated `width()` on older versions.
 
 ## Used by
 

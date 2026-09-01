@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/InvalidPolylineContainsZeroPointsException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Raised when a polyline is found to contain no points. A valid polyline requires at least two points; this exception indicates an internal consistency error when an empty polyline would be constructed or discovered.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/InvalidPolylineContainsZeroPointsException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

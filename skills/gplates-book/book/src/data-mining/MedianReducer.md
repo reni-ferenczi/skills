@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/MedianReducer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A reducer that returns the median of numeric values from a dataset. Extracts opaque data, converts to doubles, and uses `std::nth_element` to partition around the middle position. For even-length vectors, this returns the upper median (the element at position length/2) rather than averaging the two middle elements.
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/MedianReducer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+For even-length datasets, returns the upper median (element at length/2) rather than the average of the two middle values. Call `std::nth_element` once, not twice.
 
 ## Used by
 

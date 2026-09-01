@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/deprecated/PolylineIntersections_test tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Automated regression test suite for the `PolylineIntersections::partition_intersecting_polylines` function, which finds intersection points between two polylines on a sphere and partitions them accordingly. The test file contains helper utilities for comparing polylines, constructing test data in lat/lon format, and running a comprehensive suite of test cases covering scenarios like coincident endpoints, no intersections, tangential intersections, and cases where Euclidean geometry would give different results than spherical geometry. Was originally designed to run by replacing `GPlatesApp.cc` directly.
 
 ## Declared types
 
@@ -158,9 +156,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/deprecated/PolylineIntersections_test tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+This test file is deprecated and was designed to run as a replacement for `GPlatesApp.cc`, which was an early testing mechanism. It should not be compiled into GPlates unless explicitly running these regression tests. The tests use a custom `Point` structure with lat/lon coordinates for test data specification and include helper functors and iterators for comparing polyline sets and constructing test fixtures.
 
 ## Used by
 

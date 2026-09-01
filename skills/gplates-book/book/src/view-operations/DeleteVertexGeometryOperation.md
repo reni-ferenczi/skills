@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/DeleteVertexGeometryOperation tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `GeometryOperation` that responds to user clicks on vertices to delete them from the geometry being edited. It maintains three rendered geometry layers: one for the completed lines/polygon, one for the remaining vertices, and one for highlighting the vertex nearest to the mouse cursor.
+
+When the user moves the mouse, `mouse_move()` tests proximity to all vertices and highlights the closest one. When the user clicks (`left_click()`), the operation deletes the highlighted vertex if the user is allowed to (preventing deletion of the last point needed to define the geometry). The operation prevents clicks from accidental double-deletion by testing that sufficient points remain.
 
 ## Declared types
 
@@ -63,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/DeleteVertexGeometryOperation tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

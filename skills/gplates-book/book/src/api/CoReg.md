@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/CoReg tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This module is the Python binding export for co-registration functionality, intended to expose the GPlates co-registration engine to the Python API. The `CoRegistration` class is currently disabled (wrapped in preprocessor directives); `export_co_registration()` exists to define the binding but currently throws `NotYetImplementedException`. The design anticipated a lower-level Python API that would allow direct co-registration access without relying on layer infrastructure.
 
 ## Declared types
 
@@ -76,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/CoReg tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `CoRegistration` class is currently disabled and not implemented. The binding export function `export_co_registration()` throws an exception.
 
 ## Used by
 

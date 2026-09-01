@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/GenerateVelocityDomainLatLonDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A dialog for generating velocity domain points on a regular latitude/longitude grid. Users specify geographic extents (defaulting to global), the number of latitude and longitude grid intervals, and whether to place points at grid cell centers or corners. The dialog generates a single GPML file containing one `MeshNode` feature with a multipoint geometry of all generated grid points, with optional template variables for embedding grid interval counts in the output filename.
 
 ## Declared types
 
@@ -73,9 +71,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/GenerateVelocityDomainLatLonDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

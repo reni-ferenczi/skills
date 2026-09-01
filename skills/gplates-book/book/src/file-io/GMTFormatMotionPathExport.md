@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GMTFormatMotionPathExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports reconstructed motion paths to GMT format. A motion path records the trajectory of a plate-motion reference point as it travels through geologic time. This exporter writes `ReconstructedMotionPath` objects to a GMT file with their geometry (seed point and traced path) evaluated at specified time steps. Output includes GMT headers recording source data and reconstruction parameters, with coordinates in GMT xy-format.
 
 ## Declared types
 
@@ -55,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GMTFormatMotionPathExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

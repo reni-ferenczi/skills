@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/deprecated/PythonWrapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is a deprecated Boost.Python module wrapper for the legacy `_model` Python module. It exports `GPlatesModel` functionality to Python via the `BOOST_PYTHON_MODULE` macro. This module predates the modern GPlates Python API found in `src/api/`. Do not use this; it exists only for backward compatibility and is no longer maintained.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/deprecated/PythonWrapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Deprecated. Use the Python API in `src/api/` instead. This module is not actively maintained and is kept only for backward compatibility with legacy scripts.
 
 ## Used by
 

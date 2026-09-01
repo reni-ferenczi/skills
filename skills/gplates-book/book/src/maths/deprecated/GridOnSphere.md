@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/deprecated/GridOnSphere tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A parametric representation of a rectangular grid on a sphere's surface. Rather than storing grid points directly, `GridOnSphere` stores the grid's geometry using a `SmallCircle` (defining lines of latitude), a `GreatCircle` (defining lines of longitude), an origin point, and angular deltas. This allows efficient storage and manipulation of large grids in raster operations. The class encodes the relationship between the small circle and great circle (they must intersect perpendicularly at the origin) as a class invariant, enforced on construction. It is used by raster I/O operations in `GPlatesFileIO` to describe grid-based data sources.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/deprecated/GridOnSphere tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The class enforces a strict invariant: the great circle (longitude) must be perpendicular to the small circle (latitude), and the origin must lie at their intersection. Violating this invariant throws `ViolatedClassInvariantException`. Additionally, the origin cannot be placed at either pole (North or South), which would make the latitude lines undefined; the factory method `Create()` performs extensive validation and throws `InvalidGridException` if grid points do not lie on the expected lines. Grid points are computed on demand via `resolve()` by rotation rather than direct lookup, avoiding the singularities and discontinuities of the lat/lon coordinate system.
 
 ## Used by
 

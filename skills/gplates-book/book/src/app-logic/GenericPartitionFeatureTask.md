@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/GenericPartitionFeatureTask tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A fallback `PartitionFeatureTask` that partitions feature geometry by reconstructed plate polygons and assigns plate IDs and time periods to features. When special-case partition tasks do not apply, `GenericPartitionFeatureTask` is used to handle the general case.
+
+The task partitions a feature's geometry using a `GeometryCookieCutter`, then assigns properties to the resulting pieces according to one of two strategies: either assign all geometry to the single plate polygon that contains the most of it, or partition the geometry fully, creating separate features for pieces that need different plate IDs. Properties are assigned via `GenericFeaturePropertyAssigner`, which can optionally verify that assigned properties conform to the GPGIM before writing them to the feature.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/GenericPartitionFeatureTask tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

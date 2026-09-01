@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/RFGToRelationalPropertyMapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`RFGToRelationalPropertyMapper` is a mapper that computes relational properties between reconstructed features and a reference seed feature. It extends `CoRegMapper` and supports multiple attribute types: `DISTANCE_ATTRIBUTE` computes the shortest distance between seed and target geometries, `PRESENCE_ATTRIBUTE` checks if any input features exist, and `NUMBER_OF_PRESENCE_ATTRIBUTE` counts input features. The `process()` method iterates through target features and outputs tuples of computed values with their features.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/RFGToRelationalPropertyMapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

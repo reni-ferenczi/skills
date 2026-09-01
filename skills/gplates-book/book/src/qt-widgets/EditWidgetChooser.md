@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditWidgetChooser tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`EditWidgetChooser` is a feature visitor that maps each property value type to the appropriate Qt widget for editing it. When an `EditWidgetGroupBox` needs to display an editor for a property, it uses `EditWidgetChooser` to walk the property value and dispatch to the matching widget (e.g., `activate_edit_enumeration_widget()` for an enumeration, `activate_edit_gml_point_widget()` for a point).
+
+The visitor can optionally filter to a whitelist of property names via `add_property_name_to_allow()`, so that only certain properties are editable. This is useful when the same group box handles multiple feature types but should only allow editing of properties valid for each type.
 
 ## Declared types
 
@@ -65,9 +65,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditWidgetChooser tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

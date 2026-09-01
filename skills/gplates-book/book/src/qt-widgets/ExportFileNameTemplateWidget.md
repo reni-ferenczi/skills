@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ExportFileNameTemplateWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ExportFileNameTemplateWidget` is a widget for editing filename templates used in batch exports. It displays a template tree showing available placeholder tokens (like {time}, {layer}, {model}) that can be inserted into the filename, and provides a text field for entering the template base name.
+
+The widget manages the separation between base filename and file extension, which depends on the export format. When initialized with a format via `set_file_name_template()`, it automatically splits the provided template into base name and extension, which are displayed separately to help the user understand the final filename structure.
 
 ## Declared types
 
@@ -41,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ExportFileNameTemplateWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

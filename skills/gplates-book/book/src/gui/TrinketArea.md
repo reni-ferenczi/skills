@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/TrinketArea tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Manages the status bar icon "trinkets" (small clickable indicators) in the `ViewportWindow`. Each trinket communicates application state: the unsaved-changes trinket signals pending edits, and the read-errors trinket indicates that files were loaded with errors. External code accesses these trinkets via `unsaved_changes_trinket()` and `read_errors_trinket()` to control their visibility and state.
+
+The `init()` method must be called after `ViewportWindow::setupUi()` to connect buttons and menus, since it relies on UI elements that do not exist until layout has been performed. Both trinket icons are parented to the status bar and memory-managed by Qt.
 
 ## Declared types
 
@@ -44,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/TrinketArea tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `init()` method must be called after `ViewportWindow::setupUi()` has completed, not in the constructor, because it depends on status bar and UI elements that only exist post-setup. Both trinket icons are parented to the status bar, so their lifetime is managed by Qt; do not delete them manually.
 
 ## Used by
 

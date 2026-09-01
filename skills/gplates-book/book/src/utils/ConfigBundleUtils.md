@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/ConfigBundleUtils tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`ConfigBundleUtils` provides utility functions for manipulating hierarchical key names in `ConfigBundle` and `UserPreferences`. The functions handle the "/" delimited path structure that both classes use: filtering keys by prefix, stripping prefixes from key lists, extracting root components, and composing full key names from components.
+
+These utilities were formerly private helper functions but are exposed here for callers that need to perform advanced manipulation of hierarchical key structures—for example, when displaying key hierarchies in a UI or when dynamically constructing key paths from user input.
 
 ## Declared types
 
@@ -34,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/ConfigBundleUtils tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

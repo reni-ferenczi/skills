@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/LatLonCoordinatesTable tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `QObject` wrapper around a `QTreeWidget` that displays the geometry(ies) and their latitude/longitude coordinates in a hierarchical tree. It listens to a `GeometryBuilder` and keeps the tree in sync as geometries and points are inserted, removed, or moved.
+
+The tree is populated by `initialise_table_from_current_geometry_builder()`, which uses a `TreeWidgetBuilder` to construct the hierarchy. Each geometry is a top-level item with its type label, and points are children showing their lat/lon coordinates. The class also responds to highlighting signals from `GeometryOperation`, allowing points to be visually highlighted in the tree.
 
 ## Declared types
 
@@ -74,9 +74,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/LatLonCoordinatesTable tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedSquareSymbol tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered geometry wrapper for a square symbol positioned at a `PointOnSphere`. The square is north-south aligned (one edge along the meridian) and rendered with optional fill and a configurable size. This is one of several symbol types in the rendered geometry collection, alongside `RenderedTriangleSymbol`, `RenderedCircleSymbol`, and others. The wrapper stores the symbol's centre position, visual properties (colour, fill flag, size), and line-width hint for rendering. Proximity testing delegates to the centre point.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedSquareSymbol tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

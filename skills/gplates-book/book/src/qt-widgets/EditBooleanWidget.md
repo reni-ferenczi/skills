@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditBooleanWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt widget for editing boolean property values in the GPlates feature editor. The widget presents a combo box with "True" and "False" choices to the user. It follows the `AbstractEditWidget` pattern: on construction, it can be initialized with an `XsBoolean` property value via `update_widget_from_boolean()`, the user makes changes, and then either `create_property_value_from_widget()` creates a new property value for adding to the model, or `update_property_value_from_widget()` updates the existing one. Changes trigger a `commit_me()` signal and set the widget to dirty, which the containing dialog uses to track unsaved edits.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditBooleanWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_boolean_ptr` pointer can be NULL when the widget is being used to add new properties to the model (as opposed to editing existing ones). Calling `update_property_value_from_widget()` on an uninitialized widget will throw `UninitialisedEditWidgetException`; always call `reset_widget_to_default_values()` followed by either `update_widget_from_boolean()` or ensure the widget is being used for new properties only.
 
 ## Used by
 

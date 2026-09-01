@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlFiniteRotationSlerp tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GpmlFiniteRotationSlerp` represents a spherical linear interpolation (SLERP) function for finite rotations. As a subclass of `GpmlInterpolationFunction`, it specifies how rotation values should be interpolated between keyframes, using SLERP as the interpolation method. This is the natural choice for smooth rotation interpolation in geophysical models. The class itself holds no data beyond the structural type inherited from its parent; it serves mainly as a type tag that identifies the interpolation strategy to be used by code that evaluates feature properties over time.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlFiniteRotationSlerp tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

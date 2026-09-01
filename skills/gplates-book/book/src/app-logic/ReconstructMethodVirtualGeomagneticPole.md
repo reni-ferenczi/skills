@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/ReconstructMethodVirtualGeomagneticPole tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is a reconstruction method for Virtual Geomagnetic Pole (VGP) features, which represent paleomagnetic poles estimated from sample measurements. `ReconstructMethodVirtualGeomagneticPole` reconstructs VGP data by rotating both the pole position and the sample site location according to a plate circuit. It extracts the `polePosition` and `averageSampleSitePosition` properties from the feature, along with their associated uncertainty parameters (`poleA95`, `poleDm`, `poleDp`) and age. The method applies a finite rotation based on the feature's reconstruction plate ID (defaulting to 0 if absent), then packages the reconstructed geometries and parameters into `ReconstructedVirtualGeomagneticPole` objects through `ReconstructedFeatureGeometry`.
 
 ## Declared types
 
@@ -96,9 +94,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/ReconstructMethodVirtualGeomagneticPole tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

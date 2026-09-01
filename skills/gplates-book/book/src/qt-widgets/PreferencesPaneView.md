@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/PreferencesPaneView tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A preference pane for view configuration, embedded in the `PreferencesDialog`. It presents controls for animation and visibility settings managed by `GPlatesAppLogic::UserPreferences`: default time range (start, end, and increment for animations), and toggles for showing stars and topological sections. The constructor uses `GPlatesGui::ConfigGuiUtils::link_widget_to_preference` to synchronise each control with its corresponding preference key. Like other preference panes, it handles only UI presentation; view-related logic that responds to these preferences runs elsewhere in the application.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/PreferencesPaneView tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

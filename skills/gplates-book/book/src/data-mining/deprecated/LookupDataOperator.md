@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/LookupDataOperator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `DataOperator` that retrieves attribute values from associated features and stores them in a data row. The `get_data()` method examines a configuration flag `d_is_shape_file_attr` to determine whether to extract from feature properties or from shapefile attributes. For feature properties, `get_qstring_from_feature()` looks up a property by name, extracts its value, and returns the first value as a `QString`. For shapefile attributes, `get_qstring_from_shape_attr()` queries the special `shapefileAttributes` property. If no value is found or the property is missing, `EmptyData` is recorded instead.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/LookupDataOperator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+If a property has multiple values, only the first is returned with a debug warning. If a property has no values, or if the property itself does not exist, the lookup returns `boost::none` and `EmptyData` is recorded. The shapefile attribute path is marked as a temporary implementation.
 
 ## Used by
 

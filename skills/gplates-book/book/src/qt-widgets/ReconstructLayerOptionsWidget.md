@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ReconstructLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This widget displays and manages the visual parameters for reconstructed geometry layers. It allows users to configure whether geometries are reconstructed using topological rigid plates and deforming networks, or by plate ID; set parameters for topology-based reconstruction; adjust fill styling for polygons and polylines; and control the visibility of Virtual Geomagnetic Poles. The widget updates its UI based on the current layer's parameters, showing or hiding topology-related controls depending on the chosen reconstruction mode.
+
+The widget integrates with several specialized dialogs: `SetVGPVisibilityDialog` for pole visibility, `SetTopologyReconstructionParametersDialog` for deformation time ranges and parameters, and `DrawStyleDialog` for geometry rendering style. It observes layer parameter changes and synchronizes the UI state through Qt signals and slots, managing the complex logic of enabling and disabling related options based on whether topological reconstruction is active.
 
 ## Declared types
 
@@ -58,9 +58,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ReconstructLayerOptionsWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

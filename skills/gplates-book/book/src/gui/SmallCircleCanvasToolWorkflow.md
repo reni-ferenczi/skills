@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/SmallCircleCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Implements a workflow for creating small circles on the globe and map views. Small circles are circles on the sphere at a fixed distance from a pole. The workflow manages a single interactive tool `CreateSmallCircle` with parallel implementations for the 3D globe view and 2D map view via adapters. During creation, it uses `GeometryOperationState` to track the operation state and `MeasureDistanceState` to display distance feedback as the user places points.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/SmallCircleCanvasToolWorkflow tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The workflow's render layer is activated only while the workflow is active. Unlike PoleManipulationCanvasToolWorkflow, this workflow has no feature focus awareness and all tools are always enabled.
 
 ## Used by
 

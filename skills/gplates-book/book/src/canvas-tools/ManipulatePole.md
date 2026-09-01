@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/ManipulatePole tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Canvas tool for interactively adjusting plate rotation poles by dragging geometry on the globe. It delegates rotation accumulation to a `ModifyReconstructionPoleWidget`, which tracks the total rotation adjustment applied during the operation. Supports two drag modes: normal left-drag adjusts the pole, while shift-left-drag applies a different style of adjustment. Tracks drag state to ensure proper initialization and finalization of each manipulation.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/ManipulatePole tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `d_is_in_drag` boolean ensures that `start_new_drag` is called exactly once per drag sequence; subsequent `handle_left_drag` or `handle_shift_left_drag` calls during the same drag only update the position. Left-drag and shift-left-drag are distinct interaction modes: normal drag rotates via one mechanism, shift-drag via another. Release calls finalize the accumulated rotation.
 
 ## Used by
 

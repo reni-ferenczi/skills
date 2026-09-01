@@ -44,18 +44,18 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [InvalidGridException](../src/maths/InvalidGridException.md) | 3 | 75 | 4 | (pending) |
 | [InvalidLatLonCoordinateException](../src/maths/InvalidLatLonCoordinateException.md) | 2 | 151 | 24 | (pending) |
 | [InvalidLatLonException](../src/maths/InvalidLatLonException.md) | 2 | 140 | 9 | (pending) |
-| [InvalidOperationException](../src/maths/InvalidOperationException.md) | 3 | 75 | 6 | (pending) |
-| [InvalidPolylineContainsOnlyOnePointException](../src/maths/InvalidPolylineContainsOnlyOnePointException.md) | 3 | 72 | 0 | (pending) |
-| [InvalidPolylineContainsZeroPointsException](../src/maths/InvalidPolylineContainsZeroPointsException.md) | 3 | 72 | 0 | (pending) |
+| [InvalidOperationException](../src/maths/InvalidOperationException.md) | 3 | 75 | 6 | Raised when an invalid mathematical operation is attempted |
+| [InvalidPolylineContainsOnlyOnePointException](../src/maths/InvalidPolylineContainsOnlyOnePointException.md) | 3 | 72 | 0 | Raised when a polyline contains only one point |
+| [InvalidPolylineContainsZeroPointsException](../src/maths/InvalidPolylineContainsZeroPointsException.md) | 3 | 72 | 0 | Raised when a polyline contains no points |
 
 #### Point
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
 | [PointInPolygon](../src/maths/PointInPolygon.md) | 2 | 1933 | 36 | (pending) |
-| [PointLiesOnGreatCircleArc](../src/maths/PointLiesOnGreatCircleArc.md) | 3 | 176 | 1 | (pending) |
+| [PointLiesOnGreatCircleArc](../src/maths/PointLiesOnGreatCircleArc.md) | 3 | 176 | 1 | Function object testing whether a point lies on a great circle arc |
 | [PointOnSphere](../src/maths/PointOnSphere.md) | 1 | 815 | 371 | (pending) |
-| [PointProximityHitDetail](../src/maths/PointProximityHitDetail.md) | 3 | 98 | 2 | (pending) |
+| [PointProximityHitDetail](../src/maths/PointProximityHitDetail.md) | 3 | 98 | 2 | Proximity hit information for single-point geometries |
 
 #### Polygon
 
@@ -66,22 +66,22 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [PolygonOnSphere](../src/maths/PolygonOnSphere.md) | 1 | 3415 | 1296 | (pending) |
 | [PolygonOrientation](../src/maths/PolygonOrientation.md) | 2 | 364 | 98 | (pending) |
 | [PolygonPartitioner](../src/maths/PolygonPartitioner.md) | 2 | 1137 | 11 | (pending) |
-| [PolygonProximityHitDetail](../src/maths/PolygonProximityHitDetail.md) | 3 | 101 | 4 | (pending) |
+| [PolygonProximityHitDetail](../src/maths/PolygonProximityHitDetail.md) | 3 | 101 | 4 | Proximity hit information for polygon geometries |
 
 #### Polyline
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [PolylineEquivalencePredicates](../src/maths/PolylineEquivalencePredicates.md) | 3 | 110 | 1 | (pending) |
+| [PolylineEquivalencePredicates](../src/maths/PolylineEquivalencePredicates.md) | 3 | 110 | 1 | Function objects for testing polyline equivalence |
 | [PolylineIntersections](../src/maths/PolylineIntersections.md) | 2 | 933 | 36 | (pending) |
 | [PolylineOnSphere](../src/maths/PolylineOnSphere.md) | 1 | 1601 | 158 | (pending) |
-| [PolylineProximityHitDetail](../src/maths/PolylineProximityHitDetail.md) | 3 | 101 | 3 | (pending) |
+| [PolylineProximityHitDetail](../src/maths/PolylineProximityHitDetail.md) | 3 | 101 | 3 | A concrete ProximityHitDetail subclass for polyline proximity hits |
 
 #### Proximity
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [ProximityCriteria](../src/maths/ProximityCriteria.md) | 3 | 120 | 1 | (pending) |
+| [ProximityCriteria](../src/maths/ProximityCriteria.md) | 3 | 120 | 1 | Parameter holder for proximity testing criteria on the sphere |
 | [ProximityHitDetail](../src/maths/ProximityHitDetail.md) | 1 | 173 | 210 | (pending) |
 | [ProximityHitDetailVisitor](../src/maths/ProximityHitDetailVisitor.md) | 2 | 146 | 6 | (pending) |
 
@@ -92,25 +92,25 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [SmallCircle](../src/maths/SmallCircle.md) | 2 | 384 | 47 | (pending) |
 | [SmallCircleArc](../src/maths/SmallCircleArc.md) | 2 | 266 | 108 | (pending) |
 | [SmallCircleBounds](../src/maths/SmallCircleBounds.md) | 1 | 2613 | 105 | (pending) |
-| [SmallCircleCoverageMesh](../src/maths/SmallCircleCoverageMesh.md) | 3 | 238 | 0 | (pending) |
-| [SmallCircleProximityHitDetail](../src/maths/SmallCircleProximityHitDetail.md) | 3 | 96 | 0 | (pending) |
+| [SmallCircleCoverageMesh](../src/maths/SmallCircleCoverageMesh.md) | 3 | 238 | 0 | A triangular mesh that covers a region bounded by a small circle |
+| [SmallCircleProximityHitDetail](../src/maths/SmallCircleProximityHitDetail.md) | 3 | 96 | 0 | A concrete ProximityHitDetail subclass for small circle proximity hits |
 
 #### Unable
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [UnableToExtendPointlikeArcException](../src/maths/UnableToExtendPointlikeArcException.md) | 3 | 80 | 0 | (pending) |
-| [UnableToIntersectEquivalentGreatCirclesException](../src/maths/UnableToIntersectEquivalentGreatCirclesException.md) | 3 | 79 | 0 | (pending) |
-| [UnableToNormaliseZeroVectorException](../src/maths/UnableToNormaliseZeroVectorException.md) | 3 | 65 | 1 | (pending) |
+| [UnableToExtendPointlikeArcException](../src/maths/UnableToExtendPointlikeArcException.md) | 3 | 80 | 0 | Exception when extending a pointlike great circle arc |
+| [UnableToIntersectEquivalentGreatCirclesException](../src/maths/UnableToIntersectEquivalentGreatCirclesException.md) | 3 | 79 | 0 | Exception when intersecting equivalent great circles |
+| [UnableToNormaliseZeroVectorException](../src/maths/UnableToNormaliseZeroVectorException.md) | 3 | 65 | 1 | Exception when normalizing a zero vector |
 
 #### Violated
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [ViolatedClassInvariantException](../src/maths/ViolatedClassInvariantException.md) | 3 | 76 | 7 | (pending) |
-| [ViolatedDirVectorInvariantException](../src/maths/ViolatedDirVectorInvariantException.md) | 3 | 75 | 0 | (pending) |
-| [ViolatedSmallCircleInvariantException](../src/maths/ViolatedSmallCircleInvariantException.md) | 3 | 75 | 0 | (pending) |
-| [ViolatedUnitVectorInvariantException](../src/maths/ViolatedUnitVectorInvariantException.md) | 3 | 74 | 1 | (pending) |
+| [ViolatedClassInvariantException](../src/maths/ViolatedClassInvariantException.md) | 3 | 76 | 7 | Exception thrown when mathematical class invariants are violated |
+| [ViolatedDirVectorInvariantException](../src/maths/ViolatedDirVectorInvariantException.md) | 3 | 75 | 0 | Exception thrown when direction vector invariants are violated |
+| [ViolatedSmallCircleInvariantException](../src/maths/ViolatedSmallCircleInvariantException.md) | 3 | 75 | 0 | Exception thrown when small circle invariants are violated |
+| [ViolatedUnitVectorInvariantException](../src/maths/ViolatedUnitVectorInvariantException.md) | 3 | 74 | 1 | Exception thrown when unit vector invariants are violated |
 
 #### Other
 
@@ -140,13 +140,13 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [MathematicalException](../src/maths/MathematicalException.md) | 2 | 50 | 20 | (pending) |
 | [MathsUtils](../src/maths/MathsUtils.md) | 1 | 328 | 699 | (pending) |
 | [MultiPointOnSphere](../src/maths/MultiPointOnSphere.md) | 1 | 739 | 1875 | (pending) |
-| [MultiPointProximityHitDetail](../src/maths/MultiPointProximityHitDetail.md) | 3 | 100 | 2 | (pending) |
+| [MultiPointProximityHitDetail](../src/maths/MultiPointProximityHitDetail.md) | 3 | 100 | 2 | Proximity hit information for multi-point geometries |
 | [PolyGreatCircleArcBoundingTree](../src/maths/PolyGreatCircleArcBoundingTree.md) | 2 | 743 | 99 | (pending) |
 | [Real](../src/maths/Real.md) | 1 | 875 | 629 | (pending) |
 | [Rotation](../src/maths/Rotation.md) | 1 | 696 | 194 | (pending) |
 | [SphericalArea](../src/maths/SphericalArea.md) | 2 | 592 | 14 | (pending) |
 | [SphericalSubdivision](../src/maths/SphericalSubdivision.md) | 2 | 533 | 41 | (pending) |
-| [TrailingLatLonCoordinateException](../src/maths/TrailingLatLonCoordinateException.md) | 3 | 128 | 1 | (pending) |
+| [TrailingLatLonCoordinateException](../src/maths/TrailingLatLonCoordinateException.md) | 3 | 128 | 1 | Exception for odd-length latitude/longitude coordinate sequences |
 | [UnitQuaternion3D](../src/maths/UnitQuaternion3D.md) | 1 | 988 | 366 | (pending) |
 | [UnitVector3D](../src/maths/UnitVector3D.md) | 1 | 611 | 1281 | (pending) |
 | [Vector3D](../src/maths/Vector3D.md) | 1 | 403 | 248 | (pending) |
@@ -156,12 +156,12 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [GridOnSphere](../src/maths/deprecated/GridOnSphere.md) | 3 | 530 | 3 | (pending) |
-| [PolylineIntersections_test](../src/maths/deprecated/PolylineIntersections_test.md) | 3 | 3999 | 0 | (pending) |
-| [PythonWrapper](../src/maths/deprecated/PythonWrapper.md) | 3 | 43 | 0 | (pending) |
-| [RotationHistory](../src/maths/deprecated/RotationHistory.md) | 3 | 241 | 0 | (pending) |
-| [RotationSequence](../src/maths/deprecated/RotationSequence.md) | 3 | 631 | 7 | (pending) |
-| [StageRotation](../src/maths/deprecated/StageRotation.md) | 3 | 326 | 0 | (pending) |
+| [GridOnSphere](../src/maths/deprecated/GridOnSphere.md) | 3 | 530 | 3 | Parametric representation of a rectangular grid on sphere surface |
+| [PolylineIntersections_test](../src/maths/deprecated/PolylineIntersections_test.md) | 3 | 3999 | 0 | Regression test suite for polyline intersection and partitioning |
+| [PythonWrapper](../src/maths/deprecated/PythonWrapper.md) | 3 | 43 | 0 | Boost.Python module wrapping core maths types for Python |
+| [RotationHistory](../src/maths/deprecated/RotationHistory.md) | 3 | 241 | 0 | Container for rotation sequences describing plate motion history |
+| [RotationSequence](../src/maths/deprecated/RotationSequence.md) | 3 | 631 | 7 | time-dependent sequence of plate rotations supporting interpolation and future extrapolation |
+| [StageRotation](../src/maths/deprecated/StageRotation.md) | 3 | 326 | 0 | difference between finite rotations representing angular displacement over time |
 
 
 ## Other files

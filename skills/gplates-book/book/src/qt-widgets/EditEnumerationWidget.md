@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/EditEnumerationWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A Qt widget for editing enumeration property values of multiple types. Unlike the type-specific edit widgets, this single widget can be configured via `configure_for_property_value_type()` to handle any enumeration type defined in the GPGIM. The widget uses a combo box populated with the valid enumeration values for the configured type. It follows the `AbstractEditWidget` pattern: initialize via `configure_for_property_value_type()` or `update_widget_from_enumeration()`, edit the selection, then create or update the property value. The widget tolerantly preserves unknown enum values if a property is loaded with a value not in the GPGIM definition, adding it to the combo box rather than losing data.
 
 ## Declared types
 
@@ -46,9 +44,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/EditEnumerationWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Must be configured for a property value type before use via `configure_for_property_value_type()` (which throws `PropertyValueNotSupportedException` if the type is not a valid enumeration). The `d_property_value_type` is optional and will be NULL until configured. The `d_enumeration_ptr` can be NULL when adding new properties; calling `update_property_value_from_widget()` on an uninitialized widget throws `UninitialisedEditWidgetException`. Calling `create_property_value_from_widget()` without a configured type also throws `PropertyValueNotSupportedException`.
 
 ## Used by
 

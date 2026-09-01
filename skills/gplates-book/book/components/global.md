@@ -19,39 +19,39 @@ Replace this whole block, markers included, with 2-4 paragraphs: what this compo
 | [AbortException](../src/global/AbortException.md) | 2 | 104 | 47 | (pending) |
 | [AssertionFailureException](../src/global/AssertionFailureException.md) | 1 | 105 | 2599 | (pending) |
 | [CompilerWarnings](../src/global/CompilerWarnings.md) | 2 | 136 | 56 | (pending) |
-| [ControlFlowException](../src/global/ControlFlowException.md) | 3 | 75 | 0 | (pending) |
+| [ControlFlowException](../src/global/ControlFlowException.md) | 3 | 75 | 0 | Exception thrown when unreachable code is executed |
 | [ExternalResourceFailureException](../src/global/ExternalResourceFailureException.md) | 2 | 58 | 27 | (pending) |
 | [GPlatesAssert](../src/global/GPlatesAssert.md) | 1 | 267 | 3310 | (pending) |
 | [GPlatesException](../src/global/GPlatesException.md) | 1 | 325 | 777 | (pending) |
 | [GdalVersion](../src/global/GdalVersion.md) | 2 | 60 | 22 | (pending) |
-| [IllegalParametersException](../src/global/IllegalParametersException.md) | 3 | 75 | 2 | (pending) |
-| [InternalInconsistencyException](../src/global/InternalInconsistencyException.md) | 3 | 127 | 1 | (pending) |
-| [InternalObjectInconsistencyException](../src/global/InternalObjectInconsistencyException.md) | 3 | 52 | 6 | (pending) |
-| [IntrusivePointerZeroRefCountException](../src/global/IntrusivePointerZeroRefCountException.md) | 3 | 83 | 2 | (pending) |
-| [InvalidFeatureCollectionException](../src/global/InvalidFeatureCollectionException.md) | 3 | 73 | 3 | (pending) |
-| [InvalidParametersException](../src/global/InvalidParametersException.md) | 3 | 73 | 1 | (pending) |
-| [License](../src/global/License.md) | 3 | 49 | 2 | (pending) |
+| [IllegalParametersException](../src/global/IllegalParametersException.md) | 3 | 75 | 2 | Exception thrown for illegal or unreasonable method parameters |
+| [InternalInconsistencyException](../src/global/InternalInconsistencyException.md) | 3 | 127 | 1 | Exception thrown when unexpected internal inconsistencies are detected |
+| [InternalObjectInconsistencyException](../src/global/InternalObjectInconsistencyException.md) | 3 | 52 | 6 | Base class for exceptions reporting object-level internal inconsistencies |
+| [IntrusivePointerZeroRefCountException](../src/global/IntrusivePointerZeroRefCountException.md) | 3 | 83 | 2 | Exception thrown when an intrusive pointer reference count reaches zero unexpectedly |
+| [InvalidFeatureCollectionException](../src/global/InvalidFeatureCollectionException.md) | 3 | 73 | 3 | Exception thrown when an invalid FeatureCollectionHandle is encountered |
+| [InvalidParametersException](../src/global/InvalidParametersException.md) | 3 | 73 | 1 | Exception thrown for parameters that are individually valid but invalid in combination |
+| [License](../src/global/License.md) | 3 | 49 | 2 | Functions providing GPlates copyright information in plain text and HTML |
 | [LogException](../src/global/LogException.md) | 2 | 117 | 102 | (pending) |
-| [NotYetImplementedException](../src/global/NotYetImplementedException.md) | 3 | 62 | 3 | (pending) |
-| [NullParameterException](../src/global/NullParameterException.md) | 3 | 74 | 1 | (pending) |
+| [NotYetImplementedException](../src/global/NotYetImplementedException.md) | 3 | 62 | 3 | Exception for code that has not yet been implemented |
+| [NullParameterException](../src/global/NullParameterException.md) | 3 | 74 | 1 | Exception for NULL pointer parameters when non-null expected |
 | [PointerTraits](../src/global/PointerTraits.md) | 1 | 89 | 477 | (pending) |
 | [PreconditionViolationError](../src/global/PreconditionViolationError.md) | 1 | 63 | 522 | (pending) |
-| [RetrievalFromEmptyContainerException](../src/global/RetrievalFromEmptyContainerException.md) | 3 | 82 | 1 | (pending) |
-| [UnexpectedEmptyFeatureCollectionException](../src/global/UnexpectedEmptyFeatureCollectionException.md) | 3 | 73 | 1 | (pending) |
-| [UninitialisedIteratorException](../src/global/UninitialisedIteratorException.md) | 3 | 74 | 4 | (pending) |
-| [UnsupportedFunctionException](../src/global/UnsupportedFunctionException.md) | 3 | 74 | 0 | (pending) |
+| [RetrievalFromEmptyContainerException](../src/global/RetrievalFromEmptyContainerException.md) | 3 | 82 | 1 | Exception when retrieving from an empty container |
+| [UnexpectedEmptyFeatureCollectionException](../src/global/UnexpectedEmptyFeatureCollectionException.md) | 3 | 73 | 1 | Exception when receiving an unexpectedly empty FeatureCollectionHandle |
+| [UninitialisedIteratorException](../src/global/UninitialisedIteratorException.md) | 3 | 74 | 4 | Exception when dereferencing an uninitialized iterator |
+| [UnsupportedFunctionException](../src/global/UnsupportedFunctionException.md) | 3 | 74 | 0 | Exception for deliberately unsupported functions |
 | [Version](../src/global/Version.md) | 2 | 135 | 27 | (pending) |
 | [python](../src/global/python.md) | 2 | 172 | 15 | (pending) |
-| [unicode](../src/global/unicode.md) | 3 | 32 | 0 | (pending) |
+| [unicode](../src/global/unicode.md) | 3 | 32 | 0 | Convenience header providing access to Unicode string utilities |
 
 ### `src/global/deprecated`
 
 | Unit | Tier | Lines | Fan-in | Description |
 |---|---|---|---|---|
-| [AlreadyInitialisedSingletonException](../src/global/deprecated/AlreadyInitialisedSingletonException.md) | 3 | 73 | 0 | (pending) |
-| [InternalRID](../src/global/deprecated/InternalRID.md) | 3 | 108 | 1 | (pending) |
-| [UninitialisedSingletonException](../src/global/deprecated/UninitialisedSingletonException.md) | 3 | 72 | 0 | (pending) |
-| [types](../src/global/deprecated/types.md) | 3 | 83 | 42 | (pending) |
+| [AlreadyInitialisedSingletonException](../src/global/deprecated/AlreadyInitialisedSingletonException.md) | 3 | 73 | 0 | Deprecated: exception for double-initialization of singletons |
+| [InternalRID](../src/global/deprecated/InternalRID.md) | 3 | 108 | 1 | Deprecated: wrapper for rotation ID values |
+| [UninitialisedSingletonException](../src/global/deprecated/UninitialisedSingletonException.md) | 3 | 72 | 0 | Deprecated exception for uninitialized singleton access attempts |
+| [types](../src/global/deprecated/types.md) | 3 | 83 | 42 | Deprecated type aliases and enumerations for geometry and topology classification |
 
 
 ## Other files

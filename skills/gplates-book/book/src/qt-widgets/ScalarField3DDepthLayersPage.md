@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ScalarField3DDepthLayersPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This is a wizard page for importing 3D scalar field data, where multiple 2D raster files are stacked at different depth levels to form a 3D volume. Users add raster files and assign depth values to each layer, which define the z-coordinates of the 3D scalar field. The page provides buttons to add files or directories, remove selected files, and sort by depth or filename.
+
+The page tries to automatically deduce depth values from filenames and allows manual editing via a specialized table widget with custom `DepthLineEdit` editors and validators. The depth column is editable, with validation enforcing a valid numeric range. Drag-and-drop is supported for adding files. The page tracks completion based on whether all required fields are filled and whether depth values are valid and unique.
 
 ## Declared types
 
@@ -116,9 +116,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ScalarField3DDepthLayersPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

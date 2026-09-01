@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/TimescaleName tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `StringContentTypeGenerator` typedef for timescale names (e.g., ICC2012, GTS2004) used in the `GpmlAge` property value. The `TimescaleNameFactory` provides access to a singleton string set of valid timescale identifiers, leveraging the `StringSetSingletons` infrastructure to ensure a single, deduplicated pool of timescale name strings across the application.
 
 ## Declared types
 
@@ -39,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/TimescaleName tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrFormatFlowlineExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports `ReconstructedFlowline` objects to ESRI Shapefile format, with flowline geometries and generation metadata (feature name, seed points, anchor plate, reconstruction time) encoded as shapefile attributes. Each reconstructed flowline yields two separate geometries in the output: the left and right branches from the seed point.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrFormatFlowlineExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Shapefile attribute fields are limited to 10 characters in length; feature names and field names are truncated accordingly.
 
 ## Used by
 

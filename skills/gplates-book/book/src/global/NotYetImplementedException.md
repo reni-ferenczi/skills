@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/NotYetImplementedException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exception thrown when code that has not yet been implemented is invoked. This is a placeholder exception for incomplete features — when a function or code path is stubbed out but not yet fully written, throwing this signals that the feature needs work before it can be used. It inherits from `Exception`, the base class for all GPlates exceptions, and captures the call stack trace at the point of throwing for debugging.
 
 ## Declared types
 
@@ -36,9 +34,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/NotYetImplementedException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

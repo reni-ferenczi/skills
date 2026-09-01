@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ReconstructionPoleWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit provides a simple data structure and widget for displaying a single rotation pole (Euler pole), the fundamental representation of a plate rotation in GPlates. A `ReconstructionPole` struct holds the six parameters that define a rotation: the moving plate ID, the fixed plate it rotates relative to, the age at which the rotation applies, the latitude and longitude of the rotation pole on the sphere, and the rotation angle in degrees.
+
+The `ReconstructionPoleWidget` is a read-only display that populates editable fields from a pole's parameters, formatting numeric values according to locale. It is used in dialogs that calculate or insert poles, allowing users to review the computed pole parameters before confirmation.
 
 ## Declared types
 
@@ -53,9 +53,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ReconstructionPoleWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

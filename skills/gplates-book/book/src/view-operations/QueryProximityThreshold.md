@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/QueryProximityThreshold tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An interface for calculating how close a user must click to a geometry for the click to be considered a "hit". The threshold depends on the view projection and the position on the globe: a 3D view needs larger thresholds near the horizon than at the globe's center, and 2D projections introduce stretching that affects click precision. Different projection implementations subclass this interface to implement their own proximity threshold calculation.
 
 ## Declared types
 
@@ -35,9 +33,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/QueryProximityThreshold tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ExportCoRegistrationAnimationStrategy tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A concrete implementation of the animation export strategy pattern for co-registration data. Each frame during an animation export calls `do_export_iteration()`, which uses the `ExportAnimationContext` to compute co-registration results at the current reconstruction time and writes them to output files. Configuration controls filename templates with placeholders for layer names and other substitutions. The class uses intrusive pointers and the factory pattern via the static `create()` method to ensure proper lifetime management.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ExportCoRegistrationAnimationStrategy tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The protected constructor and factory method via `create()` enforce use of intrusive pointers. The Configuration class hierarchy allows subclasses to extend export options while remaining compatible with the base strategy interface.
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlFormatDeformationExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports deformation data from `TopologyReconstructedFeatureGeometry` objects to a GPML file. This module takes the per-point deformation information (strain, strain rates, and principal strains) computed during reconstruction and writes it into new GPML features structured as scalar coverage features. The exported features preserve the domain geometry and add scalar properties containing the requested deformation metrics—principal strain axes and magnitudes, dilatation strain, strain rate components, and strain rate style.
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlFormatDeformationExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

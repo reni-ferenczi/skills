@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=deprecated/controls/Lifetime tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A singleton that controls graceful program termination. Requires initialization via `init()` with a reference to the main window; subsequently `instance()` provides access to the singleton. The `terminate()` method logs the termination reason to stderr, deletes the main window (which causes wxWidgets to exit the event loop), and calls `std::exit(1)`.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=deprecated/controls/Lifetime tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Initialization is strictly ordered: `init()` must be called exactly once with a non-NULL `MainWindow` pointer before calling `instance()`. Violations throw `AlreadyInitialisedSingletonException`, `NullParameterException`, or `UninitialisedSingletonException` respectively. The `terminate()` method does not return: it deletes the main window and calls `std::exit(1)`. Code comments indicate unresolved TODOs about offering to save work before termination.
 
 ## Used by
 

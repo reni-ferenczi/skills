@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/GenericMapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`GenericMapper` is a concrete template that implements the abstract `Mapper` interface by accepting a user-provided functor or callable as a template parameter to perform the mapping operation. It bridges iterator-based input sequences and output sequences, supporting three different output collection modes: appending to a provided iterator, storing in an internal vector, or populating a supplied vector. The class encapsulates the complexity of directing output through `FilterMapOutputHandler` based on the output collection strategy chosen.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/GenericMapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

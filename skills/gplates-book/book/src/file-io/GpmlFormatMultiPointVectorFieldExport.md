@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GpmlFormatMultiPointVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports velocity vector fields from `MultiPointVectorField` objects to GPML format. This module transforms the velocity data computed during plate reconstruction into GPML `VelocityField` features, capturing the per-point velocity vectors along with metadata like the reconstruction time and anchor plate ID. Each field includes a reference to the domain feature from which the velocities were derived.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GpmlFormatMultiPointVectorFieldExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

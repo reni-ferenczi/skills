@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/ImportMenu tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Manages the Import submenu in the File menu, organizing import operations into sections such as BUILT_IN, RASTER, and SCALAR_FIELD_3D. The submenu is initially hidden and only shown when the first import type is registered. Each import item holds a callback function that is invoked when the menu item is triggered, allowing flexible registration of import operations without hardcoding menu structure.
 
 ## Declared types
 
@@ -43,9 +41,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/ImportMenu tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The Import menu is removed from its parent when constructed and only reinserted when the first import item is added; this allows it to remain hidden until needed. All callbacks are stored as `boost::function` objects in the QAction data.
 
 ## Used by
 

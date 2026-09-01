@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/CoRegFilterCache tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A cache for reconstructed feature vectors, keyed by co-registration filter configuration. Stores results of filtering operations to avoid recomputation when similar configurations are requested. The `find` method supports fuzzy lookups: if an exact configuration match is not cached, it returns the best cached result from a less-restrictive configuration (preferring smaller result sets when multiple candidates exist).
 
 ## Declared types
 
@@ -40,9 +38,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/CoRegFilterCache tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

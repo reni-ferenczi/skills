@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/MeanDistanceDataOperator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `DistanceDataOperator` subclass intended to compute the mean (average) distance from a collection of distance values. The `calculate()` method is declared virtual but not implemented—it currently contains only a TODO comment and returns `EmptyData` unconditionally.
 
 ## Declared types
 
@@ -37,9 +35,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/MeanDistanceDataOperator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `calculate()` method is not implemented and always returns `EmptyData`.
 
 ## Used by
 

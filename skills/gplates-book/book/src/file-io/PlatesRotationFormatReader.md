@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PlatesRotationFormatReader tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Reads PLATES rotation-format files (simple ASCII format) and materializes them as GPlates features. Each line in a PLATES file contains a total reconstruction pole: moving plate ID, geological age, pole latitude and longitude, rotation angle, fixed plate ID, and an optional comment.
+
+The reader groups poles by reference frame pairs and creates a `TotalReconstructionSequence` feature for each unique (fixed, moving) plate ID pair, with poles stored as an `GpmlIrregularSampling` of `GpmlFiniteRotation` values interpolated with `GpmlFiniteRotationSlerp`. Special handling treats poles with moving plate ID 999 as disabled (commented-out), and detects overlapping sequences with warnings. The reader also adjusts poles to ensure stage rotations take the geodesically short path rather than the long way around the globe.
 
 ## Declared types
 
@@ -66,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PlatesRotationFormatReader tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Parsing errors and warnings are accumulated in the `read_errors` parameter rather than thrown; missing or malformed poles are logged but do not stop the read. The reader marks files as containing unsaved changes if it adjusts poles for short-path rotation. The two anonymous helper structs `PoleParsingException` and `UnexpectedlyNullIrregularSampling` are internal exceptions used for control flow.
 
 ## Used by
 

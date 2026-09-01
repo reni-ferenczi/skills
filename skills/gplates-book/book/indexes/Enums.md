@@ -63,7 +63,7 @@ Every in-tree definition of enumerations, from the `gplates-code` index. 280 ent
 
 | Name | Unit | Description |
 |---|---|---|
-| [`GPlatesDataMining::CacheHitTypes`](../src/data-mining/DataMiningCache.md#gplatesdataminingcachehittypes) | [data-mining/DataMiningCache](../src/data-mining/DataMiningCache.md) | — |
+| [`GPlatesDataMining::CacheHitTypes`](../src/data-mining/DataMiningCache.md#gplatesdataminingcachehittypes) | [data-mining/DataMiningCache](../src/data-mining/DataMiningCache.md) | Enum indicating cache query result: perfect hit, needs further processing, or no hit |
 | [`GPlatesOpenGL::GLMultiResolutionCubeRaster::CacheTileTexturesType`](../src/opengl/GLMultiResolutionCubeRaster.md#gplatesopenglglmultiresolutioncuberaster) | [opengl/GLMultiResolutionCubeRaster](../src/opengl/GLMultiResolutionCubeRaster.md) | Determines the granularity of caching to be used for GLMultiResolutionCubeRaster tile textures... |
 | [`GPlatesOpenGL::GLMultiResolutionRaster::CacheTileTexturesType`](../src/opengl/GLMultiResolutionRaster.md#gplatesopenglglmultiresolutionraster) | [opengl/GLMultiResolutionRaster](../src/opengl/GLMultiResolutionRaster.md) | Determines the granularity of caching to be used for GLMultiResolutionRaster tile textures... |
 | [`GPlatesQtWidgets::CanvasOperationType`](../src/qt-widgets/HellingerDialog.md#gplatesqtwidgetscanvasoperationtype) | [qt-widgets/HellingerDialog](../src/qt-widgets/HellingerDialog.md) | — |
@@ -118,7 +118,7 @@ Every in-tree definition of enumerations, from the `gplates-code` index. 280 ent
 | Name | Unit | Description |
 |---|---|---|
 | [`GPlatesAppLogic::ResolvedTriangulation::Network::BuildInfo::RiftParams::EdgeType`](../src/app-logic/ResolvedTriangulationNetwork.md#gplatesapplogicresolvedtriangulationnetwork) | [app-logic/ResolvedTriangulationNetwork](../src/app-logic/ResolvedTriangulationNetwork.md) | Whether either/both Delaunay edge vertices are on an un-stretched side of the rift. |
-| [`GPlatesMaths::RotationSequence::EdgeType`](../src/maths/deprecated/RotationSequence.md#gplatesmathsrotationsequence) | [maths/deprecated/RotationSequence](../src/maths/deprecated/RotationSequence.md) | The elements of this enumeration represent the possible edge-properties which a rotation sequence may possess at a given point in time. |
+| [`GPlatesMaths::RotationSequence::EdgeType`](../src/maths/deprecated/RotationSequence.md#gplatesmathsrotationsequence) | [maths/deprecated/RotationSequence](../src/maths/deprecated/RotationSequence.md) | enumeration of edge properties at rotation sequence boundaries for handling crossover points |
 | [`GPlatesUnitTest::TranscribePrimitivesTest::Data::Enum`](../src/unit-test/TranscribeTest.md#gplatesunittesttranscribeprimitivestest) | [unit-test/TranscribeTest](../src/unit-test/TranscribeTest.md) | — |
 | [`GPlatesUnitTest::TranscribePrimitivesTest::Data::Enum2`](../src/unit-test/TranscribeTest.md#gplatesunittesttranscribeprimitivestest) | [unit-test/TranscribeTest](../src/unit-test/TranscribeTest.md) | — |
 | [`GPlatesOpenGL::GLRenderer::GLRendererAPIError::ErrorType`](../src/opengl/GLRenderer.md#gplatesopenglglrenderer) | [opengl/GLRenderer](../src/opengl/GLRenderer.md) | — |
@@ -134,7 +134,7 @@ Every in-tree definition of enumerations, from the `gplates-code` index. 280 ent
 |---|---|---|
 | [`GPlatesAppLogic::AssignPlateIds::FeaturePropertyType`](../src/app-logic/AssignPlateIds.md#gplatesapplogicassignplateids) | [app-logic/AssignPlateIds](../src/app-logic/AssignPlateIds.md) | The feature property types we can assign. |
 | [`GPlatesAppLogic::PropertyValuePropogator::FeaturePropertyType`](../src/app-logic/deprecated/PropertyValuePropogator.md#gplatesapplogicpropertyvaluepropogator) | [app-logic/deprecated/PropertyValuePropogator](../src/app-logic/deprecated/PropertyValuePropogator.md) | The feature property types we can assign. |
-| [`GPlatesGlobal::FeatureTypes`](../src/global/deprecated/types.md#gplatesglobalfeaturetypes) | [global/deprecated/types](../src/global/deprecated/types.md) | Basic feature types. |
+| [`GPlatesGlobal::FeatureTypes`](../src/global/deprecated/types.md#gplatesglobalfeaturetypes) | [global/deprecated/types](../src/global/deprecated/types.md) | Enumeration for feature geometry types (point, line, polygon, mesh, etc.) |
 | [`GPlatesQtWidgets::PreferencesPaneFiles::FileBehaviour`](../src/qt-widgets/PreferencesPaneFiles.md#gplatesqtwidgetspreferencespanefiles) | [qt-widgets/PreferencesPaneFiles](../src/qt-widgets/PreferencesPaneFiles.md) | — |
 | [`GPlatesQtWidgets::AssignReconstructionPlateIdsDialog::FileColumnName`](../src/qt-widgets/AssignReconstructionPlateIdsDialog.md#gplatesqtwidgetsassignreconstructionplateidsdialog) | [qt-widgets/AssignReconstructionPlateIdsDialog](../src/qt-widgets/AssignReconstructionPlateIdsDialog.md) | These should match the table columns set up in the UI designer. |
 | [`GPlatesGui::ExportCitcomsResolvedTopologyAnimationStrategy::Configuration::FileFormat`](../src/gui/ExportCitcomsResolvedTopologyAnimationStrategy.md#gplatesguiexportcitcomsresolvedtopologyanimationstrategy) | [gui/ExportCitcomsResolvedTopologyAnimationStrategy](../src/gui/ExportCitcomsResolvedTopologyAnimationStrategy.md) | — |
@@ -153,9 +153,9 @@ Every in-tree definition of enumerations, from the `gplates-code` index. 280 ent
 | [`GPlatesFileIO::CitcomsResolvedTopologicalBoundaryExport::Format`](../src/file-io/CitcomsResolvedTopologicalBoundaryExport.md#gplatesfileiocitcomsresolvedtopologicalboundaryexportformat) | [file-io/CitcomsResolvedTopologicalBoundaryExport](../src/file-io/CitcomsResolvedTopologicalBoundaryExport.md) | Formats of files that can export resolved topological boundaries. |
 | [`GPlatesFileIO::FeatureCollectionFileFormat::Format`](../src/file-io/FeatureCollectionFileFormat.md#gplatesfileiofeaturecollectionfileformatformat) | [file-io/FeatureCollectionFileFormat](../src/file-io/FeatureCollectionFileFormat.md) | Formats of files that can contain feature collections. |
 | [`GPlatesFileIO::ReconstructedFeatureGeometryExport::Format`](../src/file-io/ReconstructedFeatureGeometryExport.md#gplatesfileioreconstructedfeaturegeometryexportformat) | [file-io/ReconstructedFeatureGeometryExport](../src/file-io/ReconstructedFeatureGeometryExport.md) | Formats of files that can export reconstructed feature geometries. |
-| [`GPlatesFileIO::ReconstructedFlowlineExport::Format`](../src/file-io/ReconstructedFlowlineExport.md#gplatesfileioreconstructedflowlineexportformat) | [file-io/ReconstructedFlowlineExport](../src/file-io/ReconstructedFlowlineExport.md) | Formats of files that can export reconstructed flowlines. |
-| [`GPlatesFileIO::ReconstructedMotionPathExport::Format`](../src/file-io/ReconstructedMotionPathExport.md#gplatesfileioreconstructedmotionpathexportformat) | [file-io/ReconstructedMotionPathExport](../src/file-io/ReconstructedMotionPathExport.md) | Formats of files that can export reconstructed motion paths. |
-| [`GPlatesFileIO::ResolvedTopologicalGeometryExport::Format`](../src/file-io/ResolvedTopologicalGeometryExport.md#gplatesfileioresolvedtopologicalgeometryexportformat) | [file-io/ResolvedTopologicalGeometryExport](../src/file-io/ResolvedTopologicalGeometryExport.md) | Formats of files that can export resolved topological geometries. |
+| [`GPlatesFileIO::ReconstructedFlowlineExport::Format`](../src/file-io/ReconstructedFlowlineExport.md#gplatesfileioreconstructedflowlineexportformat) | [file-io/ReconstructedFlowlineExport](../src/file-io/ReconstructedFlowlineExport.md) | Export format selection: GMT, Shapefile, OGR GMT, GeoJSON or unknown |
+| [`GPlatesFileIO::ReconstructedMotionPathExport::Format`](../src/file-io/ReconstructedMotionPathExport.md#gplatesfileioreconstructedmotionpathexportformat) | [file-io/ReconstructedMotionPathExport](../src/file-io/ReconstructedMotionPathExport.md) | Export format selection: GMT, Shapefile, OGR GMT, GeoJSON or unknown |
+| [`GPlatesFileIO::ResolvedTopologicalGeometryExport::Format`](../src/file-io/ResolvedTopologicalGeometryExport.md#gplatesfileioresolvedtopologicalgeometryexportformat) | [file-io/ResolvedTopologicalGeometryExport](../src/file-io/ResolvedTopologicalGeometryExport.md) | Export format selection: GMT, Shapefile, OGR GMT, GeoJSON or unknown |
 | [`GPlatesGui::ExportAnimationType::Format`](../src/gui/ExportAnimationType.md#gplatesguiexportanimationtypeformat) | [gui/ExportAnimationType](../src/gui/ExportAnimationType.md) | The list of exporter formats. |
 | [`GPlatesFileIO::RasterReader::FormatHandler`](../src/file-io/RasterReader.md#gplatesfileiorasterreader) | [file-io/RasterReader](../src/file-io/RasterReader.md) | Libraries that we use to read in rasters. |
 | [`GPlatesFileIO::RasterWriter::FormatHandler`](../src/file-io/RasterWriter.md#gplatesfileiorasterwriter) | [file-io/RasterWriter](../src/file-io/RasterWriter.md) | Libraries that we use to write out rasters. |
@@ -234,7 +234,7 @@ Every in-tree definition of enumerations, from the `gplates-code` index. 280 ent
 
 | Name | Unit | Description |
 |---|---|---|
-| [`GPlatesQtWidgets::NewSegmentActionType`](../src/qt-widgets/HellingerNewSegmentWarning.md#gplatesqtwidgetsnewsegmentactiontype) | [qt-widgets/HellingerNewSegmentWarning](../src/qt-widgets/HellingerNewSegmentWarning.md) | — |
+| [`GPlatesQtWidgets::NewSegmentActionType`](../src/qt-widgets/HellingerNewSegmentWarning.md#gplatesqtwidgetsnewsegmentactiontype) | [qt-widgets/HellingerNewSegmentWarning](../src/qt-widgets/HellingerNewSegmentWarning.md) | Enum indicating user choice: add to existing, replace, insert, or cancel |
 
 ## O
 
@@ -334,7 +334,7 @@ Every in-tree definition of enumerations, from the `gplates-code` index. 280 ent
 | [`GPlatesUtils::XPath::Tokenizer::Token`](../src/utils/XPath.md#gplatesutilsxpathtokenizer) | [utils/XPath](../src/utils/XPath.md) | — |
 | [`(anonymous)::TokenizerState`](../src/utils/XPath.md#anonymoustokenizerstate) | [utils/XPath](../src/utils/XPath.md) | — |
 | [`GPlatesGui::CanvasToolWorkflows::ToolType`](../src/gui/CanvasToolWorkflows.md#gplatesguicanvastoolworkflows) | [gui/CanvasToolWorkflows](../src/gui/CanvasToolWorkflows.md) | The type of canvas tool. |
-| [`GPlatesGlobal::TopologyTypes`](../src/global/deprecated/types.md#gplatesglobaltopologytypes) | [global/deprecated/types](../src/global/deprecated/types.md) | — |
+| [`GPlatesGlobal::TopologyTypes`](../src/global/deprecated/types.md#gplatesglobaltopologytypes) | [global/deprecated/types](../src/global/deprecated/types.md) | Enumeration for topology structure types (plate polygon, slab polygon, network) |
 | [`GPlatesScribe::TranscribeResult`](../src/scribe/TranscribeResult.md#gplatesscribetranscriberesult) | [scribe/TranscribeResult](../src/scribe/TranscribeResult.md) | The result of transcribing an object. |
 | [`GPlatesPresentation::TopologyNetworkVisualLayerParams::TriangulationColourMode`](../src/presentation/TopologyNetworkVisualLayerParams.md#gplatespresentationtopologynetworkvisuallayerparams) | [presentation/TopologyNetworkVisualLayerParams](../src/presentation/TopologyNetworkVisualLayerParams.md) | — |
 | [`GPlatesPresentation::TopologyNetworkVisualLayerParams::TriangulationDrawMode`](../src/presentation/TopologyNetworkVisualLayerParams.md#gplatespresentationtopologynetworkvisuallayerparams) | [presentation/TopologyNetworkVisualLayerParams](../src/presentation/TopologyNetworkVisualLayerParams.md) | — |
@@ -361,7 +361,7 @@ Every in-tree definition of enumerations, from the `gplates-code` index. 280 ent
 | [`GPlatesModel::ModelUtils::TopLevelPropertyError::Type`](../src/model/ModelUtils.md#gplatesmodelmodelutilstoplevelpropertyerrortype) | [model/ModelUtils](../src/model/ModelUtils.md) | — |
 | [`GPlatesModel::WeakReferencePublisherModifiedEvent::Type`](../src/model/WeakReferenceCallback.md#gplatesmodelweakreferencepublishermodifiedevent) | [model/WeakReferenceCallback](../src/model/WeakReferenceCallback.md) | — |
 | [`GPlatesOpenGL::GLVisualLayers::LayerUsage::Type`](../src/opengl/GLVisualLayers.md#gplatesopenglglvisuallayers) | [opengl/GLVisualLayers](../src/opengl/GLVisualLayers.md) | The types of layer usage. |
-| [`GPlatesPresentation::VisualLayerGroup::Type`](../src/presentation/VisualLayerGroup.md#gplatespresentationvisuallayergrouptype) | [presentation/VisualLayerGroup](../src/presentation/VisualLayerGroup.md) | — |
+| [`GPlatesPresentation::VisualLayerGroup::Type`](../src/presentation/VisualLayerGroup.md#gplatespresentationvisuallayergrouptype) | [presentation/VisualLayerGroup](../src/presentation/VisualLayerGroup.md) | Category group for a visual layer (scalar fields, rasters, derived or basic data) |
 | [`GPlatesPropertyValues::RasterType::Type`](../src/property-values/RasterType.md#gplatespropertyvaluesrastertypetype) | [property-values/RasterType](../src/property-values/RasterType.md) | An enumeration of data types that can be found in rasters. |
 
 ## U

@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=global/unicode tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A convenience header that provides access to `UnicodeString` utilities from the `utils` module. This header makes Unicode string functionality available throughout the codebase via inclusion in the global namespace. It is used by file I/O writers, the data model, property-value handlers, and utility modules to support internationalized string handling.
 
 ## Declared types
 
@@ -28,9 +26,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=global/unicode tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

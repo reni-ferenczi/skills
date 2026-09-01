@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/FocusedFeatureGeometryManipulator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Bridges interactive geometry editing (via `GeometryBuilder`) with the feature model. When the user focuses a feature and edits its geometry, this class receives those edits through Qt signal/slot connections and persists them back to the feature's geometry property. It also handles the reverse: when a new feature is focused, it extracts that feature's geometry and loads it into the `GeometryBuilder` for editing.
+
+The class uses a visitor pattern (`SetGeometryInBuilder`) to convert between the feature's native geometry representation and the builder's point-based form. It also handles reconstruction and reverse-reconstruction of geometries to account for plate motions, allowing users to edit fixed-time geometries relative to their changing plate contexts.
 
 ## Declared types
 
@@ -72,9 +72,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/FocusedFeatureGeometryManipulator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The class must prevent infinite signal/slot loops: changing the builder emits a signal that updates the feature, which triggers a focus-changed signal that would reload the geometry, creating a cycle. The `BlockInfiniteSignalSlotLoop` RAII helper prevents this by blocking certain signals during critical operations. A developer modifying geometry-editing behavior should be aware of this blocking mechanism to avoid accidentally breaking undo/redo or other dependent behaviors.
 
 ## Used by
 

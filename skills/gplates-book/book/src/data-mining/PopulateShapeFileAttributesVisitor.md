@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/PopulateShapeFileAttributesVisitor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`PopulateShapeFileAttributesVisitor` is a feature visitor that extracts attribute names from the `shapefileAttributes` property of a feature, collecting them for export to shapefiles. It extends `ConstFeatureVisitor` and walks through property values, with special handling for `GpmlKeyValueDictionary` which contains the attribute keys. These collected names are retrieved via `get_shape_file_attr_names()` for use in co-registration export operations.
 
 ## Declared types
 
@@ -42,9 +40,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/PopulateShapeFileAttributesVisitor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

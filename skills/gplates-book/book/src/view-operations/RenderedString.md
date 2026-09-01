@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=view-operations/RenderedString tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A rendered geometry wrapper for displaying text labels on the globe or map view. The class positions a `QString` at a `PointOnSphere` and stores visual properties including the text colour, optional shadow colour, pixel offsets to fine-tune label placement, and a `QFont` for styling. Shadow colours can be disabled by setting the `ColourProxy` to `boost::none`. The pixel offsets allow shifting labels right and upward to avoid overlap with other features. Proximity testing is disabled for strings since they are meant to be informational annotations, not selectable objects.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=view-operations/RenderedString tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

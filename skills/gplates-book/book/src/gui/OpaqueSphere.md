@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/OpaqueSphere tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Renders the background sphere (globe surface) of the 3D globe view. It renders the sphere as a flat disk on the z=0 plane, which allows proper depth testing to occlude geometries on the far side of the globe while avoiding depth artifacts from geometries clipping through the surface. The rendering can use a fixed color or the background color from `ViewState`. For translucent rendering, varying alpha values from center to edge simulate the appearance of a 3D sphere using integration to calculate per-ring material thickness.
 
 ## Declared types
 
@@ -70,9 +68,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/OpaqueSphere tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The ViewState pointer (when used) is not owned and must remain valid for the lifetime of the OpaqueSphere. The translucent version uses 150 radial steps and 72 angular slices. The disk is rendered with 72 slices around the circumference. The paint() method takes an axis and angle to rotate the sphere before rendering.
 
 ## Used by
 

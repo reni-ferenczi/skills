@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/Mapper tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`Mapper` is an abstract base class template defining an interface for mapping (transforming) input sequences to output sequences. Subclasses implement the transformation logic via pure virtual operator() overloads. The class supports flexible output handling: writing to an existing iterator, creating a new output container internally, or accepting an output container reference to populate.
+
+Type extraction is handled by template metaprogramming: the class deduces the value type from both iterators and raw pointers using Boost type traits, exposing typedefs for both input and output value types. All operations return a tuple of output iterators (begin and end) to indicate the result range.
 
 ## Declared types
 
@@ -43,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/Mapper tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+`Mapper` is an abstract interface; subclasses must implement all four operator() variants. The return type is a tuple of iterators (begin and end), not the container itself; callers must extract the container from the begin iterator if needed. The `operator<<` variant expects a `boost::tuple` of input iterators, supporting a stream-like syntax. All operators are pure virtual, making direct instantiation a compile error.
 
 ## Used by
 

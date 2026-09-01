@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=cli/CliStageRotationCommand tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A CLI command that calculates and prints stage rotations between two plates over a specified time interval. The command loads rotation feature collection files, creates `ReconstructionTree` objects at two times, and uses `RotationUtils::get_stage_pole()` to compute the rotation angle and Euler pole. It supports both full-stage and partial-stage rotations through an asymmetry parameter, and can optionally output the rotation relative to an anchor plate (useful for mid-ocean ridge applications) using composition with absolute rotations from the reconstruction tree.
 
 ## Declared types
 
@@ -62,9 +60,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=cli/CliStageRotationCommand tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The asymmetry parameter must be in the range [-1, 1]; values outside this range throw an exception. The anchor, fixed, and moving plate IDs must all exist in the loaded rotation files; missing IDs result in a logged exception. When computing rotations relative to the anchor plate (rather than the fixed plate), the implementation applies a three-rotation composition using absolute rotations from both start and end reconstruction trees; see the detailed mathematical comments in the `run()` method.
 
 ## Used by
 

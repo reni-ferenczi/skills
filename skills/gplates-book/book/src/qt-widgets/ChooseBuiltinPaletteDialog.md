@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ChooseBuiltinPaletteDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Dialog for browsing and selecting from a collection of built-in color palettes. Palettes are organized into four categories: Age, Topography, Scientific ColorMaps (SCM), and ColorBrewer. Each palette is displayed as a clickable `ColourScaleButton` with its name beneath. When the user clicks a button, the dialog emits a signal with the selected palette specification.
+
+The dialog includes controls to customize ColorBrewer palettes: spin boxes to set the number of color classes (3-9 for sequential, 3-11 for diverging), and checkboxes to toggle between discrete and continuous rendering. A global invert checkbox applies to all selected palettes. When these options change, the dialog updates the corresponding button display and re-populates it with the modified palette, then signals any parameter changes.
 
 ## Declared types
 
@@ -101,9 +101,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ChooseBuiltinPaletteDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

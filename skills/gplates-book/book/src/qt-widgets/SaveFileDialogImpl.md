@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SaveFileDialogImpl tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This unit contains the internal implementation classes for a save file dialog that abstracts over platform-specific dialog behavior. A virtual base class `SaveFileDialogImpl` defines the interface, with two concrete implementations: `NativeSaveFileDialog` for Windows and macOS using native file choosers, and `QtSaveFileDialog` for Linux using Qt's file dialog.
+
+The split exists because the native GTK file chooser on Linux does not automatically update the filename extension when the user changes the selected filter, leading to files saved with incorrect extensions. The Qt implementation works around this by manually updating the extension in response to filter changes. Both implementations track file extension to filter mappings and manage the currently selected file and filter.
 
 ## Declared types
 
@@ -72,9 +72,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SaveFileDialogImpl tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/PlatesLineFormatWriter tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A feature visitor that writes GPlates features to PLATES4 line format. Traverses feature properties, accumulates feature geometries, and delegates coordinate writing to `PlatesLineFormatGeometryExporter`. Generates PLATES4 headers via `PlatesLineFormatHeaderVisitor` that encode feature metadata (data type code, geographic region, time period) before writing the feature's geometries as pen-coded coordinate sequences.
 
 ## Declared types
 
@@ -65,9 +63,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/PlatesLineFormatWriter tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

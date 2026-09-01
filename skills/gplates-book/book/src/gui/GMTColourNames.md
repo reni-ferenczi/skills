@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/GMTColourNames tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A singleton `ColourNameSet` that maps GMT color names (as defined in `man gmtcolors`) to their RGB values. The class populates itself in its constructor with the complete set of GMT named colors, providing a lookup table for applications that need to parse color specifications from GMT color palette (`.cpt`) files or other GMT-compatible data sources.
 
 ## Declared types
 
@@ -33,9 +31,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/GMTColourNames tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

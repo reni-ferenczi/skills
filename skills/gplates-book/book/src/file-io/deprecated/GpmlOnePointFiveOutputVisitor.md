@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/deprecated/GpmlOnePointFiveOutputVisitor tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A `ConstFeatureVisitor` that serializes features and property values to XML using GPML 1.5 format conventions. It traverses features, top-level properties, and the various property-value types (geometric, temporal, rotation, etc.), writing each to an `XmlOutputInterface`. The visitor handles time-dependent values through the `write_gpml_time_sample()` helper, which serializes time-variant property states. This is deprecated infrastructure for writing legacy GPML format versions.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/deprecated/GpmlOnePointFiveOutputVisitor tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

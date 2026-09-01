@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/deprecated/PaleomagUtils tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Utility visitors for paleomagnetic data handling. `DetectPaleomagFeatures` traverses feature collections to determine whether they contain paleomagnetic features. `VgpRenderer` renders Virtual Geomagnetic Pole features by visiting and collecting properties such as site point, pole location, confidence parameters, plate ID, and age information, optionally applying an additional rotation before rendering to the target layer.
 
 ## Declared types
 
@@ -71,9 +69,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/deprecated/PaleomagUtils tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=property-values/GpmlTopologicalPoint tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A topological section representing a point in topology operations. It inherits from `GpmlTopologicalSection` and holds a `GpmlPropertyDelegate` reference to its source geometry. Unlike simpler property values, `deep_clone()` recursively clones the contained source geometry delegate to ensure complete independence from the original. The source geometry can be updated after creation, triggering instance-id changes to track modifications.
 
 ## Declared types
 
@@ -52,9 +50,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=property-values/GpmlTopologicalPoint tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=gui/PlateIdColourPalettes tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Color palette implementations for mapping plate IDs to display colors. `DefaultPlateIdColourPalette` uses a scheme of 11 carefully chosen colors that cycle based on plate ID, designed to make adjacent plates visually distinct. `RegionalPlateIdColourPalette` groups plates by their region (first digit of the plate ID), assigning a base color to each region, then varying the brightness within each region based on the plate ID's lower digits, creating related colors for nearby plates.
 
 ## Declared types
 
@@ -70,9 +68,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=gui/PlateIdColourPalettes tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Both implementations use singleton pattern for their color arrays. RegionalPlateIdColourPalette uses HSV color space to vary brightness (value component) from 0.6–1.0 in 13 steps per region. The default scheme has 11 colors (not 10) specifically chosen for the sample data coastlines file. get_colour() returns an optional but will always have a value for valid (unsigned) plate IDs.
 
 ## Used by
 

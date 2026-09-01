@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/NetworkUtils tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Provides utilities for bidirectional conversion between `QNetworkProxy` objects and URL-like strings. The primary use is to serialize proxy settings into a form that can be stored in user preferences and later reconstructed. `get_url_for_proxy()` takes a proxy object and builds a URL with the scheme derived from the proxy type (e.g. "socks5", "http") and the user, password, hostname, and port fields set accordingly; `get_proxy_for_url()` reverses this process. Helper functions `build_proxy_type_map()`, `url_scheme_for_proxy_type()`, and `proxy_type_for_url_scheme()` maintain the mapping between Qt proxy type enums and their string representations.
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/NetworkUtils tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

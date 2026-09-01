@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/TopologyNetworkResolver tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Resolves topological network features at a specific reconstruction time by visiting feature properties and constructing `ResolvedTopologicalNetwork` objects. The resolver implements the visitor pattern over a feature model, extracting topological boundary sections and interior geometries from `GpmlTopologicalNetwork` property values and assembling them into resolved networks with processed intersections.
+
+Each resolved network requires boundary sections; networks without them are discarded. The resolver handles both ordinary topological networks and rift-specific variants, which carry left and right plate IDs and additional strain rate parameters. The resolver respects feature existence at the reconstruction time, filtering out features that do not span the requested time.
 
 ## Declared types
 
@@ -67,9 +67,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/TopologyNetworkResolver tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Features are only processed if they are defined at the reconstruction time; older or not-yet-born features are skipped. A valid resolved network requires at least one boundary section—interior geometries are optional—and networks without boundary sections are silently discarded.
 
 ## Used by
 

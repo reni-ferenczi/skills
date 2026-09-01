@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ManageFeatureCollectionsEditConfigurations tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Configuration handlers for saving feature collections in different file formats, used by the Manage Feature Collection dialog. The `EditConfiguration` base class defines the interface for format-specific configuration dialogs. `GMTEditConfiguration` handles output options for the GMT ".xy" format, while `ShapefileEditConfiguration` manages attribute mapping and wrap-to-dateline options for multiple OGR-based formats including Shapefile, GeoJSON, and GeoPackage. The `register_default_edit_configurations` function wires these handlers into a dialog so that users can edit format-specific options when saving.
 
 ## Declared types
 
@@ -59,9 +57,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ManageFeatureCollectionsEditConfigurations tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The model-to-attribute map is stored in the feature collection itself, not in the file configuration. `ShapefileEditConfiguration` remaps file attributes through `GPlatesFileIO::OgrReader::remap_shapefile_attributes`, which requires the updated file configuration to already be stored on the file reference. If the file is deleted before the configuration dialog opens, a dialog reports the error and the original configuration is returned unchanged.
 
 ## Used by
 

@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/GsmlFeaturesDef tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Metadata definition of supported GeoSciML feature types and their property schemas. The `FeatureInfo` struct pairs a feature type name with an array of `PropertyInfo` pointers describing which properties that type can contain. Five static arrays define property lists for `MappedFeature`, `GeologicUnit`, `UnclassifiedFeature`, `RockUnit*` (prefix-based), and `FossilCollection*` (prefix-based) types, collected in the `AllFeatureTypes` array.
+
+During GSML feature extraction, `GsmlNodeProcessorFactory` consults `AllFeatureTypes` to determine which properties to extract and process for each feature type. The struct provides the extensibility hook: adding a new feature type requires defining its property array, adding an entry to `AllFeatureTypes`, and ensuring the property definitions exist in `GsmlPropertyDef.h`.
 
 ## Declared types
 
@@ -42,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/GsmlFeaturesDef tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

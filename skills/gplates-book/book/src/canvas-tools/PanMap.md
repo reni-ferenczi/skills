@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=canvas-tools/PanMap tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A map canvas tool for panning the globe view on a map canvas. Extends `MapCanvasTool` and translates mouse drag events into view reorientation by applying transformations through `MapTransform`. Supports both regular panning (left drag) and an alternative mode (shift+left drag) to provide flexible navigation. It manages the rendered geometry collection to control visibility of focused geometry highlights during interaction.
 
 ## Declared types
 
@@ -41,9 +39,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=canvas-tools/PanMap tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

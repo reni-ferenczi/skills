@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=unit-test/CoregTest tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Unit tests for co-registration (CoReg) functionality in the data-mining subsystem. Tests load feature collections from configuration files, manipulate rotation and seed data, and validate results at various time periods. The test suite verifies `CoRegConfigurationTable` population, data loading, and the core co-registration algorithm through seven test cases. Implementation is incomplete—marked as TODO pending a lower-level Python API.
 
 ## Declared types
 
@@ -68,9 +66,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=unit-test/CoregTest tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Test methods `test_case_1()` through `test_case_7()` are placeholders—the actual test implementation is incomplete and logs a warning stating "not implemented". The test cases are intended to be re-implemented using a lower-level Python API approach.
 
 ## Used by
 

@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ShapefileFileFormatConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A modal dialog that configures OGR/shapefile file format options when loading or editing a file. It combines two embedded widgets: a `DatelineWrapOptionsWidget` for controlling whether geometries should wrap at the dateline, and a `ShapefileAttributeWidget` for mapping shapefile attributes to model properties.
+
+The dialog is initialized with the dateline-wrap setting and attribute mapping data, and provides access to the final dateline-wrap choice via `get_wrap_to_dateline()` after the user accepts the dialog.
 
 ## Declared types
 
@@ -45,9 +45,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ShapefileFileFormatConfigurationDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

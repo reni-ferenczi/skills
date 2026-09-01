@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=api/PyTopologyTools tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+This class exports a Python utility for extracting topology section information from features. `sections_info` is a static method that uses `TopologySectionsFinder` to visit a feature and categorize its boundary and interior sections, returning them as a list of tuples containing the feature ID, property name, and section type ("boundary" or "interior").
 
 ## Declared types
 
@@ -34,9 +32,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=api/PyTopologyTools tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

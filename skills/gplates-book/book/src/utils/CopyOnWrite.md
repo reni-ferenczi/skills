@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/CopyOnWrite tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`CopyOnWrite` is a template wrapper that provides copy-on-write semantics for smart pointers—`non_null_intrusive_ptr`, `boost::intrusive_ptr`, and `boost::shared_ptr`. It minimizes copying by sharing the pointed-to object between copies as long as both remain read-only, but clones the object when one copy requests mutable access, ensuring isolation.
+
+The wrapper maintains a flag tracking whether any copy has been given mutable access. On construction, it clones the input to ensure the new instance is independent. On copy construction, it shares the pointer if the source is still shareable (unmodified), otherwise it clones. When `get_non_const()` is called, it clones if the object is both shareable and currently shared by others, then marks the wrapper non-shareable to prevent further sharing. The default copy policy expects types to implement a `clone()` method returning the appropriate smart pointer type.
 
 ## Declared types
 
@@ -99,9 +99,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/CopyOnWrite tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Wrapped types must implement a `clone()` method returning the same smart pointer type; the default policies call this to create independent copies. When the template parameter is `const` (e.g., `non_null_intrusive_ptr<const T>`), the wrapper does not perform copy-on-write since the pointed-to object is immutable. The wrapper is not thread-safe; concurrent calls to `get_non_const()` on different copies may race on reference counting. Assignment uses the copy-and-swap idiom, making it exception-safe.
 
 ## Used by
 

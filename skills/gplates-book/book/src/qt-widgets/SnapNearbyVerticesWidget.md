@@ -10,9 +10,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/SnapNearbyVerticesWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A configuration widget for snapping vertices during interactive geometry editing, embedded in the task panel. The widget provides checkboxes to enable/disable snapping to nearby vertices and snapping to a specific plate ID, plus spinboxes for the threshold distance (in degrees) and the plate ID value. The conjugate plate ID is optionally extracted from the focused feature and displayed.
+
+When any control changes, the widget updates the `ModifyGeometryState` to reflect the current snap settings, which the geometry modification tools then apply during editing.
 
 ## Declared types
 
@@ -49,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/SnapNearbyVerticesWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The widget maintains weak references to the focused feature and holds the conjugate plate ID as an optional value, defaulting to absent if the feature does not define one or if no feature is focused. The plate ID spinbox accepts values in the range [0, 2^31-1].
 
 ## Used by
 

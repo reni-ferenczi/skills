@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=maths/ViolatedDirVectorInvariantException tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An exception thrown specifically when direction vector invariants are violated. Direction vectors in GPlates mathematics represent normalized directions in 3D space; this exception signals when an operation attempts to create or manipulate a direction vector in a way that would violate the mathematical invariants of that type. Like its sibling exception classes, it carries a message describing the invariant violation and stack trace information.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=maths/ViolatedDirVectorInvariantException tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

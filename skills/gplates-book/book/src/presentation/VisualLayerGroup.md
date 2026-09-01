@@ -8,9 +8,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=presentation/VisualLayerGroup tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Defines an enumeration of visual layer categories—`SCALAR_FIELDS`, `RASTERS`, `DERIVED_DATA`, `BASIC_DATA`—used to organize how layers appear on screen. The enumeration order is significant: it determines the order in which layers are added to the `VisualLayers` collection and, inversely, their visual stacking (since `VisualLayers` stores layers in reverse display order, the first enum group appears at the bottom on screen).
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=presentation/VisualLayerGroup tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The enumeration order is significant and aligns with the visual stacking of layers on screen. When adding a new group, remember that `VisualLayers` stores layers in reverse display order, so early enum values visually appear at the bottom. `NUM_GROUPS` must remain the last entry.
 
 ## Used by
 

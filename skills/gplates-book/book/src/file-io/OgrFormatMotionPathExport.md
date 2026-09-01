@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=file-io/OgrFormatMotionPathExport tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+Exports `ReconstructedMotionPath` objects to ESRI Shapefile format, with motion path geometries and generation metadata (feature name, seed points, anchor plate, reconstruction time) encoded as shapefile attributes. Each reconstructed motion path yields one geometry in the output: the polyline traced by the moving point.
 
 ## Declared types
 
@@ -51,9 +49,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=file-io/OgrFormatMotionPathExport tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Shapefile attribute fields are limited to 10 characters in length; feature names and field names are truncated accordingly.
 
 ## Used by
 

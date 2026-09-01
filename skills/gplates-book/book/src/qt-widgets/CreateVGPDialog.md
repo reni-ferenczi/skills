@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CreateVGPDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A multi-page dialog for creating Virtual Geomagnetic Pole (VGP) features from paleomagnetic data. Users enter properties such as latitude, longitude, inclination, declination, alpha-95 cone angle, age, and plate ID, then select a target feature collection. Provides helper functions for appending each VGP property to a newly created feature and emits `feature_created()` on completion.
 
 ## Declared types
 
@@ -63,9 +61,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CreateVGPDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

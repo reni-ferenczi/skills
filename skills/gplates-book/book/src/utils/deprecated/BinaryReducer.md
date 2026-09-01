@@ -8,9 +8,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=utils/deprecated/BinaryReducer tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`BinaryReducer` is a deprecated template class that reduces a sequence of values to a single result by applying a user-supplied binary function. It iterates through the input range, starting with the first element, and pairwise applies the binary function to accumulate a result. The binary function takes two elements and returns an accumulated value of the output type.
+
+This class is part of a deprecated reduction framework and is no longer used in the codebase.
 
 ## Declared types
 
@@ -37,9 +37,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=utils/deprecated/BinaryReducer tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The input range must not be empty; the reduction will crash if passed an empty range.
 
 ## Used by
 

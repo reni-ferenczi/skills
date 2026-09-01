@@ -9,9 +9,9 @@
 
 ## Overview
 
-[[[PROSE overview unit=model/FeatureRevision tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+`FeatureRevision` holds a snapshot of the mutable properties of a feature — what it contains at one point in time. Features are immutable with respect to their type and ID (those live in `FeatureHandle`), but their property list is part of the revisioned content. Like `FeatureCollectionRevision`, modifications create new `FeatureRevision` instances without changing old ones, preserving edit history and enabling undo.
+
+Each revision carries a unique `RevisionId` for tracking. You can clone a revision selectively, keeping only properties that pass a predicate, via the overloaded `clone()` methods. As with all revisions, access the current version through the `FeatureHandle` rather than directly.
 
 ## Declared types
 
@@ -46,9 +46,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=model/FeatureRevision tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+Reference counted and heap-allocated only. Cloning performs a shallow copy of the properties container, so the cloned revision shares property objects with the original. The new clone receives a fresh `RevisionId`. The `update_revision_id()` method exists for compatibility but is marked FIXME — it should not be necessary once the system fully enforces copy-on-write by creating new revisions rather than mutating the current one.
 
 ## Used by
 

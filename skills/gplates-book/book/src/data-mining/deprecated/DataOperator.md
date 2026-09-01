@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=data-mining/deprecated/DataOperator tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An abstract base class for extracting data from features in data-mining workflows. The `DataOperator` defines a virtual `get_data()` method that subclasses override to implement specific data extraction and reduction strategies. The class provides protected utility methods for finding feature properties by name, extracting values from properties, and locating features based on proximity. It maintains a static name-to-type map for the various operator types (Min, Max, Lookup, Vote, Min Distance, Presence, NumberInROI). This class is part of a deprecated data-mining architecture.
 
 ## Declared types
 
@@ -54,9 +52,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=data-mining/deprecated/DataOperator tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The `get_closest_feature()` method uses distance comparison to find unique features; when multiple features are equidistant, it returns the first one. The `get_value()` methods use visitor pattern to extract data from properties, including temporary workaround code for shapefile attributes.
 
 ## Used by
 

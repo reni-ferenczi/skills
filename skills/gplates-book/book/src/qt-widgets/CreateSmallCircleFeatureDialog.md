@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/CreateSmallCircleFeatureDialog tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A multi-page wizard dialog for creating features from small circles. Accepts a collection of small circles and lets the user define feature properties and select a target feature collection. The dialog orchestrates two pages: one for properties and one for collection selection, with previous/next/create/cancel buttons. Emits `feature_created()` on completion to trigger reconstruction.
 
 ## Declared types
 
@@ -56,9 +54,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/CreateSmallCircleFeatureDialog tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

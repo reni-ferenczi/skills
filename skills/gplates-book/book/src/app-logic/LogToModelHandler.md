@@ -9,9 +9,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=app-logic/LogToModelHandler tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+An adapter that routes Qt debug, warning, and error messages into the `LogModel`, the Qt model backing the application's log GUI. Inherits from `GPlatesQtMsgHandler::MessageHandler` and receives messages via the `handle_qt_message()` callback, converting each message type to a `LogEntry` and appending it to the model.
 
 ## Declared types
 
@@ -38,9 +36,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=app-logic/LogToModelHandler tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+The handler holds a `QPointer` to the `LogModel`, which safely becomes null if the model is deleted; `handle_qt_message()` checks this before appending.
 
 ## Used by
 

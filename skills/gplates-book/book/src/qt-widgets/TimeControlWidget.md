@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/TimeControlWidget tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A widget for navigating reconstruction time interactively. It hosts a spinbox where the user enters a time value, and `<<` / `>>` buttons to step through time at the current animation rate. The widget sits in the AwesomeBar at the top of the `ReconstructionViewWidget` and coordinates with `AnimationController` to keep its display in sync with the animation state; when the user edits the time spinbox, it signals `ReconstructionViewWidget` via `editing_finished()` so the latter can return keyboard focus to the globe. The buttons and label can be independently shown or hidden to adapt the widget to different UI layouts.
 
 ## Declared types
 
@@ -45,9 +43,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/TimeControlWidget tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 

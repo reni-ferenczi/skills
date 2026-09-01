@@ -10,9 +10,7 @@
 
 ## Overview
 
-[[[PROSE overview unit=qt-widgets/ScalarField3DGeoreferencingPage tier=3]]]
-Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
-[[[/PROSE]]]
+A wizard page in the scalar field 3D import dialog where users specify the geographic extent of the imported raster data via an `EditAffineTransformGeoreferencingWidget`. The page accepts latitude–longitude bounds or an affine transformation to define how raster pixels map to geographic coordinates. When the page is shown, it updates the widget if the raster dimensions have changed since initialization.
 
 ## Declared types
 
@@ -44,9 +42,7 @@ Replace this whole block, markers included, with 1-3 paragraphs: what this unit 
 
 ## Notes
 
-[[[PROSE notes unit=qt-widgets/ScalarField3DGeoreferencingPage tier=3]]]
-Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
-[[[/PROSE]]]
+*None.*
 
 ## Used by
 
