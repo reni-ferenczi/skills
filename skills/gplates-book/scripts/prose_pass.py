@@ -27,35 +27,51 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from bookkit import (  # noqa: E402
     BOOK_DIR, BookError, DATA_DIR, DESCRIPTIONS_PATH, PROGRESS_PATH, PROSE_ANY_RE,
-    component_page, load_json, load_manifest, save_json,
+    component_page, load_descriptions, load_json, load_manifest, save_json,
 )
 
 BATCH_DIR = DATA_DIR / "batches"
 
 
-def page_state(rel_path: str) -> str:
+def page_state(rel_path: str, description_key: str = "",
+               descriptions: dict | None = None) -> str:
+    """`done` only when the prose is written *and* its one-liner was recorded.
+
+    A page whose agent died after editing but before writing its batch file
+    would otherwise look finished and never be revisited, leaving `(pending)`
+    in the component table that the final verify refuses to accept.
+    """
     page = BOOK_DIR / rel_path
     if not page.exists():
         return "missing"
-    return "pending" if PROSE_ANY_RE.search(page.read_text(encoding="utf-8")) else "done"
+    if PROSE_ANY_RE.search(page.read_text(encoding="utf-8")):
+        return "pending"
+    if description_key and descriptions is not None and description_key not in descriptions:
+        return "undescribed"
+    return "done"
 
 
 def all_targets(units) -> list[dict]:
-    """Unit pages plus the component pages and the TOC, in writing order."""
+    """Unit pages plus the component pages and the TOC, each with its state."""
+    descriptions = load_descriptions()
     targets = [{"id": u["id"], "page": u["page"], "tier": u["tier"],
-                "component": u["component"], "kind": "unit"} for u in units]
+                "component": u["component"], "kind": "unit",
+                "key": f"unit:{u['id']}"} for u in units]
     components = sorted({u["component"] for u in units} |
                         set(load_json(DATA_DIR / "extras.json", {})))
     targets += [{"id": f"component:{c}", "page": component_page(c), "tier": 1,
-                 "component": c, "kind": "component"} for c in components]
+                 "component": c, "kind": "component", "key": f"component:{c}"}
+                for c in components]
     targets.append({"id": "book", "page": "TOC.md", "tier": 1,
-                    "component": "*", "kind": "toc"})
+                    "component": "*", "kind": "toc", "key": ""})
+    for t in targets:
+        t["state"] = page_state(t["page"], t["key"], descriptions)
     return targets
 
 
 def cmd_status(args, units) -> int:
     targets = all_targets(units)
-    state = {t["id"]: page_state(t["page"]) for t in targets}
+    state = {t["id"]: t["state"] for t in targets}
     per_tier = collections.Counter()
     for t in targets:
         if t["kind"] == "unit":
@@ -64,10 +80,11 @@ def cmd_status(args, units) -> int:
     print("units by tier")
     for tier in (1, 2, 3):
         done = per_tier[(tier, "done")]
-        pending = per_tier[(tier, "pending")]
-        total = done + pending + per_tier[(tier, "missing")]
+        total = sum(n for (t, _), n in per_tier.items() if t == tier)
+        undescribed = per_tier[(tier, "undescribed")]
         bar = "#" * round(30 * done / total) if total else ""
-        print(f"  tier {tier}: {done:5d}/{total:<5d} done  {bar}")
+        tail = f"  ({undescribed} written but not described)" if undescribed else ""
+        print(f"  tier {tier}: {done:5d}/{total:<5d} done  {bar}{tail}")
     comps = [t for t in targets if t["kind"] == "component"]
     print(f"components: {sum(1 for t in comps if state[t['id']] == 'done')}/{len(comps)} done")
     print(f"TOC overview: {state['book']}")
@@ -87,7 +104,7 @@ def cmd_plan(args, units) -> int:
         targets = [t for t in targets if t["tier"] == args.tier]
     if args.component:
         targets = [t for t in targets if t["component"] == args.component]
-    pending = [t for t in targets if page_state(t["page"]) == "pending"]
+    pending = [t for t in targets if t["state"] != "done"]
     pending.sort(key=lambda t: (t["component"], t["id"]))
 
     batches, wanted = [], args.waves * args.parallel if args.waves else None
@@ -111,6 +128,20 @@ def cmd_plan(args, units) -> int:
         if wanted and len(batches) >= wanted:
             break
 
+    if args.per_batch:
+        # One small spec per batch: the dispatching agent then only has to name
+        # a file, not repeat a page list it would otherwise have to print.
+        spec_dir = DATA_DIR / "plan"
+        spec_dir.mkdir(parents=True, exist_ok=True)
+        for batch in batches:
+            (spec_dir / f"{batch['batch']}.json").write_text(
+                json.dumps(batch, indent=1), encoding="utf-8", newline="\n")
+        for batch in batches:
+            print(f"{batch['batch']} {batch['tier']} {batch['component']} "
+                  f"{len(batch['units'])}")
+        print(f"# {len(pending)} pending, {len(batches)} specs in {spec_dir}")
+        return 0
+
     out = {"pending": len(pending), "batches": batches}
     if args.out:
         Path(args.out).write_text(json.dumps(out, indent=1), encoding="utf-8")
@@ -130,7 +161,7 @@ def cmd_settle(args, units) -> int:
 
     still_pending = []
     for t in targets:
-        state = page_state(t["page"])
+        state = t["state"]
         prev = progress["units"].get(t["id"], {})
         progress["units"][t["id"]] = {"state": state, "run": run,
                                       "attempts": prev.get("attempts", 0) + (state != "done")}
@@ -142,6 +173,10 @@ def cmd_settle(args, units) -> int:
             progress["failed"].remove(t["id"])
 
     merged = merge_descriptions()
+    if merged:  # a freshly merged one-liner can flip a page from undescribed to done
+        for t in all_targets(units):
+            progress["units"][t["id"]]["state"] = t["state"]
+        still_pending = [t["id"] for t in all_targets(units) if t["state"] != "done"]
     save_json(PROGRESS_PATH, progress)
     print(f"run {run}: {len(targets) - len(still_pending)}/{len(targets)} pages written, "
           f"{len(still_pending)} pending, {len(progress['failed'])} flagged")
@@ -186,6 +221,8 @@ def main() -> int:
     plan.add_argument("--parallel", type=int, default=10, help="agents per wave")
     plan.add_argument("--waves", type=int, default=0, help="0 = plan everything pending")
     plan.add_argument("--out", help="write the plan to this file instead of stdout")
+    plan.add_argument("--per-batch", action="store_true",
+                      help="write one spec file per batch into data/plan/")
     sub.add_parser("settle")
     args = ap.parse_args()
 
