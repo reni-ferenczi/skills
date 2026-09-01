@@ -1,0 +1,91 @@
+# XmlOutputInterface
+
+[Book TOC](../../TOC.md) · [file-io](../../components/file-io.md) · cluster Community 174 · tier 2
+
+| Source file | Kind | Lines |
+|---|---|---|
+| `src/file-io/XmlOutputInterface.h` | C++ | 477 |
+| `src/file-io/XmlOutputInterface.cc` | C++ | 274 |
+
+## Overview
+
+`XmlOutputInterface` is a low-level, hand-rolled XML writer: callers ask for opening/closing/empty elements and lines of typed content (`write_line_of_single_integer_content`, `write_line_of_decimal_duple_content`, and so on), and the class takes care of indentation and newlines. It is created via the static factories `create_for_stdout` or `create_for_stream` rather than a public constructor, mirroring the pattern of returning a value-typed handle instead of exposing ownership of the target `std::ostream` directly (the destructor flushes the stream but deliberately does not close it, since the interface does not own it).
+
+`ElementPairStackFrame` is the RAII helper for element nesting: its constructor writes the opening element and its destructor writes the matching closing element, so a scope-local `ElementPairStackFrame` guarantees balanced tags even when an exception unwinds the stack (the destructor swallows any exception from the closing write, since destructors must not throw). `write_opening_element_with_attributes` and `write_line_of_multi_decimal_content` are templated on a forward-iterator type so callers can pass any container of name/value pairs or decimals without the interface depending on a specific container type.
+
+This is a legacy, pre-Qt-XML-writer piece of the file-io layer: its only current caller is the deprecated `GpmlOnePointFiveOutputVisitor`, which used it to hand-write the old GPML 1.5 XML output before GPlates moved to a proper streaming XML writer for current formats.
+
+## Declared types
+
+| Name | Kind | Bases | Template | Subclasses | Description |
+|---|---|---|---|---|---|
+| [`GPlatesFileIO::XmlOutputInterface`](#gplatesfileioxmloutputinterface) | class | — | — | 0 | This class provides a convenient interface for XML output. |
+
+## Members
+
+### `GPlatesFileIO::XmlOutputInterface`
+
+| Member | Kind | Type | Access | Description |
+|---|---|---|---|---|
+| `Status` | enum | `None` | public | Elements of this enumeration represent the possible status of the interface. |
+| `ElementPairStackFrame` | class | `None` | public | This class provides a convenient means to automate the closing of opened elements (and maintain the correct nesting of elements) using a mechanism similar to RAII. |
+| `create_for_stdout( const GPlatesUtils::UnicodeString &indentation_unit = "\t")` | method | `XmlOutputInterface` | public | Create a new interface instance which will write to the standard output stream. |
+| `create_for_stream( std::ostream &output_stream, const GPlatesUtils::UnicodeString &indentation_unit = "\t")` | method | `XmlOutputInterface` | public | Create a new interface instance which will write to an output stream. |
+| `status()` | method | `Status` | public | Return the status of this instance. |
+| `set_status( Status new_status)` | method | `void` | public | Set the status of this instance. |
+| `write_opening_element( const GPlatesUtils::UnicodeString &elem_name)` | method | `void` | public | Write an opening element. |
+| `write_opening_element_with_attributes( const GPlatesUtils::UnicodeString &elem_name, F attrs_pair_begin, F attrs_pair_end)` | method | `void` | public | Write an opening XML element which contains attributes. |
+| `write_closing_element( const GPlatesUtils::UnicodeString &elem_name)` | method | `void` | public | Write a closing element. |
+| `write_empty_element( const GPlatesUtils::UnicodeString &elem_name)` | method | `void` | public | Write an empty element. |
+| `write_line_of_string_content( const GPlatesUtils::UnicodeString &content)` | method | `void` | public | Write a line of string content. |
+| `write_line_of_single_integer_content( const long &content)` | method | `void` | public | Write a line of content consisting of a single integer. |
+| `write_line_of_single_decimal_content( const double &content)` | method | `void` | public | Write a line of content consisting of a single decimal. |
+| `write_line_of_decimal_duple_content( const double &first, const double &second)` | method | `void` | public | Write a line of content consisting of a duple of decimals. |
+| `write_line_of_multi_decimal_content( F content_begin, F content_end)` | method | `void` | public | Write a line of content consisting of multiple decimals. |
+| `write_line_of_boolean_content( const bool &content)` | method | `void` | public | Write a line of content which is the string version of the boolean value given. |
+| `flush_underlying_stream()` | method | `void` | public | Flush the underlying stream. |
+| `~XmlOutputInterface()` | destructor | `None` | public | The destructor of XmlOutputInterface flushes the underlying stream but does not close it (since XmlOutputInterface is not responsible for the output stream as a resource). |
+| `XmlOutputInterface( std::ostream &os, const GPlatesUtils::UnicodeString &indentation_unit)` | constructor | `None` | protected | — |
+| `write_indentation()` | method | `void` | protected | — |
+| `write_unicode_string( const GPlatesUtils::UnicodeString &s)` | method | `void` | protected | — |
+| `write_attribute_name( const GPlatesModel::XmlAttributeName &xan)` | method | `void` | protected | — |
+| `write_attribute_value( const GPlatesModel::XmlAttributeValue &xav)` | method | `void` | protected | — |
+| `write_decimal_content( const double &content)` | method | `void` | protected | — |
+| `d_os_ptr` | field | `std::ostream` | private | This pointer (rather than its target) can (and should) be copied in copy-constructors and copy-assignment operators. |
+| `d_indentation_unit` | field | `GPlatesUtils::UnicodeString` | private | This is the string which is output for indentation of the XML output, once per level of indentation. |
+| `d_indentation_level` | field | `unsigned` | private | This is the current indentation level of the XML output. |
+| `d_status` | field | `Status` | private | This is the current status of the interface. |
+
+## Free functions and macros
+
+| Name | Kind | Type / body | Description |
+|---|---|---|---|
+| `write_xml_header_line(std::ostream *os)` | function | `void` | — |
+| `GPLATES_FILEIO_XMLOUTPUTINTERFACE_H` | macro | `None` | — |
+
+## Notes
+
+`create_for_stream` has a bug in the shipped source: its body constructs `XmlOutputInterface(std::cout, indentation_unit)` instead of using the passed-in `output_stream`, so calling it silently writes to standard output regardless of the stream argument.
+
+Once any write sets the status to `XML_WRITE_ERROR` (checked via `std::ostream::operator!`), every subsequent `write_indentation`, `write_unicode_string`, `write_attribute_name` and `write_attribute_value` call becomes a silent no-op — there is no way to clear the error and resume writing on that instance. `write_unicode_string`, `write_attribute_name` and `write_attribute_value` also do not escape or filter their input at all (each has a `FIXME` noting this): reserved XML characters such as `<` and `&` are written through unescaped, so callers are responsible for not passing dangerous element names, attribute names/values, or content through this interface.
+
+## Used by
+
+| Unit | Component | References |
+|---|---|---|
+| [file-io/deprecated/GpmlOnePointFiveOutputVisitor](deprecated/GpmlOnePointFiveOutputVisitor.md) | file-io | 138 |
+
+## Related
+
+*None.*
+
+## Explore
+
+Run these from the `gplates-code` skill directory:
+
+```bash
+python scripts/gpq.py file src/file-io/XmlOutputInterface.h
+python scripts/gpq.py def GPlatesFileIO::XmlOutputInterface --body
+python scripts/gpq.py uses XmlOutputInterface --kind class
+python scripts/gpq.py hier XmlOutputInterface
+```

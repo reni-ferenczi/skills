@@ -1,0 +1,26 @@
+[project]
+name = "gplates-code"
+version = "1.0.0"
+description = "Deep semantic index of the GPlates C++/Python source tree"
+readme = "SKILL.md"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    # Deep C++ parsing for the entity/occurrence index.
+    "tree-sitter>=0.23",
+    "tree-sitter-cpp>=0.23",
+    # Code knowledge graph with Leiden community detection.
+    # The `leiden` extra pulls graspologic, whose native Rust Leiden backend has
+    # no wheel for Python 3.13 - hence the upper bound on requires-python above.
+    # Without it graphify silently falls back to single-core Python Louvain,
+    # which turns a ~1 minute clustering run into tens of minutes.
+    "graphifyy[leiden]>=0.9.53",
+]
+
+[dependency-groups]
+dev = []
+
+[tool.uv]
+# This is a tool environment, not an installable package: `uv sync` just
+# materialises .venv/ (git-ignored) inside the skill folder.
+package = false

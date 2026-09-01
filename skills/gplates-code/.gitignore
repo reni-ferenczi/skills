@@ -1,0 +1,5 @@
+# Generated index data and tool environments - never committed.
+data/
+.venv/
+__pycache__/
+*.py[cod]
