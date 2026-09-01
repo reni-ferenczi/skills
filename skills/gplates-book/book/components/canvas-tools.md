@@ -6,9 +6,50 @@
 
 ## Overview
 
-[[[PROSE component unit=component:canvas-tools tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+canvas-tools is the mouse-handling layer of GPlates: everything a user does by
+clicking or dragging on the globe or map canvas — picking a feature, digitising
+or editing a geometry, building a topology, measuring a distance, moving a
+rotation pole, adjusting the light direction, panning and zooming — is one tool
+class here. The component does not compute reconstructions or own application
+state; it turns raw canvas events into calls against the state and operation
+objects that other components own, most often a `view-operations`
+`GeometryOperation`, a `GPlatesGui::FeatureFocus`, or a
+`GPlatesViewOperations::RenderedGeometryCollection` layer.
+
+Two units carry the whole design. `CanvasTool` is the view-agnostic base that
+every simple tool is written against once, reducing the genuinely different
+globe and map event signatures to a single `PointOnSphere` and a proximity
+threshold; `CanvasToolAdapterForGlobe` and `CanvasToolAdapterForMap` are the pair
+that perform that reduction, wrapping one `CanvasTool` instance so a workflow can
+register the same tool object with both canvases. Tools that need view-specific
+detail — panning, zooming, reorienting the globe, moving a pole, changing the
+light direction — bypass `CanvasTool` and derive from the globe/map interfaces
+directly, which is why several of these come in matched globe/map pairs.
+`GeometryOperationState` is the other anchor: a small signal hub tracking which
+single `GeometryOperation` and `GeometryBuilder` are currently active, so tools
+as different as `DeleteVertex`, `MoveVertex` and `BuildTopology` can share
+editing state without knowing about each other, and task-panel widgets can react
+to whichever tool just took over. `ClickGeometry` is the default tool — clicking
+finds and focuses a feature — and `AdjustFittedPoleEstimate` and the
+`MeasureDistance`/`MeasureDistanceState` pair show the same shared-state pattern
+applied to the Hellinger pole-fitting and distance-measurement workflows
+respectively, where a stateless painting tool defers all data and calculation to
+a state object shared between the globe and map instances.
+
+The heaviest neighbour in both directions is `gui`: canvas-tools calls into
+`GPlatesGui::FeatureFocus`, `CanvasToolWorkflows` and the clicked-features-table
+helpers to turn a click into application-wide selection, while `gui`'s
+`CanvasToolWorkflow` subclasses are what construct and activate these tools in
+the first place. `view-operations` supplies the other half of the shared state —
+`GeometryOperation`, `GeometryBuilder` and `RenderedGeometryCollection` — that
+tools here drive and paint into, and depends back on canvas-tools for the mouse
+gestures that activate an operation, so the two components lean on each other by
+design. `maths` is a heavy but one-directional dependency, since every click,
+drag and rendered vertex is ultimately a `PointOnSphere` or geometry-on-sphere
+computation; `qt-widgets` both supplies dialogs these tools open (such as
+`FeaturePropertiesDialog` and `HellingerDialog`) and consumes canvas-tools' state
+back through its task-panel widgets; and `app-logic`/`model` are read from,
+never written to, to resolve what feature or geometry a click actually hit.
 
 ## Units
 

@@ -6,9 +6,51 @@
 
 ## Overview
 
-[[[PROSE component unit=component:scribe tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+Scribe is GPlates' own hand-rolled serialisation library, built instead of adopting
+boost::serialization. It has no stake in what a reconstruction computes; its job is to let
+whatever the rest of the application has already built — a project's feature collections,
+a layer graph, an undo/redo command stack, a saved session — survive to disk and load back
+again, including into a later GPlates version that has added or renamed fields. Everything
+in the component is organised around a single idea: a client writes one `transcribe()`
+function that serves both saving and loading, and the library takes care of turning that
+into an object graph on one side and a byte layout on the other.
+
+The engine at the centre is `Scribe` itself, which walks a live C++ object graph and moves
+it into or out of a `Transcription`, tracking every object's identity by address-plus-type
+so that shared and owning pointers, base/derived casts and polymorphic types round-trip
+correctly. `Transcription` is the neutral form in between — a random-access tree of tagged
+composite and primitive objects that has no notion of "C++ object" left in it — and
+`TranscriptionScribeContext` is the bridge that lets `Scribe` address into that tree by
+`ObjectTag` without touching it directly. `Transcribe` declares the three customisation
+points (`transcribe`, `transcribe_construct_data`, `relocated`) that a client type
+implements, found either by ADL or, for private state, through the single friend class
+`ScribeAccess`; `TranscribeResult` and `ScribeExceptions` then draw the line the whole
+library depends on, that a structural mismatch between old and new data is a recoverable
+`TRANSCRIBE_INCOMPATIBLE`/`TRANSCRIBE_UNKNOWN_TYPE` return code, while anything else —
+a corrupt archive, a misused API, an unregistered cast — is a thrown exception the caller
+is not expected to recover from. Around that core, `ScribeObjectTag` supplies the
+path-key vocabulary, `ScribeLoadRef` gives loading a checked handle instead of a raw
+pointer, `ScribeOptions` flags whether an object is tracked and who owns a pointer to it,
+`TranscribeEnumProtocol` archives enums by name so they survive reordering, and
+`ScribeVoidCastRegistry` and `ScribeExportRegistry` together let a polymorphic pointer be
+written and read back through nothing but a base-class interface. `ScribeArchiveCommon`
+and the abstract `ScribeArchiveReader`/`ScribeArchiveWriter` pair let the text, binary and
+XML archive implementations share their signatures and format-version numbers while
+`Scribe` and `Transcription` stay indifferent to which format is in use.
+
+The component splits its neighbours into two very different relationships. Downward, it
+leans lightly on `global` and `utils` — the exception base class, `CallStack::Trace` for
+naming the transcribe call site that failed, `non_null_intrusive_ptr` — and on `maths` for
+transcribing the coordinate and geometry types that end up inside a saved project. Several
+components that sit architecturally *below* scribe in the rest of the book — `model`,
+`property-values`, `maths`, `utils`, plus smaller touches in `feature-visitors` and
+`file-io` — are nonetheless recorded as depending on it, because that is where those
+types' own `transcribe()` overloads are declared: scribe's contract is intrusive by
+design, so a serialisable type's own header is the one that includes `Transcribe.h` and
+befriends `ScribeAccess`. The heavier, more conventional consumers are `unit-test`, which
+exercises transcribe round-trips directly, and `presentation`, `gui`, `app-logic`,
+`view-operations` and `data-mining`, which call `Scribe` to save and load actual projects,
+sessions and undo commands built out of all those lower-level transcribable types.
 
 ## Units
 

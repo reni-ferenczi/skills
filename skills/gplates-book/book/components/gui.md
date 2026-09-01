@@ -6,9 +6,83 @@
 
 ## Overview
 
-[[[PROSE component unit=component:gui tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+`gui` is the presentation-side machinery that sits between the reconstruction
+results app-logic produces and the Qt windows the user actually touches. It
+decides what colour anything is drawn in, turns the rendered-geometry model into
+OpenGL draw calls for the globe and the map, interprets mouse gestures as canvas
+tool state, holds the application-wide selection and animation state, and drives
+the frame-by-frame export loop and the embedded Python interpreter. It is
+deliberately *not* the widget layer: the dialogs, canvases and docks live in
+qt-widgets, and what sits here are the widget-free models, policies and value
+types those widgets are views over. `AnimationController` says as much in its own
+class comment — it is a `QObject` purely for signals and slots, with no widget of
+its own — and `Dialogs` exists precisely so that `ViewportWindow` can reach
+thirty-five dialog types through one pointer instead of thirty-five members and
+thirty-five includes.
+
+Colouring is the component's largest coherent subsystem, and it is a chain of
+deliberately separated concerns. `Colour` is the RGBA value type the whole
+program passes around, laid out so an array of them is directly an array of
+`GLfloat`s; `ColourScheme` is handed a `ReconstructionGeometry` and is
+responsible for *extracting* some property from it, while `ColourPalette` never
+sees a geometry and only maps an already-extracted key — a plate id, an age, a
+raster sample — to a colour, so the extraction code is written once and any
+palette can be swapped behind it. `ColourSchemeDelegator` gives every renderer a
+single stable reference that survives the user switching schemes, and adds
+per-feature-collection overrides on top; `ColourProxy` defers the lookup entirely,
+letting view-operations attach a colour to a rendered geometry before it is known
+which scheme will resolve it at paint time. `BuiltinColourPalettes` is the
+catalogue of everything shipped, half loaded from CPT resources and half computed
+in code, with `BuiltinColourPaletteType` carrying the user's choice across
+sessions and `RasterColourPalette` erasing the palette's key type so a palette can
+cross the boundary into rasters, layer parameters and serialisation where the key
+type is a runtime property rather than a compile-time one.
+
+Drawing and interaction are the other two spines. `Globe` and `Map` own the view
+state for their respective canvases; the collection painters walk a
+`RenderedGeometryCollection` layer by layer, the per-layer painters tessellate
+every `RenderedGeometry` kind into primitives, and `LayerPainter` is the batching
+seam underneath both — nothing is drawn until `end_painting()` sorts everything
+into depth-semantics buckets and, within them, by point size and line width, so
+one pass replaces per-primitive state thrashing. The same class serves the map by
+being handed a `MapProjection`, which is the single point of truth for 2-D map
+space and the PROJ wrapper everything that draws or hit-tests the map goes
+through. On the input side `CanvasToolWorkflows` is the switchboard for the tool
+bar: each workflow tab keeps its own selected tool while only one is active
+overall, so a half-finished digitisation survives a detour into feature
+inspection. `GlobeCanvasTool` and `MapCanvasTool` are the abstract states those
+workflows activate, and the two adapters are the only code that inspects raw Qt
+button-and-modifier combinations, so tools never see event plumbing. `FeatureFocus`
+is where selection lives for the whole application; because every reconstruction
+discards and rebuilds its `ReconstructionGeometry` objects, it re-derives its
+association after each collection update rather than holding a pointer that would
+go stale. The export machinery is a textbook Strategy pattern layered on top:
+`ExportAnimationContext` steps the application through geological time and
+`ExportAnimationStrategy` subclasses each write one frame of one output kind,
+reaching everything else back through the Context.
+
+The dependency edges follow from that role. Downward, `gui` reads app-logic
+continually — the current reconstruction time and anchored plate from
+`ApplicationState`, the reconstruction geometries to colour and paint, the layer
+graph the exporters and visual-layer models describe — and leans on maths for
+sphere geometry, on opengl for the renderer and visual-layer services the painters
+delegate to, on model for the feature weak references focus and the topology
+table hold, and on view-operations for the rendered-geometry collection it paints.
+Upward the traffic is dominated by qt-widgets, and the shape of that edge is the
+model/view split described above: `FeatureTableModel`, `FeaturePropertyTableModel`,
+`ConfigModel`, `VisualLayersListModel`, `TopologySectionsContainer` and
+`TreeWidgetBuilder` are all here so their widgets can stay thin. presentation
+constructs and owns most of the singletons — `ViewState` holds the feature focus,
+the animation controller, the colour scheme container and delegator, the export
+registry and the Python manager — and canvas-tools supplies the concrete tool
+subclasses the workflows activate, including the adapters that let one
+projection-agnostic tool serve both globe and map. file-io is used in both
+directions: the export strategies write through its format writers and build their
+filename sequences from its template machinery, while file-io reaches back for
+`Colour` and palette types. The one place the flow reverses is time itself —
+`ExportAnimationContext` and `AnimationController` write back into
+`ApplicationState`, which reconstructs and notifies everyone, including the
+widgets that started the change.
 
 ## Units
 

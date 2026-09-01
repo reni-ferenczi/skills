@@ -6,9 +6,79 @@
 
 ## Overview
 
-[[[PROSE component unit=component:maths tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+`maths` is the geometric kernel of GPlates: the scalar type, the vectors, the
+rotations and the four shapes in which every position on the globe is expressed.
+Nothing above it computes on the sphere directly — a feature's geometry, a
+reconstructed outline, a raster tile's extent and a picked vertex are all values
+defined here. Two commitments run through the whole module. Comparison is
+approximate: `Real` — aliased `real_t` by `types` and included almost everywhere
+through that alias — is a `double` whose `operator<` means "less by more than
+`EPSILON`", and `MathsUtils` holds that constant together with the degree/radian
+conversions, so a tolerance change in one small header moves the behaviour of
+geometry code that never mentions it. And geometry is immutable: `GeometryOnSphere`
+and its four concrete shapes hand out only `const` pointers, are intrusively
+reference-counted, and cache their derived quantities lazily inside themselves.
+Reconstructing a feature therefore always builds a new geometry rather than editing
+one, which is what makes the same geometry safely shareable between unrelated
+callers, and what makes caching derived values on the geometry legal in the first
+place.
+
+The stack is easiest to read from the bottom. `GenericVectorOps3D` holds the single
+implementation of dot, cross and scale that both `Vector3D` and `UnitVector3D`
+forward to; the two share no base class precisely so that a unit vector cannot
+inherit an operation capable of breaking its magnitude-1 invariant, and
+`Vector3D::get_normalisation()` is the one sanctioned bridge back. `UnitVector3D` is
+what carries the sphere — a position, a rotation axis and a cube-face axis are all
+one — and `PointOnSphere` is nothing but one of them, deliberately kept a small
+value type outside the polymorphic hierarchy because it is multiplied by every
+vertex of every geometry in a reconstruction. `GreatCircleArc` pairs two points and
+is the element type that `PolylineOnSphere` and `PolygonOnSphere` actually store,
+which is why vertex iteration in both is an adapter riding an arc sequence, and why
+`MultiPointOnSphere`, which stores points directly, is the odd one out.
+`LatLonPoint` is the only door between degrees and unit vectors, and
+`ConstGeometryOnSphereVisitor` the only sanctioned way back from the base type to a
+concrete shape. On the rotation side `UnitQuaternion3D` is the representation and
+`FiniteRotation` the plate-motion value built on it, with `Rotation` as the
+time-independent sibling used for dragging the globe and laying out shapes, and
+`CalculateVelocity` turning a pair of finite rotations into a velocity at a point.
+
+Above that sits the machinery that keeps queries cheap. `AngularDistance` stores a
+distance as a cosine so that comparisons never pay for an `acos`, and `AngularExtent`
+adds the sine so that a bound can be grown and shrunk without leaving cosine space;
+almost every spatial structure in the module is expressed in that pair.
+`SmallCircleBounds` supplies the bounding circles that reject far-apart geometries
+before a single arc is touched, `PolyGreatCircleArcBoundingTree` refines that per
+geometry, and `CubeQuadTreePartition` — a loose quad tree on the six faces of a cube,
+rebuilt for every geometry at every reconstruction time — is the global spatial index,
+with `CubeCoordinateFrame` as the one definition of the cube's faces and axes and
+`CubeQuadTree` as the payload-agnostic container beneath. Results have their own
+vocabulary too: `GeometryIntersect` returns a graph of intersection locations that
+keeps segment provenance, which is what lets per-vertex quantities survive
+partitioning and what the topology machinery is built on, while `ProximityHitDetail`
+is the shared answer type for hit tests, rankable by closeness before anyone knows
+what was hit. `DateLineWrapper` is the exception to the module's usual inward focus:
+it clips geometry at ±180° and converts it to lat/lon, because that conversion is a
+whole-geometry operation and not a per-point one.
+
+Downward, `maths` rests on `global` for the assertion machinery and the exception
+root that `MathematicalException` extends, on `utils` for the reference counting
+behind every geometry and for Earth's radius in the velocity calculations, and on
+`scribe` only so that scalars and geometries can be transcribed into saved sessions
+and projects. Upward it is the widest dependency in the tree. `app-logic` is the
+heaviest consumer: rotation files become `FiniteRotation`s, `ReconstructionTree`
+caches one composed rotation per edge, and walking a plate circuit is quaternion
+multiplication performed here — which is also why the argument order of `compose` is
+documented so insistently. `opengl` shares `CubeCoordinateFrame` so that raster
+tiling and geometry partitioning index the same globe face-for-face; `file-io`
+crosses at `LatLonPoint` in both directions and at `DateLineWrapper` for OGR export,
+which likewise serves the 2-D map painter in `gui`. `view-operations`,
+`canvas-tools` and `qt-widgets` come in mainly through proximity — hit details
+collected from everything under the cursor and sorted by closeness — and through
+`GeometryType`, the plain enum that lets interface code say which kind of geometry
+it is holding without depending on the geometry classes themselves. The
+`src/maths/deprecated` subdirectory is a separate matter: earlier rotation-history
+and grid classes kept in the tree but superseded by `FiniteRotation` and the
+reconstruction code in `app-logic`.
 
 ## Units
 

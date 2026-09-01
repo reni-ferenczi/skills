@@ -6,9 +6,114 @@
 
 ## Overview
 
-[[[PROSE component unit=component:app-logic tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+This is the reconstruction engine: everything between the loaded data in `model`
+and anything that draws, exports or scripts it. Its subject is one question asked
+over and over — given these feature collections, these rotation files and this
+reconstruction time, what geometry exists and where is it — and its answer is a
+dataflow graph rather than a procedure. `ApplicationState` is the root: it owns
+the model services by composition (the file state and file IO, the reconstruct
+method and layer task registries, `ReconstructGraph`, `UserPreferences`,
+`LogModel`) and holds the only two pieces of reconstruction state that belong to
+no layer, the reconstruction time and the anchored plate ID. Its
+`mediate_signal_slot_connections()` is the deliberate centre of the wiring, funnelling
+file changes, layer changes, parameter changes and even raw model edits into a
+single `reconstruct()` call. What that call returns is worth internalising early,
+because it shapes the whole component: `ReconstructGraph::update_layer_tasks`
+hands back a `Reconstruction`, which is only a bag of `LayerProxy` pointers for
+the currently active layers. No geometry has been built. The heavy work happens
+later and lazily, when a renderer, an exporter or a downstream layer pulls on one
+of those proxies. `LayerProxy` states this history in its own comment — layers
+used to be executed and push their results; now each exposes one long-lived,
+self-caching output object and computes on demand — and `LayerProxyUtils` supplies
+both halves that the near-empty base leaves open: the visitor-based downcast to a
+derived proxy, and the `InputLayerProxy` observer wrappers with which a proxy
+watches its own inputs and decides whether it is still up to date.
+
+The graph itself is a handle API. `ReconstructGraph` holds the only owning
+references to layers, input files and connections; `Layer`, `Layer::InputFile` and
+`Layer::InputConnection` are weak references that are cheap to copy into GUI
+objects and go politely invalid rather than dangling. Edges are named by
+`LayerInputChannelName`, a closed global enum rather than strings specifically so
+that channel names can be written into saved sessions without being tied to
+anything the user sees, with the displayed text living one tier up in
+`presentation`. `LayerTask` is a layer's behaviour, `LayerParams` its app-logic
+configuration — split from the presentation-side `VisualLayerParams` along the
+computes-versus-draws line, with `emit_modified()` as the single obligation that
+turns a settings edit into a reconstruction — and `LayerProxy` its output.
+`update_layer_tasks` walks the active layers twice, registering every proxy on the
+`Reconstruction` before updating any layer, because topology layers reach other
+layers through the `Reconstruction` rather than through their own channels; within
+each pass order is irrelevant, since laziness removes the need for a topological
+sort. Around that core sits the convenience machinery that makes opening a file
+just work: `FeatureCollectionFileState` is the registry of loaded files, and its
+design turn is that it is *not* the authority on what is loaded — the model is, so
+loading and unloading are ordinary undoable model edits and the file state learns
+about them through unload callbacks — while `ReconstructGraph` asks
+`LayerTaskRegistry` which layer types can process each new collection, creates
+them, and auto-connects the pairs whose channel types opt in.
+
+Underneath the graph, two pipelines do the actual work. The rotation spine begins
+with `ReconstructionGraph`, the time-independent in-memory form of a rotation
+model, whose cycles at crossovers are resolved into a rooted acyclic
+`ReconstructionTree` for one time and one anchor; because rotations along tree
+edges are interpolated and memoised lazily, building a tree over a large model is
+cheap, and `ReconstructionTreeCreator` is the copyable, cacheable handle that
+almost every consumer holds instead of a tree, so that flowlines and motion paths
+can reach times other than the one being reconstructed. `ReconstructionLayerProxy`
+serves those trees per layer. The feature pipeline sits on
+`ReconstructMethodInterface`, one instance per feature knowing how that feature
+moves, with intrinsic state captured at construction and extrinsic state — params,
+a tree creator, optionally a `TopologyReconstruct` — passed in through a `Context`;
+`ReconstructContext` caches the expensive feature-to-method mapping and the
+present-day geometries behind stable geometry property handles, and
+`ReconstructLayerProxy` shapes, caches and invalidates the results. Everything
+emitted is a `ReconstructionGeometry`, recovered by double dispatch through
+`ReconstructionGeometryVisitor` and `ReconstructionGeometryUtils` rather than
+RTTI, and stamped with a `ReconstructHandle` so that a client walking a feature's
+weak observers can tell its own batch apart from every other layer's.
+`ReconstructedFeatureGeometry` is the workhorse, and its deferred-transform
+constructor — unrotated geometry plus a `ReconstructMethodFiniteRotation` that
+compares by plate ID rather than by floating-point pole — is what lets the OpenGL
+path group polygons by transform and rotate them on the GPU.
+`MultiPointVectorField` carries velocities with a per-point attribution reason.
+
+The topology and deformation half is the same pull model applied to features whose
+geometry is assembled from other features. `TopologyUtils` resolves lines, then
+boundaries, then networks, in that order because each tier may reference the
+previous as sections, and it also de-duplicates the sub-segments that neighbouring
+plates share. `ResolvedSubSegmentRangeInSection` is the design decision that makes
+the rest possible: a clipped section is kept as a *range of vertex indices* into
+the original geometry rather than as a bare polyline, so per-vertex data survives
+clipping, and `ResolvedVertexSourceInfo` carries enough provenance forward that
+velocities can still be computed at a resolved boundary vertex long after
+resolution discarded the feature it came from. `ResolvedTriangulationNetwork` is
+the single place to ask what the crust is doing at a point inside a deforming
+network, keeping a 3-D classification view and a 2-D projected CGAL triangulation
+(`ResolvedTriangulationDelaunay2`) in step. `TopologyReconstruct` is the
+deformation engine proper, advancing a geometry one `TimeSpanUtils` slot at a time
+in both directions from its import time, letting each point follow whichever
+network or rigid plate contains it and deactivating points that have been subducted
+or consumed at a ridge; `DeformationStrain` accumulates the finite strain along
+each such trajectory, and `ScalarCoverageEvolution` rides the same time spans to
+evolve crustal thickness.
+
+The neighbours divide cleanly. Downwards, `model` supplies the features,
+properties and the weak-observer chain that makes feature-to-geometry lookup
+possible; `maths` supplies finite rotations, the geometry-on-sphere hierarchy and
+the intersection code the topology resolvers depend on; `property-values` supplies
+the GPML property types the resolvers read and write; `utils` supplies the
+`KeyValueCache`, `ObserverToken` and reference-counting primitives the entire pull
+model is built from; `scribe` transcribes layer types, channel names and params
+into sessions and projects; `file-io` is reached through `FeatureCollectionFileIO`
+for the actual reading and writing. The smaller downward edges are the interesting
+exceptions rather than layering violations: `opengl` because `RasterLayerProxy`
+builds real GPU raster pyramids on its analysis path, and `data-mining` because
+co-registration lives there. Upwards, `qt-widgets`, `gui` and `presentation` are
+by far the heaviest consumers — they hold `Layer` handles, read `LayerParams`,
+render what the proxies produce and add the visual half of layer configuration on
+top — with `view-operations`, `canvas-tools`, `file-io`'s exporters, the `api`
+Python bindings and `cli` all pulling on the same proxies. Nothing above app-logic
+computes a reconstruction; it asks for one.
 
 ## Units
 

@@ -6,9 +6,83 @@
 
 ## Overview
 
-[[[PROSE component unit=component:qt-widgets tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+This is the entire desktop user interface of GPlates: the main window, the globe
+and map canvases, the task panel beside them, the layers panel, and the roughly
+one hundred and fifty dialogs and wizards behind the menus. It is the top of the
+application's three-layer state stack — `GPlatesPresentation::Application` holds
+an `ApplicationState`, a `ViewState` and one `ViewportWindow`, in that dependency
+order, so app-logic knows nothing of the view and the view knows nothing of these
+widgets. Almost nothing here computes anything about plate reconstruction. The
+component's job is to let a user name a plate ID, a time period, a rotation pole,
+a colour palette or an export format, hand that to the layer that does the work,
+and show what came back; where a class in this module does look like it is
+computing, it is usually marshalling — `HellingerDialog` writes picks to a
+temporary file and lets a Python script fit the pole, `ExportAnimationDialog`
+queues export strategies and lets `GPlatesGui::ExportAnimationContext` run them.
+
+The visible spine is short. `ViewportWindow` is the main window, and despite its
+size is mostly wiring: the `.ui` form supplies the `QAction` inventory and this
+class connects each action to a receiver that lives elsewhere, so the file usually
+tells you where the work happens rather than doing it. What it genuinely owns is
+the state canvas tools and the task panel share — `GeometryOperationState`,
+`ModifyGeometryState`, `MeasureDistanceState` and the `CanvasToolWorkflows`
+registry. Its central widget is `ReconstructionViewWidget`, which hand-builds the
+splitter holding `GlobeAndMapWidget` and the toolbars around the `TaskPanel`.
+`GlobeAndMapWidget` stacks a `GlobeCanvas` and a `MapView` and swaps between them
+on projection change; both implement `SceneView`, and both translate raw mouse
+events into the click/drag/hover signals the canvas tools consume, which is why
+`GlobeCanvas` carries the screen-pixel-to-unit-sphere maths and the proximity
+threshold that decides what a click hit. `TaskPanel` is a `QStackedWidget` of
+`TaskPanelWidget` subclasses, one per canvas-tool workflow, sharing a single
+"Clear" action that each tab reconfigures on activation. On the other side of the
+window, `VisualLayerWidget` renders one reusable row of the Layers panel —
+repointed at a different `VisualLayer` per `set_data()` rather than one widget per
+layer — and hosts whichever `LayerOptionsWidget` subclass matches the layer type.
+
+Feature and property editing is the other half of the module, and it is built
+around one contract. `AbstractEditWidget` is what lets generic editing UI drive
+sixteen unrelated Designer forms: reset, optionally reconfigure for a structural
+type, mint a fresh `PropertyValue`, or write the fields back into the one the
+widget was loaded from. `EditWidgetGroupBox` pre-allocates one instance of every
+subclass and shows whichever matches the property being edited, with
+`EditWidgetChooser` dispatching on the concrete property value type;
+`EditGeometryWidget` is the largest of the subclasses, editing geometry as a table
+of lat/lon vertices with live validity feedback. Above that sit the creation and
+management workflows — `CreateFeatureDialog`, a five-page wizard that consults the
+GPGIM for which properties a feature type allows and reverse-reconstructs the
+digitised geometry to present-day coordinates before storing it;
+`ChooseFeatureCollectionWidget`, the "add this to which collection" control those
+wizards embed; `ManageFeatureCollectionsDialog`, the per-file save/reload/unload
+table; and `TotalReconstructionSequencesDialog`, the tree editor over loaded `.rot`
+files. Around all of them is a layer of shared infrastructure that keeps the
+dialogs uniform: `GPlatesDialog` (parent-required construction and show-or-raise),
+`QtWidgetUtils`, `ProgressDialog` with its cooperative cancellation,
+`ReadErrorAccumulationDialog`, and the file-picker wrappers `OpenFileDialog` and
+`SaveFileDialog` that remember a per-purpose last directory. A few self-contained
+sub-applications also live here rather than in their own component — the Hellinger
+three-plate fitting tool and the kinematic-graphs tool each bring their own dialog,
+model and configuration widgets.
+
+The dependency edges follow that split. Downward, the heaviest traffic is to `gui`,
+which owns the objects `ViewportWindow`'s actions actually target — `Dialogs` (so
+the main window holds no direct reference to every dialog), `FileIOFeedback`,
+`CanvasToolWorkflows`, the colour palettes `ColourScaleButton` previews and the
+`ExportAnimationRegistry`/`ExportAnimationContext` pair the export dialogs
+populate. `model` and `property-values` supply the features and property values
+the edit widgets read and mint; `app-logic` supplies `ApplicationState`,
+`FeatureCollectionFileState` and `FeatureCollectionFileIO`, which the file dialogs
+delegate every actual load and save to; `presentation` supplies `ViewState` and the
+`VisualLayer`s the layers panel renders; `file-io` supplies the readers, writers and
+the `PlatesRotationFileProxy` that preserves a rotation file's original formatting
+when one pole changes; `view-operations` supplies the `RenderedGeometryCollection`
+layers that dialogs like `HellingerDialog` draw their previews into. Upward, `gui`
+is by far the largest consumer, since it is the layer that constructs and drives
+these windows, and `canvas-tools` is the next, because tools push their working
+state directly into the task-panel widgets rather than owning it. The one
+surprising edge is `file-io`, whose references are almost entirely
+`HellingerReader` and `HellingerWriter` reaching back into `HellingerModel` — that
+model is a plain, Qt-free value holder that happens to live in this module only
+because its owning dialog does.
 
 ## Units
 

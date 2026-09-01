@@ -6,9 +6,52 @@
 
 ## Overview
 
-[[[PROSE component unit=component:deprecated tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+`deprecated` is not a stage in the reconstruction pipeline — it is the wxWidgets-era
+GUI and control layer GPlates ran before the codebase moved to Qt, kept in the
+tree for reference rather than compiled into the current application. It
+corresponds to the old `GPlatesControls` namespace, and it is the largest of
+several `deprecated/` subfolders scattered through the tree (app-logic and
+data-mining keep their own), the one holding the original top-level application
+controller. Where the current app splits reconstruction (app-logic), presentation
+state (gui) and widgets (qt-widgets) into three independent layers, this older
+code mixed all three together: a control module drove file loading, animation
+and reconstruction directly against a wxWidgets main window and OpenGL canvas.
+
+`Lifetime` and `GuiCalls` are the highest fan-in units here. `Lifetime` is the
+singleton that terminates the whole wx application by deleting the main window,
+and `GuiCalls` is the static indirection layer that let the rest of the
+deprecated controls call methods on the (equally superseded) `MainWindow` and
+`GLCanvas` classes without linking against them directly. `AnimationTimer`
+builds on `GuiCalls` to drive frame-by-frame animation of geological time,
+invoking a caller-supplied warp function on each tick and working around the
+fact that a wx timer callback cannot let a C++ exception propagate. `Reconstruct`
+and `File` are the two user-facing entry points this layer offered: `Reconstruct`
+recomputes feature positions at a given time, or animates through a range, by
+walking the plate-rotation hierarchy, while `File` is the deprecated open,
+import and save path for GPML and PLATES rotation files. Separately,
+`PublisherTemplate` is a generic, template-based observer/publisher-subscriber
+base class the old control code used for event notification, with
+`PublisherTemplate_test` as a standalone usage example that was never compiled
+into the executable. The `presenter` classes — `Presenter`,
+`ExposedPresenterObject`, `ReconstructionContext` — sketch an MVP-style layer
+above `Reconstruct`, giving view code identity-bearing objects and a
+lazily-cached reconstruction result, but nothing else in the codebase calls
+them: an abandoned design, unlike the wx controls the shipped application
+actually relied on for years.
+
+The component's few real dependencies point at the same foundations everything
+else in GPlates builds on: `global` for exceptions and shared macros, `maths`
+for the rotations and geometries `Reconstruct` operates on, `file-io` for the
+PLATES and GPML parsing `File` wraps, and a single `model` reference from
+`ReconstructionContext`, which manages `GPlatesModel::FeatureCollection`
+instances directly. `unit-test` is pulled in only by `PublisherTemplate_test`.
+Traffic with `gui` runs in both directions and is really one story split across
+two folders: these controls call into the wxWidgets `MainWindow` and `GLCanvas`
+classes that live under `gui/deprecated`, and those same old classes call back
+into `GuiCalls` and `Lifetime` here — opposite halves of the same superseded
+application, kept apart only because files are grouped by directory. Nothing in
+`app-logic` or `qt-widgets`, the components that actually replaced this layer,
+depends on it.
 
 ## Units
 

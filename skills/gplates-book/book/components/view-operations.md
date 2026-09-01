@@ -6,9 +6,61 @@
 
 ## Overview
 
-[[[PROSE component unit=component:view-operations tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+This is the seam between what GPlates computes and what it draws, and the mutable
+model behind on-screen geometry editing. One half is a scene-graph: every piece of
+drawable output — reconstructed features, canvas-tool feedback, measurement
+overlays, highlight decoration — is wrapped as a `RenderedGeometry` and handed to
+`RenderedGeometryCollection`, which the globe and map painters read back by
+visiting it, with no other channel connecting producers to the canvas. The other
+half is `GeometryBuilder`, the observable point-sequence model that lets
+digitisation and vertex-editing tools accumulate a half-finished geometry before
+an immutable `GeometryOnSphere` can exist, plus the small hierarchy of
+`GeometryOperation` subclasses that drive it from mouse input. A handful of
+cross-cutting services — shared undo/redo, hit-testing, and export of on-screen
+geometry to file — round the component out.
+
+`RenderedGeometryCollection` supplies the two-level main-layer/child-layer
+structure, activation rules and aggregated update signal that let unrelated
+producers share one scene without colliding on draw order. `RenderedGeometry`
+itself is deliberately inert: a thin, copyable pimpl over an abstract
+`RenderedGeometryImpl`, reachable only through `RenderedGeometryVisitor` double
+dispatch, and buildable only through `RenderedGeometryFactory` — the one place
+that names any of the twenty-odd concrete implementation types, so adding a new
+kind of drawable never touches a producer. `RenderedGeometryLayer` is where those
+handles actually live, stored twice — once in draw order, once in a spatial
+partition — so painters and proximity tests can each get the ordering they need.
+On the editing side, `GeometryBuilder` leans on `InternalGeometryBuilder` to
+rebuild geometry lazily and on a memento-based undo protocol that plugs into
+`UndoRedo`'s shared `QUndoGroup` and its cross-command merging; the five
+`GeometryOperation` subclasses (add-point, insert-vertex, move-vertex,
+delete-vertex, split-feature) each mutate a builder and then render the result.
+`RenderedGeometryParameters` and `ScalarField3DRenderParameters` are the
+component's shared vocabulary objects — live, signal-emitting drawing settings in
+the first case, a scribe-persisted parameter bundle in the second — that give
+otherwise-unrelated subsystems a single place to agree on how something should
+look.
+
+The component leans heavily on `maths` for the geometric primitives and the
+`CubeQuadTreePartition` behind spatial layer storage, and on `model` and
+`property-values` for the feature mutation that `GeometryBuilder` and
+`FocusedFeatureGeometryManipulator` keep synchronised in both directions.
+`app-logic` supplies the `ReconstructionGeometry` objects that rendered geometry
+wraps and that `RenderedGeometryUtils` extracts back out; `gui` supplies the
+deferred `ColourProxy` colour scheme every coloured rendered geometry defers to at
+paint time; `scribe` carries `ScalarField3DRenderParameters` and friends across
+sessions and project files. Running the other way, `presentation` owns the single
+`RenderedGeometryCollection` and the two `GeometryBuilder` instances on its
+`ViewState`, and its `ReconstructionGeometryRenderer` is the heaviest single
+producer of `RenderedGeometry` each frame; `gui` and `opengl` painters are the
+heaviest consumers, walking the collection or the scalar-field parameters to put
+pixels on the globe and map; `qt-widgets` drives geometry editing through the
+operation classes and observes `GeometryBuilder`/`RenderedGeometryParameters` to
+keep dialogs and tables in sync. `canvas-tools` and this component are mutually
+dependent: view-operations supplies the rendering substrate, the editing
+operations and the proximity/undo machinery that concrete canvas tools are built
+from, while canvas-tools feeds back tool-specific policy. `file-io` is a much
+smaller, one-directional edge — `VisibleReconstructionGeometryExport` collects
+what is currently on screen and hands it to file-io's exporters.
 
 ## Units
 

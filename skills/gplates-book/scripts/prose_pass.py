@@ -27,7 +27,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from bookkit import (  # noqa: E402
     BOOK_DIR, BookError, DATA_DIR, DESCRIPTIONS_PATH, PROGRESS_PATH, PROSE_ANY_RE,
-    component_page, load_descriptions, load_json, load_manifest, save_json,
+    PROSE_CLOSE, PROSE_OPEN_RE, component_page, load_descriptions, load_json,
+    load_manifest, save_json,
 )
 
 BATCH_DIR = DATA_DIR / "batches"
@@ -161,6 +162,52 @@ def cmd_plan(args, units) -> int:
     return 0
 
 
+def cmd_repair(args, units) -> int:
+    """Strip stray markers from blocks an agent filled but did not unwrap.
+
+    A recurring agent slip is to replace the instruction line between
+    `[[[PROSE ...]]]` and `[[[/PROSE]]]` and leave the two marker lines in
+    place.  The prose is there and good; only the wrapper is wrong, and the
+    generators must treat a marker-bearing section as unwritten, so the page
+    would otherwise be rewritten back to a placeholder.  A block whose body is
+    still the instruction text is genuinely unwritten and is left alone.
+    """
+    repaired = []
+    for target in all_targets(units):
+        page = BOOK_DIR / target["page"]
+        if not page.exists():
+            continue
+        lines = page.read_text(encoding="utf-8").splitlines()
+        if not any(PROSE_ANY_RE.search(line) for line in lines):
+            continue
+        out, changed = [], False
+        i = 0
+        while i < len(lines):
+            open_at = lines[i] if PROSE_OPEN_RE.match(lines[i]) else None
+            if open_at is None:
+                out.append(lines[i])
+                i += 1
+                continue
+            close = next((j for j in range(i + 1, len(lines))
+                          if lines[j].strip() == PROSE_CLOSE), None)
+            body = [l for l in lines[i + 1:close]] if close else []
+            if close is None or not body or body[0].startswith("Replace this whole block"):
+                out.append(lines[i])          # still an unwritten placeholder
+                i += 1
+                continue
+            out += [l for l in body if l.strip()] if len(body) == 1 else body
+            changed = True
+            i = close + 1
+        if changed:
+            page.write_text("\n".join(out).rstrip() + "\n",
+                            encoding="utf-8", newline="\n")
+            repaired.append(target["page"])
+    for rel in repaired:
+        print(f"  unwrapped {rel}")
+    print(f"repair: {len(repaired)} page(s) had prose inside surviving markers")
+    return 0
+
+
 def cmd_settle(args, units) -> int:
     targets = all_targets(units)
     progress = load_json(PROGRESS_PATH, {"units": {}, "failed": []})
@@ -237,11 +284,14 @@ def main() -> int:
     plan.add_argument("--per-batch", action="store_true",
                       help="write one spec file per batch into data/plan/")
     sub.add_parser("settle")
+    sub.add_parser("repair")
     args = ap.parse_args()
 
     units = load_manifest()
     BATCH_DIR.mkdir(parents=True, exist_ok=True)
-    return {"status": cmd_status, "plan": cmd_plan, "settle": cmd_settle}[args.cmd](args, units)
+    commands = {"status": cmd_status, "plan": cmd_plan, "settle": cmd_settle,
+                "repair": cmd_repair}
+    return commands[args.cmd](args, units)
 
 
 if __name__ == "__main__":

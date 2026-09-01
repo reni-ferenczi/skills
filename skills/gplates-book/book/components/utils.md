@@ -6,9 +6,55 @@
 
 ## Overview
 
-[[[PROSE component unit=component:utils tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+`utils` is the tier-1 foundation the reconstruction pipeline is built on: object
+ownership and lifetime, string interning, intrusive containers, compile-time
+traits, and diagnostics that have no business living inside `model`, `maths` or
+`app-logic` themselves. Most of the directory has no outward dependency at all,
+which is what lets it sit underneath everything else; the dependency counts it
+does carry belong to a second, smaller class of file that bridges these
+primitives to specific domain types rather than to the foundation itself.
+
+The ownership story runs through three units read together:
+`non_null_intrusive_ptr` — a fork of `boost::intrusive_ptr` that can never hold
+null, so a null check moves from every dereference to one point of construction
+— finds its reference-counting hooks by ADL on `ReferenceCount`, the CRTP mixin
+that almost every long-lived GPlates object derives from and that gives up a
+virtual destructor in exchange for costing nothing but an atomic counter; when
+construction would produce a null anyway, `NullIntrusivePointerHandler` is the
+policy that aborts or throws instead of allowing it. Alongside that,
+`CallStackTracker` supplies the capture-at-construction call trace that every
+`GPlatesGlobal::Exception` and `GPLATES_ASSERTION_SOURCE` records, because by
+the time GPlates' top-level handler in `GPlatesQApplication` catches an
+exception the real stack is already gone. `StringSet` and `IdStringSet` are the
+reference-counted interning pools behind the model's feature types, property
+names and feature IDs — the latter adding a back-reference list so a feature ID
+can be resolved to its owning objects in better than linear time — and
+`UnicodeString` is the thin `QString`-backed shim that keeps hundreds of old ICU
+call sites compiling while giving those pools a strict weak order. Underneath
+several of these, `SmartNodeLinkedList` and `IntrusiveSinglyLinkedList` are
+zero-allocation intrusive lists whose splice semantics `ObjectCache` and
+`IdStringSet` rely on directly; `ObjectPool` and the `ObjectCache` built on it
+add O(1) individual release to `boost::object_pool` for exactly the kind of
+bounded, recyclable working set the OpenGL layer needs. `ComponentManager` gates
+optional feature areas such as Python and data mining behind one process-wide
+bitset, and `SubjectObserverToken` is the polling invalidation counter that
+lets a cache know an upstream input changed without a signal/slot subscription.
+
+Nearly every other component uses `utils` this way, `opengl`, `file-io` and
+`app-logic` most heavily: `opengl` leans on `ObjectPool`/`ObjectCache` to
+recycle GPU-resident state and on `SubjectObserverToken` for lazy
+recomputation, `model` leans on `StringSet`/`IdStringSet` for cheap identity
+comparison of feature types and IDs, and `scribe` leans on `UnicodeString`'s
+`transcribe_delegate_protocol` to make ICU and Qt strings interchangeable in
+saved sessions. `utils` itself depends back on `maths`, `model`,
+`property-values` and `api` only through a handful of bridge units —
+`GeometryCreationUtils` validating raw point sequences into a
+`GeometryOnSphere`, `FeatureUtils` pulling plate IDs and time periods off a
+`FeatureHandle`, and `GetPropertyAsPythonObjVisitor` converting property values
+to Boost.Python objects for the API — and on `file-io` through the GeoSciML/GML
+XQuery helpers in `XQueryUtils` and the namespace registry in `XmlNamespaces`.
+Everything else in the component, the ownership, container and diagnostic
+core, depends on nothing above it.
 
 ## Units
 

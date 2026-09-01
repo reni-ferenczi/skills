@@ -6,9 +6,80 @@
 
 ## Overview
 
-[[[PROSE component unit=component:model tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+`model` is the revisioned feature store: the place every piece of data GPlates
+loads comes to rest, and the only place the rest of the application is permitted
+to change it. Its content is a tree of three handle levels hanging off a single
+`Model` — a `FeatureStoreRootHandle` holding `FeatureCollectionHandle`s, roughly
+one per loaded file, each holding `FeatureHandle`s, each holding
+`TopLevelProperty` objects whose values are trees of `PropertyValue`. Nothing
+here knows anything about plate motion; the component stores what the readers
+parsed, versions it, and tells interested parties when it changed. It is
+nevertheless where the whole reconstruction pipeline's input lives: a rotation
+file arrives as `gpml:TotalReconstructionSequence` features, a coastline as a
+feature carrying a geometry property and a `gpml:reconstructionPlateId`, and
+app-logic reads both back out through this component's iterators and visitors
+rather than from the files themselves.
+
+The idea the rest of GPlates is built around is the separation of identity from
+content. A handle is the permanent identity of a feature or a collection and
+keeps one address forever; its children live in a revision object it points at,
+so an edit replaces the content without moving the identity. `BasicHandle` is
+that machinery written once as a template and mixed into all three levels by
+inheritance, with `HandleTraits` naming each level's parent, child, revision,
+iterator and weak-reference types in one dependency-free header so the mutually
+recursive participants never have to include each other. On top of that sit the
+mechanisms that let outside code hold on to model objects safely: `WeakObserver`
+is the intrusive back-pointer by which a `ReconstructedFeatureGeometry`
+remembers the feature it came from and reports itself invalid rather than
+dangling once that feature dies, `WeakReferenceCallback` is the notification
+interface that `FeatureFocus` and `UnsavedChangesTracker` hook into to learn
+that something was edited or deactivated, and `RevisionAwareIterator` holds a
+weak reference plus an index — never a pointer into a container — re-reading the
+current revision on every dereference so it can never be left addressing a
+superseded one. Reading a feature's contents goes through `FeatureVisitor`,
+whose double dispatch off `PropertyValue::accept_visitor` keeps the type switch
+over forty-odd value classes in one place; naming anything in a feature goes
+through `QualifiedXmlName`, which interns namespace, alias and local name into
+process-wide pools so that `PropertyName` and `FeatureType` comparisons are
+iterator comparisons and a file with a hundred thousand identical property names
+stores that text once.
+
+GPlates does not compile its schema in. `Gpgim` parses `gpgim.xml` at startup
+into `GpgimFeatureClass` and `GpgimProperty` objects that state which feature
+types exist, which properties each may carry, what structural types their values
+may take and whether those values must be wrapped in a time-dependent wrapper,
+so extending the data model is an edit to XML rather than to C++. `ModelUtils`
+is where that schema meets the store: `FeatureHandle::add` will accept any
+property at all, whereas `ModelUtils::add_property` consults the GPGIM first and
+adds, strips or converts the `gpml:ConstantValue`, `gpml:PiecewiseAggregation`
+or `gpml:IrregularSampling` wrapper the definition demands — which is why
+building features by writing straight to a handle bypasses every check the
+application relies on. `XmlNode` is the small uninterpreted DOM these parsers
+share: the GPGIM loader and the GPML reader both materialise subtrees through it
+because a one-pass `QXmlStreamReader` cannot be re-read, and
+`UninterpretedPropertyValue` keeps a whole subtree so that a property GPlates has
+no reader for still survives a load-and-save round trip verbatim.
+
+The component sits low in the tree and its outward edges are mostly
+infrastructure: `utils` supplies the `StringSet` pools behind every interned
+name, the intrusive reference counting every handle and value uses, and the
+singleton template `Gpgim` is; `global` supplies the `non_null_ptr_type`
+spelling and the exception hierarchy; `scribe` receives the `transcribe` members
+that put qualified names and string content into session and project files;
+`maths` supplies the finite rotations and geometries `ModelUtils` assembles into
+rotation features. The relationship with `property-values` is genuinely
+two-directional — the `PropertyValue` base and the `FeatureVisitor` interface are
+declared here while every concrete GPML and GML value class deriving from them
+lives there — and the smaller edges into `file-io`, `app-logic`, `gui` and
+`qt-widgets` are of the same kind, such as `Metadata` writing itself through
+file-io's `XmlWriter`. In the other direction almost everything leans on this
+component: `file-io` because reading and writing a file *is* building and walking
+this tree, `app-logic` because reconstruction starts by pulling plate IDs,
+geometries and rotation sequences out of features and ends by attaching results
+back to them through weak observers, `feature-visitors` because it is nothing but
+`FeatureVisitor` subclasses, and `qt-widgets` and `gui` because the property
+tables, the create and edit dialogs and the feature focus all read the model
+directly and are driven by its change notifications.
 
 ## Units
 

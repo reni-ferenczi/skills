@@ -6,9 +6,78 @@
 
 ## Overview
 
-[[[PROSE component unit=component:opengl tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+`src/opengl` is GPlates' rendering backend. It decides nothing about *what* is
+drawn — that is settled upstream by the reconstruction and by the rendered-geometry
+layers — and owns everything about *how* it reaches the framebuffer. Two jobs run
+through it. The first is insulation: it wraps OpenGL names in typed, lifetime-managed
+objects, funnels all state through one shadowed model, and hides the era of driver
+capability variation GPlates still supports, so that no code outside this directory
+tests a `GLEW_*` macro or issues a bare `gl*` call. The second is scale: global
+raster and scalar-field data is far too large to redraw from source every frame, so
+this component holds the multi-resolution, cube-quad-tree machinery that turns it
+into a hierarchy of texture tiles and meshes, together with the caches that let those
+survive from one frame — and one reconstruction time — to the next.
+
+The core is a small set of units everything else is written against. `GLRenderer` is
+the single funnel for drawing: callers use its `gl_*` methods, which record into the
+`GLState` of the current state block instead of calling the driver, so that state
+reaches OpenGL only at a draw call and only as the difference from what was last
+applied. `GLState` is the sparse array of immutable state sets behind that, with
+`GLStateSetKeys` assigning each tracked slice of global state its slot and
+`GLStateSets` holding the leaves that finally emit the GL calls; `GLCompiledDrawState`
+is the recorded, context-portable form of a state change plus its draws. `GLContext`
+mirrors a real GL context, initialises GLEW, splits the object caches along the
+line the driver draws between shared and non-shared state, and defers every
+deallocation to the frame boundary where the right context is known to be current.
+`GLCapabilities`, populated by that initialisation, is the one snapshot of extensions
+and limits that every fallback branch in the component consults — `GLBuffer::create`
+choosing a real buffer object over its client-memory twin is the pattern the whole
+directory follows. Around those sit the resource wrappers (`GLTexture`,
+`GLFrameBufferObject`, `GLProgramObject` with its name-addressed uniform cache,
+`GLShaderSource`) and the value types that are the currency of the boundary,
+`GLMatrix` and `GLViewport`. `GLVertex` catalogues the interleaved vertex layouts and
+teaches `GLVertexArray` to read each one, while `GLStreamPrimitives` gives the
+painters a `glBegin`/`glEnd`-shaped front end that writes straight into mapped vertex
+buffers — necessary because GPlates regenerates its geometry from reconstructed
+features every frame and has no static meshes to pre-build.
+
+Layered on that core is the cube-map pipeline, which is what makes the component
+large. A gnomonic cube subdivision of the sphere, computed by `GLCubeSubdivision` and
+memoised by `GLCubeSubdivisionCache`, gives every renderer a common quad-tree address
+space for tiles, frusta and spatial bounds. `GLMultiResolutionRaster` turns a
+georeferenced raster into a level-of-detail pyramid of tiles meshed onto the unit
+sphere; `GLMultiResolutionCubeRaster` re-renders that into the shared cube scheme so
+rasters, age grids and normal maps of different native resolutions can be sampled
+together; `GLMultiResolutionStaticPolygonReconstructedRaster` then draws a
+present-day raster at a past time by traversing that tree once per rotation group of
+the polygon meshes `GLReconstructedStaticPolygonMeshes` prepares. `GLMultiResolutionCubeMesh`
+and its map-projected counterpart supply the geometry those tiles are composited onto,
+`GLFilledPolygonsGlobeView` and `GLFilledPolygonsMapView` rasterise dynamic filled
+polygons per tile rather than tessellating them, `GLScalarField3D` ray-traces
+sub-surface fields, and `GLLight` resolves the one lighting direction both the globe
+and the projected map need. `GLUtils` supplies the projective-texturing and
+quad-tree-transform arithmetic that stitches all of these together.
+`GLVisualLayers` sits at the top as the per-layer cache of everything above that must
+outlive a frame.
+
+Downwards, the component leans hardest on `maths` — unit-sphere geometry, the finite
+rotations that group reconstructed polygons, and the cube quad-tree partition that
+every tile traversal walks — then on `global` for its exception types and on `utils`
+for the object caches, object pools and subject/observer tokens that all the
+lazy-rebuild logic is built from. From `app-logic` it takes layer identity and
+reconstructed output: `GLVisualLayers` is keyed by `LayerProxy`, and the reconstructed
+raster path consumes `ReconstructContext` results directly. `property-values` supplies
+the georeferencing and coordinate transformation that place a raster on the globe, and
+`view-operations` the parameter bundles that configure scalar-field rendering. The
+`gui` dependency runs both ways and is the heaviest edge in either direction: this
+component reads `Colour`, the scene lighting parameters and the map projection from
+`gui`, while `gui`'s painters — the globe and map rendered-geometry painters,
+`LayerPainter` and the scene decorations — are the main clients of `GLRenderer` and
+`GLStreamPrimitives`. Upwards, `qt-widgets` owns the instances: `GlobeCanvas` and
+`MapView` each construct a `GLContext` around their widget and a `GLVisualLayers` to
+go with it, which is how a Qt widget becomes a render surface. `data-mining` uses the
+component in an unusual way, driving `GLRasterCoRegistration` as a pure GPU compute
+back end with nothing drawn to screen at all.
 
 ## Units
 

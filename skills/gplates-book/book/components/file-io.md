@@ -6,9 +6,79 @@
 
 ## Overview
 
-[[[PROSE component unit=component:file-io tier=1]]]
-Replace this whole block, markers included, with 2-4 paragraphs: what this component is responsible for, the load-bearing units and how it connects to neighbouring components. Do not restate the unit table.
-[[[/PROSE]]]
+Everything that crosses the boundary between a file on disk and the in-memory
+model lives here: reading feature collections out of GPML, PLATES4 line and
+rotation files, shapefiles and the other OGR-backed vector formats, GeoSciML,
+GMAP and a handful of smaller text formats; writing them back; reading and
+writing rasters and 3D scalar fields; parsing GMT colour palettes; and, at the
+far end of the reconstruction pipeline, serialising reconstruction results —
+reconstructed geometries, resolved topologies, flowlines, motion paths, velocity
+fields, scalar coverages and deformation — into export files. Two cross-cutting
+concerns are also this component's rather than any single reader's. `ReadErrors`
+is the enum vocabulary every reader reports through, and `ReadErrorAccumulation`
+the bucket it reports into, because loading a geological data file is expected to
+be *partially* successful: a reader classifies each problem by consequence
+(warning, recoverable error, terminating error, failure to begin), pushes a
+`ReadErrorOccurrence` carrying only enum codes and a location, and returns a
+usable collection anyway; text is produced later, elsewhere, by
+`ReadErrorMessages`. And `File`, with its nested `File::Reference`, is the
+currency the rest of the application uses instead of a bare feature collection —
+`File` owns a collection freshly read off disk until
+`add_feature_collection_to_model` hands ownership to the model, at which point
+the weak `Reference` it already handed out is all anyone keeps.
+
+Format identity and dispatch run through two units. `FeatureCollectionFileFormat`
+is the closed enumeration naming every format, and
+`FeatureCollectionFileFormatRegistry` is the single map from that enum to a
+detector, a reader, a writer and a default `Configuration`, wired up once in
+`register_default_file_formats()` so that nothing outside `file-io` needs to name
+a concrete reader class. Per-format read/write options travel as
+`FeatureCollectionFileFormatConfiguration`, an empty polymorphic base recovered
+by a checked `dynamic_cast_configuration()`. The native GPML path is the
+deepest: `GpmlFeatureReaderImpl` turns one XML element into a feature via a
+*chain* of readers whose shape mirrors the GPGIM feature-class inheritance
+hierarchy, each link consuming the properties its own class declares and passing
+the rest on, with `GpmlAnyPropertyFeatureReader` and
+`GpmlUninterpretedFeatureReader` at the head to guarantee that nothing in the
+file is silently lost on a load-and-save round trip;
+`GpmlPropertyStructuralTypeReader` is the dispatch table from structural type
+name to parse function that every link shares, with enumerations derived from
+`gpgim.xml` rather than hard-coded. Output goes back through `GpmlOutputVisitor`
+over `XmlWriter`, whose one piece of real logic is preserving the originating
+document's own namespace prefixes instead of letting Qt invent them.
+`PlatesRotationFileProxy` solves the same round-trip problem for `.grot` by a
+different route — it keeps the file's own text alive as an editable segment
+sequence beside the model, so a user's comments, spacing and ordering survive a
+single pole edit.
+
+The raster side has its own on-disk contract. `RasterReader` and `RasterWriter`
+are format-independent facades that pick a GDAL or an RGBA backend from the file
+extension, but GPlates never paints from the source file: each band is converted
+into block-encoded sidecar cache files, one for the full-resolution band and one
+for the mipmap pyramid, whose byte layout, versioning and filename-and-location
+policy are all defined by `RasterFileCacheFormat` and agreed on by the several
+readers and writers that touch them. The export side is likewise factored:
+`ReconstructionGeometryExportImpl` performs the regrouping that every exporter
+needs — a flat vector of reconstruction geometries in reconstruction order into a
+file-and-feature hierarchy in collection order — so that two dozen `*Export`
+units do it identically, and `ExportTemplateFilenameSequence` expands one
+filename template into one concrete name per animation frame.
+
+The component sits low and wide. It leans hardest on `model`, `property-values`
+and `maths`, because reading a file *is* constructing `FeatureHandle`s, concrete
+property values and `GeometryOnSphere` objects, and writing one is visiting them;
+it reaches into `app-logic` mainly in the other direction of the pipeline, for
+the concrete reconstruction-geometry types and the
+`ReconstructionGeometryUtils` accessors the exporters need. Its ties to `gui` and
+`qt-widgets` are narrower than the counts suggest and mostly follow the colour
+palettes `CptReader` builds and the interactive attribute mapping abstracted
+behind `PropertyMapper`. In the other direction `qt-widgets` and `gui` are by far
+the largest consumers — file dialogs, export dialogs and the read-error dialog
+that groups an accumulation for display — while `app-logic` reaches back for
+`File::Reference` (its `FeatureCollectionFileState` and `FeatureCollectionFileIO`
+are the funnel through which loads and their error accumulations pass), `opengl`
+consumes the raster cache readers to fill texture tiles, and `cli`, `api` and
+`entry-points` drive loading and exporting without any GUI at all.
 
 ## Units
 
