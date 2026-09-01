@@ -10,7 +10,11 @@
 
 ## Overview
 
-Configures the appearance of latitude/longitude grid lines (graticules) displayed on the globe or map. The dialog provides controls to adjust graticule settings such as colour, spacing, and visibility. Its overridden `exec()` method takes a `GraticuleSettings` reference, populates the form from current settings, and updates the settings object if the user accepts the dialog.
+A small modal dialog for editing the latitude/longitude grid lines (graticules) drawn on the globe or map. It edits exactly the four values a `GPlatesGui::GraticuleSettings` holds: the latitude spacing, the longitude spacing, the line colour and a line-width hint. There is no visibility control: `SphericalGrid`/`MapGrid` draw the graticules from these settings unconditionally, and a spacing of zero is what suppresses lines of latitude or of longitude.
+
+The whole dialog is driven by `exec(GraticuleSettings &)`: it calls `populate()` to load the form, runs `QDialog::exec()`, and on `Accepted` calls `save()` to write the edited values back into the caller's settings object; on Cancel the settings are left untouched. `populate`/`save` are also where the unit conversion happens — `GraticuleSettings` stores the two spacings in *radians* while the spin boxes show *degrees*, so they convert in both directions via `GPlatesMaths::convert_rad_to_deg`/`convert_deg_to_rad`. The colour is edited by a `ChooseColourButton` created in the constructor and dropped into the form's placeholder widget, so it does not appear in the generated UI class.
+
+Note that `exec(GraticuleSettings &)` is not an override of `QDialog::exec()` — it is a non-virtual overload with a different signature, and the header makes the inherited zero-argument version private (`using GPlatesDialog::exec;`) to stop it being called by accident. That protection only holds when the object is used through a `ConfigureGraticulesDialog` reference: calling `exec()` through a `QDialog *`/`GPlatesDialog *` still reaches Qt's version and shows the dialog without ever running `populate` or `save`. The single caller, `GPlatesGui::Dialogs::pop_up_configure_graticules_dialog()`, uses the concrete type and passes the view state's graticule settings.
 
 ## Declared types
 

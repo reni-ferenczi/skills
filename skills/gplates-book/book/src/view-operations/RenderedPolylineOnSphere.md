@@ -8,7 +8,7 @@
 
 ## Overview
 
-A rendered geometry wrapper for a polyline on a sphere, holding a `PolylineOnSphere`, display properties, and optional fill state. When filled, a temporary polygon is formed from the polyline vertices (requiring at least 3 points) to test point-in-polygon inclusion, allowing users to click the boundary or filled area. This enables interactive selection of polylines in plate reconstructions and feature boundaries.
+A rendered geometry wrapper for a polyline on a sphere, holding a `PolylineOnSphere`, display properties, and optional fill state. `test_proximity()` first defers to the polyline itself; if that misses and the geometry is filled with at least three vertices, it builds a temporary `PolygonOnSphere` from the polyline's vertices and runs a point-in-polygon test, so a hit anywhere in the filled interior is reported at closeness 1.0. `test_vertex_proximity()` always delegates straight to the polyline.
 
 ## Declared types
 

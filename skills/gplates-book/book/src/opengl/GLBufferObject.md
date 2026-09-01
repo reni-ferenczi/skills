@@ -11,8 +11,11 @@
 
 `GLBufferObject` is the real implementation behind `GLBuffer` — the one chosen
 whenever `GLCapabilities` reports `GL_ARB_vertex_buffer_object` (and, for pixel
-targets, `GL_ARB_pixel_buffer_object`). Its second base, `GLObject`, marks it as
-an object that owns a GL name: the name comes from `GLObjectResource` with the
+targets, `GL_ARB_pixel_buffer_object`). Its second base, `GLObject`, is an empty
+marker: it adds only `boost::shared_ptr`/`weak_ptr` typedefs and a virtual
+destructor, and its own comment explains that `boost::shared_ptr` is used rather
+than `non_null_intrusive_ptr` so instances can go into a
+`GPlatesUtils::ObjectCache`. The GL name comes from `GLObjectResource` with the
 nested `Allocator` policy supplying `glGenBuffersARB`/`glDeleteBuffersARB`, and
 the resource manager it allocates from belongs to the shared state of the
 `GLContext` (`get_buffer_object_resource_manager`). That indirection is what
@@ -22,7 +25,7 @@ context is current — or, if the context is already gone, drops the handle
 silently because the driver destroyed it along with the context.
 
 No method here assumes anything about the current GL binding, and none leaves a
-binding behind. Every entry point opens with a
+binding behind. Every method that issues GL opens with a
 `GLRenderer::BindBufferObjectAndApply` scope, which records the renderer's
 current binding for the target, applies this buffer's binding to real OpenGL
 immediately (rather than deferring it as the renderer normally would), and

@@ -15,10 +15,7 @@ kind of geometry it is dealing with — GUI widgets picking a digitisation tool,
 geometry builders tracking what the user is constructing, feature-geometry
 lookups — can do so with a plain enum comparison or switch, instead of
 dispatching through a `ConstGeometryOnSphereVisitor` or testing dynamic types
-every time. Its very wide fan-in across `view-operations`, `gui`,
-`qt-widgets` and `app-logic` reflects that it is the common vocabulary these
-layers use to talk about "what kind of geometry is this" without depending on
-the geometry classes themselves.
+every time.
 
 ## Declared types
 

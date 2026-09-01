@@ -14,12 +14,17 @@ single element at the root of the cube itself, with an arbitrary `ElementType`
 stored in each node. It is deliberately only structure — it knows nothing about
 geometry, bounding circles or which node a point belongs in. Callers decide where
 to descend and this class hands out, creates and removes nodes. That is why it is
-instantiated on wildly different payloads: reconstructed polygon meshes
-(`GLReconstructedStaticPolygonMeshes`), raster tiles
-(`GLMultiResolutionCubeRaster`), filled-polygon draw lists
-(`GLFilledPolygonsGlobeView`), rendered geometries
-(`RenderedGeometryLayer`). The related `CubeQuadTreePartition` is the *spatial*
-structure built on the same idea; this one is the plain tree.
+instantiated on wildly different payloads: raster tiles
+(`GLMultiResolutionCubeRaster`), per-node polygon-mesh membership
+(`GLReconstructedStaticPolygonMeshes`), cached subdivision transforms held as
+object-cache volatile pointers (`GLCubeSubdivisionCache`), mesh drawables
+(`GLMultiResolutionCubeMesh`), and in
+`GLMultiResolutionStaticPolygonReconstructedRaster` three separate trees at once
+— tiles, per-render traversal state and a client-side cache handed back to the
+caller. Note that the related `CubeQuadTreePartition` is a different class: it is
+the *spatial* structure built on the same idea, and the code that reaches for
+`CubeQuadTreePartition` or a bare `CubeQuadTreeLocation` — `GLFilledPolygonsGlobeView`,
+`RenderedGeometryLayer` — is not using this template at all.
 
 Two construction styles are offered and they are not interchangeable in feel.
 The `get_or_create_*` family walks down from a face root creating
@@ -102,9 +107,12 @@ the class is `ReferenceCount`-derived and handed around as
 — removing a node from the tree and releasing it to the pool are the same act,
 and the pool may hand the same storage back on the next `create_node()`. So any
 `Node *` or `Node &` a caller is holding is invalidated by
-`remove_child_node()`, `remove_quad_tree_root_node()`, `clear()`, and by the
-`set_*_node(..., const ElementType &)` overloads, which silently remove the
-existing subtree before attaching the new one. Destroying the `CubeQuadTree`
+`remove_child_node()`, `remove_quad_tree_root_node()`, `clear()`, and by
+`set_quad_tree_root_node()` and `set_child_node()` — *both* overloads of each,
+which recursively remove the existing subtree before attaching the new one. The
+`ptr_type` overloads are where that removal actually happens
+(CubeQuadTree.h:622-633 and 676-688); the `const ElementType &` overloads inherit
+it by delegating to them after a `create_node()`. Destroying the `CubeQuadTree`
 destroys the pool and hence every node, attached or not.
 
 **`create_node()` without an attach is a leak until destruction.** The header is

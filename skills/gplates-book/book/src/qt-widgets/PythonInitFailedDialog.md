@@ -10,7 +10,7 @@
 
 ## Overview
 
-Modal dialog displayed when Python initialization fails at startup. It informs the user that GPlates will run without Python support and provides platform-specific troubleshooting steps, including links to download installers and instructions for installing from package managers. The dialog checks the Python version via `GPlatesGui::PythonManager` and injects version-specific and platform-specific installation instructions into the HTML message. A checkbox allows users to suppress the message on future startup attempts.
+Modal dialog displayed when Python initialization fails at startup. It tells the user that GPlates will start up without Python support, and suggests checking the installation or setting the `python/python_home` preference if Python lives in an unusual location. `assemble_message()` builds the HTML by substituting the Python version reported by `GPlatesGui::PythonManager` into a template, along with an install instruction — an installer link on Windows, a package-manager command on macOS and Linux — selected at compile time. A "Do not show this dialog again" control lets the user suppress it on later startups; `gplates_main.cc` reads it through `show_again()` and passes the result to `PythonManager::set_show_init_fail_dlg()`.
 
 ## Declared types
 
@@ -44,7 +44,9 @@ Modal dialog displayed when Python initialization fails at startup. It informs t
 
 ## Notes
 
-*None.*
+Two traps in the naming. `show_again_button` is a `QRadioButton`, not a checkbox, and its label is the negative "Do not show this dialog again"; `show_again()` therefore inverts it — `return !show_again_button->isChecked();` — so a checked button means *do not* show again.
+
+`assemble_message()` substitutes `$INSTALL_INSTRUCTION` only for python_version "2.6" or "2.7". Any other version (including the Python 3 versions GPlates 2.5 actually builds against) leaves the literal `$INSTALL_INSTRUCTION` placeholder in the HTML shown to the user.
 
 ## Used by
 

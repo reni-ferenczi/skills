@@ -13,8 +13,10 @@
 enum codes used throughout the file readers into user-facing, translatable
 text. Almost all of its 721-line `.cc` is two static tables,
 `description_table` and `result_table` (sourced from the project's
-`ReadErrorMessages` wiki page), each pairing an enum value with plain-`char*`
-short and full message text. `get_short_description_as_string`,
+`ReadErrorMessages` wiki page), both pairing an enum value with plain-`char*`
+text wrapped in `QT_TR_NOOP`: `description_table` carries two strings per entry,
+a short and a full description, while `result_table` carries a single string.
+`get_short_description_as_string`,
 `get_full_description_as_string` and `get_result_as_string` lazily build an
 `std::map` from the matching table on first use — running each string through
 `QObject::tr()` at that point, not at table-definition time, so Qt's

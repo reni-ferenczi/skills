@@ -8,7 +8,7 @@
 
 ## Overview
 
-`GPlatesModel::XmlElementName` is the type used to hold the name of an XML element (namespace, namespace alias and local name together) throughout GPML parsing and writing. It is a `typedef` for `QualifiedXmlName<XmlElementNameFactory>`, which stores each of the three parts as an iterator into a shared `GPlatesUtils::StringSet` rather than as its own `QString`, so element names that recur across a document — or across every document of a given feature type — share one interned copy and compare in constant time.
+`GPlatesModel::XmlElementName` is the type used to hold the name of an XML element (namespace, namespace alias and local name together) throughout GPML parsing and writing. It is a `typedef` for `QualifiedXmlName<XmlElementNameFactory>`, which stores each of the three parts as a `GPlatesUtils::StringSet::SharedIterator` into an interning `StringSet` — three different singletons, one per part: `StringSetSingletons::xml_namespace_instance()` for the namespace, `xml_namespace_alias_instance()` for the alias, and the factory's own `SingletonType::instance()` for the local name — rather than as its own `QString`, so element names that recur across a document — or across every document of a given feature type — share one interned copy and compare in constant time.
 
 `XmlElementNameFactory` exists only to give `QualifiedXmlName` the singleton it interns into, by forwarding `instance()` to `StringSetSingletons::xml_element_name_instance()`; it is never itself instantiated. The counterpart for attribute values is `XmlAttributeValue`, which uses the same `StringSet`-backed sharing but without the namespace/alias structure, since an attribute's value has no qualified name.
 

@@ -30,7 +30,7 @@ assignment). `ObjectPtr` exists purely to hide that optional; it is the size of 
 raw pointer, non-owning, and `SafeBool`-testable.
 
 The heaviest consumer is `GPlatesOpenGL::GLStateSetStore`, which holds one
-`ObjectPool` per `GLStateSet` subclass — roughly seventy of them — and
+`ObjectPool` per `GLStateSet` subclass — 44 of them, one member each — and
 `GPlatesOpenGL::GLState` allocates from them via `add_with_auto_release` on the
 per-draw-call path, which is exactly the workload the O(1) release was written
 for. `GPlatesUtils::ObjectCache` is a good illustration of the boundary: it uses
@@ -106,8 +106,11 @@ saying so, since those are only ever freed en masse.
   is guarded by `Loki::ScopeGuard`, but on the reuse path the node is popped off
   `d_object_free_list` (and pushed to `d_free_list_node_free_list`) *before*
   `free_list_object->object = in_place_factory`. If `ObjectType`'s constructor
-  throws there, the slot is off both lists and unreachable until the pool is
-  cleared or destroyed.
+  throws there, the `FreeListNode` itself is fine — it is already on
+  `d_free_list_node_free_list` and will be reused — but nothing points at the
+  `ObjectWrapper` slot any more, so that slot is unreachable until the pool is
+  cleared or destroyed. `d_num_objects` is incremented after the assignment, so
+  the count at least stays honest.
 - **The two free lists share the same `next` pointers**, since `FreeListNode`
   inherits `IntrusiveSinglyLinkedList<FreeListNode>::Node`. That is why `add()`
   must pop from one list before pushing to the other; reordering those two lines

@@ -9,7 +9,7 @@
 
 ## Overview
 
-`GPlatesApp` is the wxWidgets application class that manages application lifecycle during startup and shutdown. When wxWindows begins execution, it calls `OnInit()` to set up the application state, and `OnExit()` to tear it down. During initialization, `GPlatesApp` creates a single `MainWindow` instance, shows it to the user, and registers it as the top window. It applies a Mesa graphics library workaround if needed, and catches any exceptions thrown during the main window construction, reporting them to standard error rather than crashing silently.
+`GPlatesApp` is the wxWidgets application class that manages application lifecycle during startup and shutdown. wxWindows calls `OnInit()` to set up the application state, and `OnExit()` to tear it down. In builds compiled with `PACKAGE_IS_BETA`, `OnInit()` first shows a modal warning dialog and returns `FALSE` — aborting startup — if the user declines to continue. It then calls `fix_mesa_bug()` unconditionally before constructing a single `MainWindow`, showing it, registering it as the top window and handing it to `GPlatesControls::Lifetime::init()`. Exceptions escaping that construction are reported to standard error rather than crashing silently.
 
 ## Declared types
 
@@ -36,7 +36,9 @@
 
 ## Notes
 
-`OnInit()` catches `GPlatesGlobal::Exception`, `std::exception`, and all other exceptions, preventing any throw from propagating beyond the initialization phase. The `MainWindow` owns the `d_main_win` pointer and the window is deleted in `OnExit()`. The Mesa workaround (`fix_mesa_bug()`) sets an environment variable to disable SSE optimizations in Mesa, which has no effect on systems without Mesa or unaffected by the bug.
+The source warns that the `try ... catch` in `OnInit()` can only catch exceptions thrown during the instantiation of `MainWindow`, not any thrown at a later stage; each of its three handlers (`GPlatesGlobal::Exception`, `std::exception`, `...`) prints to `std::cerr` and returns `FALSE`.
+
+`GPlatesApp` owns the window, not the other way round: `d_main_win` is a private `MainWindow *` field, allocated in `OnInit()` and `delete`d in `OnExit()`.
 
 ## Used by
 

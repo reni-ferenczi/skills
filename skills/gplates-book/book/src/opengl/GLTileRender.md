@@ -73,9 +73,16 @@ point size/line width can pop in and out of tiles.
 
 ## Notes
 
-- The constructor throws `PreconditionViolationError` if either render target
-  dimension is not larger than `2 * border` (there must be room for an actual
-  tile inside the border).
+- The constructor's only precondition is that both render target dimensions are
+  non-zero; it throws `PreconditionViolationError` otherwise. Ignore the header
+  comment above the constructor (`GLTileRender.h`), which is stale: it claims a
+  `PreconditionViolationError` when a render target dimension is `<= 2 * border`
+  and that the tile dimensions are `render_target_width - 2 * border` and
+  `render_target_height - 2 * border`. Neither is true of the 2.5.0 code —
+  `d_max_tile_width`/`d_max_tile_height` are just the smaller of the render
+  target and destination viewport dimensions, with no border subtracted, so the
+  border is added *on top* of the tile size and it is the caller's job to make
+  the render target big enough for `tile size + 2 * border`.
 - After construction, `d_current_tile` is unset; callers must call
   `first_tile()` before using any of the per-tile accessors, and must check
   `finished()` after `next_tile()` before reading a (no longer valid) tile.
