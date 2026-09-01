@@ -1,0 +1,62 @@
+# NoActiveEditWidgetException
+
+[Book TOC](../../TOC.md) · [qt-widgets](../../components/qt-widgets.md) · cluster Community 92 · tier 3
+
+| Source file | Kind | Lines |
+|---|---|---|
+| `src/qt-widgets/NoActiveEditWidgetException.h` | C++ | 59 |
+
+## Overview
+
+[[[PROSE overview unit=qt-widgets/NoActiveEditWidgetException tier=3]]]
+Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
+[[[/PROSE]]]
+
+## Declared types
+
+| Name | Kind | Bases | Template | Subclasses | Description |
+|---|---|---|---|---|---|
+| [`GPlatesQtWidgets::NoActiveEditWidgetException`](#gplatesqtwidgetsnoactiveeditwidgetexception) | class | [`GPlatesGlobal::PreconditionViolationError`](../global/PreconditionViolationError.md) | — | 0 | Exception thrown by EditWidgetGroupBox when a precondition of at least one edit widget being active is violated. |
+
+## Members
+
+### `GPlatesQtWidgets::NoActiveEditWidgetException`
+
+| Member | Kind | Type | Access | Description |
+|---|---|---|---|---|
+| `NoActiveEditWidgetException( const GPlatesUtils::CallStack::Trace &exception_source)` | constructor | `None` | public | — |
+| `~NoActiveEditWidgetException()` | destructor | `None` | public | — |
+| `exception_name()` | method | `char` | public | — |
+
+## Free functions and macros
+
+| Name | Kind | Type / body | Description |
+|---|---|---|---|
+| `GPLATES_QTWIDGETS_NOACTIVEEDITWIDGETEXCEPTION_H` | macro | `None` | — |
+
+## Notes
+
+[[[PROSE notes unit=qt-widgets/NoActiveEditWidgetException tier=3]]]
+Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
+[[[/PROSE]]]
+
+## Used by
+
+| Unit | Component | References |
+|---|---|---|
+| [qt-widgets/EditWidgetGroupBox](EditWidgetGroupBox.md) | qt-widgets | 3 |
+
+## Related
+
+*None.*
+
+## Explore
+
+Run these from the `gplates-code` skill directory:
+
+```bash
+python scripts/gpq.py file src/qt-widgets/NoActiveEditWidgetException.h
+python scripts/gpq.py def GPlatesQtWidgets::NoActiveEditWidgetException --body
+python scripts/gpq.py uses NoActiveEditWidgetException --kind class
+python scripts/gpq.py hier NoActiveEditWidgetException
+```

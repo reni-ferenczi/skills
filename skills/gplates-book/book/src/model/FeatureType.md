@@ -1,0 +1,86 @@
+# FeatureType
+
+[Book TOC](../../TOC.md) · [model](../../components/model.md) · cluster Community 138 · tier 1
+
+| Source file | Kind | Lines |
+|---|---|---|
+| `src/model/FeatureType.h` | C++ | 55 |
+
+## Overview
+
+[[[PROSE overview unit=model/FeatureType tier=1]]]
+Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
+[[[/PROSE]]]
+
+## Declared types
+
+| Name | Kind | Bases | Template | Subclasses | Description |
+|---|---|---|---|---|---|
+| [`GPlatesModel::FeatureTypeFactory`](#gplatesmodelfeaturetypefactory) | class | — | — | 0 | — |
+| [`GPlatesModel::FeatureType`](#gplatesmodelfeaturetype) | typedef | — | — | 0 | — |
+
+## Members
+
+### `GPlatesModel::FeatureTypeFactory`
+
+| Member | Kind | Type | Access | Description |
+|---|---|---|---|---|
+| `FeatureTypeFactory()` | constructor | `None` | private | — |
+
+### `GPlatesModel::FeatureType`
+
+*None.*
+
+## Free functions and macros
+
+| Name | Kind | Type / body | Description |
+|---|---|---|---|
+| `GPLATES_MODEL_FEATURETYPE_H` | macro | `None` | — |
+
+## Notes
+
+[[[PROSE notes unit=model/FeatureType tier=1]]]
+Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
+[[[/PROSE]]]
+
+## Used by
+
+| Unit | Component | References |
+|---|---|---|
+| [file-io/deprecated/FeaturePropertiesMap](../file-io/deprecated/FeaturePropertiesMap.md) | file-io | 106 |
+| [file-io/PlatesLineFormatReader](../file-io/PlatesLineFormatReader.md) | file-io | 49 |
+| [file-io/GpmlFeatureReaderFactory](../file-io/GpmlFeatureReaderFactory.md) | file-io | 45 |
+| [gui/FeatureTypeColourPalette](../gui/FeatureTypeColourPalette.md) | gui | 45 |
+| [file-io/PlatesFormatUtils](../file-io/PlatesFormatUtils.md) | file-io | 44 |
+| [qt-widgets/ChooseFeatureTypeWidget](../qt-widgets/ChooseFeatureTypeWidget.md) | qt-widgets | 30 |
+| [qt-widgets/CreateFeatureDialog](../qt-widgets/CreateFeatureDialog.md) | qt-widgets | 29 |
+| [file-io/OgrReader](../file-io/OgrReader.md) | file-io | 26 |
+| [model/Gpgim](Gpgim.md) | model | 23 |
+| [model/GpgimFeatureClass](GpgimFeatureClass.md) | model | 17 |
+| [qt-widgets/CreateFeaturePropertiesPage](../qt-widgets/CreateFeaturePropertiesPage.md) | qt-widgets | 13 |
+| [file-io/PlatesRotationFileProxy](../file-io/PlatesRotationFileProxy.md) | file-io | 12 |
+| [model/FeatureHandle](FeatureHandle.md) | model | 11 |
+| [model/ModelUtils](ModelUtils.md) | model | 11 |
+| [qt-widgets/CreateFeatureAddOrEditPropertyDialog](../qt-widgets/CreateFeatureAddOrEditPropertyDialog.md) | qt-widgets | 10 |
+| [file-io/SymbolFileReader](../file-io/SymbolFileReader.md) | file-io | 8 |
+| [app-logic/PlateVelocityUtils](../app-logic/PlateVelocityUtils.md) | app-logic | 7 |
+| [property-values/GpmlFeatureReference](../property-values/GpmlFeatureReference.md) | property-values | 6 |
+| [qt-widgets/AddPropertyDialog](../qt-widgets/AddPropertyDialog.md) | qt-widgets | 6 |
+| [qt-widgets/ChangeFeatureTypeDialog](../qt-widgets/ChangeFeatureTypeDialog.md) | qt-widgets | 6 |
+
+*... and 48 more units.*
+
+## Related
+
+*None.*
+
+## Explore
+
+Run these from the `gplates-code` skill directory:
+
+```bash
+python scripts/gpq.py file src/model/FeatureType.h
+python scripts/gpq.py def GPlatesModel::FeatureTypeFactory --body
+python scripts/gpq.py uses FeatureTypeFactory --kind class
+python scripts/gpq.py hier FeatureTypeFactory
+```

@@ -1,0 +1,87 @@
+# PythonExecutionThread
+
+[Book TOC](../../TOC.md) · [api](../../components/api.md) · cluster Community 341 · tier 2
+
+| Source file | Kind | Lines |
+|---|---|---|
+| `src/api/PythonExecutionThread.h` | C++ | 272 |
+| `src/api/PythonExecutionThread.cc` | C++ | 273 |
+
+## Overview
+
+[[[PROSE overview unit=api/PythonExecutionThread tier=2]]]
+Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
+[[[/PROSE]]]
+
+## Declared types
+
+| Name | Kind | Bases | Template | Subclasses | Description |
+|---|---|---|---|---|---|
+| [`GPlatesApi::PythonExecutionThread`](#gplatesapipythonexecutionthread) | class | `QThread` | — | 0 | The thread on which Python gets executed, away from the main thread. |
+
+## Members
+
+### `GPlatesApi::PythonExecutionThread`
+
+| Member | Kind | Type | Access | Description |
+|---|---|---|---|---|
+| `PythonExecutionThread( const boost::python::object &main_namespace, QObject *parent_)` | constructor | `None` | public | — |
+| `exec_interactive_command( const QString &command)` | method | `void` | public | Executes command as entered on an interactive console on this thread, monitored from another thread by monitor. |
+| `reset_interactive_buffer()` | method | `void` | public | Resets the buffer in the interactive console (e.g. when the user presses Ctrl+C in the console). |
+| `exec_string( const QString &string)` | method | `void` | public | Executes the Python code in string on this thread, monitored from another thread by monitor. |
+| `exec_file( const QString &filename, const QString &filename_encoding)` | method | `void` | public | Executes filename as a Python script, monitored from another thread by monitor. |
+| `eval_string( const QString &string)` | method | `void` | public | Evaluates the Python expression contained in string, monitored from another thread by monitor. |
+| `exec_function( const boost::function< void () > &function)` | method | `void` | public | Executes the given function, monitored from another thread by monitor. monitor must not be NULL. |
+| `eval_function( const boost::function< boost::python::object () > &function)` | method | `void` | public | Evaluates the given function, which returns a Python object, monitored from another thread by monitor. monitor must not be NULL. |
+| `quit_event_loop()` | method | `void` | public | Quit the event loop, if it is running. |
+| `get_python_thread_id()` | method | `long` | public | Returns the thread id as reported by Python, if the thread is running. |
+| `raise_keyboard_interrupt_exception()` | method | `void` | public | Raises a Python KeyboardInterrupt exception in the Python thread, if it is running. |
+| `continue_interactive_input()` | method | `bool` | public | — |
+| `system_exit_exception_raised( int exit_status, QString exit_error_message)` | method | `void` | public | Emitted when an unhandled Python SystemExit exception is raised in the thread. |
+| `run()` | method | `void` | protected | — |
+| `check_python_runner()` | method | `void` | protected | — |
+| `run_in_python_thread( boost::function< void () > &f)` | method | `void` | protected | — |
+| `wait_done()` | method | `void` | protected | — |
+| `handle_system_exit_exception_raised( int exit_status, QString exit_error_message)` | method | `void` | private | — |
+| `d_namespace` | field | `boost::python::object` | private | — |
+| `d_python_runner` | field | `PythonRunner` | private | — |
+| `d_event_loop` | field | `QEventLoop` | private | — |
+| `d_python_thread_id` | field | `long` | private | — |
+| `d_monitor` | field | `PythonExecutionMonitor` | private | — |
+
+## Free functions and macros
+
+| Name | Kind | Type / body | Description |
+|---|---|---|---|
+| `GPLATES_API_PYTHONEXECUTIONTHREAD_H` | macro | `None` | — |
+
+## Notes
+
+[[[PROSE notes unit=api/PythonExecutionThread tier=2]]]
+Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
+[[[/PROSE]]]
+
+## Used by
+
+| Unit | Component | References |
+|---|---|---|
+| [gui/PythonManager](../gui/PythonManager.md) | gui | 9 |
+| [api/PythonUtils](PythonUtils.md) | api | 4 |
+| [qt-widgets/PythonExecutionMonitorWidget](../qt-widgets/PythonExecutionMonitorWidget.md) | qt-widgets | 4 |
+| [qt-widgets/PythonConsoleDialog](../qt-widgets/PythonConsoleDialog.md) | qt-widgets | 3 |
+| [gui/UtilitiesMenu](../gui/UtilitiesMenu.md) | gui | 1 |
+
+## Related
+
+*None.*
+
+## Explore
+
+Run these from the `gplates-code` skill directory:
+
+```bash
+python scripts/gpq.py file src/api/PythonExecutionThread.h
+python scripts/gpq.py def GPlatesApi::PythonExecutionThread --body
+python scripts/gpq.py uses PythonExecutionThread --kind class
+python scripts/gpq.py hier PythonExecutionThread
+```

@@ -1,0 +1,70 @@
+# OpaqueDataToQString
+
+[Book TOC](../../TOC.md) · [data-mining](../../components/data-mining.md) · cluster Community 1241 · tier 3
+
+| Source file | Kind | Lines |
+|---|---|---|
+| `src/data-mining/OpaqueDataToQString.h` | C++ | 98 |
+
+## Overview
+
+[[[PROSE overview unit=data-mining/OpaqueDataToQString tier=3]]]
+Replace this whole block, markers included, with 1-3 paragraphs: what this unit is, why it exists, and how it fits the surrounding design. Do not restate the tables below.
+[[[/PROSE]]]
+
+## Declared types
+
+| Name | Kind | Bases | Template | Subclasses | Description |
+|---|---|---|---|---|---|
+| [`GPlatesDataMining::ConvertOpaqueDataToString`](#gplatesdataminingconvertopaquedatatostring) | class | `boost::static_visitor<QString>` | — | 0 | — |
+
+## Members
+
+### `GPlatesDataMining::ConvertOpaqueDataToString`
+
+| Member | Kind | Type | Access | Description |
+|---|---|---|---|---|
+| `operator()( const empty_data_type)` | operator | `QString` | public | — |
+| `operator()( const bool b)` | operator | `QString` | public | — |
+| `operator()( const Type data)` | operator | `QString` | public | — |
+| `operator()( const QString& str)` | operator | `QString` | public | — |
+| `operator()( const char c)` | operator | `QString` | public | — |
+
+## Free functions and macros
+
+| Name | Kind | Type / body | Description |
+|---|---|---|---|
+| `GPLATESDATAMINING_OPAQUEDATAVISITORS_H` | macro | `None` | — |
+
+## Notes
+
+[[[PROSE notes unit=data-mining/OpaqueDataToQString tier=3]]]
+Replace this whole block, markers included, with invariants, ownership, threading or gotchas that are not visible in the tables. Write *None.* if there is nothing worth saying.
+[[[/PROSE]]]
+
+## Used by
+
+| Unit | Component | References |
+|---|---|---|
+| [unit-test/DataAssociationDataTableTest](../unit-test/DataAssociationDataTableTest.md) | unit-test | 4 |
+| [data-mining/DataTable](DataTable.md) | data-mining | 3 |
+| [api/PyFeature](../api/PyFeature.md) | api | 2 |
+| [data-mining/VoteReducer](VoteReducer.md) | data-mining | 2 |
+| [qt-widgets/CoRegistrationResultTableDialog](../qt-widgets/CoRegistrationResultTableDialog.md) | qt-widgets | 2 |
+| [api/CoReg](../api/CoReg.md) | api | 1 |
+| [unit-test/CoregTest](../unit-test/CoregTest.md) | unit-test | 1 |
+
+## Related
+
+*None.*
+
+## Explore
+
+Run these from the `gplates-code` skill directory:
+
+```bash
+python scripts/gpq.py file src/data-mining/OpaqueDataToQString.h
+python scripts/gpq.py def GPlatesDataMining::ConvertOpaqueDataToString --body
+python scripts/gpq.py uses ConvertOpaqueDataToString --kind class
+python scripts/gpq.py hier ConvertOpaqueDataToString
+```
